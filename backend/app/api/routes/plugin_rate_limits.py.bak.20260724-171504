@@ -1,0 +1,103 @@
+from __future__ import annotations
+
+from typing import Annotated
+
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException,
+    status,
+)
+
+from app.schemas.plugin_rate_limits import (
+    PluginRateLimitSettingsResponse,
+    PluginRateLimitUpdate,
+)
+from app.services.plugin_rate_limit_settings_service import (
+    PluginRateLimitSettingsError,
+    PluginRateLimitSettingsService,
+)
+
+# ЗАМЕНИТЕ импорт на существующую dependency проекта.
+from app.api.dependencies.auth import require_guild_admin
+
+
+router = APIRouter(
+    prefix=(
+        "/discord/guilds/{guild_id}/plugins/"
+        "{plugin_key}/rate-limits"
+    ),
+    tags=["Plugin Rate Limits"],
+)
+
+
+@router.get(
+    "",
+    response_model=PluginRateLimitSettingsResponse,
+)
+async def get_plugin_rate_limits(
+    guild_id: int,
+    plugin_key: str,
+    _admin: Annotated[
+        object,
+        Depends(require_guild_admin),
+    ],
+) -> PluginRateLimitSettingsResponse:
+    try:
+        data = (
+            await PluginRateLimitSettingsService
+            .get_settings(
+                guild_id=guild_id,
+                plugin_key=plugin_key,
+            )
+        )
+    except PluginRateLimitSettingsError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(exc),
+        ) from exc
+
+    return PluginRateLimitSettingsResponse(
+        **data
+    )
+
+
+@router.put(
+    "",
+    response_model=PluginRateLimitSettingsResponse,
+)
+async def update_plugin_rate_limits(
+    guild_id: int,
+    plugin_key: str,
+    payload: PluginRateLimitUpdate,
+    _admin: Annotated[
+        object,
+        Depends(require_guild_admin),
+    ],
+) -> PluginRateLimitSettingsResponse:
+    try:
+        data = (
+            await PluginRateLimitSettingsService
+            .update_settings(
+                guild_id=guild_id,
+                plugin_key=plugin_key,
+                limits=payload.limits,
+            )
+        )
+    except PluginRateLimitSettingsError as exc:
+        detail = str(exc)
+
+        status_code = (
+            status.HTTP_404_NOT_FOUND
+            if "not found" in detail.lower()
+            else status.HTTP_422_UNPROCESSABLE_ENTITY
+        )
+
+        raise HTTPException(
+            status_code=status_code,
+            detail=detail,
+        ) from exc
+
+    return PluginRateLimitSettingsResponse(
+        **data
+    )

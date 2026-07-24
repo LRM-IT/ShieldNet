@@ -1,7 +1,3 @@
-from app.api.routes.plugin_rate_limits import (
-    router as plugin_rate_limits_router,
-)
-
 from app.api.routes.plugin_runtime_gateway import (
     router as plugin_runtime_gateway_router,
 )
@@ -134,8 +130,3 @@ api_router.include_router(events_router)
 api_router.include_router(
     plugin_runtime_gateway_router
 )
-
-api_router.include_router(
-    plugin_rate_limits_router
-)
-
