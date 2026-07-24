@@ -63,12 +63,6 @@ class PluginRuntimeAuditRoute(APIRoute):
                     None,
                 )
 
-                rate_source = getattr(
-                    request.state,
-                    "plugin_audit_rate_source",
-                    None,
-                )
-
                 if rate_limit is not None:
                     response.headers[
                         "X-RateLimit-Limit"
@@ -83,11 +77,6 @@ class PluginRuntimeAuditRoute(APIRoute):
                     response.headers[
                         "X-RateLimit-Reset-After"
                     ] = f"{rate_reset:.3f}"
-
-                if rate_source is not None:
-                    response.headers[
-                        "X-RateLimit-Source"
-                    ] = str(rate_source)
 
                 response.headers[
                     "X-Request-ID"

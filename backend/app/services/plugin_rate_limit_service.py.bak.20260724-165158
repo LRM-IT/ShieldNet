@@ -4,15 +4,10 @@ import os
 import time
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
-from typing import Any
 
-from sqlalchemy import select, text
+from sqlalchemy import text
 
 from app.db.session import AsyncSessionFactory
-from app.models.plugins import (
-    GuildPluginInstallation,
-    PluginRuntimeInstance,
-)
 
 
 @dataclass(frozen=True, slots=True)
@@ -22,10 +17,16 @@ class RateLimitResult:
     remaining: int
     retry_after: float
     reset_after: float
-    source: str
 
 
 class PluginRateLimitService:
+    """
+    PostgreSQL-backed fixed-window rate limiter.
+
+    The counter is shared by every Backend worker and node
+    connected to the same ShieldNet database.
+    """
+
     def __init__(self) -> None:
         self.window_seconds = int(
             os.getenv(
@@ -83,13 +84,6 @@ class PluginRateLimitService:
             )
         )
 
-        self.maximum_custom_limit = int(
-            os.getenv(
-                "PLUGIN_RATE_LIMIT_MAX_CUSTOM",
-                "10000",
-            )
-        )
-
         if self.window_seconds < 1:
             raise RuntimeError(
                 "PLUGIN_RATE_LIMIT_WINDOW_SECONDS "
@@ -98,10 +92,7 @@ class PluginRateLimitService:
 
         self._last_cleanup_monotonic = 0.0
 
-    def system_limit_for_scope(
-        self,
-        scope: str,
-    ) -> int:
+    def limit_for_scope(self, scope: str) -> int:
         return {
             "runtime.context": self.context_limit,
             "runtime.token.refresh": self.refresh_limit,
@@ -110,104 +101,6 @@ class PluginRateLimitService:
         }.get(
             scope,
             self.default_limit,
-        )
-
-    def _parse_custom_limit(
-        self,
-        raw_value: Any,
-    ) -> int | None:
-        if isinstance(raw_value, bool):
-            return None
-
-        if not isinstance(raw_value, int):
-            return None
-
-        if raw_value < 0:
-            return None
-
-        return min(
-            raw_value,
-            self.maximum_custom_limit,
-        )
-
-    async def resolve_limit(
-        self,
-        *,
-        guild_id: int,
-        plugin_key: str,
-        scope: str,
-    ) -> tuple[int, str]:
-        async with AsyncSessionFactory() as session:
-            installation = (
-                await session.execute(
-                    select(
-                        GuildPluginInstallation
-                    ).where(
-                        GuildPluginInstallation.guild_id
-                        == guild_id,
-                        GuildPluginInstallation.plugin_key
-                        == plugin_key,
-                    )
-                )
-            ).scalar_one_or_none()
-
-            runtime = (
-                await session.execute(
-                    select(
-                        PluginRuntimeInstance
-                    ).where(
-                        PluginRuntimeInstance.guild_id
-                        == guild_id,
-                        PluginRuntimeInstance.plugin_key
-                        == plugin_key,
-                    )
-                )
-            ).scalar_one_or_none()
-
-        if installation is not None:
-            installation_limits = (
-                installation.rate_limits_json or {}
-            )
-
-            if isinstance(
-                installation_limits,
-                dict,
-            ):
-                custom_limit = self._parse_custom_limit(
-                    installation_limits.get(scope)
-                )
-
-                if custom_limit is not None:
-                    return (
-                        custom_limit,
-                        "installation",
-                    )
-
-        if runtime is not None:
-            manifest = runtime.manifest_json or {}
-
-            if isinstance(manifest, dict):
-                manifest_limits = manifest.get(
-                    "rate_limits",
-                    {},
-                )
-
-                if isinstance(manifest_limits, dict):
-                    custom_limit = (
-                        self._parse_custom_limit(
-                            manifest_limits.get(scope)
-                        )
-                    )
-
-                    if custom_limit is not None:
-                        return (
-                            custom_limit,
-                            "manifest",
-                        )
-
-        return (
-            self.system_limit_for_scope(scope),
-            "system",
         )
 
     def _window_start(
@@ -233,12 +126,7 @@ class PluginRateLimitService:
         plugin_key: str,
         scope: str,
     ) -> RateLimitResult:
-        limit, source = await self.resolve_limit(
-            guild_id=guild_id,
-            plugin_key=plugin_key,
-            scope=scope,
-        )
-
+        limit = self.limit_for_scope(scope)
         now = datetime.now(UTC)
         window_start = self._window_start(now)
         window_end = window_start + timedelta(
@@ -257,7 +145,6 @@ class PluginRateLimitService:
                 remaining=0,
                 retry_after=reset_after,
                 reset_after=reset_after,
-                source=source,
             )
 
         async with AsyncSessionFactory() as session:
@@ -324,7 +211,6 @@ class PluginRateLimitService:
                 else reset_after
             ),
             reset_after=reset_after,
-            source=source,
         )
 
     async def _cleanup_if_due(self) -> None:
@@ -358,6 +244,7 @@ class PluginRateLimitService:
 
                 await session.commit()
         except Exception:
+            # Cleanup must not break Plugin API requests.
             return
 
 

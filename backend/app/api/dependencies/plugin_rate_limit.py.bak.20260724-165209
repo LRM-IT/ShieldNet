@@ -30,9 +30,6 @@ async def enforce_plugin_rate_limit(
     request.state.plugin_audit_rate_reset = (
         result.reset_after
     )
-    request.state.plugin_audit_rate_source = (
-        result.source
-    )
 
     if result.allowed:
         return
@@ -59,6 +56,5 @@ async def enforce_plugin_rate_limit(
             "X-RateLimit-Reset-After": (
                 f"{result.reset_after:.3f}"
             ),
-            "X-RateLimit-Source": result.source,
         },
     )
