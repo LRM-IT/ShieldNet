@@ -1,0 +1,19 @@
+{
+  "_language": {
+    "code": "uk",
+    "icon": "🇺🇦",
+    "name": "Українська",
+    "english_name": "Ukrainian",
+    "discord_locale": [
+      "uk"
+    ],
+    "rtl": false,
+    "version": 1
+  },
+  "common": {
+    "save": "Зберегти"
+  },
+  "dashboard": {
+    "connect": "Підключити"
+  }
+}

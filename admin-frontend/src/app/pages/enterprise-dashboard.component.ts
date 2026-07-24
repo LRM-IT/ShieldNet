@@ -1,101 +1,282 @@
-import { Component, OnDestroy, OnInit, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, computed, signal } from '@angular/core';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 
-import { EnterpriseDashboardOverview, EnterpriseDashboardService } from '../core/enterprise-dashboard.service';
+import {
+  EnterpriseDashboardOverview,
+  EnterpriseDashboardService,
+} from '../core/enterprise-dashboard.service';
 import { ShellComponent } from '../shared/shell.component';
 
 @Component({
   standalone: true,
   imports: [ShellComponent, RouterLink, DatePipe, DecimalPipe],
   template: `
-    <sn-shell title="Enterprise Dashboard">
-      <section class="hero card" [class.critical]="data()?.overall_status === 'critical'">
-        <div>
-          <div class="eyebrow">ShieldNet command center</div>
-          <h2>Platform overview</h2>
-          <p>Infrastructure, Discord estate, moderation and security in one workspace.</p>
+    <sn-shell title="Command Center">
+      <section class="command-hero">
+        <div class="hero-copy">
+          <div class="eyebrow">GLOBAL OPERATIONS FABRIC</div>
+          <h2>Infrastructure under control.</h2>
+          <p>
+            Unified visibility across Discord estates, workers, security,
+            automation and runtime services.
+          </p>
+
+          <div class="hero-links">
+            <a routerLink="/platform/operations">Open live operations <span>→</span></a>
+            <a routerLink="/platform/doctor">Run platform doctor <span>↗</span></a>
+          </div>
         </div>
-        <div class="hero-actions">
-          <span class="health" [class]="'health ' + (data()?.overall_status || 'loading')">
-            <i></i>{{ data()?.overall_status || 'loading' }}
-          </span>
-          <button class="btn secondary" [disabled]="loading()" (click)="load()">
-            {{ loading() ? 'Refreshing…' : 'Refresh' }}
+
+        <div class="hero-status">
+          <div class="status-ring" [class]="data()?.overall_status || 'loading'">
+            <div>
+              <small>PLATFORM</small>
+              <strong>{{ data()?.overall_status || 'loading' }}</strong>
+            </div>
+          </div>
+
+          <button type="button" class="refresh" [disabled]="loading()" (click)="load()">
+            {{ loading() ? 'Synchronizing…' : 'Synchronize' }}
           </button>
         </div>
       </section>
 
       @if (error()) {
-        <section class="card error">{{ error() }}</section>
+        <section class="alert-panel">{{ error() }}</section>
       }
 
       @if (data(); as overview) {
-        <section class="infra-grid">
-          <article class="card component">
-            <span class="pulse online"></span><div><b>Backend API</b><small>online</small></div>
+        <section class="system-strip">
+          <div class="strip-label">
+            <span class="live-dot"></span>
+            CORE FABRIC
+          </div>
+
+          <article>
+            <span>API</span>
+            <strong>ONLINE</strong>
+            <small>Backend control plane</small>
           </article>
-          <article class="card component">
-            <span class="pulse online"></span><div><b>PostgreSQL</b><small>{{ overview.components.postgresql.latency_ms }} ms</small></div>
+
+          <article>
+            <span>POSTGRESQL</span>
+            <strong>{{ overview.components.postgresql.latency_ms }} MS</strong>
+            <small>Primary database latency</small>
           </article>
-          <article class="card component">
-            <span class="pulse" [class.online]="overview.components.valkey.status === 'online'" [class.offline]="overview.components.valkey.status !== 'online'"></span>
-            <div><b>Valkey</b><small>{{ overview.components.valkey.latency_ms ?? '—' }} ms</small></div>
+
+          <article>
+            <span>VALKEY</span>
+            <strong [class.warn]="overview.components.valkey.status !== 'online'">
+              {{ overview.components.valkey.status }}
+            </strong>
+            <small>{{ overview.components.valkey.latency_ms ?? '—' }} ms latency</small>
           </article>
-          @for (worker of overview.workers; track worker.name) {
-            <article class="card component">
-              <span class="pulse" [class.online]="worker.status === 'online'" [class.warning]="worker.status !== 'online'"></span>
-              <div><b>{{ worker.type }}</b><small>{{ worker.name }} · {{ worker.status }}</small></div>
+
+          @for (worker of overview.workers.slice(0, 2); track worker.name) {
+            <article>
+              <span>{{ worker.type }}</span>
+              <strong [class.warn]="worker.status !== 'online'">{{ worker.status }}</strong>
+              <small>{{ worker.name }}</small>
             </article>
           }
         </section>
 
-        <section class="metric-grid">
-          <article class="card metric primary"><span>Discord servers</span><strong>{{ overview.metrics['guilds'] | number }}</strong><small>{{ overview.scope }} scope</small></article>
-          <article class="card metric"><span>Active members</span><strong>{{ overview.metrics['active_members'] | number }}</strong><small>{{ overview.metrics['members'] | number }} indexed</small></article>
-          <article class="card metric"><span>Open cases</span><strong>{{ overview.metrics['open_cases'] | number }}</strong><small>{{ overview.metrics['overdue_cases'] | number }} overdue</small></article>
-          <article class="card metric danger"><span>Security risks</span><strong>{{ overview.metrics['security_risks'] | number }}</strong><small>high + critical</small></article>
-          <article class="card metric"><span>Open alerts</span><strong>{{ overview.metrics['open_alerts'] | number }}</strong><small>{{ overview.metrics['critical_alerts'] | number }} critical</small></article>
-          <article class="card metric"><span>Queue depth</span><strong>{{ overview.metrics['queue_depth'] | number }}</strong><small>Discord jobs</small></article>
-          <article class="card metric"><span>Audit / 24h</span><strong>{{ overview.metrics['audit_24h'] | number }}</strong><small>recorded actions</small></article>
-          <article class="card metric"><span>Jobs / 7d</span><strong>{{ overview.metrics['successful_jobs_7d'] | number }}</strong><small>{{ overview.metrics['failed_jobs_24h'] | number }} failed today</small></article>
+        <section class="overview-grid">
+          <article class="primary-metric panel">
+            <div class="panel-index">01</div>
+            <div>
+              <span>MANAGED SERVERS</span>
+              <strong>{{ overview.metrics['guilds'] | number }}</strong>
+              <small>{{ overview.scope }} infrastructure scope</small>
+            </div>
+            <div class="metric-trend">ACTIVE</div>
+          </article>
+
+          <article class="metric panel">
+            <div class="panel-index">02</div>
+            <span>ACTIVE MEMBERS</span>
+            <strong>{{ overview.metrics['active_members'] | number }}</strong>
+            <small>{{ overview.metrics['members'] | number }} identities indexed</small>
+          </article>
+
+          <article class="metric panel">
+            <div class="panel-index">03</div>
+            <span>OPEN CASES</span>
+            <strong>{{ overview.metrics['open_cases'] | number }}</strong>
+            <small [class.danger]="overview.metrics['overdue_cases'] > 0">
+              {{ overview.metrics['overdue_cases'] | number }} overdue
+            </small>
+          </article>
+
+          <article class="metric panel">
+            <div class="panel-index">04</div>
+            <span>SECURITY RISKS</span>
+            <strong [class.danger]="overview.metrics['security_risks'] > 0">
+              {{ overview.metrics['security_risks'] | number }}
+            </strong>
+            <small>High and critical signals</small>
+          </article>
+
+          <article class="metric panel">
+            <div class="panel-index">05</div>
+            <span>OPEN ALERTS</span>
+            <strong>{{ overview.metrics['open_alerts'] | number }}</strong>
+            <small>{{ overview.metrics['critical_alerts'] | number }} critical</small>
+          </article>
+
+          <article class="metric panel">
+            <div class="panel-index">06</div>
+            <span>QUEUE DEPTH</span>
+            <strong>{{ overview.metrics['queue_depth'] | number }}</strong>
+            <small>Pending Discord operations</small>
+          </article>
         </section>
 
-        <section class="workspace-grid">
-          <article class="card quick-panel">
-            <div class="section-head"><div><span class="eyebrow">Operations</span><h3>Control centers</h3></div></div>
-            <div class="quick-grid">
-              <a routerLink="/platform/operations"><b>Live operations</b><span>Runtime, queue and event stream</span></a>
-              <a routerLink="/platform/notifications"><b>Notifications</b><span>Alerts and incident signals</span></a>
-              <a routerLink="/platform/jobs"><b>Jobs & health</b><span>Run and inspect system jobs</span></a>
-              <a routerLink="/platform/access"><b>Platform access</b><span>Global roles and privileges</span></a>
+        <section class="operations-grid">
+          <article class="panel operations-panel">
+            <div class="section-title">
+              <div>
+                <span>OPERATIONAL ACCESS</span>
+                <h3>Control surfaces</h3>
+              </div>
+              <small>SELECT WORKSPACE</small>
+            </div>
+
+            <div class="action-grid">
+              <a routerLink="/platform/operations">
+                <b>LIVE OPS</b>
+                <strong>Operations stream</strong>
+                <span>Runtime events, queue state and active processes.</span>
+                <i>01</i>
+              </a>
+
+              <a routerLink="/platform/plugins">
+                <b>PLUGIN FABRIC</b>
+                <strong>Runtime platform</strong>
+                <span>Lifecycle, health, capabilities and execution state.</span>
+                <i>02</i>
+              </a>
+
+              <a routerLink="/platform/jobs">
+                <b>JOBS</b>
+                <strong>Execution center</strong>
+                <span>Inspect jobs, failures, retries and service health.</span>
+                <i>03</i>
+              </a>
+
+              <a routerLink="/platform/access">
+                <b>IDENTITY</b>
+                <strong>Platform access</strong>
+                <span>Global roles, permissions and trusted operators.</span>
+                <i>04</i>
+              </a>
             </div>
           </article>
 
-          <article class="card status-panel">
-            <div class="section-head"><div><span class="eyebrow">Capacity</span><h3>Platform telemetry</h3></div></div>
-            <div class="telemetry"><span>Valkey memory</span><b>{{ formatBytes(overview.components.valkey.memory_bytes) }}</b></div>
-            <div class="telemetry"><span>Bot accounts</span><b>{{ overview.metrics['bots'] | number }}</b></div>
-            <div class="telemetry"><span>Watchlisted members</span><b>{{ overview.metrics['watchlisted'] | number }}</b></div>
-            <div class="telemetry"><span>Generated</span><b>{{ overview.generated_at | date:'mediumTime' }}</b></div>
+          <article class="panel telemetry-panel">
+            <div class="section-title">
+              <div>
+                <span>LIVE CAPACITY</span>
+                <h3>Telemetry</h3>
+              </div>
+            </div>
+
+            <div class="telemetry-row">
+              <span>Valkey memory</span>
+              <strong>{{ formatBytes(overview.components.valkey.memory_bytes) }}</strong>
+            </div>
+            <div class="telemetry-row">
+              <span>Bot accounts</span>
+              <strong>{{ overview.metrics['bots'] | number }}</strong>
+            </div>
+            <div class="telemetry-row">
+              <span>Watchlisted users</span>
+              <strong>{{ overview.metrics['watchlisted'] | number }}</strong>
+            </div>
+            <div class="telemetry-row">
+              <span>Audit events / 24h</span>
+              <strong>{{ overview.metrics['audit_24h'] | number }}</strong>
+            </div>
+            <div class="telemetry-row">
+              <span>Successful jobs / 7d</span>
+              <strong>{{ overview.metrics['successful_jobs_7d'] | number }}</strong>
+            </div>
+
+            <div class="generated">
+              LAST SYNC {{ overview.generated_at | date:'mediumTime' }}
+            </div>
           </article>
         </section>
 
-        <section class="section-head guild-title"><div><span class="eyebrow">Discord estate</span><h3>Managed servers</h3></div><span>{{ overview.guilds.length }} shown</span></section>
+        <section class="estate-header">
+          <div>
+            <span>DISCORD ESTATE</span>
+            <h3>Managed infrastructure</h3>
+          </div>
+          <div class="estate-count">{{ overview.guilds.length }} NODES</div>
+        </section>
+
         @if (overview.guilds.length === 0) {
-          <section class="card empty">No Discord servers are available for this account.</section>
+          <section class="empty-state panel">
+            No Discord servers are available for this operator.
+          </section>
         } @else {
           <section class="guild-grid">
-            @for (guild of overview.guilds; track guild.guild_id) {
-              <article class="card guild">
-                <div class="guild-head">
-                  @if (guild.icon_url) { <img [src]="guild.icon_url" alt=""> }
-                  @else { <div class="avatar">{{ guild.name.slice(0, 1) }}</div> }
-                  <div><h4>{{ guild.name }}</h4><small>{{ guild.guild_id }}</small></div>
-                  <span class="badge" [class.online]="guild.bot_status === 'online'">{{ guild.bot_status }}</span>
+            @for (guild of overview.guilds; track guild.guild_id; let index = $index) {
+              <article class="guild-node panel">
+                <div class="node-index">
+                  {{ (index + 1).toString().padStart(2, '0') }}
                 </div>
-                <div class="guild-data"><span>Members <b>{{ guild.member_count | number }}</b></span><span>Sync <b>{{ guild.last_sync_at ? (guild.last_sync_at | date:'short') : 'Never' }}</b></span></div>
-                <div class="guild-actions"><a class="btn" [routerLink]="['/guild', guild.guild_id]">Open server</a><a class="btn secondary" [routerLink]="['/guild', guild.guild_id, 'security']">Security</a></div>
+
+                <div class="guild-head">
+                  @if (guild.icon_url) {
+                    <img [src]="guild.icon_url" alt="" />
+                  } @else {
+                    <div class="avatar">{{ guild.name.slice(0, 1) }}</div>
+                  }
+
+                  <div class="guild-name">
+                    <span>DISCORD NODE</span>
+                    <h4>{{ guild.name }}</h4>
+                    <small>{{ guild.guild_id }}</small>
+                  </div>
+
+                  <div class="node-state" [class.online]="guild.bot_status === 'online'">
+                    <i></i>{{ guild.bot_status }}
+                  </div>
+                </div>
+
+                <div class="guild-stats">
+                  <div>
+                    <span>MEMBERS</span>
+                    <strong>{{ guild.member_count | number }}</strong>
+                  </div>
+                  <div>
+                    <span>LAST SYNC</span>
+                    <strong>{{ guild.last_sync_at ? (guild.last_sync_at | date:'short') : 'NEVER' }}</strong>
+                  </div>
+                </div>
+
+                <div class="guild-actions">
+                  @if (guild.bot_status === 'online') {
+                    <a class="open-node" [routerLink]="['/guild', guild.guild_id]">
+                      ENTER NODE <span>→</span>
+                    </a>
+                    <a class="security-node" [routerLink]="['/guild', guild.guild_id, 'security']">
+                      SECURITY
+                    </a>
+                  } @else {
+                    <a
+                      class="connect-node"
+                      [href]="connectUrl(guild.guild_id)"
+                      target="_blank"
+                      rel="noopener"
+                    >
+                      CONNECT BOT <span>↗</span>
+                    </a>
+                  }
+                </div>
               </article>
             }
           </section>
@@ -104,15 +285,501 @@ import { ShellComponent } from '../shared/shell.component';
     </sn-shell>
   `,
   styles: [`
-    .hero{padding:1.6rem;display:flex;justify-content:space-between;align-items:center;gap:1rem;background:radial-gradient(circle at 80% 20%,rgba(108,121,255,.2),transparent 38%),var(--panel)}
-    .hero h2{font-size:2rem;margin:.25rem 0}.hero p{margin:0;color:var(--muted)}.hero-actions{display:flex;gap:.75rem;align-items:center}
-    .eyebrow{text-transform:uppercase;letter-spacing:.12em;font-size:.68rem;font-weight:800;color:#9da8ff}.health{display:flex;align-items:center;gap:.45rem;text-transform:uppercase;font-size:.72rem;font-weight:800;padding:.55rem .75rem;border-radius:999px;background:rgba(116,233,179,.1);color:#74e9b3}.health i,.pulse{width:.65rem;height:.65rem;border-radius:50%;background:currentColor;box-shadow:0 0 13px currentColor}.health.degraded{color:#ffd27a}.health.critical{color:#ff7b8f}
-    .infra-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:.8rem;margin-top:1rem}.component{padding:.9rem 1rem;display:flex;align-items:center;gap:.75rem}.component div{display:grid;gap:.2rem}.component small{color:var(--muted);text-transform:capitalize}.pulse{color:#718096}.pulse.online{color:#74e9b3}.pulse.warning{color:#ffd27a}.pulse.offline{color:#ff7b8f}
-    .metric-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-top:1rem}.metric{padding:1.15rem;display:grid;gap:.4rem;min-height:125px}.metric span,.metric small{color:var(--muted)}.metric strong{font-size:2rem}.metric.primary{background:linear-gradient(145deg,rgba(96,111,255,.22),rgba(15,22,42,.86))}.metric.danger strong{color:#ff96a6}
-    .workspace-grid{display:grid;grid-template-columns:2fr 1fr;gap:1rem;margin-top:1rem}.quick-panel,.status-panel{padding:1.2rem}.section-head{display:flex;justify-content:space-between;align-items:end}.section-head h3{margin:.25rem 0 0}.quick-grid{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-top:1rem}.quick-grid a{padding:1rem;border:1px solid var(--line);border-radius:12px;display:grid;gap:.3rem;background:rgba(255,255,255,.018)}.quick-grid a:hover{background:var(--primary-soft);border-color:rgba(122,133,255,.3)}.quick-grid span{color:var(--muted);font-size:.82rem}.telemetry{display:flex;justify-content:space-between;padding:.9rem 0;border-bottom:1px solid var(--line)}.telemetry:last-child{border-bottom:0}.telemetry span{color:var(--muted)}
-    .guild-title{margin:1.8rem 0 .8rem}.guild-title>span{color:var(--muted)}.guild-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}.guild{padding:1.1rem}.guild-head{display:grid;grid-template-columns:44px 1fr auto;gap:.75rem;align-items:center}.guild-head img,.avatar{width:44px;height:44px;border-radius:13px}.avatar{display:grid;place-items:center;background:var(--primary-soft);font-weight:800}.guild h4{margin:0}.guild small{color:var(--muted)}.badge{font-size:.68rem;text-transform:uppercase;padding:.35rem .5rem;border-radius:999px;background:rgba(255,210,122,.12);color:#ffd27a}.badge.online{background:rgba(116,233,179,.12);color:#74e9b3}.guild-data{display:grid;gap:.55rem;margin:1rem 0}.guild-data span{display:flex;justify-content:space-between;color:var(--muted)}.guild-data b{color:var(--text)}.guild-actions{display:flex;gap:.6rem}.empty{padding:2rem;text-align:center;color:var(--muted)}
-    @media(max-width:1100px){.metric-grid{grid-template-columns:repeat(2,1fr)}.guild-grid{grid-template-columns:repeat(2,1fr)}}
-    @media(max-width:760px){.hero{align-items:flex-start;flex-direction:column}.hero-actions{width:100%;justify-content:space-between}.metric-grid,.workspace-grid,.guild-grid,.quick-grid{grid-template-columns:1fr}}
+    .command-hero{
+      position:relative;
+      overflow:hidden;
+      min-height:285px;
+      display:grid;
+      grid-template-columns:minmax(0,1fr) auto;
+      align-items:center;
+      gap:2rem;
+      padding:2rem;
+      background:
+        linear-gradient(105deg,rgba(10,19,26,.98),rgba(7,12,18,.88)),
+        var(--panel);
+      border:1px solid var(--line);
+      border-radius:18px
+    }
+
+    .command-hero::before{
+      content:"";
+      position:absolute;
+      width:520px;
+      height:520px;
+      right:-210px;
+      top:-190px;
+      border:1px solid rgba(53,226,178,.11);
+      border-radius:50%;
+      box-shadow:
+        0 0 0 48px rgba(53,226,178,.018),
+        0 0 0 96px rgba(53,226,178,.012)
+    }
+
+    .command-hero::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      background:
+        linear-gradient(rgba(53,226,178,.025) 1px,transparent 1px),
+        linear-gradient(90deg,rgba(53,226,178,.025) 1px,transparent 1px);
+      background-size:24px 24px;
+      mask-image:linear-gradient(90deg,black,transparent 80%)
+    }
+
+    .hero-copy,.hero-status{position:relative;z-index:2}
+    .eyebrow{
+      color:#6e908b;
+      font-size:.6rem;
+      font-weight:900;
+      letter-spacing:.17em
+    }
+
+    .hero-copy h2{
+      max-width:720px;
+      margin:.7rem 0 .6rem;
+      font-size:clamp(2rem,4vw,4rem);
+      line-height:1;
+      letter-spacing:-.055em
+    }
+
+    .hero-copy p{
+      max-width:650px;
+      margin:0;
+      color:var(--muted);
+      line-height:1.7
+    }
+
+    .hero-links{display:flex;gap:.65rem;flex-wrap:wrap;margin-top:1.35rem}
+    .hero-links a{
+      display:flex;
+      align-items:center;
+      gap:.8rem;
+      padding:.65rem .8rem;
+      color:#a7c7be;
+      border:1px solid var(--line);
+      border-radius:9px;
+      background:rgba(255,255,255,.018);
+      font-size:.72rem;
+      font-weight:750
+    }
+    .hero-links a:hover{color:var(--primary);border-color:rgba(53,226,178,.23)}
+
+    .hero-status{
+      display:grid;
+      justify-items:center;
+      gap:1rem
+    }
+
+    .status-ring{
+      width:150px;
+      height:150px;
+      display:grid;
+      place-items:center;
+      border:1px solid rgba(53,226,178,.2);
+      border-radius:50%;
+      background:
+        radial-gradient(circle,rgba(53,226,178,.08),transparent 62%);
+      box-shadow:
+        inset 0 0 0 10px rgba(53,226,178,.018),
+        inset 0 0 0 11px rgba(53,226,178,.08)
+    }
+
+    .status-ring>div{display:grid;justify-items:center;gap:.25rem}
+    .status-ring small{color:#607c78;font-size:.57rem;letter-spacing:.16em}
+    .status-ring strong{
+      color:var(--primary);
+      font-size:.72rem;
+      text-transform:uppercase;
+      letter-spacing:.12em
+    }
+
+    .status-ring.degraded{border-color:rgba(248,189,92,.28)}
+    .status-ring.degraded strong{color:var(--warning)}
+    .status-ring.critical{border-color:rgba(255,111,127,.3)}
+    .status-ring.critical strong{color:var(--danger)}
+
+    .refresh{
+      min-width:150px;
+      padding:.65rem .85rem;
+      color:#b8d5cd;
+      background:#0b141b;
+      border:1px solid var(--line);
+      border-radius:9px;
+      font-size:.7rem;
+      font-weight:800
+    }
+
+    .refresh:hover{border-color:rgba(53,226,178,.26);color:var(--primary)}
+    .refresh:disabled{opacity:.5;cursor:wait}
+
+    .alert-panel{
+      margin-top:1rem;
+      padding:1rem;
+      color:#ffd8dc;
+      background:rgba(255,111,127,.055);
+      border:1px solid rgba(255,111,127,.25);
+      border-radius:10px
+    }
+
+    .system-strip{
+      display:grid;
+      grid-template-columns:auto repeat(5,minmax(140px,1fr));
+      margin-top:1rem;
+      overflow:auto;
+      background:#080e14;
+      border:1px solid var(--line);
+      border-radius:12px
+    }
+
+    .strip-label{
+      min-width:145px;
+      display:flex;
+      align-items:center;
+      gap:.55rem;
+      padding:1rem;
+      color:#779991;
+      border-right:1px solid var(--line);
+      font-size:.6rem;
+      font-weight:900;
+      letter-spacing:.14em
+    }
+
+    .live-dot{
+      width:.48rem;
+      height:.48rem;
+      border-radius:50%;
+      background:var(--success);
+      box-shadow:0 0 12px rgba(57,221,161,.75)
+    }
+
+    .system-strip article{
+      min-width:150px;
+      display:grid;
+      gap:.2rem;
+      padding:.8rem 1rem;
+      border-right:1px solid var(--line)
+    }
+
+    .system-strip article:last-child{border-right:0}
+    .system-strip article span{color:#536b79;font-size:.56rem;letter-spacing:.12em}
+    .system-strip article strong{
+      color:var(--success);
+      font-size:.69rem;
+      text-transform:uppercase
+    }
+    .system-strip article strong.warn{color:var(--warning)}
+    .system-strip article small{color:var(--muted);font-size:.61rem}
+
+    .overview-grid{
+      display:grid;
+      grid-template-columns:repeat(4,minmax(0,1fr));
+      gap:.8rem;
+      margin-top:1rem
+    }
+
+    .panel{
+      position:relative;
+      overflow:hidden;
+      background:
+        linear-gradient(145deg,rgba(255,255,255,.022),transparent 40%),
+        rgba(11,18,26,.95);
+      border:1px solid var(--line);
+      border-radius:13px
+    }
+
+    .panel::before{
+      content:"";
+      position:absolute;
+      left:0;
+      top:0;
+      width:36px;
+      height:1px;
+      background:var(--primary);
+      box-shadow:0 0 10px rgba(53,226,178,.55)
+    }
+
+    .primary-metric{
+      grid-column:span 2;
+      min-height:170px;
+      display:grid;
+      grid-template-columns:auto 1fr auto;
+      align-items:end;
+      gap:1rem;
+      padding:1.2rem;
+      background:
+        radial-gradient(circle at 85% 10%,rgba(53,226,178,.1),transparent 16rem),
+        linear-gradient(145deg,rgba(17,31,38,.98),rgba(8,14,20,.98))
+    }
+
+    .primary-metric>div:nth-child(2){display:grid;gap:.3rem}
+    .primary-metric span,.metric span{
+      color:#68818d;
+      font-size:.59rem;
+      font-weight:850;
+      letter-spacing:.13em
+    }
+
+    .primary-metric strong{
+      font-size:3.1rem;
+      line-height:1
+    }
+
+    .primary-metric small,.metric small{color:var(--muted);font-size:.68rem}
+    .metric-trend{
+      color:var(--success);
+      font-size:.62rem;
+      letter-spacing:.13em
+    }
+
+    .panel-index{
+      position:absolute!important;
+      top:.7rem;
+      right:.75rem;
+      color:#30424d;
+      font-family:ui-monospace,SFMono-Regular,Consolas,monospace;
+      font-size:.58rem
+    }
+
+    .metric{
+      min-height:170px;
+      display:flex;
+      flex-direction:column;
+      justify-content:flex-end;
+      gap:.35rem;
+      padding:1rem
+    }
+    .metric strong{font-size:2rem}
+    .danger{color:var(--danger)!important}
+
+    .operations-grid{
+      display:grid;
+      grid-template-columns:minmax(0,1.9fr) minmax(280px,.8fr);
+      gap:.8rem;
+      margin-top:.8rem
+    }
+
+    .operations-panel,.telemetry-panel{padding:1rem}
+    .section-title{
+      display:flex;
+      align-items:end;
+      justify-content:space-between;
+      gap:1rem
+    }
+    .section-title span{
+      color:#607983;
+      font-size:.58rem;
+      font-weight:900;
+      letter-spacing:.14em
+    }
+    .section-title h3{margin:.28rem 0 0}
+    .section-title small{color:#40535f;font-size:.56rem;letter-spacing:.12em}
+
+    .action-grid{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:.65rem;
+      margin-top:1rem
+    }
+
+    .action-grid a{
+      position:relative;
+      min-height:126px;
+      display:flex;
+      flex-direction:column;
+      justify-content:flex-end;
+      gap:.32rem;
+      padding:1rem;
+      background:rgba(255,255,255,.015);
+      border:1px solid var(--line);
+      border-radius:10px
+    }
+
+    .action-grid a:hover{
+      background:rgba(53,226,178,.035);
+      border-color:rgba(53,226,178,.2)
+    }
+
+    .action-grid b{
+      color:var(--primary);
+      font-size:.55rem;
+      letter-spacing:.14em
+    }
+    .action-grid strong{font-size:.84rem}
+    .action-grid span{color:var(--muted);font-size:.68rem;line-height:1.45}
+    .action-grid i{
+      position:absolute;
+      top:.75rem;
+      right:.8rem;
+      color:#32454f;
+      font-style:normal;
+      font-family:ui-monospace,SFMono-Regular,Consolas,monospace;
+      font-size:.58rem
+    }
+
+    .telemetry-row{
+      display:flex;
+      justify-content:space-between;
+      gap:1rem;
+      padding:.85rem 0;
+      border-bottom:1px solid var(--line)
+    }
+    .telemetry-row span{color:var(--muted);font-size:.7rem}
+    .telemetry-row strong{font-size:.72rem}
+    .generated{
+      margin-top:1rem;
+      padding:.65rem;
+      color:#527168;
+      background:rgba(53,226,178,.035);
+      border:1px solid rgba(53,226,178,.1);
+      border-radius:8px;
+      font-size:.55rem;
+      font-weight:850;
+      letter-spacing:.12em
+    }
+
+    .estate-header{
+      display:flex;
+      justify-content:space-between;
+      align-items:end;
+      gap:1rem;
+      margin:1.5rem 0 .8rem
+    }
+    .estate-header span{
+      color:#607983;
+      font-size:.58rem;
+      font-weight:900;
+      letter-spacing:.14em
+    }
+    .estate-header h3{margin:.25rem 0 0}
+    .estate-count{
+      color:#638379;
+      font-size:.6rem;
+      font-weight:900;
+      letter-spacing:.12em
+    }
+
+    .guild-grid{
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:.8rem
+    }
+
+    .guild-node{padding:1rem}
+    .node-index{
+      position:absolute;
+      right:.8rem;
+      top:.65rem;
+      color:#31434d;
+      font-family:ui-monospace,SFMono-Regular,Consolas,monospace;
+      font-size:.58rem
+    }
+
+    .guild-head{
+      display:grid;
+      grid-template-columns:auto 1fr auto;
+      align-items:center;
+      gap:.7rem
+    }
+
+    .guild-head img,.avatar{
+      width:44px;
+      height:44px;
+      border-radius:10px
+    }
+    .guild-head img{object-fit:cover}
+    .avatar{
+      display:grid;
+      place-items:center;
+      color:#03130e;
+      background:var(--primary);
+      font-weight:900
+    }
+
+    .guild-name{min-width:0}
+    .guild-name span{color:#5f7883;font-size:.52rem;letter-spacing:.12em}
+    .guild-name h4{
+      margin:.16rem 0;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap
+    }
+    .guild-name small{color:var(--muted);font-size:.59rem}
+
+    .node-state{
+      display:flex;
+      align-items:center;
+      gap:.35rem;
+      color:var(--warning);
+      font-size:.55rem;
+      font-weight:850;
+      text-transform:uppercase
+    }
+    .node-state i{
+      width:.4rem;
+      height:.4rem;
+      border-radius:50%;
+      background:currentColor;
+      box-shadow:0 0 9px currentColor
+    }
+    .node-state.online{color:var(--success)}
+
+    .guild-stats{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:.55rem;
+      margin:1rem 0
+    }
+    .guild-stats>div{
+      display:grid;
+      gap:.25rem;
+      padding:.65rem;
+      background:#091018;
+      border:1px solid var(--line);
+      border-radius:8px
+    }
+    .guild-stats span{color:#526a76;font-size:.52rem;letter-spacing:.12em}
+    .guild-stats strong{font-size:.72rem}
+
+    .guild-actions{display:grid;grid-template-columns:1fr auto;gap:.5rem}
+    .guild-actions a{
+      min-height:38px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:.6rem;
+      padding:.55rem .7rem;
+      border-radius:8px;
+      font-size:.59rem;
+      font-weight:900;
+      letter-spacing:.08em
+    }
+    .open-node{color:#03130e;background:var(--primary)}
+    .connect-node{grid-column:1/-1;color:#03130e;background:linear-gradient(135deg,var(--primary),#7cefd2);box-shadow:0 8px 24px rgba(53,226,178,.12)}
+    .security-node{color:#8ca29d;border:1px solid var(--line)}
+    .empty-state{padding:2rem;text-align:center;color:var(--muted)}
+
+    @media(max-width:1200px){
+      .overview-grid{grid-template-columns:repeat(2,1fr)}
+      .guild-grid{grid-template-columns:repeat(2,1fr)}
+    }
+
+    @media(max-width:850px){
+      .command-hero{grid-template-columns:1fr}
+      .hero-status{grid-template-columns:auto auto;justify-content:start}
+      .status-ring{width:110px;height:110px}
+      .operations-grid{grid-template-columns:1fr}
+      .system-strip{grid-template-columns:auto repeat(5,150px)}
+    }
+
+    @media(max-width:650px){
+      .command-hero{padding:1.2rem}
+      .hero-copy h2{font-size:2.3rem}
+      .overview-grid,.guild-grid,.action-grid{grid-template-columns:1fr}
+      .primary-metric{grid-column:span 1;grid-template-columns:1fr}
+      .guild-head{grid-template-columns:auto 1fr}
+      .node-state{grid-column:1/-1}
+    }
   `],
 })
 export class EnterpriseDashboardComponent implements OnInit, OnDestroy {
@@ -135,18 +802,35 @@ export class EnterpriseDashboardComponent implements OnInit, OnDestroy {
   async load(showLoader = true): Promise<void> {
     if (showLoader) this.loading.set(true);
     this.error.set('');
-    try { this.data.set(await this.dashboard.overview()); }
-    catch (error) { this.error.set(error instanceof Error ? error.message : 'Unable to load the dashboard.'); }
-    finally { this.loading.set(false); }
+
+    try {
+      this.data.set(await this.dashboard.overview());
+    } catch (error) {
+      this.error.set(
+        error instanceof Error ? error.message : 'Unable to load the dashboard.',
+      );
+    } finally {
+      this.loading.set(false);
+    }
+  }
+
+  connectUrl(guildId: string): string {
+    return `/api/v1/auth/discord/bot-install?guild_id=${encodeURIComponent(guildId)}`;
   }
 
   formatBytes(value: number | null): string {
     if (value === null || value === undefined) return '—';
     if (value < 1024) return `${value} B`;
+
     const units = ['KB', 'MB', 'GB', 'TB'];
     let size = value / 1024;
     let unit = 0;
-    while (size >= 1024 && unit < units.length - 1) { size /= 1024; unit += 1; }
+
+    while (size >= 1024 && unit < units.length - 1) {
+      size /= 1024;
+      unit += 1;
+    }
+
     return `${size.toFixed(size >= 10 ? 1 : 2)} ${units[unit]}`;
   }
 }

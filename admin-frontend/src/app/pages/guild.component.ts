@@ -3,6 +3,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 
 import { GuildAccess } from '../core/api.models';
 import { GuildService } from '../core/guild.service';
+import { GuildPluginInstallation, GuildPluginService } from '../core/guild-plugin.service';
 import { GuildModule } from '../core/module.models';
 import { ModuleService } from '../core/module.service';
 import { ShellComponent } from '../shared/shell.component';
@@ -12,128 +13,530 @@ interface QuickAction {
   description: string;
   icon: string;
   path: string;
+  code: string;
 }
 
 @Component({
   standalone: true,
   imports: [ShellComponent, RouterLink],
   template: `
-    <sn-shell [title]="guild()?.name || 'Server'">
+    <sn-shell [title]="guild()?.name || 'Server Node'">
       @if (error()) {
-        <div class="error card">{{ error() }}</div>
+        <div class="error-panel">{{ error() }}</div>
       } @else if (guild(); as item) {
-        <div class="page-actions">
-          <div>
-            <h2>Server management</h2>
-            <p class="muted">Configure Discord, users, security and ShieldNet modules.</p>
-          </div>
-          <div class="top-buttons">
-            <a class="button secondary" [routerLink]="['/guild', guildId, 'explorer']">Open Discord Explorer</a>
-            <a class="button" [routerLink]="['/guild', guildId, 'control']">Server control</a>
-          </div>
-        </div>
+        <section class="node-hero">
+          <div class="node-identity">
+            <div class="node-label">DISCORD INFRASTRUCTURE NODE</div>
+            <h2>{{ item.name }}</h2>
+            <p>
+              Identity, moderation, security, automation and runtime control.
+            </p>
 
-        <div class="summary-grid">
-          <div class="metric card"><span class="muted">Bot status</span><strong>{{ item.bot_status }}</strong><div class="status">● Connected</div></div>
-          <div class="metric card"><span class="muted">Members</span><strong>{{ item.member_count }}</strong><a [routerLink]="['/guild', guildId, 'members']">Open members</a></div>
-          <div class="metric card"><span class="muted">Your access</span><strong>{{ item.access_role }}</strong><a [routerLink]="['/guild', guildId, 'permissions']">View permissions</a></div>
-          <div class="metric card"><span class="muted">Modules enabled</span><strong>{{ enabledCount() }}/{{ modules().length }}</strong><a href="#modules">Manage modules</a></div>
-        </div>
+            <div class="node-id">NODE ID // {{ guildId }}</div>
+          </div>
 
-        <section class="quick-section">
-          <div class="section-heading"><div><h2>Quick access</h2><p class="muted">Main administration pages for this server.</p></div></div>
-          <div class="quick-grid">
-            @for (action of quickActions; track action.path) {
-              <a class="quick-card card" [routerLink]="['/guild', guildId, action.path]">
-                <span class="quick-icon">{{ action.icon }}</span>
-                <span><strong>{{ action.title }}</strong><small class="muted">{{ action.description }}</small></span>
-                <b>Open →</b>
-              </a>
-            }
+          <div class="node-status">
+            <div class="status-box">
+              <span>BOT LINK</span>
+              <strong>{{ item.bot_status }}</strong>
+              <i></i>
+            </div>
+
+            <div class="hero-actions">
+              <a [routerLink]="['/guild', guildId, 'explorer']">EXPLORE</a>
+              <a class="primary" [routerLink]="['/guild', guildId, 'control']">CONTROL</a>
+            </div>
           </div>
         </section>
 
-        <div id="modules" class="module-header">
-          <div><h2>Modules</h2><p class="muted">Enable a module and open its management page.</p></div>
-          @if (savingKey()) { <div class="muted">Saving changes…</div> }
-        </div>
+        <section class="summary-grid">
+          <article>
+            <span>MEMBERS</span>
+            <strong>{{ item.member_count }}</strong>
+            <a [routerLink]="['/guild', guildId, 'members']">Inspect identities →</a>
+          </article>
+
+          <article>
+            <span>ACCESS PROFILE</span>
+            <strong class="text-value">{{ item.access_role }}</strong>
+            <a [routerLink]="['/guild', guildId, 'permissions']">View permissions →</a>
+          </article>
+
+          <article>
+            <span>INSTALLED PLUGINS</span>
+            <strong>{{ enabledCount() }}/{{ visibleModules().length }}</strong>
+            <a href="#module-fabric">Open module fabric ↓</a>
+          </article>
+
+          <article>
+            <span>NODE STATE</span>
+            <strong class="state-value">NOMINAL</strong>
+            <a [routerLink]="['/guild', guildId, 'security']">Security overview →</a>
+          </article>
+        </section>
+
+        <section class="section-title">
+          <div>
+            <span>CORE OPERATIONS</span>
+            <h3>Operational access</h3>
+          </div>
+          <small>GLOBAL MODULES</small>
+        </section>
+
+        <section class="quick-grid">
+          @for (action of quickActions; track action.path) {
+            <a class="quick-node" [routerLink]="['/guild', guildId, action.path]">
+              <div class="quick-code">{{ action.code }}</div>
+              <div class="quick-icon">{{ action.icon }}</div>
+              <div>
+                <strong>{{ action.title }}</strong>
+                <span>{{ action.description }}</span>
+              </div>
+              <b>→</b>
+            </a>
+          }
+        </section>
+
+        <section id="module-fabric" class="section-title module-title">
+          <div>
+            <span>INSTALLED PLUGINS</span>
+            <h3>Plugin controls</h3>
+          </div>
+          @if (savingKey()) {
+            <small>SYNCHRONIZING {{ savingKey() }}</small>
+          } @else {
+            <small>{{ enabledCount() }} ACTIVE MODULES</small>
+          }
+        </section>
 
         @if (loading()) {
-          <div class="loading card">Loading modules…</div>
+          <div class="loading-panel">Loading module fabric…</div>
         } @else {
-          <div class="module-grid">
-            @for (module of modules(); track module.module_key) {
-              <article class="module card" [class.enabled]="module.enabled">
-                <div class="module-icon">{{ module.icon || '◈' }}</div>
-                <div class="module-content">
-                  <div class="module-title">
-                    <h3>{{ module.name }}</h3>
-                    @if (module.is_core) { <span class="badge core">Core</span> }
-                    @else if (module.enabled) { <span class="badge enabled-badge">Enabled</span> }
-                    @else { <span class="badge">Disabled</span> }
+          <section class="module-grid">
+            @for (module of visibleModules(); track module.module_key; let index = $index) {
+              <article class="module-row" [class.enabled]="module.enabled">
+                <div class="module-icon">{{ module.icon || '⬡' }}</div>
+
+                <div class="module-copy">
+                  <div class="module-heading">
+                    <h4>{{ module.name }}</h4>
+                    @if (module.is_core) {
+                      <span class="badge core">CORE</span>
+                    } @else if (module.enabled) {
+                      <span class="badge active">ENABLED</span>
+                    } @else {
+                      <span class="badge">DISABLED</span>
+                    }
                   </div>
-                  <p class="muted">{{ module.description }}</p>
-                  <div class="module-meta"><span>v{{ module.version }}</span><span>Revision {{ module.revision }}</span></div>
+                  <p>{{ module.description }}</p>
                 </div>
+
                 <div class="module-actions">
                   @if (modulePath(module.module_key); as path) {
-                    <a class="button compact" [class.disabled-link]="!module.enabled && !module.is_core" [routerLink]="['/guild', guildId, path]">Open</a>
+                    <a
+                      class="open-button"
+                      [class.disabled]="!module.enabled && !module.is_core"
+                      [routerLink]="['/guild', guildId, path]"
+                    >
+                      OPEN
+                    </a>
                   }
-                  <button class="toggle" [class.on]="module.enabled" [disabled]="module.is_core || savingKey() === module.module_key" (click)="toggle(module)" [attr.aria-label]="'Toggle ' + module.name"><span></span></button>
+
+                  <label class="switch-wrap">
+                    <span>{{ module.enabled ? 'ON' : 'OFF' }}</span>
+                    <button
+                      type="button"
+                      class="toggle"
+                      [class.on]="module.enabled"
+                      [disabled]="module.is_core || savingKey() === module.module_key"
+                      (click)="toggle(module)"
+                      [attr.aria-label]="'Toggle ' + module.name"
+                    >
+                      <span></span>
+                    </button>
+                  </label>
                 </div>
               </article>
             }
-          </div>
+          </section>
         }
       } @else if (loading()) {
-        <div class="card loading">Loading server…</div>
+        <div class="loading-panel">Establishing node connection…</div>
       } @else {
-        <div class="error card">Server was not found or access was revoked.</div>
+        <div class="error-panel">Node unavailable or access has been revoked.</div>
       }
     </sn-shell>
   `,
   styles: [`
-    .page-actions,.section-heading,.module-header{display:flex;justify-content:space-between;align-items:end;gap:1rem;margin-bottom:1rem}.page-actions h2,.page-actions p,.section-heading h2,.section-heading p,.module-header h2,.module-header p{margin:0}.page-actions p,.section-heading p,.module-header p{margin-top:.35rem}.top-buttons{display:flex;gap:.65rem;flex-wrap:wrap}.button{display:inline-flex;align-items:center;justify-content:center;padding:.7rem 1rem;border-radius:11px;background:var(--primary);color:#fff;font-weight:750;border:1px solid transparent}.button.secondary{background:var(--primary-soft);border-color:var(--line)}.button.compact{padding:.5rem .78rem;font-size:.8rem}.button.disabled-link{opacity:.45;pointer-events:none}.summary-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1rem}.metric{padding:1.2rem;display:grid;gap:.45rem}.metric strong{font-size:1.55rem;text-transform:capitalize}.metric a{font-size:.78rem;color:#aeb7ff}.status{color:var(--success);font-size:.8rem}.quick-section{margin-top:2rem}.quick-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.8rem}.quick-card{padding:1rem;display:grid;grid-template-columns:auto 1fr auto;gap:.8rem;align-items:center;transition:.2s}.quick-card:hover{transform:translateY(-2px);border-color:rgba(122,133,255,.5)}.quick-card strong,.quick-card small{display:block}.quick-card small{margin-top:.25rem}.quick-card b{font-size:.78rem;color:#aeb7ff}.quick-icon{width:2.6rem;height:2.6rem;border-radius:12px;background:var(--primary-soft);display:grid;place-items:center}.module-header{margin-top:2rem}.module-grid{display:grid;gap:.8rem}.module{padding:1rem;display:grid;grid-template-columns:auto 1fr auto;gap:1rem;align-items:center;transition:.2s}.module.enabled{border-color:rgba(75,214,155,.45)}.module:hover{transform:translateY(-1px)}.module-icon{width:3rem;height:3rem;border-radius:14px;display:grid;place-items:center;background:var(--primary-soft);font-size:1.25rem}.module-title{display:flex;align-items:center;gap:.65rem;flex-wrap:wrap}.module h3{margin:0}.module p{margin:.35rem 0 0}.module-meta{margin-top:.65rem;display:flex;gap:.8rem;color:var(--muted);font-size:.75rem}.module-actions{display:flex;align-items:center;gap:.65rem}.badge{padding:.22rem .52rem;border-radius:999px;border:1px solid var(--line);color:var(--muted);font-size:.7rem;font-weight:800;text-transform:uppercase}.badge.core{color:#cfd5ff;background:var(--primary-soft)}.badge.enabled-badge{color:#b9f4dc;background:rgba(75,214,155,.12);border-color:rgba(75,214,155,.35)}.toggle{width:3.1rem;height:1.75rem;padding:.2rem;border-radius:999px;background:#2a344b}.toggle span{display:block;width:1.35rem;height:1.35rem;border-radius:50%;background:white;transition:.2s}.toggle.on{background:var(--success)}.toggle.on span{transform:translateX(1.35rem)}.loading,.error{padding:1.3rem}.error{color:#ffd9de;border-color:rgba(255,107,125,.4)}
-    @media(max-width:1100px){.summary-grid{grid-template-columns:repeat(2,1fr)}.quick-grid{grid-template-columns:repeat(2,1fr)}}
-    @media(max-width:700px){.page-actions,.module-header{align-items:stretch;flex-direction:column}.top-buttons{display:grid}.summary-grid,.quick-grid{grid-template-columns:1fr}.module{grid-template-columns:auto 1fr}.module-actions{grid-column:1/-1;justify-content:flex-end}}
+    .node-hero{
+      position:relative;
+      overflow:hidden;
+      min-height:245px;
+      display:grid;
+      grid-template-columns:1fr auto;
+      align-items:center;
+      gap:2rem;
+      padding:1.8rem;
+      background:
+        radial-gradient(circle at 82% 30%,rgba(53,226,178,.1),transparent 17rem),
+        linear-gradient(145deg,#0c171f,#070d13);
+      border:1px solid var(--line);
+      border-radius:17px
+    }
+
+    .node-hero::before{
+      content:"";
+      position:absolute;
+      right:-90px;
+      top:-120px;
+      width:360px;
+      height:360px;
+      border:1px solid rgba(53,226,178,.1);
+      border-radius:50%;
+      box-shadow:0 0 0 45px rgba(53,226,178,.015),0 0 0 90px rgba(53,226,178,.01)
+    }
+
+    .node-identity,.node-status{position:relative;z-index:2}
+    .node-label{
+      color:#69857e;
+      font-size:.58rem;
+      font-weight:900;
+      letter-spacing:.16em
+    }
+
+    .node-identity h2{
+      margin:.65rem 0 .45rem;
+      font-size:clamp(2rem,4vw,4.3rem);
+      line-height:1;
+      letter-spacing:-.055em
+    }
+
+    .node-identity p{margin:0;color:var(--muted)}
+    .node-id{
+      width:max-content;
+      max-width:100%;
+      margin-top:1.2rem;
+      padding:.5rem .65rem;
+      color:#6f8f87;
+      background:rgba(53,226,178,.04);
+      border-left:2px solid var(--primary);
+      font-family:ui-monospace,SFMono-Regular,Consolas,monospace;
+      font-size:.59rem
+    }
+
+    .node-status{display:grid;justify-items:end;gap:1rem}
+    .status-box{
+      min-width:170px;
+      display:grid;
+      grid-template-columns:1fr auto;
+      gap:.25rem .75rem;
+      padding:1rem;
+      background:#091018;
+      border:1px solid var(--line);
+      border-radius:11px
+    }
+    .status-box span{color:#5a737e;font-size:.55rem;letter-spacing:.14em}
+    .status-box strong{
+      grid-row:2;
+      color:var(--success);
+      text-transform:uppercase;
+      font-size:.73rem;
+      letter-spacing:.1em
+    }
+    .status-box i{
+      grid-row:1/3;
+      grid-column:2;
+      align-self:center;
+      width:.55rem;
+      height:.55rem;
+      border-radius:50%;
+      background:var(--success);
+      box-shadow:0 0 12px rgba(57,221,161,.78)
+    }
+
+    .hero-actions{display:flex;gap:.55rem}
+    .hero-actions a{
+      min-height:40px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:.65rem .8rem;
+      color:#91a8a1;
+      background:#0b131b;
+      border:1px solid var(--line);
+      border-radius:8px;
+      font-size:.6rem;
+      font-weight:900;
+      letter-spacing:.09em
+    }
+    .hero-actions a.primary{color:#03130e;background:var(--primary)}
+
+    .summary-grid{
+      display:grid;
+      grid-template-columns:repeat(4,minmax(0,1fr));
+      gap:.7rem;
+      margin-top:.8rem
+    }
+
+    .summary-grid article{
+      min-height:138px;
+      display:flex;
+      flex-direction:column;
+      justify-content:flex-end;
+      gap:.35rem;
+      padding:1rem;
+      background:
+        linear-gradient(145deg,rgba(255,255,255,.02),transparent 45%),
+        #0a1119;
+      border:1px solid var(--line);
+      border-radius:11px
+    }
+
+    .summary-grid span{
+      color:#5e7580;
+      font-size:.55rem;
+      font-weight:850;
+      letter-spacing:.13em
+    }
+    .summary-grid strong{font-size:2rem}
+    .summary-grid strong.text-value{font-size:1.05rem;text-transform:uppercase}
+    .summary-grid strong.state-value{color:var(--success);font-size:1.1rem}
+    .summary-grid a{margin-top:.2rem;color:#718d86;font-size:.63rem}
+
+    .section-title{
+      display:flex;
+      justify-content:space-between;
+      align-items:end;
+      gap:1rem;
+      margin:1.5rem 0 .75rem
+    }
+    .section-title span{
+      color:#607982;
+      font-size:.56rem;
+      font-weight:900;
+      letter-spacing:.15em
+    }
+    .section-title h3{margin:.24rem 0 0}
+    .section-title small{color:#49616c;font-size:.55rem;letter-spacing:.11em}
+
+    .quick-grid{
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:.55rem
+    }
+
+    .quick-node{
+      min-height:78px;
+      display:grid;
+      grid-template-columns:34px 1fr auto;
+      align-items:center;
+      gap:.7rem;
+      padding:.75rem .85rem;
+      background:#0a1119;
+      border:1px solid var(--line);
+      border-radius:9px
+    }
+
+    .quick-node:hover{
+      background:rgba(53,226,178,.025);
+      border-color:rgba(53,226,178,.18)
+    }
+
+    .quick-code{display:none}
+
+    .quick-icon{
+      width:34px;
+      height:34px;
+      display:grid;
+      place-items:center;
+      color:var(--primary);
+      background:rgba(53,226,178,.045);
+      border:1px solid rgba(53,226,178,.12);
+      border-radius:8px
+    }
+
+    .quick-node>div:nth-child(3){display:grid;gap:.15rem}
+    .quick-node strong{font-size:.76rem}
+    .quick-node span{color:var(--muted);font-size:.61rem;line-height:1.25}
+    .quick-node b{color:#58756d;font-size:.72rem}
+
+    .module-title{margin-top:1.4rem}
+    .module-grid{display:grid;gap:.45rem}
+
+    .module-row{
+      display:grid;
+      grid-template-columns:38px minmax(0,1fr) auto;
+      gap:.75rem;
+      align-items:center;
+      padding:.7rem .8rem;
+      background:#0a1119;
+      border:1px solid var(--line);
+      border-radius:9px
+    }
+
+    .module-row.enabled{
+      border-color:rgba(53,226,178,.16);
+      background:linear-gradient(90deg,rgba(53,226,178,.025),transparent 24%),#0a1119
+    }
+
+    .module-icon{
+      width:38px;
+      height:38px;
+      display:grid;
+      place-items:center;
+      color:#6f9187;
+      background:#0d1720;
+      border:1px solid var(--line);
+      border-radius:8px;
+      font-size:.95rem
+    }
+
+    .module-row.enabled .module-icon{color:var(--primary)}
+
+    .module-heading{display:flex;align-items:center;gap:.45rem;flex-wrap:wrap}
+    .module-heading h4{margin:0;font-size:.78rem}
+    .module-copy p{margin:.2rem 0 0;color:var(--muted);font-size:.62rem;line-height:1.3}
+
+    .badge{
+      padding:.18rem .36rem;
+      color:#738791;
+      border:1px solid var(--line);
+      border-radius:999px;
+      font-size:.46rem;
+      font-weight:900;
+      letter-spacing:.06em
+    }
+    .badge.active{color:var(--success);border-color:rgba(57,221,161,.22)}
+    .badge.core{color:var(--accent);border-color:rgba(99,199,255,.22)}
+
+    .module-actions{display:flex;align-items:center;gap:.65rem}
+
+    .open-button{
+      min-height:32px;
+      display:flex;
+      align-items:center;
+      padding:.42rem .58rem;
+      color:#9bb1ab;
+      border:1px solid var(--line);
+      border-radius:7px;
+      font-size:.53rem;
+      font-weight:900
+    }
+    .open-button.disabled{opacity:.3;pointer-events:none}
+
+    .switch-wrap{
+      display:flex;
+      align-items:center;
+      gap:.4rem;
+      color:#5e737d;
+      font-size:.49rem;
+      font-weight:900;
+      letter-spacing:.08em
+    }
+
+    .toggle{
+      width:2.7rem;
+      height:1.45rem;
+      padding:.16rem;
+      background:#23303a;
+      border-radius:999px
+    }
+    .toggle:disabled{opacity:.45}
+    .toggle span{
+      display:block;
+      width:1.12rem;
+      height:1.12rem;
+      background:#7d8b94;
+      border-radius:50%;
+      transition:.18s
+    }
+    .toggle.on{background:rgba(53,226,178,.2)}
+    .toggle.on span{
+      transform:translateX(1.2rem);
+      background:var(--primary);
+      box-shadow:0 0 8px rgba(53,226,178,.4)
+    }
+
+    .error-panel,.loading-panel{
+      padding:1rem;
+      color:var(--muted);
+      background:#0a1119;
+      border:1px solid var(--line);
+      border-radius:10px
+    }
+    .error-panel{color:#ffd8dc;border-color:rgba(255,111,127,.24)}
+
+    @media(max-width:1100px){
+      .summary-grid{grid-template-columns:repeat(2,1fr)}
+      .quick-grid{grid-template-columns:repeat(2,1fr)}
+    }
+
+    @media(max-width:700px){
+      .node-hero{grid-template-columns:1fr;padding:1.2rem}
+      .node-status{justify-items:start}
+      .summary-grid,.quick-grid{grid-template-columns:1fr}
+      .module-row{grid-template-columns:34px 1fr}
+      .module-actions{grid-column:1/-1;justify-content:flex-end}
+      .section-title{align-items:flex-start;flex-direction:column}
+    }
   `],
 })
 export class GuildComponent implements OnInit {
   readonly guilds = signal<GuildAccess[]>([]);
   readonly modules = signal<GuildModule[]>([]);
+  readonly installedPlugins = signal<GuildPluginInstallation[]>([]);
   readonly loading = signal(true);
   readonly error = signal('');
   readonly savingKey = signal('');
 
   readonly guildId = this.route.snapshot.paramMap.get('guildId') ?? '';
-  readonly guild = computed(() => this.guilds().find((item) => item.guild_id === this.guildId) || null);
-  readonly enabledCount = computed(() => this.modules().filter((m) => m.enabled).length);
+  readonly guild = computed(
+    () => this.guilds().find((item) => item.guild_id === this.guildId) || null,
+  );
+  readonly visibleModules = computed(() => {
+    const installed = new Set(
+      this.installedPlugins().map((plugin) => this.normalize(plugin.plugin_key)),
+    );
+
+    return this.modules().filter((module) => {
+      if (module.is_core) return true;
+      return installed.has(this.normalize(module.module_key));
+    });
+  });
+
+  readonly enabledCount = computed(
+    () => this.visibleModules().filter((module) => module.enabled).length,
+  );
 
   readonly quickActions: QuickAction[] = [
-    { title: 'Members', description: 'Profiles, roles and member actions', icon: '👥', path: 'members' },
-    { title: 'Verification', description: 'Verification requests and decisions', icon: '✅', path: 'verification' },
-    { title: 'R5/R4 Applications', description: 'Leadership applications and role sync', icon: '⭐', path: 'leadership' },
-    { title: 'Moderation', description: 'Warnings, cases, timeouts and bans', icon: '⚖️', path: 'moderation' },
-    { title: 'Discord Explorer', description: 'Roles, channels and server structure', icon: '🧭', path: 'explorer' },
-    { title: 'Automations', description: 'Designer, schedules and run monitor', icon: '⚙️', path: 'automations' },
-    { title: 'Plugin Runtime', description: 'Usage, errors, limits and response time', icon: '◈', path: 'plugin-runtime' },
-    { title: 'Security', description: 'Security checks and incident controls', icon: '🛡️', path: 'security' },
-    { title: 'Backup Center', description: 'Create and restore configurations', icon: '💾', path: 'backups' },
-    { title: 'Audit log', description: 'Review administrative activity', icon: '📋', path: 'audit' },
+    { title: 'Members', description: 'Identity and member management', icon: '◉', path: 'members', code: 'CORE-01' },
+    { title: 'Security', description: 'Risks and security controls', icon: '◇', path: 'security', code: 'CORE-02' },
+    { title: 'Explorer', description: 'Discord roles and channels', icon: '⌁', path: 'explorer', code: 'CORE-03' },
+    { title: 'Audit Trail', description: 'Administrative activity', icon: '≡', path: 'audit', code: 'CORE-04' },
+    { title: 'Backup Center', description: 'Backup and restore', icon: '◫', path: 'backups', code: 'CORE-05' },
+    { title: 'Server Control', description: 'Core server settings', icon: '⌬', path: 'control', code: 'CORE-06' },
   ];
 
-  constructor(private readonly route: ActivatedRoute, private readonly guildService: GuildService, private readonly moduleService: ModuleService) {}
+  constructor(
+    private readonly route: ActivatedRoute,
+    private readonly guildService: GuildService,
+    private readonly moduleService: ModuleService,
+    private readonly guildPluginService: GuildPluginService,
+  ) {}
 
   async ngOnInit(): Promise<void> {
     try {
-      const [guilds, modules] = await Promise.all([
+      const [guilds, modules, installedPlugins] = await Promise.all([
         this.guildService.list(),
         this.moduleService.list(this.guildId),
+        this.guildPluginService.listInstalled(this.guildId),
       ]);
+
       this.guilds.set(guilds);
       this.modules.set(modules);
+      this.installedPlugins.set(installedPlugins);
     } catch {
-      this.error.set('Unable to load server information and modules.');
+      this.error.set('Unable to establish a connection to this server node.');
     } finally {
       this.loading.set(false);
     }
@@ -141,11 +544,23 @@ export class GuildComponent implements OnInit {
 
   async toggle(module: GuildModule): Promise<void> {
     if (module.is_core || this.savingKey()) return;
+
     this.savingKey.set(module.module_key);
     this.error.set('');
+
     try {
-      const updated = await this.moduleService.update(this.guildId, module.module_key, !module.enabled, module.configuration);
-      this.modules.update((items) => items.map((item) => item.module_key === updated.module_key ? updated : item));
+      const updated = await this.moduleService.update(
+        this.guildId,
+        module.module_key,
+        !module.enabled,
+        module.configuration,
+      );
+
+      this.modules.update((items) =>
+        items.map((item) =>
+          item.module_key === updated.module_key ? updated : item,
+        ),
+      );
     } catch {
       this.error.set(`Unable to update ${module.name}.`);
     } finally {
@@ -153,11 +568,28 @@ export class GuildComponent implements OnInit {
     }
   }
 
+  private normalize(value: string): string {
+    return value.trim().toLowerCase().replace(/[^a-z0-9]+/g, '_');
+  }
+
   modulePath(key: string): string | null {
     const map: Record<string, string> = {
-      core: 'control', welcome: 'control', verification: 'verification', moderation: 'moderation', translator: 'control',
-      security: 'security', automations: 'automations', automation: 'automations', plugin_runtime: 'plugin-runtime', runtime: 'plugin-runtime', plugins: 'plugin-runtime', members: 'members', leadership: 'leadership', audit: 'audit',
+      core: 'control',
+      welcome: 'control',
+      verification: 'verification',
+      moderation: 'moderation',
+      translator: 'control',
+      security: 'security',
+      automations: 'automations',
+      automation: 'automations',
+      plugin_runtime: 'plugin-runtime',
+      runtime: 'plugin-runtime',
+      plugins: 'plugin-runtime',
+      members: 'members',
+      leadership: 'leadership',
+      audit: 'audit',
     };
+
     return map[key.toLowerCase()] || null;
   }
 }

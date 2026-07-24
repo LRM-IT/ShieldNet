@@ -1,9 +1,11 @@
 from fastapi import APIRouter, Depends, Request, Response, status
-from fastapi.responses import HTMLResponse
+from urllib.parse import urlencode
+from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 import json
 
 from app.api.dependencies.auth import get_current_user
+from app.core.config import settings
 from app.db.session import get_db_session
 from app.models.core import User
 from app.schemas.auth import LoginRequest, RefreshRequest, TokenPair
@@ -54,6 +56,25 @@ async def logout(
 async def me(current_user: User = Depends(get_current_user)) -> dict:
     return user_to_response(current_user)
 
+
+
+
+
+@router.get("/discord/bot-install")
+async def discord_bot_install(guild_id: int) -> RedirectResponse:
+    query = urlencode(
+        {
+            "client_id": settings.discord_client_id,
+            "scope": "bot applications.commands",
+            "permissions": str(getattr(settings, "discord_bot_permissions", 8)),
+            "guild_id": str(guild_id),
+            "disable_guild_select": "true",
+        }
+    )
+    return RedirectResponse(
+        url=f"https://discord.com/oauth2/authorize?{query}",
+        status_code=status.HTTP_307_TEMPORARY_REDIRECT,
+    )
 
 @router.get("/discord/start")
 async def discord_start(response: Response) -> dict[str, str]:

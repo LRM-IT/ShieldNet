@@ -1,0 +1,20 @@
+{
+  "_language": {
+    "code": "en",
+    "icon": "🇬🇧",
+    "name": "English",
+    "english_name": "English",
+    "discord_locale": [
+      "en-US",
+      "en-GB"
+    ],
+    "rtl": false,
+    "version": 1
+  },
+  "common": {
+    "save": "Save"
+  },
+  "dashboard": {
+    "connect": "Connect bot"
+  }
+}

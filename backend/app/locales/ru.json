@@ -1,0 +1,19 @@
+{
+  "_language": {
+    "code": "ru",
+    "icon": "🇷🇺",
+    "name": "Русский",
+    "english_name": "Russian",
+    "discord_locale": [
+      "ru"
+    ],
+    "rtl": false,
+    "version": 1
+  },
+  "common": {
+    "save": "Сохранить"
+  },
+  "dashboard": {
+    "connect": "Подключить"
+  }
+}
