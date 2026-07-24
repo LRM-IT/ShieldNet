@@ -116,6 +116,7 @@ export class GuildComponent implements OnInit {
     { title: 'Moderation', description: 'Warnings, cases, timeouts and bans', icon: '⚖️', path: 'moderation' },
     { title: 'Discord Explorer', description: 'Roles, channels and server structure', icon: '🧭', path: 'explorer' },
     { title: 'Automations', description: 'Designer, schedules and run monitor', icon: '⚙️', path: 'automations' },
+    { title: 'Plugin Runtime', description: 'Usage, errors, limits and response time', icon: '◈', path: 'plugin-runtime' },
     { title: 'Security', description: 'Security checks and incident controls', icon: '🛡️', path: 'security' },
     { title: 'Backup Center', description: 'Create and restore configurations', icon: '💾', path: 'backups' },
     { title: 'Audit log', description: 'Review administrative activity', icon: '📋', path: 'audit' },
@@ -155,7 +156,7 @@ export class GuildComponent implements OnInit {
   modulePath(key: string): string | null {
     const map: Record<string, string> = {
       core: 'control', welcome: 'control', verification: 'verification', moderation: 'moderation', translator: 'control',
-      security: 'security', automations: 'automations', automation: 'automations', members: 'members', leadership: 'leadership', audit: 'audit',
+      security: 'security', automations: 'automations', automation: 'automations', plugin_runtime: 'plugin-runtime', runtime: 'plugin-runtime', plugins: 'plugin-runtime', members: 'members', leadership: 'leadership', audit: 'audit',
     };
     return map[key.toLowerCase()] || null;
   }

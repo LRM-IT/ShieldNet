@@ -1,3 +1,4 @@
+import { PluginRuntimeUsageComponent } from './pages/plugin-runtime-usage.component';
 import { PluginsComponent } from './pages/plugins.component';
 import { AIIntegrationsComponent } from './pages/ai-integrations.component';
 import { LeadershipComponent } from './pages/leadership.component';
@@ -51,6 +52,7 @@ export const routes: Routes = [
   { path: 'guild/:guildId/server-diff', component: ServerDiffComponent, canActivate: [authGuard] },
   { path: 'guild/:guildId/backups', component: BackupsComponent, canActivate: [authGuard] },
   { path: 'guild/:guildId/automations', component: AutomationsComponent, canActivate: [authGuard] },
+  { path: 'guild/:guildId/plugin-runtime', component: PluginRuntimeUsageComponent, canActivate: [authGuard] },
   { path: 'guild/:guildId/automation-monitor', component: AutomationMonitorComponent, canActivate: [authGuard] },
   { path: 'guild/:guildId/workflow-scheduler', component: WorkflowSchedulerComponent, canActivate: [authGuard] },
   {
