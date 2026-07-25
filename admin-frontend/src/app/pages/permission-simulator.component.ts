@@ -6,83 +6,85 @@ import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
 
 import { PermissionSimulatorService, SimulationResult, SimulatorChannel, SimulatorMember } from '../core/permission-simulator.service';
 import { ShellComponent } from '../shared/shell.component';
+import { TranslatePipe } from '../core/translate.pipe';
+import { TranslationService } from '../core/translation.service';
 
 @Component({
   selector:'sn-permission-simulator',
   standalone:true,
-  imports:[CommonModule, FormsModule, ShellComponent],
+  imports: [CommonModule, FormsModule, ShellComponent, TranslatePipe],
   template:`
-  <sn-shell title="Permission Simulator">
+  <sn-shell [title]="'permission.title' | snT:'Permission Simulator'">
     <section class="hero">
       <div>
-        <div class="eyebrow">Discord permission resolver</div>
-        <h2>Explain access before changing roles</h2>
-        <p>Select a member and channel to calculate effective Discord permissions, including role permissions and channel overwrites.</p>
+        <div class="eyebrow">{{ "permission.eyebrow" | snT:"Discord permission resolver" }}</div>
+        <h2>{{ "permission.heading" | snT:"Explain access before changing roles" }}</h2>
+        <p>{{ "permission.description" | snT:"Select a member and channel to calculate effective Discord permissions, including role permissions and channel overwrites." }}</p>
       </div>
-      <button (click)="simulate()" [disabled]="!memberId || !channelId || loading">{{loading?'Calculating…':'Run simulation'}}</button>
+      <button (click)="simulate()" [disabled]="!memberId || !channelId || loading">{{ loading ? ('permission.calculating' | snT:'Calculating…') : ('permission.run' | snT:'Run simulation') }}</button>
     </section>
 
     <section class="selector-grid">
       <article class="panel">
-        <label>Find member</label>
-        <input [(ngModel)]="memberQuery" (ngModelChange)="memberSearch.next($event)" placeholder="Username, nickname or global name">
+        <label>{{ "permission.find_member" | snT:"Find member" }}</label>
+        <input [(ngModel)]="memberQuery" (ngModelChange)="memberSearch.next($event)" [placeholder]="'permission.member_placeholder' | snT:'Username, nickname or global name'">
         <select [(ngModel)]="memberId">
-          <option value="">Select member</option>
+          <option value="">{{ "permission.select_member" | snT:"Select member" }}</option>
           <option *ngFor="let m of members" [value]="m.id">{{m.display_name}} · {{m.username}}{{m.bot?' [BOT]':''}}</option>
         </select>
-        <small>{{members.length}} matching members</small>
+        <small>{{members.length}} {{ "permission.matching_members" | snT:"matching members" }}</small>
       </article>
       <article class="panel">
-        <label>Channel</label>
+        <label>{{ "permission.channel" | snT:"Channel" }}</label>
         <select [(ngModel)]="channelId">
-          <option value="">Select channel</option>
+          <option value="">{{ "permission.select_channel" | snT:"Select channel" }}</option>
           <option *ngFor="let c of channels" [value]="c.id"># {{c.name}} · {{c.type}}</option>
         </select>
-        <small>{{channels.length}} synchronized channels</small>
+        <small>{{channels.length}} {{ "permission.synced_channels" | snT:"synchronized channels" }}</small>
       </article>
     </section>
 
     <div class="notice error" *ngIf="error">{{error}}</div>
-    <div class="notice" *ngIf="!result && !error">Choose a member and channel, then run the simulation.</div>
+    <div class="notice" *ngIf="!result && !error">{{ "permission.choose_help" | snT:"Choose a member and channel, then run the simulation." }}</div>
 
     <ng-container *ngIf="result as r">
       <section class="summary-grid">
         <article class="identity panel">
           <img *ngIf="r.member.avatar_url" [src]="r.member.avatar_url" alt="">
-          <div><span>Member</span><strong>{{r.member.display_name}}</strong><small>{{r.member.username}} · {{r.member.id}}</small></div>
+          <div><span>{{ "permission.member" | snT:"Member" }}</span><strong>{{r.member.display_name}}</strong><small>{{r.member.username}} · {{r.member.id}}</small></div>
         </article>
-        <article class="panel"><span>Channel</span><strong># {{r.channel.name}}</strong><small>{{r.channel.type}} · {{r.channel.id}}</small></article>
-        <article class="panel"><span>Effective allows</span><strong>{{allowedCount()}}</strong><small>of {{r.permissions.length}} known permissions</small></article>
-        <article class="panel" [class.warn]="r.owner_bypass || r.administrator_bypass"><span>Bypass</span><strong>{{r.owner_bypass?'Owner':r.administrator_bypass?'Administrator':'No'}}</strong><small>{{r.role_count}} assigned roles</small></article>
+        <article class="panel"><span>{{ "permission.channel" | snT:"Channel" }}</span><strong># {{r.channel.name}}</strong><small>{{r.channel.type}} · {{r.channel.id}}</small></article>
+        <article class="panel"><span>{{ "permission.effective_allows" | snT:"Effective allows" }}</span><strong>{{allowedCount()}}</strong><small>{{ ("permission.of_known" | snT:"of {count} known permissions").replace("{count}", r.permissions.length + "") }}</small></article>
+        <article class="panel" [class.warn]="r.owner_bypass || r.administrator_bypass"><span>{{ "permission.bypass" | snT:"Bypass" }}</span><strong>{{ r.owner_bypass ? ("permission.owner" | snT:"Owner") : r.administrator_bypass ? ("permission.administrator" | snT:"Administrator") : ("permission.no" | snT:"No") }}</strong><small>{{r.role_count}} {{ "permission.assigned_roles" | snT:"assigned roles" }}</small></article>
       </section>
 
-      <div class="warning" *ngIf="!r.snapshot_complete">This channel snapshot is not marked as permissions-synced. The result uses the latest stored overwrites, but Discord may have changed since the last worker sync.</div>
+      <div class="warning" *ngIf="!r.snapshot_complete">{{ "permission.snapshot_warning" | snT:"This channel snapshot is not marked as permissions-synced. The result uses the latest stored overwrites, but Discord may have changed since the last worker sync." }}</div>
 
       <section class="result-layout">
         <article class="panel permissions">
-          <div class="panel-head"><div><span>Effective permissions</span><h3>Allowed and denied actions</h3></div><input [(ngModel)]="permissionFilter" placeholder="Filter permissions"></div>
+          <div class="panel-head"><div><span>{{ "permission.effective" | snT:"Effective permissions" }}</span><h3>{{ "permission.actions" | snT:"Allowed and denied actions" }}</h3></div><input [(ngModel)]="permissionFilter" [placeholder]="'permission.filter' | snT:'Filter permissions'"></div>
           <div class="permission-list">
             <div class="permission" *ngFor="let p of filteredPermissions()" [class.allowed]="p.allowed" [class.denied]="!p.allowed">
               <span class="state">{{p.allowed?'✓':'×'}}</span>
               <div><b>{{p.label}}</b><small>{{p.key}} · bit {{p.bit}}</small></div>
-              <strong>{{p.allowed?'Allowed':'Denied'}}</strong>
+              <strong>{{ p.allowed ? ('permission.allowed' | snT:'Allowed') : ('permission.denied' | snT:'Denied') }}</strong>
             </div>
           </div>
         </article>
 
         <article class="panel trace">
-          <span>Resolution trace</span>
-          <h3>Why this result was produced</h3>
+          <span>{{ "permission.resolution_trace" | snT:"Resolution trace" }}</span>
+          <h3>{{ "permission.why" | snT:"Why this result was produced" }}</h3>
           <div class="trace-item" *ngFor="let s of r.sources; let i=index">
             <i>{{i+1}}</i>
             <div><b>{{s.source}}</b><small>{{stageLabel(s.stage)}}</small></div>
             <div class="chips">
-              <em *ngIf="s.permissions !== undefined">base {{s.permissions}}</em>
-              <em class="allow" *ngIf="s.allow">allow {{s.allow}}</em>
-              <em class="deny" *ngIf="s.deny">deny {{s.deny}}</em>
+              <em *ngIf="s.permissions !== undefined">{{ "permission.base" | snT:"base" }} {{s.permissions}}</em>
+              <em class="allow" *ngIf="s.allow">{{ "permission.allow" | snT:"allow" }} {{s.allow}}</em>
+              <em class="deny" *ngIf="s.deny">{{ "permission.deny" | snT:"deny" }} {{s.deny}}</em>
             </div>
           </div>
-          <div class="raw"><span>Base bitfield</span><code>{{r.base_permissions}}</code><span>Effective bitfield</span><code>{{r.effective_permissions}}</code></div>
+          <div class="raw"><span>{{ "permission.base_bitfield" | snT:"Base bitfield" }}</span><code>{{r.base_permissions}}</code><span>{{ "permission.effective_bitfield" | snT:"Effective bitfield" }}</span><code>{{r.effective_permissions}}</code></div>
         </article>
       </section>
     </ng-container>
@@ -94,13 +96,13 @@ import { ShellComponent } from '../shared/shell.component';
 export class PermissionSimulatorComponent implements OnInit {
   guildId=''; members:SimulatorMember[]=[]; channels:SimulatorChannel[]=[]; memberId=''; channelId=''; memberQuery=''; permissionFilter=''; loading=false; error=''; result:SimulationResult|null=null;
   readonly memberSearch = new Subject<string>();
-  constructor(private readonly route:ActivatedRoute, private readonly api:PermissionSimulatorService) {
+  constructor(private readonly route:ActivatedRoute, private readonly api:PermissionSimulatorService, private readonly i18n:TranslationService) {
     this.memberSearch.pipe(debounceTime(300), distinctUntilChanged()).subscribe(q=>this.loadOptions(q));
   }
   ngOnInit(){ this.guildId=this.route.snapshot.paramMap.get('guildId')||''; this.loadOptions(); }
-  loadOptions(q=''){ this.api.options(this.guildId,q).subscribe({next:v=>{this.members=v.members;this.channels=v.channels},error:()=>this.error='Unable to load simulator inventory. Wait for Discord Explorer synchronization.'}); }
-  simulate(){ if(!this.memberId||!this.channelId)return; this.loading=true;this.error='';this.api.check(this.guildId,this.memberId,this.channelId).subscribe({next:v=>{this.result=v;this.loading=false},error:e=>{this.error=e?.error?.detail||'Permission simulation failed.';this.loading=false}}); }
+  loadOptions(q=''){ this.api.options(this.guildId,q).subscribe({next:v=>{this.members=v.members;this.channels=v.channels},error:()=>this.error=this.i18n.t('permission.load_error','Unable to load simulator inventory. Wait for Discord Explorer synchronization.')}); }
+  simulate(){ if(!this.memberId||!this.channelId)return; this.loading=true;this.error='';this.api.check(this.guildId,this.memberId,this.channelId).subscribe({next:v=>{this.result=v;this.loading=false},error:e=>{this.error=e?.error?.detail||this.i18n.t('permission.simulation_error','Permission simulation failed.');this.loading=false}}); }
   allowedCount(){ return this.result?.permissions.filter(x=>x.allowed).length||0; }
   filteredPermissions(){ const q=this.permissionFilter.trim().toLowerCase(); return (this.result?.permissions||[]).filter(x=>!q||x.label.toLowerCase().includes(q)||x.key.includes(q)); }
-  stageLabel(stage:string){ return ({base:'Server base permission',role:'Role permission merged',channel_everyone:'Channel @everyone overwrite',channel_roles:'Channel role overwrites merged',channel_member:'Direct member overwrite',bypass:'Discord permission bypass'} as Record<string,string>)[stage]||stage; }
+  stageLabel(stage:string){const keys:Record<string,string>={base:'permission.stage_base',role:'permission.stage_role',channel_everyone:'permission.stage_everyone',channel_roles:'permission.stage_roles',channel_member:'permission.stage_member',bypass:'permission.stage_bypass'};return this.i18n.t(keys[stage]||'',stage)}
 }

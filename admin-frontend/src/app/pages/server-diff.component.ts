@@ -4,32 +4,34 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { ServerDiffResult, ServerDiffService, DiffGuildOption } from '../core/server-diff.service';
 import { ShellComponent } from '../shared/shell.component';
+import { TranslatePipe } from '../core/translate.pipe';
+import { TranslationService } from '../core/translation.service';
 
 @Component({
-  selector:'sn-server-diff', standalone:true, imports:[CommonModule,FormsModule,ShellComponent],
-  template:`<sn-shell title="Server Diff">
+  selector:'sn-server-diff', standalone:true, imports:[CommonModule,FormsModule,ShellComponent,TranslatePipe],
+  template:`<sn-shell [title]="'diff.title' | snT:'Server Diff'">
     <section class="hero">
-      <div><div class="eyebrow">Configuration comparison</div><h2>Compare two Discord servers</h2><p>Find missing roles, channel changes, permission drift, webhook differences and emoji mismatches.</p></div>
-      <button (click)="run()" [disabled]="loading || !sourceId || !targetId || sourceId===targetId">{{loading?'Comparing…':'Compare servers'}}</button>
+      <div><div class="eyebrow">{{ "diff.eyebrow" | snT:"Configuration comparison" }}</div><h2>{{ "diff.heading" | snT:"Compare two Discord servers" }}</h2><p>{{ "diff.description" | snT:"Find missing roles, channel changes, permission drift, webhook differences and emoji mismatches." }}</p></div>
+      <button (click)="run()" [disabled]="loading || !sourceId || !targetId || sourceId===targetId">{{ loading ? ('diff.comparing' | snT:'Comparing…') : ('diff.compare' | snT:'Compare servers') }}</button>
     </section>
     <section class="selector">
-      <label>Source server<select [(ngModel)]="sourceId"><option [ngValue]="''">Choose source</option><option *ngFor="let g of guilds" [ngValue]="g.guild_id">{{g.name}} · {{g.guild_id}}</option></select></label>
+      <label>{{ "diff.source" | snT:"Source server" }}<select [(ngModel)]="sourceId"><option [ngValue]="''">{{ "diff.choose_source" | snT:"Choose source" }}</option><option *ngFor="let g of guilds" [ngValue]="g.guild_id">{{g.name}} · {{g.guild_id}}</option></select></label>
       <button class="swap" (click)="swap()">⇄</button>
-      <label>Target server<select [(ngModel)]="targetId"><option [ngValue]="''">Choose target</option><option *ngFor="let g of guilds" [ngValue]="g.guild_id">{{g.name}} · {{g.guild_id}}</option></select></label>
+      <label>{{ "diff.target" | snT:"Target server" }}<select [(ngModel)]="targetId"><option [ngValue]="''">{{ "diff.choose_target" | snT:"Choose target" }}</option><option *ngFor="let g of guilds" [ngValue]="g.guild_id">{{g.name}} · {{g.guild_id}}</option></select></label>
     </section>
     <div class="notice err" *ngIf="error">{{error}}</div>
     <ng-container *ngIf="result">
       <section class="summary">
-        <article><span>Similarity</span><strong>{{result.summary.similarity_percent}}%</strong></article>
-        <article><span>Total differences</span><strong>{{result.summary.total_differences}}</strong></article>
-        <article><span>Affected sections</span><strong>{{result.summary.sections_with_differences}}</strong></article>
-        <article><span>Source members</span><strong>{{result.source.member_count}}</strong></article>
-        <article><span>Target members</span><strong>{{result.target.member_count}}</strong></article>
+        <article><span>{{ "diff.similarity" | snT:"Similarity" }}</span><strong>{{result.summary.similarity_percent}}%</strong></article>
+        <article><span>{{ "diff.total_differences" | snT:"Total differences" }}</span><strong>{{result.summary.total_differences}}</strong></article>
+        <article><span>{{ "diff.affected_sections" | snT:"Affected sections" }}</span><strong>{{result.summary.sections_with_differences}}</strong></article>
+        <article><span>{{ "diff.source_members" | snT:"Source members" }}</span><strong>{{result.source.member_count}}</strong></article>
+        <article><span>{{ "diff.target_members" | snT:"Target members" }}</span><strong>{{result.target.member_count}}</strong></article>
       </section>
-      <section class="server-head"><div><b>{{result.source.name}}</b><code>{{result.source.guild_id}}</code></div><span>compared with</span><div><b>{{result.target.name}}</b><code>{{result.target.guild_id}}</code></div></section>
+      <section class="server-head"><div><b>{{result.source.name}}</b><code>{{result.source.guild_id}}</code></div><span>{{ "diff.compared_with" | snT:"compared with" }}</span><div><b>{{result.target.name}}</b><code>{{result.target.guild_id}}</code></div></section>
       <section class="diff-section" *ngFor="let section of result.sections">
-        <header><div><h3>{{section.name}}</h3><span>{{section.source_count}} source · {{section.target_count}} target</span></div><b [class.ok]="section.difference_count===0">{{section.difference_count}} differences</b></header>
-        <div class="empty" *ngIf="section.difference_count===0">No differences detected.</div>
+        <header><div><h3>{{section.name}}</h3><span>{{section.source_count}} {{ "diff.source_label" | snT:"source" }} · {{section.target_count}} {{ "diff.target_label" | snT:"target" }}</span></div><b [class.ok]="section.difference_count===0">{{section.difference_count}} {{ "diff.differences" | snT:"differences" }}</b></header>
+        <div class="empty" *ngIf="section.difference_count===0">{{ "diff.none" | snT:"No differences detected." }}</div>
         <article class="change" *ngFor="let change of section.changes">
           <div class="change-title"><span [class]="change.kind">{{label(change.kind)}}</span><b>{{change.name}}</b></div>
           <div class="pair" *ngIf="change.kind==='changed'"><pre>{{change.source|json}}</pre><pre>{{change.target|json}}</pre></div>
@@ -43,9 +45,9 @@ import { ShellComponent } from '../shared/shell.component';
 })
 export class ServerDiffComponent implements OnInit{
   guilds:DiffGuildOption[]=[]; sourceId=''; targetId=''; result:ServerDiffResult|null=null; loading=false; error='';
-  constructor(private api:ServerDiffService,private route:ActivatedRoute){}
-  ngOnInit(){this.sourceId=this.route.snapshot.paramMap.get('guildId')||'';this.api.options().subscribe({next:v=>{this.guilds=v; if(!this.targetId){const other=v.find(x=>x.guild_id!==this.sourceId);this.targetId=other?.guild_id||''}},error:()=>this.error='Unable to load available servers.'});}
+  constructor(private api:ServerDiffService,private route:ActivatedRoute,private i18n:TranslationService){}
+  ngOnInit(){this.sourceId=this.route.snapshot.paramMap.get('guildId')||'';this.api.options().subscribe({next:v=>{this.guilds=v; if(!this.targetId){const other=v.find(x=>x.guild_id!==this.sourceId);this.targetId=other?.guild_id||''}},error:()=>this.error=this.i18n.t('diff.load_error','Unable to load available servers.')});}
   swap(){[this.sourceId,this.targetId]=[this.targetId,this.sourceId];this.result=null;}
-  run(){this.error='';this.loading=true;this.api.compare(this.sourceId,this.targetId).subscribe({next:v=>{this.result=v;this.loading=false},error:e=>{this.error=e?.error?.detail||'Unable to compare servers.';this.loading=false}})}
-  label(k:string){return k==='source_only'?'Only in source':k==='target_only'?'Only in target':'Changed'}
+  run(){this.error='';this.loading=true;this.api.compare(this.sourceId,this.targetId).subscribe({next:v=>{this.result=v;this.loading=false},error:e=>{this.error=e?.error?.detail||this.i18n.t('diff.compare_error','Unable to compare servers.');this.loading=false}})}
+  label(k:string){return k==='source_only'?this.i18n.t('diff.only_source','Only in source'):k==='target_only'?this.i18n.t('diff.only_target','Only in target'):this.i18n.t('diff.changed','Changed')}
 }

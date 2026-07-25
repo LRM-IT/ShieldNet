@@ -5,18 +5,22 @@ import { FormsModule } from '@angular/forms';
 import { PermissionRule, PermissionService } from '../core/permission.service';
 import { GuildRoleService } from '../core/guild-role.service';
 import { ShellComponent } from '../shared/shell.component';
+import { TranslatePipe } from '../core/translate.pipe';
+import { TranslationService } from '../core/translation.service';
+import { ModalService } from '../core/modal.service';
+import { ToastService } from '../core/toast.service';
 
 @Component({
   standalone: true,
-  imports: [FormsModule, ShellComponent],
+  imports: [FormsModule, ShellComponent, TranslatePipe],
   template: `
-    <sn-shell title="Permissions">
+    <sn-shell [title]="'permissions_engine.title' | snT:'Permissions'">
       <div class="card heading">
         <div>
-          <h2>Permissions Engine</h2>
-          <p class="muted">Module access rules for ShieldNet and Discord roles.</p>
+          <h2>{{ "permissions_engine.heading" | snT:"Permissions Engine" }}</h2>
+          <p class="muted">{{ "permissions_engine.description" | snT:"Module access rules for ShieldNet and Discord roles." }}</p>
         </div>
-        <button class="btn" (click)="dialog.set(true)">Add rule</button>
+        <button class="btn" (click)="dialog.set(true)">{{ "permissions_engine.add_rule" | snT:"Add rule" }}</button>
       </div>
 
       <div class="rules">
@@ -25,10 +29,10 @@ import { ShellComponent } from '../shared/shell.component';
             <div>
               <strong>{{ rule.module_key }} · {{ rule.permission }}</strong>
               <div class="muted">
-                {{ rule.effect }} · {{ label(rule) }} · priority {{ rule.priority }}
+                {{ rule.effect }} · {{ label(rule) }} · {{ "permissions_engine.priority" | snT:"priority" }} {{ rule.priority }}
               </div>
             </div>
-            <button class="danger" (click)="remove(rule)">Delete</button>
+            <button class="danger" (click)="remove(rule)">{{ "permissions_engine.delete" | snT:"Delete" }}</button>
           </article>
         }
       </div>
@@ -36,58 +40,58 @@ import { ShellComponent } from '../shared/shell.component';
       @if (dialog()) {
         <div class="overlay" (click)="dialog.set(false)">
           <section class="dialog card" (click)="$event.stopPropagation()">
-            <h3>New permission rule</h3>
+            <h3>{{ "permissions_engine.new_rule" | snT:"New permission rule" }}</h3>
 
-            <label>Module
+            <label>{{ "permissions_engine.module" | snT:"Module" }}
               <select [(ngModel)]="moduleKey">
-                <option value="*">All modules</option>
-                <option value="core">Core</option>
-                <option value="verification">Verification</option>
-                <option value="translator">Translator</option>
-                <option value="moderation">Moderation</option>
-                <option value="welcome">Welcome</option>
-                <option value="tickets">Tickets</option>
+                <option value="*">{{ "permissions_engine.all_modules" | snT:"All modules" }}</option>
+                <option value="core">{{ "permissions_engine.core" | snT:"Core" }}</option>
+                <option value="verification">{{ "permissions_engine.verification" | snT:"Verification" }}</option>
+                <option value="translator">{{ "permissions_engine.translator" | snT:"Translator" }}</option>
+                <option value="moderation">{{ "permissions_engine.moderation" | snT:"Moderation" }}</option>
+                <option value="welcome">{{ "permissions_engine.welcome" | snT:"Welcome" }}</option>
+                <option value="tickets">{{ "permissions_engine.tickets" | snT:"Tickets" }}</option>
               </select>
             </label>
 
-            <label>Permission
+            <label>{{ "permissions_engine.permission" | snT:"Permission" }}
               <select [(ngModel)]="permission">
-                <option value="view">View</option>
-                <option value="manage">Manage</option>
-                <option value="execute">Execute</option>
-                <option value="configure">Configure</option>
+                <option value="view">{{ "permissions_engine.view" | snT:"View" }}</option>
+                <option value="manage">{{ "permissions_engine.manage" | snT:"Manage" }}</option>
+                <option value="execute">{{ "permissions_engine.execute" | snT:"Execute" }}</option>
+                <option value="configure">{{ "permissions_engine.configure" | snT:"Configure" }}</option>
               </select>
             </label>
 
-            <label>Effect
+            <label>{{ "permissions_engine.effect" | snT:"Effect" }}
               <select [(ngModel)]="effect">
-                <option value="allow">Allow</option>
-                <option value="deny">Deny</option>
+                <option value="allow">{{ "permissions_engine.allow" | snT:"Allow" }}</option>
+                <option value="deny">{{ "permissions_engine.deny" | snT:"Deny" }}</option>
               </select>
             </label>
 
-            <label>Subject
+            <label>{{ "permissions_engine.subject" | snT:"Subject" }}
               <select [(ngModel)]="subjectType" (ngModelChange)="subjectChanged()">
-                <option value="shieldnet_role">ShieldNet role</option>
-                <option value="discord_role">Discord role</option>
-                <option value="discord_user">Discord user ID</option>
-                <option value="everyone">Everyone</option>
+                <option value="shieldnet_role">{{ "permissions_engine.shieldnet_role" | snT:"ShieldNet role" }}</option>
+                <option value="discord_role">{{ "permissions_engine.discord_role" | snT:"Discord role" }}</option>
+                <option value="discord_user">{{ "permissions_engine.discord_user" | snT:"Discord user ID" }}</option>
+                <option value="everyone">{{ "permissions_engine.everyone" | snT:"Everyone" }}</option>
               </select>
             </label>
 
             @if (subjectType === 'shieldnet_role') {
-              <label>ShieldNet role
+              <label>{{ "permissions_engine.shieldnet_role" | snT:"ShieldNet role" }}
                 <select [(ngModel)]="subjectValue">
-                  <option value="moderator">Moderator</option>
-                  <option value="admin">Admin</option>
+                  <option value="moderator">{{ "permissions_engine.moderator" | snT:"Moderator" }}</option>
+                  <option value="admin">{{ "permissions_engine.admin" | snT:"Admin" }}</option>
                 </select>
               </label>
             }
 
             @if (subjectType === 'discord_role') {
-              <label>Discord role
+              <label>{{ "permissions_engine.discord_role" | snT:"Discord role" }}
                 <select [(ngModel)]="subjectValue">
-                  <option value="">Select role</option>
+                  <option value="">{{ "permissions_engine.select_role" | snT:"Select role" }}</option>
                   @for (role of discordRoles(); track role.discord_role_id) {
                     <option [value]="role.discord_role_id">{{ role.name }}</option>
                   }
@@ -96,18 +100,18 @@ import { ShellComponent } from '../shared/shell.component';
             }
 
             @if (subjectType === 'discord_user') {
-              <label>Discord user ID
+              <label>{{ "permissions_engine.discord_user" | snT:"Discord user ID" }}
                 <input [(ngModel)]="subjectValue">
               </label>
             }
 
-            <label>Priority
+            <label>{{ "permissions_engine.priority" | snT:"Priority" }}
               <input type="number" [(ngModel)]="priority">
             </label>
 
             <footer>
-              <button class="btn secondary" (click)="dialog.set(false)">Close</button>
-              <button class="btn" (click)="save()">Save</button>
+              <button class="btn secondary" (click)="dialog.set(false)">{{ "permissions_engine.close" | snT:"Close" }}</button>
+              <button class="btn" (click)="save()">{{ "permissions_engine.save" | snT:"Save" }}</button>
             </footer>
           </section>
         </div>
@@ -142,11 +146,18 @@ export class PermissionsComponent implements OnInit {
     private readonly route: ActivatedRoute,
     private readonly permissions: PermissionService,
     private readonly guildRoles: GuildRoleService,
+    private readonly i18n: TranslationService,
+    private readonly modal: ModalService,
+    private readonly toast: ToastService,
   ) {}
 
   async ngOnInit(): Promise<void> {
-    this.rules.set(await this.permissions.list(this.guildId));
-    this.discordRoles.set(await this.guildRoles.list(this.guildId));
+    try {
+      this.rules.set(await this.permissions.list(this.guildId));
+      this.discordRoles.set(await this.guildRoles.list(this.guildId));
+    } catch {
+      this.toast.error(this.i18n.t('ui.error','Operation failed'),this.i18n.t('permissions_engine.load_error','Unable to load permission rules.'));
+    }
   }
 
   subjectChanged(): void {
@@ -169,7 +180,8 @@ export class PermissionsComponent implements OnInit {
   }
 
   async save(): Promise<void> {
-    await this.permissions.save(
+    try {
+      await this.permissions.save(
       this.guildId,
       this.moduleKey,
       this.permission,
@@ -183,11 +195,20 @@ export class PermissionsComponent implements OnInit {
     );
     this.rules.set(await this.permissions.list(this.guildId));
     this.dialog.set(false);
+    this.toast.success(this.i18n.t('ui.success','Completed'),this.i18n.t('permissions_engine.saved_success','Permission rule saved.'));
+    } catch {
+      this.toast.error(this.i18n.t('ui.error','Operation failed'),this.i18n.t('permissions_engine.save_error','Unable to save permission rule.'));
+    }
   }
 
   async remove(rule: PermissionRule): Promise<void> {
-    if (!confirm('Delete this permission rule?')) return;
-    await this.permissions.remove(this.guildId, rule.id);
-    this.rules.set(await this.permissions.list(this.guildId));
+    if (!await this.modal.confirm(this.i18n.t('permissions_engine.delete_confirm','Delete this permission rule?'),{title:this.i18n.t('ui.confirm_title','Confirm action'),confirmLabel:this.i18n.t('ui.confirm','Confirm'),cancelLabel:this.i18n.t('ui.cancel','Cancel'),danger:true})) return;
+    try {
+      await this.permissions.remove(this.guildId, rule.id);
+      this.rules.set(await this.permissions.list(this.guildId));
+      this.toast.success(this.i18n.t('ui.success','Completed'),this.i18n.t('permissions_engine.deleted_success','Permission rule deleted.'));
+    } catch {
+      this.toast.error(this.i18n.t('ui.error','Operation failed'),this.i18n.t('permissions_engine.delete_error','Unable to delete permission rule.'));
+    }
   }
 }

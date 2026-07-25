@@ -13,18 +13,22 @@ import {
   PluginService,
 } from '../core/plugin.service';
 import { ShellComponent } from '../shared/shell.component';
+import { TranslatePipe } from '../core/translate.pipe';
+import { TranslationService } from '../core/translation.service';
+import { ModalService } from '../core/modal.service';
+import { ToastService } from '../core/toast.service';
 
 @Component({
   selector: 'sn-plugins',
   standalone: true,
-  imports: [ShellComponent],
+  imports: [ShellComponent, TranslatePipe],
   template: `
-    <sn-shell title="Plugin Platform">
+    <sn-shell [title]="'plugins.title' | snT:'Plugin Platform'">
       <section class="page-head">
         <div>
-          <h2>Installed plugins</h2>
+          <h2>{{ "plugins.installed" | snT:"Installed plugins" }}</h2>
           <p class="muted">
-            Manage discovered ShieldNet plugins and their runtime state.
+            {{ "plugins.description" | snT:"Manage discovered ShieldNet plugins and their runtime state." }}
           </p>
         </div>
 
@@ -35,7 +39,7 @@ import { ShellComponent } from '../shared/shell.component';
             (click)="load()"
             [disabled]="loading()"
           >
-            Refresh
+            {{ "plugins.refresh" | snT:"Refresh" }}
           </button>
 
           <button
@@ -43,39 +47,39 @@ import { ShellComponent } from '../shared/shell.component';
             (click)="scan()"
             [disabled]="scanning()"
           >
-            {{ scanning() ? 'Scanning…' : 'Scan plugin directory' }}
+            {{ scanning() ? ('plugins.scanning' | snT:'Scanning…') : ('plugins.scan' | snT:'Scan plugin directory') }}
           </button>
         </div>
       </section>
 
       <section class="metrics">
         <article class="card">
-          <span class="muted">Discovered</span>
+          <span class="muted">{{ "plugins.discovered" | snT:"Discovered" }}</span>
           <strong>{{ plugins().length }}</strong>
         </article>
 
         <article class="card">
-          <span class="muted">Enabled</span>
+          <span class="muted">{{ "plugins.enabled" | snT:"Enabled" }}</span>
           <strong>{{ enabledCount() }}</strong>
         </article>
 
         <article class="card">
-          <span class="muted">Healthy</span>
+          <span class="muted">{{ "plugins.healthy" | snT:"Healthy" }}</span>
           <strong>{{ healthyCount() }}</strong>
         </article>
 
         <article class="card">
-          <span class="muted">Running</span>
+          <span class="muted">{{ "plugins.running" | snT:"Running" }}</span>
           <strong>{{ runningCount() }}</strong>
         </article>
       </section>
 
       @if (scanResult()) {
         <div class="notice card">
-          Scan complete:
-          {{ scanResult()?.discovered }} discovered,
-          {{ scanResult()?.updated }} updated,
-          {{ scanResult()?.missing }} missing.
+          {{ "plugins.scan_complete" | snT:"Scan complete" }}:
+          {{ scanResult()?.discovered }} {{ "plugins.scan_discovered" | snT:"discovered" }},
+          {{ scanResult()?.updated }} {{ "plugins.scan_updated" | snT:"updated" }},
+          {{ scanResult()?.missing }} {{ "plugins.scan_missing" | snT:"missing" }}.
 
           @if ((scanResult()?.errors?.length || 0) > 0) {
             <div class="scan-errors">
@@ -92,7 +96,7 @@ import { ShellComponent } from '../shared/shell.component';
       }
 
       @if (loading()) {
-        <div class="card loading">Loading plugins…</div>
+        <div class="card loading">{{ "plugins.loading" | snT:"Loading plugins…" }}</div>
       }
 
       <section class="plugin-grid">
@@ -112,18 +116,18 @@ import { ShellComponent } from '../shared/shell.component';
                   [class.good]="plugin.healthy"
                   [class.bad]="!plugin.healthy"
                 >
-                  {{ plugin.healthy ? 'Healthy' : 'Unhealthy' }}
+                  {{ plugin.healthy ? ('plugins.healthy' | snT:'Healthy') : ('plugins.unhealthy' | snT:'Unhealthy') }}
                 </span>
 
                 <span
                   class="badge"
                   [class.good]="runtime(plugin.plugin_key)?.state === 'running'"
                 >
-                  {{ runtime(plugin.plugin_key)?.state || 'unknown' }}
+                  {{ runtime(plugin.plugin_key)?.state || ('plugins.unknown' | snT:'unknown') }}
                 </span>
 
                 @if (runtime(plugin.plugin_key)?.maintenance) {
-                  <span class="badge warning">Maintenance</span>
+                  <span class="badge warning">{{ "plugins.maintenance" | snT:"Maintenance" }}</span>
                 }
 
                 <span class="badge">
@@ -132,20 +136,20 @@ import { ShellComponent } from '../shared/shell.component';
               </div>
 
               <p class="muted">
-                {{ plugin.description || 'No description supplied.' }}
+                {{ plugin.description || ('plugins.no_description' | snT:'No description supplied.') }}
               </p>
 
               <div class="meta">
-                <span>ID: {{ plugin.plugin_key }}</span>
-                <span>Author: {{ plugin.author || 'Unknown' }}</span>
-                <span>Core: {{ plugin.min_core_version || 'Any' }}</span>
+                <span>{{ 'plugins.id' | snT:'ID' }}: {{ plugin.plugin_key }}</span>
+                <span>{{ 'plugins.author' | snT:'Author' }}: {{ plugin.author || ('plugins.unknown_author' | snT:'Unknown') }}</span>
+                <span>{{ 'plugins.core' | snT:'Core' }}: {{ plugin.min_core_version || ('plugins.any' | snT:'Any') }}</span>
 
                 @if (runtime(plugin.plugin_key)?.pid) {
-                  <span>PID: {{ runtime(plugin.plugin_key)?.pid }}</span>
+                  <span>{{ 'plugins.pid' | snT:'PID' }}: {{ runtime(plugin.plugin_key)?.pid }}</span>
                 }
 
                 <span>
-                  Restarts:
+                  {{ "plugins.restarts" | snT:"Restarts" }}:
                   {{ runtime(plugin.plugin_key)?.restart_count || 0 }}
                 </span>
               </div>
@@ -173,13 +177,16 @@ import { ShellComponent } from '../shared/shell.component';
             </div>
 
             <div class="plugin-actions">
+              <button class="small secondary" type="button" (click)="showDetails(plugin)">
+                {{ "plugins.view_details" | snT:"View details" }}
+              </button>
               <button
                 class="small success"
                 type="button"
                 [disabled]="busy(plugin.plugin_key)"
                 (click)="runAction(plugin, 'start')"
               >
-                Start
+                {{ "plugins.start" | snT:"Start" }}
               </button>
 
               <button
@@ -188,7 +195,7 @@ import { ShellComponent } from '../shared/shell.component';
                 [disabled]="busy(plugin.plugin_key)"
                 (click)="runAction(plugin, 'restart')"
               >
-                Restart
+                {{ "plugins.restart" | snT:"Restart" }}
               </button>
 
               <button
@@ -197,7 +204,7 @@ import { ShellComponent } from '../shared/shell.component';
                 [disabled]="busy(plugin.plugin_key)"
                 (click)="runAction(plugin, 'stop')"
               >
-                Stop
+                {{ "plugins.stop" | snT:"Stop" }}
               </button>
 
               <button
@@ -208,13 +215,13 @@ import { ShellComponent } from '../shared/shell.component';
               >
                 {{
                   runtime(plugin.plugin_key)?.maintenance
-                    ? 'Leave maintenance'
-                    : 'Maintenance'
+                    ? ('plugins.leave_maintenance' | snT:'Leave maintenance')
+                    : ('plugins.maintenance' | snT:'Maintenance')
                 }}
               </button>
 
               <label class="enabled-control">
-                <span>Enabled</span>
+                <span>{{ "plugins.enabled" | snT:"Enabled" }}</span>
 
                 <button
                   class="toggle"
@@ -222,7 +229,7 @@ import { ShellComponent } from '../shared/shell.component';
                   [class.on]="plugin.enabled"
                   [disabled]="busy(plugin.plugin_key) || !plugin.healthy"
                   (click)="toggle(plugin)"
-                  [attr.aria-label]="'Toggle ' + plugin.name"
+                  [attr.aria-label]="('plugins.toggle' | snT:'Toggle') + ' ' + plugin.name"
                 >
                   <span></span>
                 </button>
@@ -232,9 +239,7 @@ import { ShellComponent } from '../shared/shell.component';
         } @empty {
           @if (!loading()) {
             <div class="empty card">
-              No plugins found. Place manifests under
-              <code>/opt/shieldnet/plugins/&lt;plugin&gt;/plugin.json</code>
-              and scan again.
+              {{ "plugins.empty" | snT:"No plugins found. Place manifests under /opt/shieldnet/plugins/&lt;plugin&gt;/plugin.json and scan again." }}
             </div>
           }
         }
@@ -478,7 +483,37 @@ export class PluginsComponent implements OnInit {
       .length,
   );
 
-  constructor(private readonly pluginService: PluginService) {}
+  constructor(private readonly pluginService: PluginService, private readonly i18n: TranslationService, private readonly modal: ModalService, private readonly toast: ToastService) {}
+
+
+  showDetails(plugin: PluginManifest): void {
+    const runtime = this.runtime(plugin.plugin_key);
+    const raw = JSON.stringify({ plugin, runtime }, null, 2);
+
+    this.modal.details(
+      this.i18n.t('plugins.details', 'Plugin details'),
+      [
+        { label: this.i18n.t('plugins.plugin_key', 'Plugin key'), value: plugin.plugin_key, code: true },
+        { label: this.i18n.t('plugins.version', 'Version'), value: plugin.version },
+        { label: this.i18n.t('plugins.author', 'Author'), value: plugin.author || this.i18n.t('plugins.unknown_author','Unknown') },
+        { label: this.i18n.t('plugins.signature', 'Signature'), value: plugin.signature_status || '—' },
+        { label: this.i18n.t('plugins.runtime_state', 'Runtime state'), value: runtime?.state || this.i18n.t('plugins.unknown','unknown') },
+        { label: this.i18n.t('plugins.maintenance_mode', 'Maintenance mode'), value: runtime?.maintenance ? 'ON' : 'OFF' },
+        { label: this.i18n.t('plugins.pid', 'PID'), value: runtime?.pid ? String(runtime.pid) : '—', code: true },
+        { label: this.i18n.t('plugins.restart_count', 'Restart count'), value: String(runtime?.restart_count || 0) },
+        { label: this.i18n.t('plugins.capabilities', 'Capabilities'), value: plugin.capabilities?.join(', ') || '—', wide: true },
+        { label: this.i18n.t('plugins.description', 'Description'), value: plugin.description || '—', wide: true },
+        { label: this.i18n.t('plugins.last_error', 'Last error'), value: runtime?.last_error || plugin.last_error || '—', wide: true, code: true },
+      ],
+      {
+        message: plugin.name,
+        raw,
+        copyLabel: this.i18n.t('ui.copy', 'Copy'),
+        closeLabel: this.i18n.t('ui.close', 'Close'),
+        danger: !plugin.healthy,
+      },
+    );
+  }
 
   async ngOnInit(): Promise<void> {
     await this.load();
@@ -524,7 +559,7 @@ export class PluginsComponent implements OnInit {
 
       this.activations.set(activations);
     } catch {
-      this.error.set('Unable to load plugins.');
+      this.error.set(this.i18n.t('plugins.load_error','Unable to load plugins.'));
     } finally {
       this.loading.set(false);
     }
@@ -537,9 +572,10 @@ export class PluginsComponent implements OnInit {
     try {
       this.scanResult.set(await this.pluginService.scan());
       await this.load();
+      this.toast.success(this.i18n.t('ui.success','Completed'),this.i18n.t('plugins.scan_success','Plugin scan completed.'));
     } catch {
       this.error.set(
-        'Plugin scan failed. Superadmin access is required.',
+        this.i18n.t('plugins.scan_error','Plugin scan failed. Superadmin access is required.'),
       );
     } finally {
       this.scanning.set(false);
@@ -563,8 +599,9 @@ export class PluginsComponent implements OnInit {
       );
 
       await this.refreshStatus(plugin.plugin_key);
+      this.toast.success(this.i18n.t('ui.success','Completed'),this.i18n.t('plugins.enabled_success','Plugin state updated.'));
     } catch {
-      this.error.set(`Unable to update ${plugin.name}.`);
+      this.error.set(this.i18n.t('plugins.update_error','Unable to update {name}.').replace('{name}',plugin.name));
     } finally {
       this.savingKey.set(null);
     }
@@ -585,9 +622,10 @@ export class PluginsComponent implements OnInit {
 
       this.setActivation(activation);
       await this.refreshManifest();
+      this.toast.success(this.i18n.t('ui.success','Completed'),this.i18n.t('plugins.action_success','Plugin action completed.'));
     } catch {
       this.error.set(
-        `Unable to ${action} ${plugin.name}.`,
+        this.i18n.t('plugins.action_error','Unable to {action} {name}.').replace('{action}',action).replace('{name}',plugin.name),
       );
     } finally {
       this.savingKey.set(null);
@@ -609,9 +647,10 @@ export class PluginsComponent implements OnInit {
       );
 
       this.setActivation(activation);
+      this.toast.success(this.i18n.t('ui.success','Completed'),this.i18n.t('plugins.maintenance_success','Maintenance mode updated.'));
     } catch {
       this.error.set(
-        `Unable to update maintenance mode for ${plugin.name}.`,
+        this.i18n.t('plugins.maintenance_error','Unable to update maintenance mode for {name}.').replace('{name}',plugin.name),
       );
     } finally {
       this.savingKey.set(null);

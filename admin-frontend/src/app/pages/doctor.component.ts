@@ -2,30 +2,32 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { DoctorCheck, DoctorReport, DoctorService } from '../core/doctor.service';
 import { ShellComponent } from '../shared/shell.component';
+import { TranslatePipe } from '../core/translate.pipe';
+import { TranslationService } from '../core/translation.service';
 
 @Component({
   selector: 'sn-doctor',
   standalone: true,
-  imports: [CommonModule, ShellComponent],
+  imports: [CommonModule, ShellComponent, TranslatePipe],
   template: `
-    <sn-shell title="ShieldNet Doctor">
+    <sn-shell [title]="'doctor.title' | snT:'ShieldNet Doctor'">
       <section class="hero">
-        <div><div class="eyebrow">Platform diagnostics</div><h2>Installation and runtime health</h2>
-          <p>Checks application configuration, PostgreSQL privileges, Valkey, heartbeats and required resources.</p></div>
-        <button (click)="load()" [disabled]="loading">{{ loading ? 'Running…' : 'Run diagnostics' }}</button>
+        <div><div class="eyebrow">{{ "doctor.eyebrow" | snT:"Platform diagnostics" }}</div><h2>{{ "doctor.heading" | snT:"Installation and runtime health" }}</h2>
+          <p>{{ "doctor.description" | snT:"Checks application configuration, PostgreSQL privileges, Valkey, heartbeats and required resources." }}</p></div>
+        <button (click)="load()" [disabled]="loading">{{ loading ? ('doctor.running' | snT:'Running…') : ('doctor.run' | snT:'Run diagnostics') }}</button>
       </section>
 
       <div class="notice error" *ngIf="error">{{ error }}</div>
       <ng-container *ngIf="report">
         <section class="status" [class]="'status ' + report.overall_status">
-          <div><span>Overall status</span><strong>{{ report.overall_status }}</strong></div>
+          <div><span>{{ "doctor.overall" | snT:"Overall status" }}</span><strong>{{ report.overall_status }}</strong></div>
           <small>{{ report.generated_at | date:'medium' }}</small>
         </section>
         <div class="cards">
-          <article><span>Passed</span><strong>{{ report.summary['ok'] || 0 }}</strong></article>
-          <article><span>Warnings</span><strong>{{ report.summary['warning'] || 0 }}</strong></article>
-          <article><span>Failed</span><strong>{{ report.summary['failed'] || 0 }}</strong></article>
-          <article><span>Manual checks</span><strong>{{ report.summary['manual'] || 0 }}</strong></article>
+          <article><span>{{ "doctor.passed" | snT:"Passed" }}</span><strong>{{ report.summary['ok'] || 0 }}</strong></article>
+          <article><span>{{ "doctor.warnings" | snT:"Warnings" }}</span><strong>{{ report.summary['warning'] || 0 }}</strong></article>
+          <article><span>{{ "doctor.failed" | snT:"Failed" }}</span><strong>{{ report.summary['failed'] || 0 }}</strong></article>
+          <article><span>{{ "doctor.manual" | snT:"Manual checks" }}</span><strong>{{ report.summary['manual'] || 0 }}</strong></article>
         </div>
 
         <section class="panel" *ngFor="let category of categories()">
@@ -35,7 +37,7 @@ import { ShellComponent } from '../shared/shell.component';
             <div class="body"><div class="row"><b>{{ item.name }}</b><span class="badge" [class]="'badge ' + item.status">{{ item.status }}</span></div>
               <p>{{ item.message }}</p>
               <code *ngIf="item.remediation">{{ item.remediation }}</code>
-              <details *ngIf="hasDetails(item)"><summary>Technical details</summary><pre>{{ item.details | json }}</pre></details>
+              <details *ngIf="hasDetails(item)"><summary>{{ "doctor.technical" | snT:"Technical details" }}</summary><pre>{{ item.details | json }}</pre></details>
             </div>
           </div>
         </section>
@@ -48,9 +50,9 @@ import { ShellComponent } from '../shared/shell.component';
 })
 export class DoctorComponent implements OnInit {
   report: DoctorReport | null = null; loading = false; error = '';
-  constructor(private readonly doctor: DoctorService) {}
+  constructor(private readonly doctor: DoctorService, private readonly i18n: TranslationService) {}
   ngOnInit(): void { this.load(); }
-  load(): void { this.loading = true; this.error = ''; this.doctor.report().subscribe({next:r=>{this.report=r;this.loading=false;},error:()=>{this.error='Unable to run platform diagnostics.';this.loading=false;}}); }
+  load(): void { this.loading = true; this.error = ''; this.doctor.report().subscribe({next:r=>{this.report=r;this.loading=false;},error:()=>{this.error=this.i18n.t('doctor.error','Unable to run platform diagnostics.');this.loading=false;}}); }
   categories(): string[] { return [...new Set((this.report?.checks || []).map(i=>i.category))]; }
   checksFor(category: string): DoctorCheck[] { return (this.report?.checks || []).filter(i=>i.category===category); }
   hasDetails(item: DoctorCheck): boolean { return Object.keys(item.details || {}).length > 0; }

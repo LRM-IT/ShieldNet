@@ -7,50 +7,52 @@ import {
   PlatformAccessService,
 } from '../core/platform-access.service';
 import { ShellComponent } from '../shared/shell.component';
+import { TranslatePipe } from '../core/translate.pipe';
+import { TranslationService } from '../core/translation.service';
 
 @Component({
   selector: 'sn-platform-access',
   standalone: true,
-  imports: [CommonModule, ShellComponent],
+  imports: [CommonModule, ShellComponent,TranslatePipe],
   template: `
-    <sn-shell title="Platform Access">
-      <div class="notice" *ngIf="loading">Checking platform access…</div>
+    <sn-shell [title]="'access.title' | snT:'Platform Access'">
+      <div class="notice" *ngIf="loading">{{ "access.checking" | snT:"Checking platform access…" }}</div>
       <div class="notice error" *ngIf="error">{{ error }}</div>
 
       <section class="hero" *ngIf="identity">
         <div>
-          <div class="eyebrow">Global RBAC</div>
-          <h2>{{ identity.is_superadmin ? 'SuperAdmin access active' : 'Standard platform access' }}</h2>
+          <div class="eyebrow">{{ "access.eyebrow" | snT:"Global RBAC" }}</div>
+          <h2>{{ identity.is_superadmin ? ('access.superadmin' | snT:'SuperAdmin access active') : ('access.standard' | snT:'Standard platform access') }}</h2>
           <p>
-            Discord ID: <strong>{{ identity.discord_user_id || 'not linked' }}</strong>
-            · Source: <strong>{{ identity.superadmin_source || 'membership / database roles' }}</strong>
+            {{ "access.discord_id" | snT:"Discord ID" }}: <strong>{{ identity.discord_user_id || ('access.not_linked' | snT:'not linked') }}</strong>
+            · {{ "access.source" | snT:"Source" }}: <strong>{{ identity.superadmin_source || ('access.membership_source' | snT:'membership / database roles') }}</strong>
           </p>
         </div>
         <span class="badge" [class.active]="identity.is_superadmin">
-          {{ identity.highest_role || 'no global role' }}
+          {{ identity.highest_role || ('access.no_role' | snT:'no global role') }}
         </span>
       </section>
 
       <div class="cards" *ngIf="overview">
-        <article><span>Registered servers</span><strong>{{ overview.guild_count }}</strong></article>
-        <article><span>Platform users</span><strong>{{ overview.user_count }}</strong></article>
-        <article><span>Active memberships</span><strong>{{ overview.active_memberships }}</strong></article>
-        <article><span>Configured SuperAdmins</span><strong>{{ overview.configured_superadmins }}</strong></article>
+        <article><span>{{ "access.registered_servers" | snT:"Registered servers" }}</span><strong>{{ overview.guild_count }}</strong></article>
+        <article><span>{{ "access.platform_users" | snT:"Platform users" }}</span><strong>{{ overview.user_count }}</strong></article>
+        <article><span>{{ "access.active_memberships" | snT:"Active memberships" }}</span><strong>{{ overview.active_memberships }}</strong></article>
+        <article><span>{{ "access.configured_superadmins" | snT:"Configured SuperAdmins" }}</span><strong>{{ overview.configured_superadmins }}</strong></article>
       </div>
 
       <section class="panel" *ngIf="identity">
-        <h3>Effective roles</h3>
+        <h3>{{ "access.effective_roles" | snT:"Effective roles" }}</h3>
         <div class="roles" *ngIf="identity.roles.length; else noRoles">
           <span *ngFor="let role of identity.roles">{{ role }}</span>
         </div>
-        <ng-template #noRoles><p class="muted">No global roles assigned.</p></ng-template>
+        <ng-template #noRoles><p class="muted">{{ "access.no_roles" | snT:"No global roles assigned." }}</p></ng-template>
       </section>
 
       <section class="panel setup" *ngIf="identity?.is_superadmin">
-        <h3>Server configuration</h3>
-        <p>Add one or more Discord user IDs to the backend environment:</p>
+        <h3>{{ "access.configuration" | snT:"Server configuration" }}</h3>
+        <p>{{ "access.configuration_help" | snT:"Add one or more Discord user IDs to the backend environment:" }}</p>
         <code>SHIELDNET_SUPERADMIN_IDS=123456789012345678,987654321098765432</code>
-        <p class="muted">Restart shieldnet-backend after changing the environment file.</p>
+        <p class="muted">{{ "access.restart_help" | snT:"Restart shieldnet-backend after changing the environment file." }}</p>
       </section>
     </sn-shell>
   `,
@@ -86,7 +88,7 @@ export class PlatformAccessComponent implements OnInit {
   loading = true;
   error = '';
 
-  constructor(private readonly access: PlatformAccessService) {}
+  constructor(private readonly access: PlatformAccessService, private readonly i18n: TranslationService) {}
 
   ngOnInit(): void {
     this.access.identity().subscribe({
@@ -98,10 +100,10 @@ export class PlatformAccessComponent implements OnInit {
         }
         this.access.overview().subscribe({
           next: (overview) => { this.overview = overview; this.loading = false; },
-          error: () => { this.error = 'Unable to load SuperAdmin overview.'; this.loading = false; },
+          error: () => { this.error = this.i18n.t('access.overview_error','Unable to load SuperAdmin overview.'); this.loading = false; },
         });
       },
-      error: () => { this.error = 'Unable to verify platform access.'; this.loading = false; },
+      error: () => { this.error = this.i18n.t('access.verify_error','Unable to verify platform access.'); this.loading = false; },
     });
   }
 }

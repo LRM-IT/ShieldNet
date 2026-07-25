@@ -3,15 +3,17 @@ import { ActivatedRoute } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { ShellComponent } from '../shared/shell.component';
+import { TranslatePipe } from '../core/translate.pipe';
+import { TranslationService } from '../core/translation.service';
 
 @Component({
   standalone: true,
-  imports: [ShellComponent],
+  imports: [ShellComponent, TranslatePipe],
   template: `
-    <sn-shell title="Audit Log">
+    <sn-shell [title]="'audit.title' | snT:'Audit Log'">
       <div class="card header">
-        <h2>Recent actions</h2>
-        <div class="muted">{{ total() }} events</div>
+        <h2>{{ "audit.recent" | snT:"Recent actions" }}</h2>
+        <div class="muted">{{ total() }} {{ "audit.events" | snT:"events" }}</div>
       </div>
 
       <div class="events">

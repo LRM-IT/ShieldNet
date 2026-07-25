@@ -1,9 +1,12 @@
 import { Component, signal } from '@angular/core';
 
 import { AuthService } from '../core/auth.service';
+import { TranslatePipe } from '../core/translate.pipe';
+import { TranslationService } from '../core/translation.service';
 
 @Component({
   standalone: true,
+  imports: [TranslatePipe],
   template: `
     <main class="access-page">
       <section class="visual-zone">
@@ -18,39 +21,38 @@ import { AuthService } from '../core/auth.service';
             </span>
             <span>
               <strong>SHIELDNET</strong>
-              <small>SECURE CONTROL FABRIC</small>
+              <small>{{ "login.brand_subtitle" | snT:"SECURE CONTROL FABRIC" }}</small>
             </span>
           </a>
 
           <div class="hero">
-            <div class="classification">RESTRICTED SYSTEM · AUTHORIZED OPERATORS ONLY</div>
+            <div class="classification">{{ "login.classification" | snT:"RESTRICTED SYSTEM · AUTHORIZED OPERATORS ONLY" }}</div>
             <h1>
-              Command your
-              <span>Discord infrastructure.</span>
+              {{ "login.hero_line_1" | snT:"Command your" }}
+              <span>{{ "login.hero_line_2" | snT:"Discord infrastructure." }}</span>
             </h1>
             <p>
-              One hardened control surface for servers, identities, automation,
-              security policy and plugin runtimes.
+              {{ "login.hero_description" | snT:"One hardened control surface for servers, identities, automation, security policy and plugin runtimes." }}
             </p>
 
             <div class="capabilities">
               <article>
-                <strong>IDENTITY</strong>
-                <span>Discord OAuth and scoped access</span>
+                <strong>{{ "login.identity" | snT:"IDENTITY" }}</strong>
+                <span>{{ "login.identity_desc" | snT:"Discord OAuth and scoped access" }}</span>
               </article>
               <article>
-                <strong>CONTROL</strong>
-                <span>Live server and module operations</span>
+                <strong>{{ "login.control" | snT:"CONTROL" }}</strong>
+                <span>{{ "login.control_desc" | snT:"Live server and module operations" }}</span>
               </article>
               <article>
-                <strong>OBSERVE</strong>
-                <span>Health, audit and runtime telemetry</span>
+                <strong>{{ "login.observe" | snT:"OBSERVE" }}</strong>
+                <span>{{ "login.observe_desc" | snT:"Health, audit and runtime telemetry" }}</span>
               </article>
             </div>
           </div>
 
           <div class="visual-footer">
-            <span><i></i> CONTROL PLANE ONLINE</span>
+            <span><i></i> {{ "login.online" | snT:"CONTROL PLANE ONLINE" }}</span>
             <span>SHIELDNET // LRM-IT</span>
           </div>
         </div>
@@ -61,21 +63,21 @@ import { AuthService } from '../core/auth.service';
           <div class="access-header">
             <div class="terminal-mark">SN</div>
             <div>
-              <div class="eyebrow">SECURE ACCESS GATEWAY</div>
-              <h2>Operator authentication</h2>
+              <div class="eyebrow">{{ "login.gateway" | snT:"SECURE ACCESS GATEWAY" }}</div>
+              <h2>{{ "login.heading" | snT:"Operator authentication" }}</h2>
             </div>
           </div>
 
           <p class="intro">
-            Continue through Discord to verify your identity and server permissions.
+            {{ "login.intro" | snT:"Continue through Discord to verify your identity and server permissions." }}
           </p>
 
           <div class="security-status">
             <div>
               <span class="status-dot"></span>
-              <strong>OAuth gateway ready</strong>
+              <strong>{{ "login.oauth_ready" | snT:"OAuth gateway ready" }}</strong>
             </div>
-            <small>Encrypted redirect · permission-scoped session</small>
+            <small>{{ "login.encrypted" | snT:"Encrypted redirect · permission-scoped session" }}</small>
           </div>
 
           <button
@@ -86,28 +88,28 @@ import { AuthService } from '../core/auth.service';
           >
             <span class="discord-icon">⌁</span>
             <span>
-              <strong>{{ loading() ? 'Establishing secure session…' : 'Continue with Discord' }}</strong>
-              <small>{{ loading() ? 'Do not close this window' : 'Authenticate authorized operator' }}</small>
+              <strong>{{ loading() ? ('login.establishing' | snT:'Establishing secure session…') : ('login.continue' | snT:'Continue with Discord') }}</strong>
+              <small>{{ loading() ? ('login.do_not_close' | snT:'Do not close this window') : ('login.authenticate' | snT:'Authenticate authorized operator') }}</small>
             </span>
             <b>→</b>
           </button>
 
           @if (error()) {
             <div class="error">
-              <strong>ACCESS FAILURE</strong>
+              <strong>{{ "login.failure" | snT:"ACCESS FAILURE" }}</strong>
               <span>{{ error() }}</span>
             </div>
           }
 
           <div class="trust-grid">
-            <div><span>01</span><p>Discord verifies your account.</p></div>
-            <div><span>02</span><p>ShieldNet checks server access.</p></div>
-            <div><span>03</span><p>A scoped console session is issued.</p></div>
+            <div><span>01</span><p>{{ "login.step_1" | snT:"Discord verifies your account." }}</p></div>
+            <div><span>02</span><p>{{ "login.step_2" | snT:"ShieldNet checks server access." }}</p></div>
+            <div><span>03</span><p>{{ "login.step_3" | snT:"A scoped console session is issued." }}</p></div>
           </div>
 
           <footer>
-            <span>By continuing, you enter a monitored administrative environment.</span>
-            <span class="build">BUILD 2.0 // SECURE</span>
+            <span>{{ "login.footer" | snT:"By continuing, you enter a monitored administrative environment." }}</span>
+            <span class="build">{{ "login.build" | snT:"BUILD 2.0 // SECURE" }}</span>
           </footer>
         </div>
       </section>
@@ -480,7 +482,7 @@ export class LoginComponent {
   readonly loading = signal(false);
   readonly error = signal('');
 
-  constructor(private readonly auth: AuthService) {}
+  constructor(private readonly auth: AuthService, private readonly i18n: TranslationService) {}
 
   async login(): Promise<void> {
     this.loading.set(true);

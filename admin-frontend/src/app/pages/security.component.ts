@@ -4,22 +4,24 @@ import { ActivatedRoute } from '@angular/router';
 
 import { SecurityFinding, SecurityService, SecuritySummary } from '../core/security.service';
 import { ShellComponent } from '../shared/shell.component';
+import { TranslatePipe } from '../core/translate.pipe';
+import { TranslationService } from '../core/translation.service';
 
 @Component({
   selector: 'sn-security',
   standalone: true,
-  imports: [CommonModule, ShellComponent],
+  imports: [CommonModule, ShellComponent, TranslatePipe],
   template: `
-    <sn-shell title="Security Center">
-      <div class="notice" *ngIf="loading">Loading latest security snapshot…</div>
+    <sn-shell [title]="'security.title' | snT:'Security Center'">
+      <div class="notice" *ngIf="loading">{{ 'security.loading' | snT:'Loading latest security snapshot…' }}</div>
       <div class="notice error" *ngIf="error">{{ error }}</div>
 
       <ng-container *ngIf="summary">
         <section class="hero">
           <div>
-            <div class="eyebrow">Configuration risk</div>
+            <div class="eyebrow">{{ 'security.configuration_risk' | snT:'Configuration risk' }}</div>
             <h2>{{ riskLabel(summary.risk_score) }}</h2>
-            <p>ShieldNet analyses Discord roles, channels, webhooks and the bot's effective permissions.</p>
+            <p>{{ 'security.description' | snT:'ShieldNet analyses Discord roles, channels, webhooks and the bot\'s effective permissions.' }}</p>
           </div>
           <div class="score" [class.high]="summary.risk_score >= 50" [class.critical]="summary.risk_score >= 75">
             <strong>{{ summary.risk_score }}</strong><span>/100</span>
@@ -27,26 +29,26 @@ import { ShellComponent } from '../shared/shell.component';
         </section>
 
         <section class="summary-grid">
-          <article><span>Critical</span><strong class="critical-text">{{ count('critical') }}</strong></article>
-          <article><span>High</span><strong class="high-text">{{ count('high') }}</strong></article>
-          <article><span>Medium</span><strong>{{ count('medium') }}</strong></article>
-          <article><span>Low</span><strong>{{ count('low') }}</strong></article>
-          <article><span>Roles scanned</span><strong>{{ summary.role_count }}</strong></article>
-          <article><span>Channels scanned</span><strong>{{ summary.channel_count }}</strong></article>
-          <article><span>Webhooks scanned</span><strong>{{ summary.webhook_count }}</strong></article>
-          <article><span>Last scan</span><strong class="date">{{ summary.collected_at ? (summary.collected_at | date:'short') : 'Waiting for bot' }}</strong></article>
+          <article><span>{{ 'security.critical' | snT:'Critical' }}</span><strong class="critical-text">{{ count('critical') }}</strong></article>
+          <article><span>{{ 'security.high' | snT:'High' }}</span><strong class="high-text">{{ count('high') }}</strong></article>
+          <article><span>{{ 'security.medium' | snT:'Medium' }}</span><strong>{{ count('medium') }}</strong></article>
+          <article><span>{{ 'security.low' | snT:'Low' }}</span><strong>{{ count('low') }}</strong></article>
+          <article><span>{{ 'security.roles_scanned' | snT:'Roles scanned' }}</span><strong>{{ summary.role_count }}</strong></article>
+          <article><span>{{ 'security.channels_scanned' | snT:'Channels scanned' }}</span><strong>{{ summary.channel_count }}</strong></article>
+          <article><span>{{ 'security.webhooks_scanned' | snT:'Webhooks scanned' }}</span><strong>{{ summary.webhook_count }}</strong></article>
+          <article><span>{{ 'security.last_scan' | snT:'Last scan' }}</span><strong class="date">{{ summary.collected_at ? (summary.collected_at | date:'short') : ('security.waiting_bot' | snT:'Waiting for bot') }}</strong></article>
         </section>
 
         <section class="panel" *ngIf="!summary.snapshot_id">
-          <div class="eyebrow">No data yet</div>
-          <h2>Waiting for the first bot snapshot</h2>
-          <p>The ShieldNet bot sends a security snapshot every 15 minutes. Ensure the bot is online and the backend service token matches.</p>
+          <div class="eyebrow">{{ 'security.no_data' | snT:'No data yet' }}</div>
+          <h2>{{ 'security.waiting_snapshot' | snT:'Waiting for the first bot snapshot' }}</h2>
+          <p>{{ 'security.snapshot_help' | snT:'The ShieldNet bot sends a security snapshot every 15 minutes. Ensure the bot is online and the backend service token matches.' }}</p>
         </section>
 
         <section class="panel" *ngIf="summary.snapshot_id">
           <div class="panel-head">
-            <div><div class="eyebrow">Findings</div><h2>Detected risks</h2></div>
-            <button (click)="reload()" [disabled]="loading">Refresh</button>
+            <div><div class="eyebrow">{{ 'security.findings' | snT:'Findings' }}</div><h2>{{ 'security.detected_risks' | snT:'Detected risks' }}</h2></div>
+            <button (click)="reload()" [disabled]="loading">{{ 'security.refresh' | snT:'Refresh' }}</button>
           </div>
 
           <div class="findings">
@@ -55,14 +57,14 @@ import { ShellComponent } from '../shared/shell.component';
                 <span class="badge">{{ item.severity }}</span>
                 <span class="category">{{ item.category }}</span>
               </div>
-              <h3>{{ item.title }}</h3>
-              <p>{{ item.description }}</p>
+              <h3>{{ findingText(item.title) }}</h3>
+              <p>{{ findingText(item.description) }}</p>
               <div class="resource" *ngIf="item.resource_name || item.resource_id">
-                {{ item.resource_type || 'resource' }}: <b>{{ item.resource_name || item.resource_id }}</b>
+                {{ item.resource_type || ('security.resource' | snT:'resource') }}: <b>{{ item.resource_name || item.resource_id }}</b>
               </div>
               <div class="recommendation" *ngIf="item.recommendation">
-                <strong>Recommended action</strong>
-                <span>{{ item.recommendation }}</span>
+                <strong>{{ 'security.recommended_action' | snT:'Recommended action' }}</strong>
+                <span>{{ findingText(item.recommendation) }}</span>
               </div>
             </article>
           </div>
@@ -90,7 +92,11 @@ export class SecurityComponent implements OnInit {
   error = '';
   private guildId = '';
 
-  constructor(private readonly route: ActivatedRoute, private readonly security: SecurityService) {}
+  constructor(
+    private readonly route: ActivatedRoute,
+    private readonly security: SecurityService,
+    private readonly i18n: TranslationService,
+  ) {}
 
   ngOnInit(): void {
     this.guildId = this.route.snapshot.paramMap.get('guildId') || '';
@@ -102,17 +108,31 @@ export class SecurityComponent implements OnInit {
     this.error = '';
     this.security.summary(this.guildId).subscribe({
       next: value => { this.summary = value; this.loading = false; },
-      error: () => { this.error = 'Unable to load Security Center.'; this.loading = false; },
+      error: () => { this.error = this.i18n.t('security.load_error', 'Unable to load Security Center.'); this.loading = false; },
     });
   }
 
   count(level: string): number { return Number(this.summary?.counts?.[level] || 0); }
 
+
+  findingText(value: string | null | undefined): string {
+    if (!value) return '';
+    const map: Record<string, string> = {
+      'Role has broad management permissions': 'security.finding.role_broad_title',
+      'Role Admin combines several sensitive permissions.': 'security.finding.role_broad_description',
+      'Split responsibilities and remove permissions that are not required.': 'security.finding.role_broad_recommendation',
+      '@everyone mentions are allowed': 'security.finding.everyone_title',
+      'Disable Mention @everyone unless this is intentional.': 'security.finding.everyone_recommendation',
+    };
+    const key = map[value];
+    return key ? this.i18n.t(key, value) : value;
+  }
+
   riskLabel(score: number): string {
-    if (score >= 75) return 'Critical risk';
-    if (score >= 50) return 'High risk';
-    if (score >= 25) return 'Moderate risk';
-    if (score > 0) return 'Low risk';
-    return 'Healthy baseline';
+    if (score >= 75) return this.i18n.t('security.risk_critical', 'Critical risk');
+    if (score >= 50) return this.i18n.t('security.risk_high', 'High risk');
+    if (score >= 25) return this.i18n.t('security.risk_moderate', 'Moderate risk');
+    if (score > 0) return this.i18n.t('security.risk_low', 'Low risk');
+    return this.i18n.t('security.risk_healthy', 'Healthy baseline');
   }
 }

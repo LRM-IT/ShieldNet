@@ -5,20 +5,22 @@ import { firstValueFrom } from 'rxjs';
 import { AuthService } from '../core/auth.service';
 import { OperationsService, OperationsSnapshot } from '../core/operations.service';
 import { ShellComponent } from '../shared/shell.component';
+import { TranslatePipe } from '../core/translate.pipe';
+import { TranslationService } from '../core/translation.service';
 
 @Component({
   selector: 'sn-operations',
   standalone: true,
-  imports: [CommonModule, ShellComponent],
+  imports: [CommonModule, ShellComponent, TranslatePipe],
   template: `
-    <sn-shell title="Live Operations">
+    <sn-shell [title]="'operations.title' | snT:'Live Operations'">
       <div class="topline">
         <div>
-          <div class="eyebrow">REAL-TIME CONTROL PLANE</div>
-          <h2>Platform telemetry</h2>
+          <div class="eyebrow">{{ "operations.eyebrow" | snT:"REAL-TIME CONTROL PLANE" }}</div>
+          <h2>{{ "operations.telemetry" | snT:"Platform telemetry" }}</h2>
         </div>
         <div class="connection" [class.online]="connected()">
-          <span></span>{{ connected() ? 'Live stream connected' : 'Reconnecting…' }}
+          <span></span>{{ connected() ? ('operations.connected' | snT:'Live stream connected') : ('operations.reconnecting' | snT:'Reconnecting…') }}
         </div>
       </div>
 
@@ -28,15 +30,15 @@ import { ShellComponent } from '../shared/shell.component';
             <article class="card">
               <div class="card-head"><b>{{ label(item.key) }}</b><span [class.good]="item.value.status === 'online'">{{ item.value.status }}</span></div>
               @if (item.value.latency_ms !== undefined && item.value.latency_ms !== null) { <strong>{{ item.value.latency_ms }} ms</strong> }
-              @if (item.value.queue_depth !== undefined) { <div class="metric"><span>Queue</span><b>{{ item.value.queue_depth }}</b></div> }
-              @if (item.value.memory_bytes) { <div class="metric"><span>Memory</span><b>{{ formatBytes(item.value.memory_bytes) }}</b></div> }
+              @if (item.value.queue_depth !== undefined) { <div class="metric"><span>{{ "operations.queue" | snT:"Queue" }}</span><b>{{ item.value.queue_depth }}</b></div> }
+              @if (item.value.memory_bytes) { <div class="metric"><span>{{ "operations.memory" | snT:"Memory" }}</span><b>{{ formatBytes(item.value.memory_bytes) }}</b></div> }
             </article>
           }
         </div>
 
         <div class="grid">
           <section class="panel">
-            <div class="panel-title"><h3>Runtime workers</h3><span>{{ data.workers.length }}</span></div>
+            <div class="panel-title"><h3>{{ "operations.workers" | snT:"Runtime workers" }}</h3><span>{{ data.workers.length }}</span></div>
             <div class="worker-list">
               @for (worker of data.workers; track worker.worker_name) {
                 <div class="worker">
@@ -44,25 +46,25 @@ import { ShellComponent } from '../shared/shell.component';
                   <div><b>{{ worker.worker_name }}</b><small>{{ worker.worker_type }} · {{ worker.last_seen_at | date:'mediumTime' }}</small></div>
                   <em [class.stale-text]="worker.status !== 'online'">{{ worker.status }}</em>
                 </div>
-              } @empty { <div class="empty">No heartbeat data yet.</div> }
+              } @empty { <div class="empty">{{ "operations.no_heartbeat" | snT:"No heartbeat data yet." }}</div> }
             </div>
           </section>
 
           <section class="panel events">
-            <div class="panel-title"><h3>Live event stream</h3><span>{{ data.events.length }}</span></div>
+            <div class="panel-title"><h3>{{ "operations.events" | snT:"Live event stream" }}</h3><span>{{ data.events.length }}</span></div>
             <div class="event-list">
               @for (event of data.events; track event.id) {
                 <div class="event">
                   <time>{{ event.created_at | date:'HH:mm:ss' }}</time>
-                  <div><b>{{ event.event_type }}</b><small>{{ event.message || event.target_type || 'Platform event' }}</small></div>
+                  <div><b>{{ event.event_type }}</b><small>{{ event.message || event.target_type || ('operations.platform_event' | snT:'Platform event') }}</small></div>
                   <span>{{ event.result }}</span>
                 </div>
-              } @empty { <div class="empty">No audit events available.</div> }
+              } @empty { <div class="empty">{{ "operations.no_events" | snT:"No audit events available." }}</div> }
             </div>
           </section>
         </div>
       } @else {
-        <div class="loading">Loading live telemetry…</div>
+        <div class="loading">{{ "operations.loading" | snT:"Loading live telemetry…" }}</div>
       }
     </sn-shell>
   `,
@@ -76,7 +78,7 @@ export class OperationsComponent implements OnInit, OnDestroy {
   private socket?: WebSocket;
   private retry?: number;
 
-  constructor(private readonly auth: AuthService, private readonly operations: OperationsService) {}
+  constructor(private readonly auth: AuthService, private readonly operations: OperationsService, private readonly i18n: TranslationService) {}
 
   async ngOnInit(): Promise<void> {
     try { this.snapshot.set(await firstValueFrom(this.operations.snapshot())); } catch {}
@@ -84,7 +86,7 @@ export class OperationsComponent implements OnInit, OnDestroy {
   }
   ngOnDestroy(): void { if (this.retry) window.clearTimeout(this.retry); this.socket?.close(); }
   componentEntries(data: OperationsSnapshot) { return Object.entries(data.components).map(([key, value]) => ({ key, value })); }
-  label(key: string): string { return key === 'valkey' ? 'Valkey / Queue' : key; }
+  label(key: string): string { return key === 'valkey' ? this.i18n.t('operations.valkey_queue', 'Valkey / Queue') : key; }
   formatBytes(value: number): string { return value < 1024 * 1024 ? `${Math.round(value / 1024)} KB` : `${(value / 1024 / 1024).toFixed(1)} MB`; }
 
   private connect(): void {

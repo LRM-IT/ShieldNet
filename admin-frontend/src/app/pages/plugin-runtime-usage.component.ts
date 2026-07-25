@@ -9,24 +9,26 @@ import {
   PluginUsageSummary,
 } from '../core/plugin-usage.service';
 import { ShellComponent } from '../shared/shell.component';
+import { TranslatePipe } from '../core/translate.pipe';
+import { TranslationService } from '../core/translation.service';
 
 @Component({
   selector: 'sn-plugin-runtime-usage',
   standalone: true,
-  imports: [ShellComponent],
+  imports: [ShellComponent, TranslatePipe],
   template: `
-    <sn-shell title="Plugin Runtime">
+    <sn-shell [title]="'runtime_usage.title' | snT:'Plugin Runtime'">
       <section class="head">
-        <div><h2>Runtime usage</h2><p class="muted">Requests, errors, rate limits and response time.</p></div>
-        <button (click)="refresh()" [disabled]="loading() || !selectedKey()">{{ loading() ? 'Refreshing…' : 'Refresh' }}</button>
+        <div><h2>{{ "runtime_usage.heading" | snT:"Runtime usage" }}</h2><p class="muted">{{ "runtime_usage.description" | snT:"Requests, errors, rate limits and response time." }}</p></div>
+        <button (click)="refresh()" [disabled]="loading() || !selectedKey()">{{ loading() ? ('runtime_usage.refreshing' | snT:'Refreshing…') : ('runtime_usage.refresh' | snT:'Refresh') }}</button>
       </section>
 
       @if (error()) { <div class="error card">{{ error() }}</div> }
 
       <section class="picker card">
-        <div><strong>Plugin</strong><small class="muted">Select a runtime to inspect</small></div>
+        <div><strong>{{ "runtime_usage.plugin" | snT:"Plugin" }}</strong><small class="muted">{{ "runtime_usage.select_runtime" | snT:"Select a runtime to inspect" }}</small></div>
         <select [value]="selectedKey()" (change)="selectPlugin($any($event.target).value)" [disabled]="pluginsLoading()">
-          <option value="">{{ pluginsLoading() ? 'Loading plugins…' : 'Select plugin' }}</option>
+          <option value="">{{ pluginsLoading() ? ('runtime_usage.loading_plugins' | snT:'Loading plugins…') : ('runtime_usage.select_plugin' | snT:'Select plugin') }}</option>
           @for (plugin of plugins(); track plugin.plugin_key) {
             <option [value]="plugin.plugin_key">{{ plugin.name }} · {{ plugin.plugin_key }}</option>
           }
@@ -34,60 +36,60 @@ import { ShellComponent } from '../shared/shell.component';
       </section>
 
       @if (!selectedKey() && !pluginsLoading()) {
-        <div class="card empty">Select a plugin to open its Runtime Usage dashboard.</div>
+        <div class="card empty">{{ "runtime_usage.select_help" | snT:"Select a plugin to open its Runtime Usage dashboard." }}</div>
       }
 
       @if (selectedKey()) {
         <section class="banner card">
-          <div><span class="eyebrow">Selected runtime</span><h3>{{ selectedPlugin()?.name || selectedKey() }}</h3><p class="muted">{{ selectedPlugin()?.description || 'ShieldNet plugin runtime statistics.' }}</p></div>
-          <div class="meta"><span>v{{ selectedPlugin()?.version || '—' }}</span><span [class.good]="selectedPlugin()?.healthy">{{ selectedPlugin()?.healthy ? 'Healthy' : 'Status unknown' }}</span></div>
+          <div><span class="eyebrow">{{ "runtime_usage.selected" | snT:"Selected runtime" }}</span><h3>{{ selectedPlugin()?.name || selectedKey() }}</h3><p class="muted">{{ selectedPlugin()?.description || ('runtime_usage.default_description' | snT:'ShieldNet plugin runtime statistics.') }}</p></div>
+          <div class="meta"><span>v{{ selectedPlugin()?.version || '—' }}</span><span [class.good]="selectedPlugin()?.healthy">{{ selectedPlugin()?.healthy ? ('runtime_usage.healthy' | snT:'Healthy') : ('runtime_usage.unknown' | snT:'Status unknown') }}</span></div>
         </section>
 
         @if (loading() && !summary()) {
-          <div class="card empty">Loading runtime statistics…</div>
+          <div class="card empty">{{ "runtime_usage.loading" | snT:"Loading runtime statistics…" }}</div>
         } @else if (summary(); as usage) {
           <section class="metrics">
-            <article class="card metric"><span class="muted">Requests today</span><strong>{{ n(usage.requests_today) }}</strong><small>{{ n(usage.requests_total) }} total</small></article>
-            <article class="card metric"><span class="muted">Successful</span><strong>{{ n(usage.successful_today) }}</strong><small>{{ successRate() }}% success rate</small></article>
-            <article class="card metric" [class.warn]="usage.errors_today > 0"><span class="muted">Errors today</span><strong>{{ n(usage.errors_today) }}</strong><small>{{ n(usage.errors_total) }} total</small></article>
-            <article class="card metric" [class.warn]="usage.rate_limited_today > 0"><span class="muted">Rate limited</span><strong>{{ n(usage.rate_limited_today) }}</strong><small>{{ n(usage.rate_limited_total) }} total</small></article>
-            <article class="card metric"><span class="muted">Average response</span><strong>{{ duration(usage.average_duration_ms_today) }}</strong><small>{{ duration(usage.average_duration_ms_total) }} overall</small></article>
-            <article class="card metric"><span class="muted">Last request</span><strong class="date">{{ date(usage.last_request_at) }}</strong><small>Updated {{ date(usage.generated_at) }}</small></article>
+            <article class="card metric"><span class="muted">{{ "runtime_usage.requests_today" | snT:"Requests today" }}</span><strong>{{ n(usage.requests_today) }}</strong><small>{{ n(usage.requests_total) }} {{ "runtime_usage.total" | snT:"total" }}</small></article>
+            <article class="card metric"><span class="muted">{{ "runtime_usage.successful" | snT:"Successful" }}</span><strong>{{ n(usage.successful_today) }}</strong><small>{{ successRate() }}% {{ "runtime_usage.success_rate" | snT:"success rate" }}</small></article>
+            <article class="card metric" [class.warn]="usage.errors_today > 0"><span class="muted">{{ "runtime_usage.errors_today" | snT:"Errors today" }}</span><strong>{{ n(usage.errors_today) }}</strong><small>{{ n(usage.errors_total) }} {{ "runtime_usage.total" | snT:"total" }}</small></article>
+            <article class="card metric" [class.warn]="usage.rate_limited_today > 0"><span class="muted">{{ "runtime_usage.rate_limited" | snT:"Rate limited" }}</span><strong>{{ n(usage.rate_limited_today) }}</strong><small>{{ n(usage.rate_limited_total) }} {{ "runtime_usage.total" | snT:"total" }}</small></article>
+            <article class="card metric"><span class="muted">{{ "runtime_usage.average_response" | snT:"Average response" }}</span><strong>{{ duration(usage.average_duration_ms_today) }}</strong><small>{{ duration(usage.average_duration_ms_total) }} {{ "runtime_usage.overall" | snT:"overall" }}</small></article>
+            <article class="card metric"><span class="muted">{{ "runtime_usage.last_request" | snT:"Last request" }}</span><strong class="date">{{ date(usage.last_request_at) }}</strong><small>{{ "runtime_usage.updated" | snT:"Updated" }} {{ date(usage.generated_at) }}</small></article>
           </section>
 
           <section class="grid">
             <article class="card panel">
               <div class="section-head">
-                <div><h3>Usage history</h3><p class="muted">Daily requests and errors.</p></div>
+                <div><h3>{{ "runtime_usage.usage_history" | snT:"Usage history" }}</h3><p class="muted">{{ "runtime_usage.daily_requests" | snT:"Daily requests and errors." }}</p></div>
                 <div class="periods">
                   @for (period of periods; track period) { <button [class.active]="days() === period" (click)="changePeriod(period)">{{ period }}d</button> }
                 </div>
               </div>
-              @if (historyLoading()) { <div class="chart-empty">Loading history…</div> }
+              @if (historyLoading()) { <div class="chart-empty">{{ "runtime_usage.loading_history" | snT:"Loading history…" }}</div> }
               @else if (history(); as dataset) {
-                <div class="legend"><span><i class="req"></i>Requests</span><span><i class="err"></i>Errors</span></div>
+                <div class="legend"><span><i class="req"></i>{{ "runtime_usage.requests" | snT:"Requests" }}</span><span><i class="err"></i>{{ "runtime_usage.errors" | snT:"Errors" }}</span></div>
                 <div class="chart">
                   @for (point of dataset.points; track point.day) {
                     <div class="col" [title]="tooltip(point)"><div class="bars"><span class="bar req" [style.height.%]="barHeight(point.requests)"></span><span class="bar err" [style.height.%]="barHeight(point.errors)"></span></div><small>{{ label(point.day) }}</small></div>
                   }
                 </div>
-              } @else { <div class="chart-empty">No history available.</div> }
+              } @else { <div class="chart-empty">{{ "runtime_usage.no_history" | snT:"No history available." }}</div> }
             </article>
 
             <article class="card panel">
-              <div class="section-head"><div><h3>Capabilities today</h3><p class="muted">Most-used Runtime API scopes.</p></div></div>
+              <div class="section-head"><div><h3>{{ "runtime_usage.capabilities" | snT:"Capabilities today" }}</h3><p class="muted">{{ "runtime_usage.capabilities_desc" | snT:"Most-used Runtime API scopes." }}</p></div></div>
               @for (item of usage.scope_breakdown_today; track item.scope) {
                 <div class="scope"><div><strong>{{ item.scope }}</strong><small class="muted">{{ n(item.requests) }}</small></div><div class="track"><span [style.width.%]="scopePercent(item.requests)"></span></div></div>
-              } @empty { <div class="chart-empty small">No capability activity today.</div> }
+              } @empty { <div class="chart-empty small">{{ "runtime_usage.no_capabilities" | snT:"No capability activity today." }}</div> }
             </article>
           </section>
 
           <section class="card panel status-panel">
-            <div class="section-head"><div><h3>HTTP status distribution</h3><p class="muted">Response codes returned today.</p></div></div>
+            <div class="section-head"><div><h3>{{ "runtime_usage.http_distribution" | snT:"HTTP status distribution" }}</h3><p class="muted">{{ "runtime_usage.http_desc" | snT:"Response codes returned today." }}</p></div></div>
             <div class="statuses">
               @for (item of usage.status_breakdown_today; track item.status_code) {
-                <div class="status" [class.bad]="item.status_code >= 400"><strong>{{ item.status_code }}</strong><span>{{ n(item.requests) }} requests</span></div>
-              } @empty { <span class="muted">No requests recorded today.</span> }
+                <div class="status" [class.bad]="item.status_code >= 400"><strong>{{ item.status_code }}</strong><span>{{ n(item.requests) }} {{ "runtime_usage.request_count" | snT:"requests" }}</span></div>
+              } @empty { <span class="muted">{{ "runtime_usage.no_requests" | snT:"No requests recorded today." }}</span> }
             </div>
           </section>
         }
@@ -115,14 +117,14 @@ export class PluginRuntimeUsageComponent implements OnInit {
   readonly maxHistory = computed(() => Math.max(1, ...(this.history()?.points || []).flatMap((p) => [p.requests, p.errors])));
   readonly maxScope = computed(() => Math.max(1, ...(this.summary()?.scope_breakdown_today || []).map((i) => i.requests)));
 
-  constructor(private readonly route: ActivatedRoute, private readonly pluginService: PluginService, private readonly usageService: PluginUsageService) {}
+  constructor(private readonly route: ActivatedRoute, private readonly pluginService: PluginService, private readonly usageService: PluginUsageService, private readonly i18n: TranslationService) {}
 
   async ngOnInit(): Promise<void> {
     try {
       this.plugins.set(await this.pluginService.list());
       const key = this.route.snapshot.queryParamMap.get('plugin') || this.plugins()[0]?.plugin_key || '';
       if (key) { this.selectedKey.set(key); await this.refresh(); }
-    } catch { this.error.set('Unable to load the plugin list.'); }
+    } catch { this.error.set(this.i18n.t('runtime_usage.load_plugins_error','Unable to load the plugin list.')); }
     finally { this.pluginsLoading.set(false); }
   }
 
@@ -136,7 +138,7 @@ export class PluginRuntimeUsageComponent implements OnInit {
       this.usageService.history(this.guildId, this.selectedKey(), this.days()),
     ]);
     if (summary.status === 'fulfilled') this.summary.set(summary.value);
-    else { this.summary.set(null); this.error.set('Runtime usage is unavailable. Confirm that the plugin is installed for this server and the Usage API is enabled.'); }
+    else { this.summary.set(null); this.error.set(this.i18n.t('runtime_usage.summary_error','Runtime usage is unavailable. Confirm that the plugin is installed for this server and the Usage API is enabled.')); }
     this.history.set(history.status === 'fulfilled' ? history.value : null);
     this.loading.set(false); this.historyLoading.set(false);
   }
@@ -145,15 +147,15 @@ export class PluginRuntimeUsageComponent implements OnInit {
     if (period === this.days() || !this.selectedKey()) return;
     this.days.set(period); this.historyLoading.set(true);
     try { this.history.set(await this.usageService.history(this.guildId, this.selectedKey(), period)); }
-    catch { this.history.set(null); this.error.set('Unable to load Runtime Usage history.'); }
+    catch { this.history.set(null); this.error.set(this.i18n.t('runtime_usage.history_error','Unable to load Runtime Usage history.')); }
     finally { this.historyLoading.set(false); }
   }
 
   n(value: number): string { return new Intl.NumberFormat().format(value || 0); }
   duration(value: number): string { return value >= 1000 ? `${(value / 1000).toFixed(2)} s` : `${Math.round((value || 0) * 100) / 100} ms`; }
-  date(value: string | null): string { if (!value) return 'No requests yet'; const d = new Date(value); return Number.isNaN(d.getTime()) ? value : new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(d); }
+  date(value: string | null): string { if (!value) return this.i18n.t('runtime_usage.no_requests_yet','No requests yet'); const d = new Date(value); return Number.isNaN(d.getTime()) ? value : new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(d); }
   label(value: string): string { const d = new Date(`${value}T00:00:00`); return new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric' }).format(d); }
   barHeight(value: number): number { return Math.max(value > 0 ? 2 : 0, (value / this.maxHistory()) * 100); }
   scopePercent(value: number): number { return Math.max(2, (value / this.maxScope()) * 100); }
-  tooltip(point: PluginUsageHistoryPoint): string { return `${point.day}: ${point.requests} requests, ${point.errors} errors, ${point.rate_limited} rate limited`; }
+  tooltip(point: PluginUsageHistoryPoint): string { return `${point.day}: ${point.requests} ${this.i18n.t('runtime_usage.tooltip_requests','requests')}, ${point.errors} ${this.i18n.t('runtime_usage.tooltip_errors','errors')}, ${point.rate_limited} ${this.i18n.t('runtime_usage.tooltip_limited','rate limited')}`; }
 }

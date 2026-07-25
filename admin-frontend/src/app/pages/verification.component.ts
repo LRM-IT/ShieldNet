@@ -9,21 +9,23 @@ import { FormsModule } from '@angular/forms';
 import { GuildRoleService } from '../core/guild-role.service';
 import { VerificationService } from '../core/verification.service';
 import { ShellComponent } from '../shared/shell.component';
+import { TranslatePipe } from '../core/translate.pipe';
 
 @Component({
   standalone: true,
   imports: [
     FormsModule,
     ShellComponent,
+    TranslatePipe,
   ],
   template: `
-    <sn-shell title="Verification">
+    <sn-shell [title]="'verification.title' | snT:'Verification'">
       <section class="card panel">
         <div class="heading">
           <div>
-            <h2>Verification settings</h2>
+            <h2>{{ "verification.settings" | snT:"Verification settings" }}</h2>
             <p class="muted">
-              Configure /verify, approval mode and Verified role.
+              {{ "verification.description" | snT:"Configure /verify, approval mode and Verified role." }}
             </p>
           </div>
 
@@ -32,7 +34,7 @@ import { ShellComponent } from '../shared/shell.component';
             [disabled]="saving()"
             (click)="saveSettings()"
           >
-            {{ saving() ? 'Saving…' : 'Save settings' }}
+            {{ saving() ? ('verification.saving' | snT:'Saving…') : ('verification.save' | snT:'Save settings') }}
           </button>
         </div>
 
@@ -41,7 +43,7 @@ import { ShellComponent } from '../shared/shell.component';
             type="checkbox"
             [(ngModel)]="enabled"
           >
-          Verification module enabled
+          {{ "verification.enabled" | snT:"Verification module enabled" }}
         </label>
 
         <label class="check">
@@ -49,22 +51,22 @@ import { ShellComponent } from '../shared/shell.component';
             type="checkbox"
             [(ngModel)]="autoApprove"
           >
-          Automatically approve new requests
+          {{ "verification.auto_approve" | snT:"Automatically approve new requests" }}
         </label>
 
         <label>
-          Review channel ID
+          {{ "verification.review_channel" | snT:"Review channel ID" }}
           <input
             [(ngModel)]="reviewChannelId"
-            placeholder="Discord channel ID"
+            [placeholder]="'verification.channel_placeholder' | snT:'Discord channel ID'"
           >
         </label>
 
         <label>
-          Verified role
+          {{ "verification.verified_role" | snT:"Verified role" }}
           <select [(ngModel)]="verifiedRoleId">
             <option [ngValue]="null">
-              Do not assign a role
+              {{ "verification.no_role" | snT:"Do not assign a role" }}
             </option>
 
             @for (
@@ -81,10 +83,10 @@ import { ShellComponent } from '../shared/shell.component';
         </label>
 
         <label>
-          Nickname template
+          {{ "verification.nickname_template" | snT:"Nickname template" }}
           <input [(ngModel)]="nicknameTemplate">
           <small class="muted">
-            Variables:
+            {{ "verification.variables" | snT:"Variables" }}:
             &#123;alliance&#125;,
             &#123;nickname&#125;
           </small>
@@ -92,7 +94,7 @@ import { ShellComponent } from '../shared/shell.component';
 
         <div class="grid">
           <label>
-            Alliance minimum
+            {{ "verification.alliance_min" | snT:"Alliance minimum" }}
             <input
               type="number"
               min="1"
@@ -102,7 +104,7 @@ import { ShellComponent } from '../shared/shell.component';
           </label>
 
           <label>
-            Alliance maximum
+            {{ "verification.alliance_max" | snT:"Alliance maximum" }}
             <input
               type="number"
               min="1"
@@ -120,23 +122,23 @@ import { ShellComponent } from '../shared/shell.component';
       </section>
 
       <section class="card stats">
-        <h2>Verification statistics</h2>
+        <h2>{{ "verification.statistics" | snT:"Verification statistics" }}</h2>
         <div class="stats-grid">
-          <div><strong>{{ summaryData().total || 0 }}</strong><span>Total</span></div>
-          <div><strong>{{ summaryData().pending || 0 }}</strong><span>Pending</span></div>
-          <div><strong>{{ summaryData().completed || 0 }}</strong><span>Completed</span></div>
-          <div><strong>{{ summaryData().failed || 0 }}</strong><span>Failed</span></div>
+          <div><strong>{{ summaryData().total || 0 }}</strong><span>{{ "verification.total" | snT:"Total" }}</span></div>
+          <div><strong>{{ summaryData().pending || 0 }}</strong><span>{{ "verification.pending" | snT:"Pending" }}</span></div>
+          <div><strong>{{ summaryData().completed || 0 }}</strong><span>{{ "verification.completed" | snT:"Completed" }}</span></div>
+          <div><strong>{{ summaryData().failed || 0 }}</strong><span>{{ "verification.failed" | snT:"Failed" }}</span></div>
         </div>
       </section>
 
       <section class="queue">
         <div class="control-toolbar card">
-          <strong>Control Center</strong>
+          <strong>{{ "verification.control_center" | snT:"Control Center" }}</strong>
 
           <input
             [(ngModel)]="searchText"
             (keyup.enter)="reloadRequests()"
-            placeholder="Search nickname, alliance or Discord ID"
+            [placeholder]="'verification.search_placeholder' | snT:'Search nickname, alliance or Discord ID'"
           >
 
           <button class="btn" (click)="reloadRequests()">
@@ -148,7 +150,7 @@ import { ShellComponent } from '../shared/shell.component';
             [disabled]="selectedIds().size === 0"
             (click)="bulkCancel()"
           >
-            Cancel selected
+            {{ "verification.cancel_selected" | snT:"Cancel selected" }}
           </button>
 
           <button
@@ -156,7 +158,7 @@ import { ShellComponent } from '../shared/shell.component';
             [disabled]="selectedIds().size === 0"
             (click)="bulkRequeue()"
           >
-            Requeue selected
+            {{ "verification.requeue_selected" | snT:"Requeue selected" }}
           </button>
 
           <input
@@ -168,22 +170,22 @@ import { ShellComponent } from '../shared/shell.component';
           >
 
           <button class="btn secondary" (click)="recoverStale()">
-            Recover stale
+            {{ "verification.recover_stale" | snT:"Recover stale" }}
           </button>
 
           <a
             class="btn secondary"
             [href]="exportUrl()"
           >
-            Export CSV
+            {{ "verification.export_csv" | snT:"Export CSV" }}
           </a>
         </div>
 
         <div class="queue-heading">
           <div>
-            <h2>Verification queue</h2>
+            <h2>{{ "verification.queue" | snT:"Verification queue" }}</h2>
             <p class="muted">
-              {{ pendingCount() }} waiting for review
+              {{ pendingCount() }} {{ "verification.waiting_review" | snT:"waiting for review" }}
             </p>
           </div>
 
@@ -192,7 +194,7 @@ import { ShellComponent } from '../shared/shell.component';
             (ngModelChange)="reloadRequests()"
           >
             <option value="">
-              All statuses
+              {{ "verification.all_statuses" | snT:"All statuses" }}
             </option>
             <option value="pending">
               Pending
@@ -271,13 +273,13 @@ import { ShellComponent } from '../shared/shell.component';
               </span>
 
               @if (item.status === 'failed' || item.status === 'processing') {
-                <button class="btn" (click)="requeue(item)">Requeue</button>
+                <button class="btn" (click)="requeue(item)">{{ "verification.requeue" | snT:"Requeue" }}</button>
               }
 
               @if (item.status === 'pending') {
                 <div class="buttons">
-                  <button class="btn secondary" (click)="resendReview(item)">Resend</button>
-                  <button class="btn danger" (click)="cancel(item)">Cancel</button>
+                  <button class="btn secondary" (click)="resendReview(item)">{{ "verification.resend" | snT:"Resend" }}</button>
+                  <button class="btn danger" (click)="cancel(item)">{{ "verification.cancel" | snT:"Cancel" }}</button>
                   <button
                     class="btn"
                     (click)="openApprove(item)"
@@ -285,7 +287,7 @@ import { ShellComponent } from '../shared/shell.component';
                     Approve
                   </button>
 
-                  <button class="btn secondary" (click)="openChanges(item)">Request changes</button>
+                  <button class="btn secondary" (click)="openChanges(item)">{{ "verification.request_changes" | snT:"Request changes" }}</button>
                   <button
                     class="btn danger"
                     (click)="openReject(item)"

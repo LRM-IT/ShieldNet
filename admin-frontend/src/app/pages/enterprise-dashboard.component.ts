@@ -1,6 +1,7 @@
 import { Component, OnDestroy, OnInit, computed, signal } from '@angular/core';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { TranslatePipe } from '../core/translate.pipe';
 
 import {
   EnterpriseDashboardOverview,
@@ -10,34 +11,33 @@ import { ShellComponent } from '../shared/shell.component';
 
 @Component({
   standalone: true,
-  imports: [ShellComponent, RouterLink, DatePipe, DecimalPipe],
+  imports: [ShellComponent, RouterLink, DatePipe, DecimalPipe, TranslatePipe],
   template: `
-    <sn-shell title="Command Center">
+    <sn-shell [title]="'dashboard.title' | snT:'Command Center'">
       <section class="command-hero">
         <div class="hero-copy">
-          <div class="eyebrow">GLOBAL OPERATIONS FABRIC</div>
-          <h2>Infrastructure under control.</h2>
+          <div class="eyebrow">{{ 'dashboard.global_fabric' | snT:'GLOBAL OPERATIONS FABRIC' }}</div>
+          <h2>{{ 'dashboard.under_control' | snT:'Infrastructure under control.' }}</h2>
           <p>
-            Unified visibility across Discord estates, workers, security,
-            automation and runtime services.
+            {{ 'dashboard.description' | snT:'Unified visibility across Discord estates, workers, security,             automation and runtime services.' }}
           </p>
 
           <div class="hero-links">
-            <a routerLink="/platform/operations">Open live operations <span>→</span></a>
-            <a routerLink="/platform/doctor">Run platform doctor <span>↗</span></a>
+            <a routerLink="/platform/operations">{{ 'dashboard.open_operations' | snT:'Open live operations' }} <span>→</span></a>
+            <a routerLink="/platform/doctor">{{ 'dashboard.run_doctor' | snT:'Run platform doctor' }} <span>↗</span></a>
           </div>
         </div>
 
         <div class="hero-status">
           <div class="status-ring" [class]="data()?.overall_status || 'loading'">
             <div>
-              <small>PLATFORM</small>
-              <strong>{{ data()?.overall_status || 'loading' }}</strong>
+              <small>{{ 'dashboard.platform' | snT:'PLATFORM' }}</small>
+              <strong>{{ data()?.overall_status || ('dashboard.loading' | snT:'loading') }}</strong>
             </div>
           </div>
 
           <button type="button" class="refresh" [disabled]="loading()" (click)="load()">
-            {{ loading() ? 'Synchronizing…' : 'Synchronize' }}
+            {{ loading() ? ('dashboard.synchronizing' | snT:'Synchronizing…') : ('dashboard.synchronize' | snT:'Synchronize') }}
           </button>
         </div>
       </section>
@@ -50,27 +50,27 @@ import { ShellComponent } from '../shared/shell.component';
         <section class="system-strip">
           <div class="strip-label">
             <span class="live-dot"></span>
-            CORE FABRIC
+            {{ 'dashboard.core_fabric' | snT:'CORE FABRIC' }}
           </div>
 
           <article>
-            <span>API</span>
-            <strong>ONLINE</strong>
-            <small>Backend control plane</small>
+            <span>{{ "enterprise_dashboard.api" | snT:"API" }}</span>
+            <strong>{{ 'dashboard.online' | snT:'ONLINE' }}</strong>
+            <small>{{ 'dashboard.backend_plane' | snT:'Backend control plane' }}</small>
           </article>
 
           <article>
-            <span>POSTGRESQL</span>
+            <span>{{ "enterprise_dashboard.postgresql" | snT:"POSTGRESQL" }}</span>
             <strong>{{ overview.components.postgresql.latency_ms }} MS</strong>
-            <small>Primary database latency</small>
+            <small>{{ 'dashboard.db_latency' | snT:'Primary database latency' }}</small>
           </article>
 
           <article>
-            <span>VALKEY</span>
+            <span>{{ "enterprise_dashboard.valkey" | snT:"VALKEY" }}</span>
             <strong [class.warn]="overview.components.valkey.status !== 'online'">
               {{ overview.components.valkey.status }}
             </strong>
-            <small>{{ overview.components.valkey.latency_ms ?? '—' }} ms latency</small>
+            <small>{{ overview.components.valkey.latency_ms ?? '—' }} {{ 'dashboard.latency' | snT:'latency' }}</small>
           </article>
 
           @for (worker of overview.workers.slice(0, 2); track worker.name) {
@@ -86,50 +86,50 @@ import { ShellComponent } from '../shared/shell.component';
           <article class="primary-metric panel">
             <div class="panel-index">01</div>
             <div>
-              <span>MANAGED SERVERS</span>
+              <span>{{ 'dashboard.managed_servers' | snT:'MANAGED SERVERS' }}</span>
               <strong>{{ overview.metrics['guilds'] | number }}</strong>
-              <small>{{ overview.scope }} infrastructure scope</small>
+              <small>{{ overview.scope }} {{ 'dashboard.infrastructure_scope' | snT:'infrastructure scope' }}</small>
             </div>
-            <div class="metric-trend">ACTIVE</div>
+            <div class="metric-trend">{{ "dashboard.active" | snT:"ACTIVE" }}</div>
           </article>
 
           <article class="metric panel">
             <div class="panel-index">02</div>
-            <span>ACTIVE MEMBERS</span>
+            <span>{{ 'dashboard.active_members' | snT:'ACTIVE MEMBERS' }}</span>
             <strong>{{ overview.metrics['active_members'] | number }}</strong>
-            <small>{{ overview.metrics['members'] | number }} identities indexed</small>
+            <small>{{ overview.metrics['members'] | number }} {{ 'dashboard.identities_indexed' | snT:'identities indexed' }}</small>
           </article>
 
           <article class="metric panel">
             <div class="panel-index">03</div>
-            <span>OPEN CASES</span>
+            <span>{{ 'dashboard.open_cases' | snT:'OPEN CASES' }}</span>
             <strong>{{ overview.metrics['open_cases'] | number }}</strong>
             <small [class.danger]="overview.metrics['overdue_cases'] > 0">
-              {{ overview.metrics['overdue_cases'] | number }} overdue
+              {{ overview.metrics['overdue_cases'] | number }} {{ 'dashboard.overdue' | snT:'overdue' }}
             </small>
           </article>
 
           <article class="metric panel">
             <div class="panel-index">04</div>
-            <span>SECURITY RISKS</span>
+            <span>{{ 'dashboard.security_risks' | snT:'SECURITY RISKS' }}</span>
             <strong [class.danger]="overview.metrics['security_risks'] > 0">
               {{ overview.metrics['security_risks'] | number }}
             </strong>
-            <small>High and critical signals</small>
+            <small>{{ 'dashboard.high_critical' | snT:'High and critical signals' }}</small>
           </article>
 
           <article class="metric panel">
             <div class="panel-index">05</div>
-            <span>OPEN ALERTS</span>
+            <span>{{ 'dashboard.open_alerts' | snT:'OPEN ALERTS' }}</span>
             <strong>{{ overview.metrics['open_alerts'] | number }}</strong>
-            <small>{{ overview.metrics['critical_alerts'] | number }} critical</small>
+            <small>{{ overview.metrics['critical_alerts'] | number }} {{ 'dashboard.critical' | snT:'critical' }}</small>
           </article>
 
           <article class="metric panel">
             <div class="panel-index">06</div>
-            <span>QUEUE DEPTH</span>
+            <span>{{ 'dashboard.queue_depth' | snT:'QUEUE DEPTH' }}</span>
             <strong>{{ overview.metrics['queue_depth'] | number }}</strong>
-            <small>Pending Discord operations</small>
+            <small>{{ 'dashboard.pending_operations' | snT:'Pending Discord operations' }}</small>
           </article>
         </section>
 
@@ -137,38 +137,38 @@ import { ShellComponent } from '../shared/shell.component';
           <article class="panel operations-panel">
             <div class="section-title">
               <div>
-                <span>OPERATIONAL ACCESS</span>
-                <h3>Control surfaces</h3>
+                <span>{{ 'dashboard.operational_access' | snT:'OPERATIONAL ACCESS' }}</span>
+                <h3>{{ 'dashboard.control_surfaces' | snT:'Control surfaces' }}</h3>
               </div>
-              <small>SELECT WORKSPACE</small>
+              <small>{{ 'dashboard.select_workspace' | snT:'SELECT WORKSPACE' }}</small>
             </div>
 
             <div class="action-grid">
               <a routerLink="/platform/operations">
-                <b>LIVE OPS</b>
-                <strong>Operations stream</strong>
-                <span>Runtime events, queue state and active processes.</span>
+                <b>{{ 'dashboard.live_ops' | snT:'LIVE OPS' }}</b>
+                <strong>{{ 'dashboard.operations_stream' | snT:'Operations stream' }}</strong>
+                <span>{{ 'dashboard.operations_desc' | snT:'Runtime events, queue state and active processes.' }}</span>
                 <i>01</i>
               </a>
 
               <a routerLink="/platform/plugins">
-                <b>PLUGIN FABRIC</b>
-                <strong>Runtime platform</strong>
-                <span>Lifecycle, health, capabilities and execution state.</span>
+                <b>{{ 'shell.plugin_fabric' | snT:'PLUGIN FABRIC' }}</b>
+                <strong>{{ 'dashboard.runtime_platform' | snT:'Runtime platform' }}</strong>
+                <span>{{ 'dashboard.runtime_desc' | snT:'Lifecycle, health, capabilities and execution state.' }}</span>
                 <i>02</i>
               </a>
 
               <a routerLink="/platform/jobs">
-                <b>JOBS</b>
-                <strong>Execution center</strong>
-                <span>Inspect jobs, failures, retries and service health.</span>
+                <b>{{ 'dashboard.jobs' | snT:'JOBS' }}</b>
+                <strong>{{ 'dashboard.execution_center' | snT:'Execution center' }}</strong>
+                <span>{{ 'dashboard.jobs_desc' | snT:'Inspect jobs, failures, retries and service health.' }}</span>
                 <i>03</i>
               </a>
 
               <a routerLink="/platform/access">
-                <b>IDENTITY</b>
-                <strong>Platform access</strong>
-                <span>Global roles, permissions and trusted operators.</span>
+                <b>{{ 'dashboard.identity' | snT:'IDENTITY' }}</b>
+                <strong>{{ 'dashboard.platform_access' | snT:'Platform access' }}</strong>
+                <span>{{ 'dashboard.identity_desc' | snT:'Global roles, permissions and trusted operators.' }}</span>
                 <i>04</i>
               </a>
             </div>
@@ -177,44 +177,44 @@ import { ShellComponent } from '../shared/shell.component';
           <article class="panel telemetry-panel">
             <div class="section-title">
               <div>
-                <span>LIVE CAPACITY</span>
-                <h3>Telemetry</h3>
+                <span>{{ 'dashboard.live_capacity' | snT:'LIVE CAPACITY' }}</span>
+                <h3>{{ 'dashboard.telemetry' | snT:'Telemetry' }}</h3>
               </div>
             </div>
 
             <div class="telemetry-row">
-              <span>Valkey memory</span>
+              <span>{{ 'dashboard.valkey_memory' | snT:'Valkey memory' }}</span>
               <strong>{{ formatBytes(overview.components.valkey.memory_bytes) }}</strong>
             </div>
             <div class="telemetry-row">
-              <span>Bot accounts</span>
+              <span>{{ 'dashboard.bot_accounts' | snT:'Bot accounts' }}</span>
               <strong>{{ overview.metrics['bots'] | number }}</strong>
             </div>
             <div class="telemetry-row">
-              <span>Watchlisted users</span>
+              <span>{{ 'dashboard.watchlisted_users' | snT:'Watchlisted users' }}</span>
               <strong>{{ overview.metrics['watchlisted'] | number }}</strong>
             </div>
             <div class="telemetry-row">
-              <span>Audit events / 24h</span>
+              <span>{{ 'dashboard.audit_events' | snT:'Audit events / 24h' }}</span>
               <strong>{{ overview.metrics['audit_24h'] | number }}</strong>
             </div>
             <div class="telemetry-row">
-              <span>Successful jobs / 7d</span>
+              <span>{{ 'dashboard.successful_jobs' | snT:'Successful jobs / 7d' }}</span>
               <strong>{{ overview.metrics['successful_jobs_7d'] | number }}</strong>
             </div>
 
             <div class="generated">
-              LAST SYNC {{ overview.generated_at | date:'mediumTime' }}
+              {{ 'dashboard.last_sync' | snT:'LAST SYNC' }} {{ overview.generated_at | date:'mediumTime' }}
             </div>
           </article>
         </section>
 
         <section class="estate-header">
           <div>
-            <span>DISCORD ESTATE</span>
-            <h3>Managed infrastructure</h3>
+            <span>{{ 'dashboard.discord_estate' | snT:'DISCORD ESTATE' }}</span>
+            <h3>{{ 'dashboard.managed_infrastructure' | snT:'Managed infrastructure' }}</h3>
           </div>
-          <div class="estate-count">{{ overview.guilds.length }} NODES</div>
+          <div class="estate-count">{{ overview.guilds.length }} {{ 'dashboard.nodes' | snT:'NODES' }}</div>
         </section>
 
         @if (overview.guilds.length === 0) {
@@ -237,7 +237,7 @@ import { ShellComponent } from '../shared/shell.component';
                   }
 
                   <div class="guild-name">
-                    <span>DISCORD NODE</span>
+                    <span>{{ "enterprise_dashboard.discord_node" | snT:"DISCORD NODE" }}</span>
                     <h4>{{ guild.name }}</h4>
                     <small>{{ guild.guild_id }}</small>
                   </div>
@@ -249,19 +249,19 @@ import { ShellComponent } from '../shared/shell.component';
 
                 <div class="guild-stats">
                   <div>
-                    <span>MEMBERS</span>
+                    <span>{{ 'dashboard.members' | snT:'MEMBERS' }}</span>
                     <strong>{{ guild.member_count | number }}</strong>
                   </div>
                   <div>
-                    <span>LAST SYNC</span>
-                    <strong>{{ guild.last_sync_at ? (guild.last_sync_at | date:'short') : 'NEVER' }}</strong>
+                    <span>{{ "enterprise_dashboard.last_sync" | snT:"LAST SYNC" }}</span>
+                    <strong>{{ guild.last_sync_at ? (guild.last_sync_at | date:'short') : ('dashboard.never' | snT:'NEVER') }}</strong>
                   </div>
                 </div>
 
                 <div class="guild-actions">
                   @if (guild.bot_status === 'online') {
                     <a class="open-node" [routerLink]="['/guild', guild.guild_id]">
-                      ENTER NODE <span>→</span>
+                      {{ 'dashboard.enter_node' | snT:'ENTER NODE' }} <span>→</span>
                     </a>
                     <a class="security-node" [routerLink]="['/guild', guild.guild_id, 'security']">
                       SECURITY
@@ -273,7 +273,7 @@ import { ShellComponent } from '../shared/shell.component';
                       target="_blank"
                       rel="noopener"
                     >
-                      CONNECT BOT <span>↗</span>
+                      {{ 'dashboard.connect_bot' | snT:'CONNECT BOT' }} <span>↗</span>
                     </a>
                   }
                 </div>

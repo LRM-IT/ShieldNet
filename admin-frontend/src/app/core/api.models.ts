@@ -12,6 +12,9 @@ export interface UserProfile {
   display_name: string | null;
   avatar_url: string | null;
   discord_user_id: string | null;
+  discord_locale?: string | null;
+  preferred_locale?: string | null;
+  use_discord_locale?: boolean;
   status: string;
   email_verified: boolean;
   roles: string[];

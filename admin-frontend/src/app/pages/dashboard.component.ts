@@ -7,21 +7,24 @@ import { RouterLink } from '@angular/router';
 
 import { DashboardService } from '../core/dashboard.service';
 import { ShellComponent } from '../shared/shell.component';
+import { TranslatePipe } from '../core/translate.pipe';
+import { TranslationService } from '../core/translation.service';
 
 @Component({
   standalone: true,
   imports: [
     RouterLink,
     ShellComponent,
+    TranslatePipe,
   ],
   template: `
-    <sn-shell title="ShieldNet Dashboard">
+    <sn-shell [title]="'dashboard.title' | snT:'ShieldNet Dashboard'">
       <section class="hero card">
         <div>
-          <div class="muted">Administration workspace</div>
-          <h2>Discord infrastructure overview</h2>
+          <div class="muted">{{ "dashboard.workspace" | snT:"Administration workspace" }}</div>
+          <h2>{{ "dashboard.heading" | snT:"Discord infrastructure overview" }}</h2>
           <p class="muted">
-            Live service status, verification queues and server activity.
+            {{ "dashboard.description" | snT:"Live service status, verification queues and server activity." }}
           </p>
         </div>
 
@@ -30,7 +33,7 @@ import { ShellComponent } from '../shared/shell.component';
           [disabled]="loading()"
           (click)="load()"
         >
-          {{ loading() ? 'Refreshing…' : 'Refresh' }}
+          {{ loading() ? ('dashboard.refreshing' | snT:'Refreshing…') : ('dashboard.refresh' | snT:'Refresh') }}
         </button>
       </section>
 
@@ -45,7 +48,7 @@ import { ShellComponent } from '../shared/shell.component';
           <article class="card service">
             <span class="indicator online"></span>
             <div>
-              <strong>Backend</strong>
+              <strong>{{ "dashboard.backend" | snT:"Backend" }}</strong>
               <span>{{ overview().services.backend }}</span>
             </div>
           </article>
@@ -65,10 +68,10 @@ import { ShellComponent } from '../shared/shell.component';
               [class.warning]="overview().totals.verification_failed > 0"
             ></span>
             <div>
-              <strong>Verification</strong>
+              <strong>{{ "dashboard.verification" | snT:"Verification" }}</strong>
               <span>
                 {{ overview().totals.verification_failed }}
-                failed
+                {{ "dashboard.failed" | snT:"failed" }}
               </span>
             </div>
           </article>
@@ -77,39 +80,39 @@ import { ShellComponent } from '../shared/shell.component';
         <section class="metric-grid">
           <article class="card metric">
             <strong>{{ overview().totals.guilds }}</strong>
-            <span>Discord servers</span>
+            <span>{{ "dashboard.discord_servers" | snT:"Discord servers" }}</span>
           </article>
 
           <article class="card metric">
             <strong>{{ overview().totals.members }}</strong>
-            <span>Active members</span>
+            <span>{{ "dashboard.active_members" | snT:"Active members" }}</span>
           </article>
 
           <article class="card metric">
             <strong>
               {{ overview().totals.verification_pending }}
             </strong>
-            <span>Pending verification</span>
+            <span>{{ "dashboard.pending_verification" | snT:"Pending verification" }}</span>
           </article>
 
           <article class="card metric">
             <strong>{{ overview().totals.audit_24h }}</strong>
-            <span>Audit events / 24h</span>
+            <span>{{ "dashboard.audit_24h" | snT:"Audit events / 24h" }}</span>
           </article>
         </section>
 
         <div class="section-heading">
           <div>
-            <h2>Servers</h2>
+            <h2>{{ "dashboard.servers" | snT:"Servers" }}</h2>
             <div class="muted">
-              Generated {{ overview().generated_at }}
+              {{ "dashboard.generated" | snT:"Generated" }} {{ overview().generated_at }}
             </div>
           </div>
         </div>
 
         @if (overview().guilds.length === 0) {
           <section class="card empty">
-            No active server access was found.
+            {{ "dashboard.empty" | snT:"No active server access was found." }}
           </section>
         } @else {
           <section class="guild-grid">
@@ -146,23 +149,23 @@ import { ShellComponent } from '../shared/shell.component';
                 <div class="guild-metrics">
                   <div>
                     <strong>{{ guild.member_count }}</strong>
-                    <span>Members</span>
+                    <span>{{ "dashboard.members" | snT:"Members" }}</span>
                   </div>
                   <div>
                     <strong>
                       {{ guild.verification_pending }}
                     </strong>
-                    <span>Pending</span>
+                    <span>{{ "dashboard.pending" | snT:"Pending" }}</span>
                   </div>
                   <div>
                     <strong>
                       {{ guild.verification_failed }}
                     </strong>
-                    <span>Failed</span>
+                    <span>{{ "dashboard.failed" | snT:"Failed" }}</span>
                   </div>
                   <div>
                     <strong>{{ guild.audit_24h }}</strong>
-                    <span>Audit 24h</span>
+                    <span>{{ "dashboard.audit" | snT:"Audit 24h" }}</span>
                   </div>
                 </div>
 
@@ -174,7 +177,7 @@ import { ShellComponent } from '../shared/shell.component';
                       guild.guild_id
                     ]"
                   >
-                    Open server
+                    {{ "dashboard.open_server" | snT:"Open server" }}
                   </a>
 
                   <a
@@ -185,7 +188,7 @@ import { ShellComponent } from '../shared/shell.component';
                       'verification'
                     ]"
                   >
-                    Verification
+                    {{ "dashboard.open_verification" | snT:"Verification" }}
                   </a>
 
                   <a
@@ -196,7 +199,7 @@ import { ShellComponent } from '../shared/shell.component';
                       'audit'
                     ]"
                   >
-                    Audit
+                    {{ "dashboard.open_audit" | snT:"Audit" }}
                   </a>
                 </div>
               </article>
@@ -427,7 +430,7 @@ export class DashboardComponent implements OnInit {
       );
     } catch {
       this.error.set(
-        'Unable to load the ShieldNet dashboard.',
+        this.i18n.t('dashboard.load_error_full','Unable to load the ShieldNet dashboard.'),
       );
     } finally {
       this.loading.set(false);

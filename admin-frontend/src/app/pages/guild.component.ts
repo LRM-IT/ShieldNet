@@ -7,6 +7,8 @@ import { GuildPluginInstallation, GuildPluginService } from '../core/guild-plugi
 import { GuildModule } from '../core/module.models';
 import { ModuleService } from '../core/module.service';
 import { ShellComponent } from '../shared/shell.component';
+import { TranslatePipe } from '../core/translate.pipe';
+import { TranslationService } from '../core/translation.service';
 
 interface QuickAction {
   title: string;
@@ -18,69 +20,69 @@ interface QuickAction {
 
 @Component({
   standalone: true,
-  imports: [ShellComponent, RouterLink],
+  imports: [ShellComponent, RouterLink, TranslatePipe],
   template: `
-    <sn-shell [title]="guild()?.name || 'Server Node'">
+    <sn-shell [title]="guild()?.name || ('guild_node.fallback_title' | snT:'Server Node')">
       @if (error()) {
         <div class="error-panel">{{ error() }}</div>
       } @else if (guild(); as item) {
         <section class="node-hero">
           <div class="node-identity">
-            <div class="node-label">DISCORD INFRASTRUCTURE NODE</div>
+            <div class="node-label">{{ "guild_node.label" | snT:"DISCORD INFRASTRUCTURE NODE" }}</div>
             <h2>{{ item.name }}</h2>
             <p>
-              Identity, moderation, security, automation and runtime control.
+              {{ "guild_node.description" | snT:"Identity, moderation, security, automation and runtime control." }}
             </p>
 
-            <div class="node-id">NODE ID // {{ guildId }}</div>
+            <div class="node-id">{{ "guild_node.node_id" | snT:"NODE ID" }} // {{ guildId }}</div>
           </div>
 
           <div class="node-status">
             <div class="status-box">
-              <span>BOT LINK</span>
+              <span>{{ "guild_node.bot_link" | snT:"BOT LINK" }}</span>
               <strong>{{ item.bot_status }}</strong>
               <i></i>
             </div>
 
             <div class="hero-actions">
-              <a [routerLink]="['/guild', guildId, 'explorer']">EXPLORE</a>
-              <a class="primary" [routerLink]="['/guild', guildId, 'control']">CONTROL</a>
+              <a [routerLink]="['/guild', guildId, 'explorer']">{{ "guild_node.explore" | snT:"EXPLORE" }}</a>
+              <a class="primary" [routerLink]="['/guild', guildId, 'control']">{{ "guild_node.control" | snT:"CONTROL" }}</a>
             </div>
           </div>
         </section>
 
         <section class="summary-grid">
           <article>
-            <span>MEMBERS</span>
+            <span>{{ "guild_node.members" | snT:"MEMBERS" }}</span>
             <strong>{{ item.member_count }}</strong>
-            <a [routerLink]="['/guild', guildId, 'members']">Inspect identities →</a>
+            <a [routerLink]="['/guild', guildId, 'members']">{{ "guild_node.inspect_identities" | snT:"Inspect identities" }} →</a>
           </article>
 
           <article>
-            <span>ACCESS PROFILE</span>
+            <span>{{ "guild_node.access_profile" | snT:"ACCESS PROFILE" }}</span>
             <strong class="text-value">{{ item.access_role }}</strong>
-            <a [routerLink]="['/guild', guildId, 'permissions']">View permissions →</a>
+            <a [routerLink]="['/guild', guildId, 'permissions']">{{ "guild_node.view_permissions" | snT:"View permissions" }} →</a>
           </article>
 
           <article>
-            <span>INSTALLED PLUGINS</span>
+            <span>{{ "guild_node.installed_plugins" | snT:"INSTALLED PLUGINS" }}</span>
             <strong>{{ enabledCount() }}/{{ visibleModules().length }}</strong>
-            <a href="#module-fabric">Open module fabric ↓</a>
+            <a href="#module-fabric">{{ "guild_node.open_module_fabric" | snT:"Open module fabric" }} ↓</a>
           </article>
 
           <article>
-            <span>NODE STATE</span>
-            <strong class="state-value">NOMINAL</strong>
-            <a [routerLink]="['/guild', guildId, 'security']">Security overview →</a>
+            <span>{{ "guild_node.node_state" | snT:"NODE STATE" }}</span>
+            <strong class="state-value">{{ "guild_node.nominal" | snT:"NOMINAL" }}</strong>
+            <a [routerLink]="['/guild', guildId, 'security']">{{ "guild_node.security_overview" | snT:"Security overview" }} →</a>
           </article>
         </section>
 
         <section class="section-title">
           <div>
-            <span>CORE OPERATIONS</span>
-            <h3>Operational access</h3>
+            <span>{{ "guild_node.core_operations" | snT:"CORE OPERATIONS" }}</span>
+            <h3>{{ "guild_node.operational_access" | snT:"Operational access" }}</h3>
           </div>
-          <small>GLOBAL MODULES</small>
+          <small>{{ "guild_node.global_modules" | snT:"GLOBAL MODULES" }}</small>
         </section>
 
         <section class="quick-grid">
@@ -99,18 +101,18 @@ interface QuickAction {
 
         <section id="module-fabric" class="section-title module-title">
           <div>
-            <span>INSTALLED PLUGINS</span>
-            <h3>Plugin controls</h3>
+            <span>{{ "guild_node.installed_plugins" | snT:"INSTALLED PLUGINS" }}</span>
+            <h3>{{ "guild_node.plugin_controls" | snT:"Plugin controls" }}</h3>
           </div>
           @if (savingKey()) {
-            <small>SYNCHRONIZING {{ savingKey() }}</small>
+            <small>{{ "guild_node.synchronizing" | snT:"SYNCHRONIZING" }} {{ savingKey() }}</small>
           } @else {
-            <small>{{ enabledCount() }} ACTIVE MODULES</small>
+            <small>{{ enabledCount() }} {{ "guild_node.active_modules" | snT:"ACTIVE MODULES" }}</small>
           }
         </section>
 
         @if (loading()) {
-          <div class="loading-panel">Loading module fabric…</div>
+          <div class="loading-panel">{{ "guild_node.loading_fabric" | snT:"Loading module fabric…" }}</div>
         } @else {
           <section class="module-grid">
             @for (module of visibleModules(); track module.module_key; let index = $index) {
@@ -121,11 +123,11 @@ interface QuickAction {
                   <div class="module-heading">
                     <h4>{{ module.name }}</h4>
                     @if (module.is_core) {
-                      <span class="badge core">CORE</span>
+                      <span class="badge core">{{ "guild_node.core" | snT:"CORE" }}</span>
                     } @else if (module.enabled) {
-                      <span class="badge active">ENABLED</span>
+                      <span class="badge active">{{ "guild_node.enabled" | snT:"ENABLED" }}</span>
                     } @else {
-                      <span class="badge">DISABLED</span>
+                      <span class="badge">{{ "guild_node.disabled" | snT:"DISABLED" }}</span>
                     }
                   </div>
                   <p>{{ module.description }}</p>
@@ -138,19 +140,19 @@ interface QuickAction {
                       [class.disabled]="!module.enabled && !module.is_core"
                       [routerLink]="['/guild', guildId, path]"
                     >
-                      OPEN
+                      {{ "guild_node.open" | snT:"OPEN" }}
                     </a>
                   }
 
                   <label class="switch-wrap">
-                    <span>{{ module.enabled ? 'ON' : 'OFF' }}</span>
+                    <span>{{ module.enabled ? ('guild_node.on' | snT:'ON') : ('guild_node.off' | snT:'OFF') }}</span>
                     <button
                       type="button"
                       class="toggle"
                       [class.on]="module.enabled"
                       [disabled]="module.is_core || savingKey() === module.module_key"
                       (click)="toggle(module)"
-                      [attr.aria-label]="'Toggle ' + module.name"
+                      [attr.aria-label]="('guild_node.toggle' | snT:'Toggle') + ' ' + module.name"
                     >
                       <span></span>
                     </button>
@@ -161,9 +163,9 @@ interface QuickAction {
           </section>
         }
       } @else if (loading()) {
-        <div class="loading-panel">Establishing node connection…</div>
+        <div class="loading-panel">{{ "guild_node.establishing" | snT:"Establishing node connection…" }}</div>
       } @else {
-        <div class="error-panel">Node unavailable or access has been revoked.</div>
+        <div class="error-panel">{{ "guild_node.unavailable" | snT:"Node unavailable or access has been revoked." }}</div>
       }
     </sn-shell>
   `,
@@ -522,6 +524,7 @@ export class GuildComponent implements OnInit {
     private readonly guildService: GuildService,
     private readonly moduleService: ModuleService,
     private readonly guildPluginService: GuildPluginService,
+    private readonly i18n: TranslationService,
   ) {}
 
   async ngOnInit(): Promise<void> {
@@ -536,7 +539,7 @@ export class GuildComponent implements OnInit {
       this.modules.set(modules);
       this.installedPlugins.set(installedPlugins);
     } catch {
-      this.error.set('Unable to establish a connection to this server node.');
+      this.error.set(this.i18n.t('guild_node.connection_error','Unable to establish a connection to this server node.'));
     } finally {
       this.loading.set(false);
     }
@@ -562,7 +565,7 @@ export class GuildComponent implements OnInit {
         ),
       );
     } catch {
-      this.error.set(`Unable to update ${module.name}.`);
+      this.error.set(this.i18n.t('guild_node.module_update_error','Unable to update {name}.').replace('{name}',module.name));
     } finally {
       this.savingKey.set('');
     }

@@ -3,14 +3,16 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 
 import { ServerControlService } from '../core/server-control.service';
 import { ShellComponent } from '../shared/shell.component';
+import { TranslatePipe } from '../core/translate.pipe';
+import { TranslationService } from '../core/translation.service';
 
 @Component({
   standalone: true,
-  imports: [RouterLink, ShellComponent],
+  imports: [RouterLink, ShellComponent, TranslatePipe],
   template: `
-    <sn-shell title="Server Control Center">
+    <sn-shell [title]="'server_control.title' | snT:'Server Control Center'">
       @if (loading()) {
-        <section class="card state">Loading…</section>
+        <section class="card state">{{ "server_control.loading" | snT:"Loading…" }}</section>
       }
 
       @if (error()) {
@@ -29,54 +31,54 @@ import { ShellComponent } from '../shared/shell.component';
             }
 
             <div>
-              <div class="muted">Discord server</div>
+              <div class="muted">{{ "server_control.discord_server" | snT:"Discord server" }}</div>
               <h2>{{ data().guild.name }}</h2>
               <div class="muted">{{ data().guild.guild_id }}</div>
             </div>
           </div>
 
           <div class="hero-actions">
-            <span class="badge">Bot {{ data().guild.bot_status }}</span>
-            <button class="btn secondary" (click)="load()">Refresh</button>
+            <span class="badge">{{ "server_control.bot" | snT:"Bot" }} {{ data().guild.bot_status }}</span>
+            <button class="btn secondary" (click)="load()">{{ "server_control.refresh" | snT:"Refresh" }}</button>
           </div>
         </section>
 
         <section class="grid services">
-          <article class="card metric"><strong>{{ data().services.backend }}</strong><span>Backend</span></article>
-          <article class="card metric"><strong>{{ data().services.database }}</strong><span>PostgreSQL</span></article>
-          <article class="card metric"><strong>{{ data().services.bot }}</strong><span>Discord Bot</span></article>
+          <article class="card metric"><strong>{{ data().services.backend }}</strong><span>{{ "server_control.backend_label" | snT:"Backend" }}</span></article>
+          <article class="card metric"><strong>{{ data().services.database }}</strong><span>{{ "server_control.postgresql_label" | snT:"PostgreSQL" }}</span></article>
+          <article class="card metric"><strong>{{ data().services.bot }}</strong><span>{{ "server_control.discord_bot" | snT:"Discord Bot" }}</span></article>
         </section>
 
         <section class="grid totals">
-          <article class="card metric"><strong>{{ data().guild.member_count }}</strong><span>Members</span></article>
-          <article class="card metric"><strong>{{ data().guild.role_count }}</strong><span>Roles</span></article>
-          <article class="card metric"><strong>{{ data().guild.channel_count }}</strong><span>Channels</span></article>
-          <article class="card metric"><strong>{{ data().audit.events_24h }}</strong><span>Audit / 24h</span></article>
+          <article class="card metric"><strong>{{ data().guild.member_count }}</strong><span>{{ "server_control.members" | snT:"Members" }}</span></article>
+          <article class="card metric"><strong>{{ data().guild.role_count }}</strong><span>{{ "server_control.roles" | snT:"Roles" }}</span></article>
+          <article class="card metric"><strong>{{ data().guild.channel_count }}</strong><span>{{ "server_control.channels" | snT:"Channels" }}</span></article>
+          <article class="card metric"><strong>{{ data().audit.events_24h }}</strong><span>{{ "server_control.audit_24h" | snT:"Audit / 24h" }}</span></article>
         </section>
 
         <section class="card panel">
           <div class="panel-head">
-            <h3>Verification</h3>
-            <a class="btn secondary" [routerLink]="['/guild', guildId, 'verification']">Open</a>
+            <h3>{{ "server_control.verification" | snT:"Verification" }}</h3>
+            <a class="btn secondary" [routerLink]="['/guild', guildId, 'verification']">{{ "server_control.open" | snT:"Open" }}</a>
           </div>
 
           <div class="grid verify">
-            <div><strong>{{ data().verification.pending }}</strong><span>Pending</span></div>
-            <div><strong>{{ data().verification.processing }}</strong><span>Processing</span></div>
-            <div><strong>{{ data().verification.completed }}</strong><span>Completed</span></div>
-            <div><strong>{{ data().verification.failed }}</strong><span>Failed</span></div>
+            <div><strong>{{ data().verification.pending }}</strong><span>{{ "server_control.pending" | snT:"Pending" }}</span></div>
+            <div><strong>{{ data().verification.processing }}</strong><span>{{ "server_control.processing" | snT:"Processing" }}</span></div>
+            <div><strong>{{ data().verification.completed }}</strong><span>{{ "server_control.completed" | snT:"Completed" }}</span></div>
+            <div><strong>{{ data().verification.failed }}</strong><span>{{ "server_control.failed" | snT:"Failed" }}</span></div>
           </div>
         </section>
 
         <section class="card panel">
-          <h3>Server management</h3>
+          <h3>{{ "server_control.management" | snT:"Server management" }}</h3>
           <div class="grid nav">
-            <a [routerLink]="['/guild', guildId, 'members']">Members</a>
-            <a [routerLink]="['/guild', guildId, 'roles']">Roles</a>
-            <a [routerLink]="['/guild', guildId, 'modules']">Modules</a>
-            <a [routerLink]="['/guild', guildId, 'audit']">Audit</a>
-            <a [routerLink]="['/guild', guildId, 'verification']">Verification</a>
-            <a [routerLink]="['/guild', guildId, 'settings']">Settings</a>
+            <a [routerLink]="['/guild', guildId, 'members']">{{ "server_control.members" | snT:"Members" }}</a>
+            <a [routerLink]="['/guild', guildId, 'roles']">{{ "server_control.roles" | snT:"Roles" }}</a>
+            <a [routerLink]="['/guild', guildId, 'modules']">{{ "server_control.modules" | snT:"Modules" }}</a>
+            <a [routerLink]="['/guild', guildId, 'audit']">{{ "server_control.audit" | snT:"Audit" }}</a>
+            <a [routerLink]="['/guild', guildId, 'verification']">{{ "server_control.verification" | snT:"Verification" }}</a>
+            <a [routerLink]="['/guild', guildId, 'settings']">{{ "server_control.settings" | snT:"Settings" }}</a>
           </div>
         </section>
       }
@@ -108,6 +110,7 @@ export class ServerControlComponent implements OnInit {
   constructor(
     private readonly route: ActivatedRoute,
     private readonly service: ServerControlService,
+    private readonly i18n: TranslationService,
   ) {}
 
   async ngOnInit(): Promise<void> {
@@ -120,7 +123,7 @@ export class ServerControlComponent implements OnInit {
     try {
       this.data.set(await this.service.overview(this.guildId));
     } catch {
-      this.error.set('Unable to load the Server Control Center.');
+      this.error.set(this.i18n.t('server_control.load_error', 'Unable to load the Server Control Center.'));
     } finally {
       this.loading.set(false);
     }
