@@ -72,3 +72,4 @@ from app.models.plugins import (
 from app.models.settings import ModuleSetting
 
 from app.models.plugin_control import PluginPermission, PluginPermissionGrant, PluginPermissionAudit, PluginSecret, PluginSecretAudit, PluginActivationState, PluginActivationHistory, PluginPackageHistory
+from app.models.platform_ai import PlatformAIProvider, PlatformAISettings

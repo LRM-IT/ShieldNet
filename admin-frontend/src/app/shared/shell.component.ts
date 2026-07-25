@@ -85,6 +85,9 @@ interface PluginNavDefinition {
               <a routerLink="/platform/notifications" routerLinkActive="active">
                 <span class="nav-icon">◌</span><span>Notifications</span>
               </a>
+              <a routerLink="/platform/ai" routerLinkActive="active">
+                <span class="nav-icon">AI</span><span>AI Center</span>
+              </a>
               <a routerLink="/platform/access" routerLinkActive="active">
                 <span class="nav-icon">⚿</span><span>Platform access</span>
               </a>

@@ -1,3 +1,4 @@
+import { PlatformAIComponent } from './pages/platform-ai.component';
 import { HealthMonitorComponent } from './pages/health-monitor.component';
 import { LiveLogsComponent } from './pages/live-logs.component';
 import { PluginRuntimeUsageComponent } from './pages/plugin-runtime-usage.component';
@@ -46,6 +47,7 @@ export const routes: Routes = [
   { path: 'profile', component: ProfileComponent, canActivate: [authGuard] },
   { path: 'access-denied', component: AccessDeniedComponent },
   { path: 'servers', component: ServerSelectorComponent, canActivate: [authGuard] },
+  { path: 'platform/ai', component: PlatformAIComponent, canActivate: [platformGuard] },
   { path: 'platform/access', component: PlatformAccessComponent, canActivate: [platformGuard] },
   { path: 'platform/plugins', component: PluginsComponent, canActivate: [platformGuard] },
   { path: 'platform/jobs', component: JobsCenterComponent, canActivate: [platformGuard] },
