@@ -12,7 +12,7 @@ from app.core.security import (
     hash_refresh_token,
     verify_password,
 )
-from app.models.core import LoginAttempt, Session, User, UserStatus
+from app.models.core import AuthSource, GlobalRole, LoginAttempt, Session, User, UserStatus
 from app.schemas.auth import TokenPair
 
 
@@ -73,7 +73,29 @@ class AuthService:
             )
 
         user.last_login_at = datetime.now(UTC)
-        tokens = await self._issue_tokens(user, ip_address, user_agent)
+        tokens = await self._issue_tokens(user, ip_address, user_agent, AuthSource.LOCAL_PLATFORM.value)
+        await self.session.commit()
+        return tokens
+
+    async def platform_login(
+        self, identity: str, password: str, ip_address: str | None, user_agent: str | None
+    ) -> TokenPair:
+        normalized = identity.strip().lower()
+        result = await self.session.execute(
+            select(User).options(selectinload(User.roles)).where(or_(User.email == normalized, User.login == normalized))
+        )
+        user = result.scalar_one_or_none()
+        valid = user is not None and user.password_hash is not None and verify_password(password, user.password_hash)
+        is_owner = valid and any(role.role == GlobalRole.SUPERADMIN for role in user.roles)
+        self.session.add(LoginAttempt(email=normalized if "@" in normalized else None, user_id=user.id if user else None, ip_address=ip_address, user_agent=user_agent, successful=bool(is_owner), failure_reason=None if is_owner else "platform_access_denied"))
+        if not is_owner:
+            await self.session.commit()
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid platform credentials")
+        if user.status != UserStatus.ACTIVE:
+            await self.session.commit()
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Account is not active")
+        user.last_login_at = datetime.now(UTC)
+        tokens = await self._issue_tokens(user, ip_address, user_agent, AuthSource.LOCAL_PLATFORM.value)
         await self.session.commit()
         return tokens
 
@@ -108,6 +130,7 @@ class AuthService:
             stored.user,
             ip_address,
             user_agent,
+            stored.auth_source,
         )
         await self.session.commit()
         return tokens
@@ -129,9 +152,10 @@ class AuthService:
         user: User,
         ip_address: str | None,
         user_agent: str | None,
+        auth_source: str = AuthSource.DISCORD_GUILD.value,
     ) -> TokenPair:
         roles = [role.role.value for role in user.roles]
-        access_token = create_access_token(str(user.id), roles)
+        access_token = create_access_token(str(user.id), roles, auth_source)
         refresh_token = generate_refresh_token()
 
         self.session.add(
@@ -142,6 +166,7 @@ class AuthService:
                 user_agent=user_agent,
                 expires_at=datetime.now(UTC)
                 + timedelta(days=settings.refresh_token_days),
+                auth_source=auth_source,
             )
         )
 

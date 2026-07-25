@@ -10,7 +10,7 @@ from sqlalchemy.orm import selectinload
 
 from app.core.config import settings
 from app.core.security import create_oauth_state, decode_oauth_state
-from app.models.core import User, UserStatus
+from app.models.core import AuthSource, GlobalRole, PlatformDiscordAdmin, User, UserRole, UserStatus
 from app.models.discord import (
     Guild,
     GuildMembership,
@@ -161,10 +161,28 @@ class DiscordOAuthService:
                 "AuthService token issuing method was not found."
             )
 
+        admin_result = await self.session.execute(
+            select(PlatformDiscordAdmin).where(
+                PlatformDiscordAdmin.discord_user_id == discord_user_id,
+                PlatformDiscordAdmin.is_active.is_(True),
+                or_(PlatformDiscordAdmin.expires_at.is_(None), PlatformDiscordAdmin.expires_at > datetime.now(UTC)),
+            )
+        )
+        platform_admin = admin_result.scalar_one_or_none()
+        auth_source = AuthSource.DISCORD_PLATFORM.value if platform_admin else AuthSource.DISCORD_GUILD.value
+        if platform_admin:
+            platform_admin.last_login_at = datetime.now(UTC)
+            role_value = GlobalRole.ADMIN if platform_admin.role == "platform_admin" else GlobalRole.MODERATOR
+            if not any(item.role == role_value for item in user.roles):
+                self.session.add(UserRole(user_id=user.id, role=role_value))
+                await self.session.flush()
+                await self.session.refresh(user, attribute_names=["roles"])
+
         tokens = await issue_tokens(
             user,
             ip_address,
             user_agent,
+            auth_source,
         )
 
         # Some AuthService versions commit internally; this remains safe.

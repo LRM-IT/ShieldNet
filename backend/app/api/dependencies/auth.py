@@ -46,4 +46,5 @@ async def get_current_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
+    setattr(user, "_auth_source", payload.get("auth_source", "discord_guild"))
     return user

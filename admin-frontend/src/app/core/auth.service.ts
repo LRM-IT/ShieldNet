@@ -27,6 +27,13 @@ export class AuthService {
     return localStorage.getItem(this.refreshKey) || sessionStorage.getItem(this.refreshKey);
   }
 
+  async platformLogin(identity: string, password: string): Promise<void> {
+    const tokens = await firstValueFrom(this.http.post<TokenPair>('/api/v1/auth/platform/login', { identity, password }));
+    this.saveTokens(tokens);
+    const profile = await this.loadProfile();
+    await this.router.navigateByUrl(profile.platform_context ? '/' : '/');
+  }
+
   async startDiscordLogin(): Promise<void> {
     const response = await firstValueFrom(
       this.http.get<{ authorization_url: string }>('/api/v1/auth/discord/start'),

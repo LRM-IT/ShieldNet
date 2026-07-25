@@ -39,6 +39,12 @@ class TwoFactorType(str, enum.Enum):
     TELEGRAM = "telegram"
 
 
+class AuthSource(str, enum.Enum):
+    LOCAL_PLATFORM = "local_platform"
+    DISCORD_PLATFORM = "discord_platform"
+    DISCORD_GUILD = "discord_guild"
+
+
 class User(Base, TimestampMixin):
     __tablename__ = "users"
     __table_args__ = (
@@ -196,6 +202,7 @@ class Session(Base):
         server_default=func.now(),
     )
     revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    auth_source: Mapped[str] = mapped_column(String(32), nullable=False, server_default=AuthSource.DISCORD_GUILD.value)
     user: Mapped[User] = relationship(back_populates="sessions")
 
 
@@ -312,3 +319,22 @@ class PasswordResetToken(Base):
         nullable=False,
         server_default=func.now(),
     )
+
+
+class PlatformDiscordAdmin(Base, TimestampMixin):
+    __tablename__ = "platform_discord_admins"
+    __table_args__ = (
+        UniqueConstraint("discord_user_id", name="uq_core_platform_discord_admins_discord_user_id"),
+        Index("ix_core_platform_discord_admins_active", "is_active"),
+        {"schema": "core"},
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    discord_user_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
+    role: Mapped[str] = mapped_column(String(32), nullable=False, server_default="platform_admin")
+    display_name: Mapped[str | None] = mapped_column(String(128))
+    description: Mapped[str | None] = mapped_column(Text)
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True, server_default="true")
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_by_user_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("core.users.id", ondelete="SET NULL"))
+    last_login_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

@@ -20,6 +20,8 @@ export interface UserProfile {
   roles: string[];
   highest_role?: string | null;
   is_superadmin?: boolean;
+  auth_source?: string;
+  platform_context?: boolean;
 }
 
 export interface GuildAccess {

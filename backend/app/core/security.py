@@ -21,11 +21,12 @@ def verify_password(password: str, encoded_hash: str) -> bool:
     return password_hash.verify(password, encoded_hash)
 
 
-def create_access_token(user_id: str, roles: list[str]) -> str:
+def create_access_token(user_id: str, roles: list[str], auth_source: str = "discord_guild") -> str:
     now = datetime.now(UTC)
     payload = {
         "sub": user_id,
         "roles": roles,
+        "auth_source": auth_source,
         "type": "access",
         "iat": now,
         "exp": now + timedelta(minutes=settings.access_token_minutes),

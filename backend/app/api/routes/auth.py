@@ -16,7 +16,7 @@ from app.services.discord_oauth import DiscordOAuthService
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 
-@router.post("/login", response_model=TokenPair)
+@router.post("/login", response_model=TokenPair, include_in_schema=False)
 async def login(
     payload: LoginRequest,
     request: Request,
@@ -25,6 +25,17 @@ async def login(
     return await AuthService(session).login(
         payload.identity,
         payload.password,
+        request.client.host if request.client else None,
+        request.headers.get("user-agent"),
+    )
+
+
+@router.post("/platform/login", response_model=TokenPair)
+async def platform_login(
+    payload: LoginRequest, request: Request, session: AsyncSession = Depends(get_db_session),
+) -> TokenPair:
+    return await AuthService(session).platform_login(
+        payload.identity, payload.password,
         request.client.host if request.client else None,
         request.headers.get("user-agent"),
     )
@@ -54,7 +65,10 @@ async def logout(
 
 @router.get("/me")
 async def me(current_user: User = Depends(get_current_user)) -> dict:
-    return user_to_response(current_user)
+    payload = user_to_response(current_user)
+    payload["auth_source"] = getattr(current_user, "_auth_source", "discord_guild")
+    payload["platform_context"] = payload["auth_source"] in {"local_platform", "discord_platform"}
+    return payload
 
 
 

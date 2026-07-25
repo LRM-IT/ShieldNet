@@ -28,12 +28,14 @@ import { Routes } from '@angular/router';
 
 import { authGuard } from './core/auth.guard';
 import { LoginComponent } from './pages/login.component';
+import { PlatformLoginComponent } from './pages/platform-login.component';
 import { EnterpriseDashboardComponent } from './pages/enterprise-dashboard.component';
 import { GuildComponent } from './pages/guild.component';
 import { ProfileComponent } from './pages/profile.component';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
+  { path: 'control/auth', component: PlatformLoginComponent },
   { path: 'profile', component: ProfileComponent, canActivate: [authGuard] },
   { path: 'platform/access', component: PlatformAccessComponent, canActivate: [authGuard] },
   { path: 'platform/plugins', component: PluginsComponent, canActivate: [authGuard] },
