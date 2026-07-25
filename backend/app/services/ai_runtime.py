@@ -8,6 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.ai_gateway import GuildAIModuleSetting, GuildAIProvider, GuildAIRequestLog, GuildAIUsage
+from app.models.platform_ai import PlatformAIProvider, PlatformAISettings
 from app.services.ai_gateway import DEFAULT_BASE_URLS
 from app.services.ai_secrets import AISecretService
 
@@ -30,14 +31,30 @@ class AIRuntimeService:
                       target_language: str | None = None, model: str | None = None,
                       temperature: float | None = None, max_output_tokens: int | None = None,
                       metadata: dict[str, Any] | None = None) -> tuple[GuildAIProvider, AIResult]:
+        platform_settings = await self.session.get(PlatformAISettings, 1)
+        if platform_settings and platform_settings.emergency_stop:
+            raise RuntimeError("Platform AI emergency stop is enabled")
+
         setting = await self._setting(guild_id, module_key, capability)
         candidates = await self._providers(guild_id, setting)
         if not candidates:
             raise LookupError(f"No enabled AI provider configured for {module_key}/{capability}")
 
+        defaults = (platform_settings.defaults or {}) if platform_settings else {}
+        platform_default_model = (
+            defaults.get(f"{module_key}:{capability}")
+            or defaults.get(capability)
+            or defaults.get(module_key)
+        )
+
         failures: list[str] = []
         for provider in candidates:
-            selected_model = model or (setting.model if setting else None) or provider.default_model
+            selected_model = (
+                model
+                or (setting.model if setting else None)
+                or provider.default_model
+                or platform_default_model
+            )
             try:
                 result = await self._call_provider(
                     provider=provider, capability=capability, input_text=input_text,
@@ -63,7 +80,11 @@ class AIRuntimeService:
         ))
         return result.scalar_one_or_none()
 
-    async def _providers(self, guild_id: int, setting: GuildAIModuleSetting | None) -> list[GuildAIProvider]:
+    async def _providers(
+        self,
+        guild_id: int,
+        setting: GuildAIModuleSetting | None,
+    ) -> list[GuildAIProvider | PlatformAIProvider]:
         ids: list[UUID] = []
         if setting and setting.provider_id:
             ids.append(setting.provider_id)
@@ -75,13 +96,32 @@ class AIRuntimeService:
                         ids.append(value)
                 except ValueError:
                     continue
-        query = select(GuildAIProvider).where(GuildAIProvider.guild_id == guild_id, GuildAIProvider.enabled.is_(True))
-        result = await self.session.execute(query.order_by(GuildAIProvider.priority, GuildAIProvider.name))
+
+        query = select(GuildAIProvider).where(
+            GuildAIProvider.guild_id == guild_id,
+            GuildAIProvider.enabled.is_(True),
+        )
+        result = await self.session.execute(
+            query.order_by(GuildAIProvider.priority, GuildAIProvider.name)
+        )
         available = list(result.scalars().all())
-        if not ids:
+
+        if ids:
+            by_id = {item.id: item for item in available}
+            available = [by_id[item_id] for item_id in ids if item_id in by_id]
+
+        if available:
             return available
-        by_id = {item.id: item for item in available}
-        return [by_id[item_id] for item_id in ids if item_id in by_id]
+
+        platform_result = await self.session.execute(
+            select(PlatformAIProvider)
+            .where(PlatformAIProvider.enabled.is_(True))
+            .order_by(
+                PlatformAIProvider.priority,
+                PlatformAIProvider.name,
+            )
+        )
+        return list(platform_result.scalars().all())
 
     async def _call_provider(self, *, provider: GuildAIProvider, capability: str, input_text: str,
                              system_prompt: str | None, source_language: str | None,
@@ -194,13 +234,52 @@ class AIRuntimeService:
         if response.status_code >= 400:
             raise RuntimeError(f"Provider HTTP {response.status_code}: {response.text[:500]}")
 
+    @staticmethod
+    def _provider_log_data(provider, metadata):
+        is_platform = isinstance(provider, PlatformAIProvider)
+        result = dict(metadata)
+        if is_platform:
+            result.update({
+                "provider_scope": "platform",
+                "platform_provider_id": str(provider.id),
+                "platform_provider_name": provider.name,
+            })
+        else:
+            result.setdefault("provider_scope", "guild")
+        return (None if is_platform else provider.id), result
+
     async def _record(self, provider, guild_id, module_key, capability, result, status, metadata):
-        self.session.add(GuildAIUsage(guild_id=guild_id, provider_id=provider.id, module_key=module_key,
-            capability=capability, model=result.model, input_units=result.input_units, output_units=result.output_units))
-        self.session.add(GuildAIRequestLog(guild_id=guild_id, provider_id=provider.id, module_key=module_key,
-            capability=capability, model=result.model, status=status, latency_ms=result.latency_ms, metadata_json=metadata))
+        provider_id, metadata_json = self._provider_log_data(provider, metadata)
+        self.session.add(GuildAIUsage(
+            guild_id=guild_id,
+            provider_id=provider_id,
+            module_key=module_key,
+            capability=capability,
+            model=result.model,
+            input_units=result.input_units,
+            output_units=result.output_units,
+        ))
+        self.session.add(GuildAIRequestLog(
+            guild_id=guild_id,
+            provider_id=provider_id,
+            module_key=module_key,
+            capability=capability,
+            model=result.model,
+            status=status,
+            latency_ms=result.latency_ms,
+            metadata_json=metadata_json,
+        ))
 
     async def _record_failure(self, provider, guild_id, module_key, capability, model, exc, metadata):
-        self.session.add(GuildAIRequestLog(guild_id=guild_id, provider_id=provider.id, module_key=module_key,
-            capability=capability, model=model, status="error", error_code=exc.__class__.__name__,
-            error_message=str(exc)[:2000], metadata_json=metadata))
+        provider_id, metadata_json = self._provider_log_data(provider, metadata)
+        self.session.add(GuildAIRequestLog(
+            guild_id=guild_id,
+            provider_id=provider_id,
+            module_key=module_key,
+            capability=capability,
+            model=model,
+            status="error",
+            error_code=exc.__class__.__name__,
+            error_message=str(exc)[:2000],
+            metadata_json=metadata_json,
+        ))
