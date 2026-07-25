@@ -1,3 +1,5 @@
+import { HealthMonitorComponent } from './pages/health-monitor.component';
+import { LiveLogsComponent } from './pages/live-logs.component';
 import { PluginRuntimeUsageComponent } from './pages/plugin-runtime-usage.component';
 import { PluginsComponent } from './pages/plugins.component';
 import { AIIntegrationsComponent } from './pages/ai-integrations.component';
@@ -37,6 +39,8 @@ export const routes: Routes = [
   { path: 'platform/plugins', component: PluginsComponent, canActivate: [authGuard] },
   { path: 'platform/jobs', component: JobsCenterComponent, canActivate: [authGuard] },
   { path: 'platform/operations', component: OperationsComponent, canActivate: [authGuard] },
+  { path: 'platform/health', component: HealthMonitorComponent, canActivate: [authGuard] },
+  { path: 'platform/logs', component: LiveLogsComponent, canActivate: [authGuard] },
   { path: 'platform/notifications', component: NotificationsComponent, canActivate: [authGuard] },
   { path: 'platform/doctor', component: DoctorComponent, canActivate: [authGuard] },
   {

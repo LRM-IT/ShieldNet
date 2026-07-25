@@ -329,3 +329,17 @@ textarea::placeholder {
 :root[data-theme="arctic"] textarea {
   background: #ffffff;
 }
+
+
+/* Stage 14 appearance mode refinements */
+:root[data-theme="arctic"] body {
+  background:
+    linear-gradient(rgba(25,118,210,.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(25,118,210,.035) 1px, transparent 1px),
+    radial-gradient(circle at 85% -10%, rgba(25,118,210,.12), transparent 34rem),
+    #eef4f8;
+  background-size:32px 32px,32px 32px,auto,auto;
+}
+:root[data-theme="arctic"] body::before{opacity:.08}
+:root[data-theme="arctic"] ::-webkit-scrollbar-track{background:#e5edf3}
+:root[data-theme="arctic"] ::-webkit-scrollbar-thumb{background:#b8c8d4;border-color:#e5edf3}

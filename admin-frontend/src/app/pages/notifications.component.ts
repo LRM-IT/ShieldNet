@@ -1,13 +1,14 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, Subscription } from 'rxjs';
 
 import { NotificationService, NotificationSummary, PlatformNotification } from '../core/notification.service';
 import { ShellComponent } from '../shared/shell.component';
 import { TranslatePipe } from '../core/translate.pipe';
 import { TranslationService } from '../core/translation.service';
 import { ToastService } from '../core/toast.service';
+import { EventBusService } from '../core/event-bus.service';
 
 @Component({
   selector: 'sn-notifications',
@@ -141,20 +142,27 @@ export class NotificationsComponent implements OnInit, OnDestroy {
   autoRefresh = true;
 
   private refreshTimer: number | null = null;
+  private eventSubscription?: Subscription;
 
   constructor(
     private readonly notifications: NotificationService,
     private readonly i18n: TranslationService,
     private readonly toast: ToastService,
+    private readonly eventBus: EventBusService,
   ) {}
 
   ngOnInit(): void {
     void this.load();
     this.configureAutoRefresh();
+    this.eventBus.connect();
+    this.eventSubscription = this.eventBus.events$.subscribe((event) => {
+      if (event.type.startsWith('notification.')) void this.load(false);
+    });
   }
 
   ngOnDestroy(): void {
     this.stopAutoRefresh();
+    this.eventSubscription?.unsubscribe();
   }
 
   async load(showError = true): Promise<void> {

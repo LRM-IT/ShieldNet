@@ -1,14 +1,17 @@
 import {
   Component,
+  OnDestroy,
   OnInit,
   signal,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { Subscription, debounceTime, filter } from 'rxjs';
 
 import { DashboardService } from '../core/dashboard.service';
 import { ShellComponent } from '../shared/shell.component';
 import { TranslatePipe } from '../core/translate.pipe';
 import { TranslationService } from '../core/translation.service';
+import { EventBusService } from '../core/event-bus.service';
 
 @Component({
   standalone: true,
@@ -407,33 +410,51 @@ import { TranslationService } from '../core/translation.service';
     }
   `],
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, OnDestroy {
   readonly overview = signal<any | null>(null);
   readonly loading = signal(false);
   readonly error = signal('');
 
+  private readonly liveSubscription: Subscription;
+
   constructor(
     private readonly dashboardService: DashboardService,
-  ) {}
+    private readonly eventBus: EventBusService,
+    readonly i18n: TranslationService,
+  ) {
+    this.liveSubscription = this.eventBus.events$.pipe(
+      filter((event) =>
+        event.type.startsWith('notification.') ||
+        event.type.startsWith('guild.') ||
+        event.type.startsWith('member.') ||
+        event.type.startsWith('verification.') ||
+        event.type.startsWith('runtime.')
+      ),
+      debounceTime(500),
+    ).subscribe(() => void this.load(true));
+  }
 
   async ngOnInit(): Promise<void> {
+    this.eventBus.connect();
     await this.load();
   }
 
-  async load(): Promise<void> {
-    this.loading.set(true);
+  ngOnDestroy(): void {
+    this.liveSubscription.unsubscribe();
+  }
+
+  async load(silent = false): Promise<void> {
+    if (!silent) this.loading.set(true);
     this.error.set('');
 
     try {
-      this.overview.set(
-        await this.dashboardService.overview(),
-      );
+      this.overview.set(await this.dashboardService.overview());
     } catch {
       this.error.set(
-        this.i18n.t('dashboard.load_error_full','Unable to load the ShieldNet dashboard.'),
+        this.i18n.t('dashboard.load_error_full', 'Unable to load the ShieldNet dashboard.'),
       );
     } finally {
-      this.loading.set(false);
+      if (!silent) this.loading.set(false);
     }
   }
 }

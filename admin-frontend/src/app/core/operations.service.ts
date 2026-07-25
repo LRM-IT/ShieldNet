@@ -9,6 +9,17 @@ export interface OperationsSnapshot {
     latency_ms?: number | null;
     queue_depth?: number;
     memory_bytes?: number | null;
+    cpu_count?: number;
+    load_1m?: number;
+    load_5m?: number;
+    load_15m?: number;
+    load_percent?: number;
+    memory_total_bytes?: number;
+    memory_used_bytes?: number;
+    memory_percent?: number;
+    disk_total_bytes?: number;
+    disk_used_bytes?: number;
+    disk_percent?: number;
   }>;
   workers: Array<{
     worker_name: string;

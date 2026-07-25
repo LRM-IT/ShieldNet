@@ -12,6 +12,8 @@ export interface ThemeDefinition {
 @Injectable({ providedIn: 'root' })
 export class ThemeService {
   private readonly storageKey = 'shieldnet_theme';
+  private readonly appearanceKey = 'shieldnet_appearance';
+  private mediaQuery: MediaQueryList | null = null;
 
   readonly themes: ThemeDefinition[] = [
     {
@@ -66,9 +68,14 @@ export class ThemeService {
 
   readonly activeTheme = signal(this.readStoredTheme());
   readonly theme = this.activeTheme;
+  readonly appearanceMode = signal<'auto' | 'dark' | 'light'>(this.readAppearanceMode());
 
   constructor() {
-    this.apply(this.activeTheme());
+    this.mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    this.mediaQuery.addEventListener('change', () => {
+      if (this.appearanceMode() === 'auto') this.applyAppearance();
+    });
+    this.applyAppearance();
   }
 
   setTheme(themeId: string): void {
@@ -77,7 +84,35 @@ export class ThemeService {
       : 'shieldnet';
     this.activeTheme.set(valid);
     localStorage.setItem(this.storageKey, valid);
-    this.apply(valid);
+    this.applyAppearance();
+  }
+
+  setAppearanceMode(mode: 'auto' | 'dark' | 'light'): void {
+    this.appearanceMode.set(mode);
+    localStorage.setItem(this.appearanceKey, mode);
+    this.applyAppearance();
+  }
+
+  cycleAppearanceMode(): void {
+    const order: Array<'auto' | 'dark' | 'light'> = ['auto', 'dark', 'light'];
+    const index = order.indexOf(this.appearanceMode());
+    this.setAppearanceMode(order[(index + 1) % order.length]);
+  }
+
+  private readAppearanceMode(): 'auto' | 'dark' | 'light' {
+    const stored = localStorage.getItem(this.appearanceKey);
+    return stored === 'dark' || stored === 'light' || stored === 'auto' ? stored : 'auto';
+  }
+
+  private applyAppearance(): void {
+    const mode = this.appearanceMode();
+    const wantsDark = mode === 'dark' || (mode === 'auto' && (this.mediaQuery?.matches ?? true));
+    const selected = this.themes.find((item) => item.id === this.activeTheme());
+    const themeId = wantsDark
+      ? (selected?.dark === false ? 'shieldnet' : this.activeTheme())
+      : 'arctic';
+    document.documentElement.dataset['appearance'] = mode;
+    this.apply(themeId);
   }
 
   private readStoredTheme(): string {

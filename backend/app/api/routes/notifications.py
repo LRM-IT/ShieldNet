@@ -9,6 +9,7 @@ from app.api.dependencies.auth import get_current_user
 from app.db.session import get_db_session
 from app.models.core import GlobalRole, User
 from app.models.notifications import PlatformNotification
+from app.core.events import Event, event_bus
 from app.services.audit_service import AuditService
 from app.services.global_access import GlobalAccessService
 from app.services.notification_service import NotificationService
@@ -89,6 +90,12 @@ async def evaluate_notifications(
         payload=result,
     )
     await session.commit()
+    await event_bus.publish(Event(
+        name="notification.summary.updated",
+        payload=result,
+        actor_id=current_user.discord_user_id,
+        source="notification-center",
+    ))
     return result
 
 
@@ -115,7 +122,15 @@ async def _change_status(notification_id: UUID, status: str, current_user: User,
     )
     await session.commit()
     await session.refresh(item)
-    return _serialize(item)
+    serialized = _serialize(item)
+    await event_bus.publish(Event(
+        name="notification.status.changed",
+        payload=serialized,
+        guild_id=item.guild_id,
+        actor_id=current_user.discord_user_id,
+        source="notification-center",
+    ))
+    return serialized
 
 
 @router.post("/{notification_id}/acknowledge")

@@ -1,4 +1,6 @@
 import asyncio
+import os
+import shutil
 from datetime import UTC, datetime, timedelta
 from time import perf_counter
 
@@ -17,6 +19,43 @@ from app.models.runtime import RuntimeHeartbeat
 from app.services.global_access import GlobalAccessService
 
 router = APIRouter(prefix="/platform/operations", tags=["Platform Operations"])
+
+
+def _read_memory() -> tuple[int, int]:
+    values: dict[str, int] = {}
+    try:
+        for line in open("/proc/meminfo", encoding="utf-8"):
+            key, raw = line.split(":", 1)
+            values[key] = int(raw.strip().split()[0]) * 1024
+    except (OSError, ValueError):
+        return 0, 0
+    total = values.get("MemTotal", 0)
+    available = values.get("MemAvailable", values.get("MemFree", 0))
+    return total, max(0, total - available)
+
+
+def _system_metrics() -> dict:
+    memory_total, memory_used = _read_memory()
+    disk = shutil.disk_usage("/")
+    try:
+        load_1m, load_5m, load_15m = os.getloadavg()
+    except OSError:
+        load_1m = load_5m = load_15m = 0.0
+    cpu_count = os.cpu_count() or 1
+    return {
+        "status": "online",
+        "cpu_count": cpu_count,
+        "load_1m": round(load_1m, 2),
+        "load_5m": round(load_5m, 2),
+        "load_15m": round(load_15m, 2),
+        "load_percent": round(min(100.0, load_1m / cpu_count * 100), 1),
+        "memory_total_bytes": memory_total,
+        "memory_used_bytes": memory_used,
+        "memory_percent": round(memory_used / memory_total * 100, 1) if memory_total else 0.0,
+        "disk_total_bytes": disk.total,
+        "disk_used_bytes": disk.used,
+        "disk_percent": round(disk.used / disk.total * 100, 1) if disk.total else 0.0,
+    }
 
 
 def _require(user: User) -> None:
@@ -59,6 +98,7 @@ async def _snapshot(session: AsyncSession) -> dict:
         "generated_at": now.isoformat(),
         "components": {
             "backend": {"status": "online"},
+            "system": _system_metrics(),
             "postgresql": {"status": "online", "latency_ms": db_latency},
             "valkey": {
                 "status": redis_status,

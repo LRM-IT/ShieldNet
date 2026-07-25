@@ -1,6 +1,8 @@
 import { Component, HostListener, Input, OnDestroy, OnInit, computed, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { TranslatePipe } from '../core/translate.pipe';
+import { EventBusService } from '../core/event-bus.service';
+import { ThemeService } from '../core/theme.service';
 
 import { AuthService } from '../core/auth.service';
 import {
@@ -37,7 +39,7 @@ interface PluginNavDefinition {
   standalone: true,
   imports: [RouterLink, RouterLinkActive, TranslatePipe],
   template: `
-    <div class="workspace" [class.menu-open]="mobileMenu()">
+    <div class="workspace" [class.menu-open]="mobileMenu()" [class.menu-collapsed]="menuCollapsed()">
       <aside class="rail">
         <a routerLink="/" class="brand" aria-label="ShieldNet home">
           <span class="brand-symbol"><span></span><span></span><span></span></span>
@@ -68,9 +70,20 @@ interface PluginNavDefinition {
             <a routerLink="/platform/jobs" routerLinkActive="active">
               <span class="nav-icon">⌁</span><span>{{ 'shell.jobs_center' | snT:'Jobs center' }}</span>
             </a>
-            <a routerLink="/platform/operations" routerLinkActive="active">
-              <span class="nav-icon">◎</span><span>{{ 'shell.operations' | snT:'Operations' }}</span>
-            </a>
+            @if (hasPlatformOperations()) {
+              <a routerLink="/platform/operations" routerLinkActive="active">
+                <span class="nav-icon">◎</span><span>{{ 'shell.operations' | snT:'Operations' }}</span>
+              </a>
+              <a routerLink="/platform/health" routerLinkActive="active">
+                <span class="nav-icon">✚</span><span>Health monitor</span>
+              </a>
+              <a routerLink="/platform/logs" routerLinkActive="active">
+                <span class="nav-icon">≡</span><span>Live logs</span>
+              </a>
+              <a routerLink="/platform/notifications" routerLinkActive="active">
+                <span class="nav-icon">◌</span><span>Notifications</span>
+              </a>
+            }
           </div>
 
           @if (guildId()) {
@@ -126,12 +139,22 @@ interface PluginNavDefinition {
           </div>
 
           <div class="top-actions">
+            <button type="button" class="icon-action desktop-collapse"
+                    (click)="toggleMenuCollapsed()"
+                    [attr.aria-label]="menuCollapsed() ? 'Expand navigation' : 'Collapse navigation'">
+              {{ menuCollapsed() ? '»' : '«' }}
+            </button>
+            <button type="button" class="appearance-button"
+                    (click)="themes.cycleAppearanceMode()"
+                    [attr.aria-label]="'Appearance: ' + themes.appearanceMode()">
+              <span>{{ appearanceIcon() }}</span><b>{{ themes.appearanceMode().toUpperCase() }}</b>
+            </button>
             <button type="button" class="command-button"
                     (click)="openPalette()"
                     [attr.aria-label]="'palette.open' | snT:'Open command palette'">
               <span>⌘</span><b>Ctrl K</b>
             </button>
-            <div class="health-chip"><span></span>{{ "shell.system_nominal" | snT:"SYSTEM NOMINAL" }}</div>
+            <div class="health-chip" [class.offline]="eventBus.state() === 'offline'"><span></span>{{ eventBus.state() === 'online' ? ("shell.system_nominal" | snT:"SYSTEM NOMINAL") : ("shell.connecting" | snT:"CONNECTING") }}</div>
             <div class="clock"><small>{{ "shell.secure_console" | snT:"SECURE CONSOLE" }}</small><strong>{{ currentTime() }}</strong></div>
           </div>
         </header>
@@ -188,7 +211,8 @@ interface PluginNavDefinition {
     </div>
   `,
   styles: [`
-    .workspace{min-height:100vh;display:grid;grid-template-columns:276px minmax(0,1fr)}
+    .workspace{min-height:100vh;display:grid;grid-template-columns:276px minmax(0,1fr);transition:grid-template-columns .2s ease}
+    .workspace.menu-collapsed{grid-template-columns:86px minmax(0,1fr)}
     .rail{position:sticky;top:0;height:100vh;z-index:30;display:flex;flex-direction:column;padding:1rem;overflow:auto;background:linear-gradient(180deg,rgba(16,29,38,.96),rgba(6,10,16,.98)),#080d14;border-right:1px solid var(--line)}
     .brand{min-height:68px;display:flex;align-items:center;gap:.85rem;padding:.7rem .75rem;border-bottom:1px solid var(--line)}
     .brand-symbol{position:relative;width:38px;height:38px;display:grid;place-items:center;border:1px solid rgba(53,226,178,.34);border-radius:10px;transform:rotate(45deg);background:rgba(53,226,178,.07)}
@@ -234,7 +258,7 @@ interface PluginNavDefinition {
     .command-list>button>span:nth-child(2){display:grid;gap:.12rem}.command-list strong{font-size:.78rem}.command-list small{color:var(--muted);font-size:.61rem}
     .command-list kbd{color:#738895;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:6px;padding:.18rem .35rem}
     .palette-empty{padding:2rem;text-align:center;color:var(--muted)}
-    @media(max-width:1000px){.workspace{grid-template-columns:1fr}.rail{position:fixed;left:0;transform:translateX(-102%);width:min(290px,88vw);transition:transform .22s ease}.menu-open .rail{transform:translateX(0)}.menu-button{display:grid;place-items:center}.scrim{display:block;position:fixed;inset:0;z-index:25;background:rgba(0,0,0,.6);backdrop-filter:blur(3px)}}
+    @media(max-width:1000px){.workspace,.workspace.menu-collapsed{grid-template-columns:1fr}.desktop-collapse{display:none}.rail{position:fixed;left:0;transform:translateX(-102%);width:min(290px,88vw);transition:transform .22s ease}.menu-open .rail{transform:translateX(0)}.menu-button{display:grid;place-items:center}.scrim{display:block;position:fixed;inset:0;z-index:25;background:rgba(0,0,0,.6);backdrop-filter:blur(3px)}}
     @media(max-width:680px){.topbar{min-height:74px;padding:.8rem 1rem}.viewport{padding:1rem}.health-chip,.clock small,.command-button b{display:none}.clock{min-width:auto}.breadcrumb{display:none}h1{margin:0;font-size:1.05rem}}
   `],
 })
@@ -242,10 +266,16 @@ export class ShellComponent implements OnInit, OnDestroy {
   @Input({ required: true }) title = '';
 
   readonly mobileMenu = signal(false);
+  readonly menuCollapsed = signal(localStorage.getItem('shieldnet_menu_collapsed') === '1');
   readonly paletteOpen = signal(false);
   readonly paletteQuery = signal('');
   readonly installedPlugins = signal<GuildPluginInstallation[]>([]);
   readonly currentTime = signal('');
+  readonly appearanceIcon = computed(() => ({ auto: '◐', dark: '●', light: '○' }[this.themes.appearanceMode()]));
+  readonly hasPlatformOperations = computed(() => {
+    const profile = this.auth.profile();
+    return Boolean(profile?.is_superadmin || profile?.roles?.some(role => ['superadmin', 'admin'].includes(role.toLowerCase())));
+  });
   private timerId: ReturnType<typeof setInterval> | null = null;
 
 
@@ -253,13 +283,20 @@ export class ShellComponent implements OnInit, OnDestroy {
     const id = this.guildId();
     const commands: PaletteCommand[] = [
       { id: 'dashboard', label: 'palette.dashboard', fallback: 'Open Command Center', icon: '⌂', path: '/' },
-      { id: 'operations', label: 'palette.operations', fallback: 'Open Live Operations', icon: '◎', path: '/platform/operations' },
       { id: 'plugins', label: 'palette.plugins', fallback: 'Open Plugin Platform', icon: '⬡', path: '/platform/plugins' },
       { id: 'jobs', label: 'palette.jobs', fallback: 'Open Jobs Center', icon: '⌁', path: '/platform/jobs' },
-      { id: 'notifications', label: 'palette.notifications', fallback: 'Open Notification Center', icon: '◌', path: '/platform/notifications' },
       { id: 'doctor', label: 'palette.doctor', fallback: 'Run Platform Doctor', icon: '✚', path: '/platform/doctor' },
       { id: 'profile', label: 'palette.profile', fallback: 'Open Profile', icon: '◉', path: '/profile' },
     ];
+
+    if (this.hasPlatformOperations()) {
+      commands.push(
+        { id: 'operations', label: 'palette.operations', fallback: 'Open Live Operations', icon: '◎', path: '/platform/operations' },
+        { id: 'health', label: 'palette.health', fallback: 'Open Health Monitor', icon: '✚', path: '/platform/health' },
+        { id: 'logs', label: 'palette.logs', fallback: 'Open Live Logs', icon: '≡', path: '/platform/logs' },
+        { id: 'notifications', label: 'palette.notifications', fallback: 'Open Notification Center', icon: '◌', path: '/platform/notifications' },
+      );
+    }
 
     if (id) {
       commands.push(
@@ -352,6 +389,8 @@ export class ShellComponent implements OnInit, OnDestroy {
     private readonly route: ActivatedRoute,
     private readonly guildPluginService: GuildPluginService,
     private readonly router: Router,
+    public readonly themes: ThemeService,
+    public readonly eventBus: EventBusService,
   ) {}
 
 
@@ -366,6 +405,12 @@ export class ShellComponent implements OnInit, OnDestroy {
       event.preventDefault();
       this.closePalette();
     }
+  }
+
+  toggleMenuCollapsed(): void {
+    const next = !this.menuCollapsed();
+    this.menuCollapsed.set(next);
+    localStorage.setItem('shieldnet_menu_collapsed', next ? '1' : '0');
   }
 
   openPalette(): void {
@@ -393,6 +438,7 @@ export class ShellComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.eventBus.connect();
     this.updateTime();
     this.timerId = setInterval(() => this.updateTime(), 1000);
 
