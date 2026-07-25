@@ -11,10 +11,10 @@ depends_on = None
 
 
 def upgrade() -> None:
-    # Columns permissions and expires_at were already created by revision 0057.
+    # permissions and expires_at are created by revision 0057.
     pass
 
 
 def downgrade() -> None:
-    # Schema changes belong to revision 0057.
+    # Schema ownership remains with revision 0057.
     pass
