@@ -1,161 +1,203 @@
+import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, signal } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 
-import { PluginManifest, PluginService } from '../core/plugin.service';
-import {
-  PluginUsageHistory,
-  PluginUsageHistoryPoint,
-  PluginUsageService,
-  PluginUsageSummary,
-} from '../core/plugin-usage.service';
+import { GuildPluginInstallation, GuildPluginService } from '../core/guild-plugin.service';
+import { PluginRuntimeInstance, PluginRuntimeService } from '../core/plugin-runtime.service';
+import { TranslationService } from '../core/translation.service';
 import { ShellComponent } from '../shared/shell.component';
 import { TranslatePipe } from '../core/translate.pipe';
-import { TranslationService } from '../core/translation.service';
 
 @Component({
   selector: 'sn-plugin-runtime-usage',
   standalone: true,
-  imports: [ShellComponent, TranslatePipe],
+  imports: [CommonModule, FormsModule, RouterLink, ShellComponent, TranslatePipe],
   template: `
     <sn-shell [title]="'runtime_usage.title' | snT:'Plugin Runtime'">
       <section class="head">
-        <div><h2>{{ "runtime_usage.heading" | snT:"Runtime usage" }}</h2><p class="muted">{{ "runtime_usage.description" | snT:"Requests, errors, rate limits and response time." }}</p></div>
-        <button (click)="refresh()" [disabled]="loading() || !selectedKey()">{{ loading() ? ('runtime_usage.refreshing' | snT:'Refreshing…') : ('runtime_usage.refresh' | snT:'Refresh') }}</button>
+        <div>
+          <div class="eyebrow">SHIELDNET ADMIN V4 · STAGE 14.11</div>
+          <h2>{{ 'runtime_usage.heading' | snT:'Server plugin runtime' }}</h2>
+          <p>{{ 'runtime_usage.description' | snT:'Manage installed plugins, runtime processes and server-specific settings.' }}</p>
+        </div>
+        <div class="head-actions">
+          <a [routerLink]="['/guild', guildId]">{{ 'common.back' | snT:'Back to server' }}</a>
+          <button type="button" (click)="load()" [disabled]="loading()">
+            {{ loading() ? ('runtime_usage.refreshing' | snT:'Refreshing…') : ('runtime_usage.refresh' | snT:'Refresh') }}
+          </button>
+        </div>
       </section>
 
-      @if (error()) { <div class="error card">{{ error() }}</div> }
+      @if (error()) { <div class="notice error">{{ error() }}</div> }
 
-      <section class="picker card">
-        <div><strong>{{ "runtime_usage.plugin" | snT:"Plugin" }}</strong><small class="muted">{{ "runtime_usage.select_runtime" | snT:"Select a runtime to inspect" }}</small></div>
-        <select [value]="selectedKey()" (change)="selectPlugin($any($event.target).value)" [disabled]="pluginsLoading()">
-          <option value="">{{ pluginsLoading() ? ('runtime_usage.loading_plugins' | snT:'Loading plugins…') : ('runtime_usage.select_plugin' | snT:'Select plugin') }}</option>
-          @for (plugin of plugins(); track plugin.plugin_key) {
-            <option [value]="plugin.plugin_key">{{ plugin.name }} · {{ plugin.plugin_key }}</option>
-          }
-        </select>
+      <section class="metrics">
+        <article><span>{{ 'plugins.installed' | snT:'Installed' }}</span><strong>{{ installations().length }}</strong></article>
+        <article><span>{{ 'plugins.enabled' | snT:'Enabled' }}</span><strong>{{ enabledCount() }}</strong></article>
+        <article><span>{{ 'plugins.running' | snT:'Running' }}</span><strong>{{ runningCount() }}</strong></article>
+        <article><span>{{ 'plugins.errors' | snT:'Errors' }}</span><strong [class.danger]="errorCount() > 0">{{ errorCount() }}</strong></article>
       </section>
 
-      @if (!selectedKey() && !pluginsLoading()) {
-        <div class="card empty">{{ "runtime_usage.select_help" | snT:"Select a plugin to open its Runtime Usage dashboard." }}</div>
+      @if (loading() && installations().length === 0) {
+        <div class="notice">{{ 'runtime_usage.loading' | snT:'Loading server plugins…' }}</div>
       }
 
-      @if (selectedKey()) {
-        <section class="banner card">
-          <div><span class="eyebrow">{{ "runtime_usage.selected" | snT:"Selected runtime" }}</span><h3>{{ selectedPlugin()?.name || selectedKey() }}</h3><p class="muted">{{ selectedPlugin()?.description || ('runtime_usage.default_description' | snT:'ShieldNet plugin runtime statistics.') }}</p></div>
-          <div class="meta"><span>v{{ selectedPlugin()?.version || '—' }}</span><span [class.good]="selectedPlugin()?.healthy">{{ selectedPlugin()?.healthy ? ('runtime_usage.healthy' | snT:'Healthy') : ('runtime_usage.unknown' | snT:'Status unknown') }}</span></div>
-        </section>
+      <section class="plugin-grid">
+        @for (plugin of installations(); track plugin.plugin_key) {
+          <article class="plugin-card">
+            <div class="plugin-head">
+              <div class="plugin-icon">{{ plugin.plugin_key.slice(0, 1).toUpperCase() }}</div>
+              <div class="plugin-title">
+                <h3>{{ displayName(plugin) }}</h3>
+                <small>{{ plugin.plugin_key }}</small>
+              </div>
+              <div class="badges">
+                <span [class.good]="plugin.enabled" [class.muted-badge]="!plugin.enabled">{{ plugin.enabled ? 'ENABLED' : 'DISABLED' }}</span>
+                <span [class.good]="runtime(plugin.plugin_key)?.state === 'running'" [class.warn]="runtime(plugin.plugin_key)?.state !== 'running'">
+                  {{ (runtime(plugin.plugin_key)?.state || 'not started') | uppercase }}
+                </span>
+              </div>
+            </div>
 
-        @if (loading() && !summary()) {
-          <div class="card empty">{{ "runtime_usage.loading" | snT:"Loading runtime statistics…" }}</div>
-        } @else if (summary(); as usage) {
-          <section class="metrics">
-            <article class="card metric"><span class="muted">{{ "runtime_usage.requests_today" | snT:"Requests today" }}</span><strong>{{ n(usage.requests_today) }}</strong><small>{{ n(usage.requests_total) }} {{ "runtime_usage.total" | snT:"total" }}</small></article>
-            <article class="card metric"><span class="muted">{{ "runtime_usage.successful" | snT:"Successful" }}</span><strong>{{ n(usage.successful_today) }}</strong><small>{{ successRate() }}% {{ "runtime_usage.success_rate" | snT:"success rate" }}</small></article>
-            <article class="card metric" [class.warn]="usage.errors_today > 0"><span class="muted">{{ "runtime_usage.errors_today" | snT:"Errors today" }}</span><strong>{{ n(usage.errors_today) }}</strong><small>{{ n(usage.errors_total) }} {{ "runtime_usage.total" | snT:"total" }}</small></article>
-            <article class="card metric" [class.warn]="usage.rate_limited_today > 0"><span class="muted">{{ "runtime_usage.rate_limited" | snT:"Rate limited" }}</span><strong>{{ n(usage.rate_limited_today) }}</strong><small>{{ n(usage.rate_limited_total) }} {{ "runtime_usage.total" | snT:"total" }}</small></article>
-            <article class="card metric"><span class="muted">{{ "runtime_usage.average_response" | snT:"Average response" }}</span><strong>{{ duration(usage.average_duration_ms_today) }}</strong><small>{{ duration(usage.average_duration_ms_total) }} {{ "runtime_usage.overall" | snT:"overall" }}</small></article>
-            <article class="card metric"><span class="muted">{{ "runtime_usage.last_request" | snT:"Last request" }}</span><strong class="date">{{ date(usage.last_request_at) }}</strong><small>{{ "runtime_usage.updated" | snT:"Updated" }} {{ date(usage.generated_at) }}</small></article>
-          </section>
+            <div class="details">
+              <div><span>{{ 'plugins.version' | snT:'Version' }}</span><strong>{{ runtime(plugin.plugin_key)?.package_version || '—' }}</strong></div>
+              <div><span>{{ 'runtime_usage.generation' | snT:'Generation' }}</span><strong>{{ runtime(plugin.plugin_key)?.generation ?? 0 }}</strong></div>
+              <div><span>{{ 'runtime_usage.last_heartbeat' | snT:'Last heartbeat' }}</span><strong>{{ formatDate(runtime(plugin.plugin_key)?.last_heartbeat_at) }}</strong></div>
+              <div><span>{{ 'runtime_usage.updated' | snT:'Updated' }}</span><strong>{{ formatDate(plugin.updated_at) }}</strong></div>
+            </div>
 
-          <section class="grid">
-            <article class="card panel">
-              <div class="section-head">
-                <div><h3>{{ "runtime_usage.usage_history" | snT:"Usage history" }}</h3><p class="muted">{{ "runtime_usage.daily_requests" | snT:"Daily requests and errors." }}</p></div>
-                <div class="periods">
-                  @for (period of periods; track period) { <button [class.active]="days() === period" (click)="changePeriod(period)">{{ period }}d</button> }
+            @if (plugin.last_error || runtime(plugin.plugin_key)?.last_error) {
+              <div class="plugin-error">{{ runtime(plugin.plugin_key)?.last_error || plugin.last_error }}</div>
+            }
+
+            <div class="actions">
+              <button type="button" class="toggle" [class.on]="plugin.enabled" [disabled]="busy(plugin.plugin_key)" (click)="toggleEnabled(plugin)">
+                {{ plugin.enabled ? ('plugins.disable' | snT:'Disable') : ('plugins.enable' | snT:'Enable') }}
+              </button>
+              <button type="button" class="start" [disabled]="busy(plugin.plugin_key) || !plugin.enabled || runtime(plugin.plugin_key)?.state === 'running'" (click)="start(plugin)">
+                {{ 'plugins.start' | snT:'Start' }}
+              </button>
+              <button type="button" class="stop" [disabled]="busy(plugin.plugin_key) || runtime(plugin.plugin_key)?.state !== 'running'" (click)="stop(plugin)">
+                {{ 'plugins.stop' | snT:'Stop' }}
+              </button>
+              <button type="button" class="settings" [disabled]="busy(plugin.plugin_key)" (click)="openSettings(plugin)">
+                {{ 'plugins.settings' | snT:'Settings' }}
+              </button>
+            </div>
+
+            @if (editingKey() === plugin.plugin_key) {
+              <div class="settings-editor">
+                <label>{{ 'plugins.configuration_json' | snT:'Configuration JSON' }}</label>
+                <textarea [(ngModel)]="settingsText" rows="8" spellcheck="false"></textarea>
+                <div class="editor-actions">
+                  <button type="button" (click)="cancelSettings()">{{ 'common.cancel' | snT:'Cancel' }}</button>
+                  <button type="button" class="save" [disabled]="busy(plugin.plugin_key)" (click)="saveSettings(plugin)">{{ 'common.save' | snT:'Save' }}</button>
                 </div>
               </div>
-              @if (historyLoading()) { <div class="chart-empty">{{ "runtime_usage.loading_history" | snT:"Loading history…" }}</div> }
-              @else if (history(); as dataset) {
-                <div class="legend"><span><i class="req"></i>{{ "runtime_usage.requests" | snT:"Requests" }}</span><span><i class="err"></i>{{ "runtime_usage.errors" | snT:"Errors" }}</span></div>
-                <div class="chart">
-                  @for (point of dataset.points; track point.day) {
-                    <div class="col" [title]="tooltip(point)"><div class="bars"><span class="bar req" [style.height.%]="barHeight(point.requests)"></span><span class="bar err" [style.height.%]="barHeight(point.errors)"></span></div><small>{{ label(point.day) }}</small></div>
-                  }
-                </div>
-              } @else { <div class="chart-empty">{{ "runtime_usage.no_history" | snT:"No history available." }}</div> }
-            </article>
-
-            <article class="card panel">
-              <div class="section-head"><div><h3>{{ "runtime_usage.capabilities" | snT:"Capabilities today" }}</h3><p class="muted">{{ "runtime_usage.capabilities_desc" | snT:"Most-used Runtime API scopes." }}</p></div></div>
-              @for (item of usage.scope_breakdown_today; track item.scope) {
-                <div class="scope"><div><strong>{{ item.scope }}</strong><small class="muted">{{ n(item.requests) }}</small></div><div class="track"><span [style.width.%]="scopePercent(item.requests)"></span></div></div>
-              } @empty { <div class="chart-empty small">{{ "runtime_usage.no_capabilities" | snT:"No capability activity today." }}</div> }
-            </article>
-          </section>
-
-          <section class="card panel status-panel">
-            <div class="section-head"><div><h3>{{ "runtime_usage.http_distribution" | snT:"HTTP status distribution" }}</h3><p class="muted">{{ "runtime_usage.http_desc" | snT:"Response codes returned today." }}</p></div></div>
-            <div class="statuses">
-              @for (item of usage.status_breakdown_today; track item.status_code) {
-                <div class="status" [class.bad]="item.status_code >= 400"><strong>{{ item.status_code }}</strong><span>{{ n(item.requests) }} {{ "runtime_usage.request_count" | snT:"requests" }}</span></div>
-              } @empty { <span class="muted">{{ "runtime_usage.no_requests" | snT:"No requests recorded today." }}</span> }
-            </div>
-          </section>
+            }
+          </article>
+        } @empty {
+          @if (!loading()) { <div class="notice">{{ 'runtime_usage.no_plugins' | snT:'No plugins are installed for this server.' }}</div> }
         }
-      }
+      </section>
     </sn-shell>
   `,
   styles: [`
-    .head,.picker,.banner,.section-head{display:flex;justify-content:space-between;align-items:center;gap:1rem}.head{align-items:end;margin-bottom:1rem}.head h2,.head p,.banner h3,.banner p,.section-head h3,.section-head p{margin:0}.head p,.banner p,.section-head p{margin-top:.3rem}button,select{font:inherit}button{border:0;cursor:pointer}.head>button{padding:.72rem 1rem;border-radius:11px;background:var(--primary);color:#fff;font-weight:750}button:disabled{opacity:.5;cursor:not-allowed}.picker,.banner,.panel{padding:1rem}.picker{margin-bottom:1rem}.picker>div{display:grid;gap:.2rem}.picker select{min-width:min(28rem,100%);padding:.75rem;background:#1d273b;color:#fff;border:1px solid var(--line);border-radius:10px}.error,.empty{padding:1rem;margin-bottom:1rem}.error{color:#ffd9de;border-color:rgba(255,107,125,.4)}.banner{margin-bottom:1rem}.eyebrow{color:#aeb7ff;font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.12em}.banner h3{margin-top:.25rem}.meta{display:flex;gap:.5rem}.meta span{padding:.28rem .55rem;border:1px solid var(--line);border-radius:999px;color:var(--muted);font-size:.72rem}.meta .good{color:#b9f4dc;border-color:rgba(75,214,155,.35)}.metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1rem;margin-bottom:1rem}.metric{padding:1rem;display:grid;gap:.35rem}.metric strong{font-size:1.55rem}.metric small{color:var(--muted)}.metric.warn{border-color:rgba(255,202,98,.42)}.metric .date{font-size:1rem}.grid{display:grid;grid-template-columns:minmax(0,2fr) minmax(18rem,1fr);gap:1rem;margin-bottom:1rem}.periods{display:flex;gap:.3rem}.periods button{padding:.42rem .58rem;border-radius:8px;background:#263149;color:var(--muted)}.periods .active{background:var(--primary);color:#fff}.legend{display:flex;gap:1rem;margin-top:1rem;color:var(--muted);font-size:.75rem}.legend span{display:flex;align-items:center;gap:.3rem}.legend i{width:.55rem;height:.55rem;border-radius:50%}.req{background:#7a85ff}.err{background:#ff6b7d}.chart{height:15rem;display:flex;align-items:end;gap:.2rem;padding-top:1rem;overflow:hidden}.col{flex:1;min-width:0;height:100%;display:grid;grid-template-rows:1fr 1.2rem;gap:.25rem}.bars{height:100%;display:flex;align-items:end;justify-content:center;gap:1px}.bar{width:43%;min-height:2px;border-radius:4px 4px 1px 1px}.col small{font-size:.55rem;color:var(--muted);text-align:center;white-space:nowrap}.chart-empty{min-height:12rem;display:grid;place-items:center;color:var(--muted)}.chart-empty.small{min-height:7rem}.scope{display:grid;gap:.45rem;padding:.75rem 0;border-bottom:1px solid var(--line)}.scope>div:first-child{display:flex;justify-content:space-between;gap:.6rem}.scope strong{font-size:.78rem;overflow-wrap:anywhere}.track{height:.35rem;background:#253047;border-radius:99px;overflow:hidden}.track span{display:block;height:100%;min-width:2px;background:var(--primary)}.status-panel{margin-bottom:1rem}.statuses{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:.6rem;margin-top:1rem}.status{padding:.75rem;border:1px solid var(--line);border-radius:10px;display:grid;gap:.2rem}.status strong{color:#b9f4dc}.status.bad strong{color:#ffd9de}.status span{font-size:.7rem;color:var(--muted)}@media(max-width:1050px){.metrics{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:1fr}.statuses{grid-template-columns:repeat(3,1fr)}}@media(max-width:700px){.head,.picker,.banner,.section-head{align-items:stretch;flex-direction:column}.picker select{min-width:0;width:100%}.metrics{grid-template-columns:1fr}.statuses{grid-template-columns:repeat(2,1fr)}}
+    :host{display:block}.head{display:flex;justify-content:space-between;align-items:flex-end;gap:1rem;margin-bottom:1rem}.eyebrow{font-size:.68rem;font-weight:900;letter-spacing:.14em;color:var(--accent)}.head h2{margin:.3rem 0}.head p{margin:0;color:var(--muted)}.head-actions{display:flex;gap:.55rem}.head-actions a,.head-actions button,.actions button,.editor-actions button{border:1px solid var(--line);background:var(--panel-2);color:var(--text);border-radius:9px;padding:.62rem .78rem;text-decoration:none;cursor:pointer}.head-actions button{background:var(--accent);color:#07110e;font-weight:800}.notice{padding:1rem;border:1px solid var(--line);background:var(--panel);border-radius:12px}.error,.plugin-error{color:#ff8e98;border-color:rgba(255,80,95,.4)}.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:.8rem;margin-bottom:1rem}.metrics article{padding:1rem;border:1px solid var(--line);border-radius:13px;background:var(--panel);display:grid;gap:.35rem}.metrics span,.details span{font-size:.7rem;text-transform:uppercase;color:var(--muted)}.metrics strong{font-size:1.5rem}.danger{color:#ff6874}.plugin-grid{display:grid;gap:1rem}.plugin-card{border:1px solid var(--line);background:var(--panel);border-radius:16px;padding:1.1rem}.plugin-head{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:.75rem}.plugin-icon{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:rgba(53,226,178,.12);color:var(--accent);font-weight:900}.plugin-title h3{margin:0 0 .2rem}.plugin-title small{color:var(--muted)}.badges{display:flex;gap:.4rem;flex-wrap:wrap}.badges span{font-size:.65rem;padding:.3rem .5rem;border:1px solid var(--line);border-radius:999px}.badges .good{color:#35e2b2}.badges .warn{color:#f2b15a}.muted-badge{color:var(--muted)}.details{display:grid;grid-template-columns:repeat(4,1fr);gap:.6rem;margin:1rem 0}.details div{padding:.75rem;border:1px solid var(--line);border-radius:10px;display:grid;gap:.25rem}.details strong{font-size:.86rem;overflow:hidden;text-overflow:ellipsis}.plugin-error{padding:.7rem;border:1px solid rgba(255,80,95,.25);border-radius:9px;margin-bottom:.8rem}.actions{display:flex;gap:.5rem;flex-wrap:wrap}.actions button:disabled,.head-actions button:disabled{opacity:.45;cursor:not-allowed}.actions .start{color:#35e2b2}.actions .stop{color:#ff7c85}.actions .toggle.on{border-color:rgba(53,226,178,.45)}.settings-editor{margin-top:1rem;padding-top:1rem;border-top:1px solid var(--line);display:grid;gap:.55rem}.settings-editor label{font-size:.75rem;color:var(--muted)}.settings-editor textarea{width:100%;box-sizing:border-box;background:#090d14;color:#dce7e4;border:1px solid var(--line);border-radius:10px;padding:.8rem;font-family:monospace;resize:vertical}.editor-actions{display:flex;justify-content:flex-end;gap:.5rem}.editor-actions .save{background:var(--accent);color:#07110e;font-weight:800}@media(max-width:900px){.metrics,.details{grid-template-columns:repeat(2,1fr)}}@media(max-width:620px){.head{align-items:stretch;flex-direction:column}.metrics,.details{grid-template-columns:1fr}.plugin-head{grid-template-columns:auto 1fr}.badges{grid-column:1/-1}.head-actions{flex-wrap:wrap}}
   `],
 })
 export class PluginRuntimeUsageComponent implements OnInit {
   readonly guildId = this.route.snapshot.paramMap.get('guildId') ?? '';
-  readonly plugins = signal<PluginManifest[]>([]);
-  readonly selectedKey = signal('');
-  readonly summary = signal<PluginUsageSummary | null>(null);
-  readonly history = signal<PluginUsageHistory | null>(null);
-  readonly pluginsLoading = signal(true);
+  readonly installations = signal<GuildPluginInstallation[]>([]);
+  readonly runtimes = signal<PluginRuntimeInstance[]>([]);
   readonly loading = signal(false);
-  readonly historyLoading = signal(false);
   readonly error = signal('');
-  readonly days = signal<7 | 30 | 90>(7);
-  readonly periods: Array<7 | 30 | 90> = [7, 30, 90];
-  readonly selectedPlugin = computed(() => this.plugins().find((item) => item.plugin_key === this.selectedKey()) || null);
-  readonly successRate = computed(() => { const u = this.summary(); return !u || u.requests_today <= 0 ? 0 : Math.round((u.successful_today / u.requests_today) * 1000) / 10; });
-  readonly maxHistory = computed(() => Math.max(1, ...(this.history()?.points || []).flatMap((p) => [p.requests, p.errors])));
-  readonly maxScope = computed(() => Math.max(1, ...(this.summary()?.scope_breakdown_today || []).map((i) => i.requests)));
+  readonly busyKey = signal('');
+  readonly editingKey = signal('');
+  settingsText = '{}';
 
-  constructor(private readonly route: ActivatedRoute, private readonly pluginService: PluginService, private readonly usageService: PluginUsageService, private readonly i18n: TranslationService) {}
+  readonly enabledCount = computed(() => this.installations().filter(item => item.enabled).length);
+  readonly runningCount = computed(() => this.runtimes().filter(item => item.state === 'running').length);
+  readonly errorCount = computed(() => this.installations().filter(item => item.status === 'error' || item.last_error).length + this.runtimes().filter(item => item.last_error).length);
 
-  async ngOnInit(): Promise<void> {
-    try {
-      this.plugins.set(await this.pluginService.list());
-      const key = this.route.snapshot.queryParamMap.get('plugin') || this.plugins()[0]?.plugin_key || '';
-      if (key) { this.selectedKey.set(key); await this.refresh(); }
-    } catch { this.error.set(this.i18n.t('runtime_usage.load_plugins_error','Unable to load the plugin list.')); }
-    finally { this.pluginsLoading.set(false); }
-  }
+  constructor(
+    private readonly route: ActivatedRoute,
+    private readonly guildPlugins: GuildPluginService,
+    private readonly runtimeService: PluginRuntimeService,
+    private readonly i18n: TranslationService,
+  ) {}
 
-  async selectPlugin(key: string): Promise<void> { this.selectedKey.set(key); this.summary.set(null); this.history.set(null); this.error.set(''); if (key) await this.refresh(); }
+  ngOnInit(): void { void this.load(); }
 
-  async refresh(): Promise<void> {
-    if (!this.selectedKey()) return;
-    this.loading.set(true); this.historyLoading.set(true); this.error.set('');
-    const [summary, history] = await Promise.allSettled([
-      this.usageService.summary(this.guildId, this.selectedKey()),
-      this.usageService.history(this.guildId, this.selectedKey(), this.days()),
+  async load(): Promise<void> {
+    if (this.loading()) return;
+    this.loading.set(true); this.error.set('');
+    const [plugins, runtimes] = await Promise.allSettled([
+      this.guildPlugins.listInstalled(this.guildId),
+      this.runtimeService.list(this.guildId),
     ]);
-    if (summary.status === 'fulfilled') this.summary.set(summary.value);
-    else { this.summary.set(null); this.error.set(this.i18n.t('runtime_usage.summary_error','Runtime usage is unavailable. Confirm that the plugin is installed for this server and the Usage API is enabled.')); }
-    this.history.set(history.status === 'fulfilled' ? history.value : null);
-    this.loading.set(false); this.historyLoading.set(false);
+    if (plugins.status === 'fulfilled') this.installations.set(plugins.value);
+    else this.error.set(this.i18n.t('runtime_usage.load_plugins_error', 'Unable to load installed plugins.'));
+    this.runtimes.set(runtimes.status === 'fulfilled' ? runtimes.value : []);
+    this.loading.set(false);
   }
 
-  async changePeriod(period: 7 | 30 | 90): Promise<void> {
-    if (period === this.days() || !this.selectedKey()) return;
-    this.days.set(period); this.historyLoading.set(true);
-    try { this.history.set(await this.usageService.history(this.guildId, this.selectedKey(), period)); }
-    catch { this.history.set(null); this.error.set(this.i18n.t('runtime_usage.history_error','Unable to load Runtime Usage history.')); }
-    finally { this.historyLoading.set(false); }
+  runtime(pluginKey: string): PluginRuntimeInstance | null { return this.runtimes().find(item => item.plugin_key === pluginKey) || null; }
+  busy(pluginKey: string): boolean { return this.busyKey() === pluginKey; }
+  displayName(plugin: GuildPluginInstallation): string {
+    const manifest = this.runtime(plugin.plugin_key)?.manifest_json || {};
+    return String(manifest['name'] || plugin.plugin_key);
+  }
+  formatDate(value: string | null | undefined): string {
+    if (!value) return '—'; const date = new Date(value); return Number.isNaN(date.getTime()) ? value : new Intl.DateTimeFormat(undefined, { dateStyle: 'short', timeStyle: 'short' }).format(date);
   }
 
-  n(value: number): string { return new Intl.NumberFormat().format(value || 0); }
-  duration(value: number): string { return value >= 1000 ? `${(value / 1000).toFixed(2)} s` : `${Math.round((value || 0) * 100) / 100} ms`; }
-  date(value: string | null): string { if (!value) return this.i18n.t('runtime_usage.no_requests_yet','No requests yet'); const d = new Date(value); return Number.isNaN(d.getTime()) ? value : new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(d); }
-  label(value: string): string { const d = new Date(`${value}T00:00:00`); return new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric' }).format(d); }
-  barHeight(value: number): number { return Math.max(value > 0 ? 2 : 0, (value / this.maxHistory()) * 100); }
-  scopePercent(value: number): number { return Math.max(2, (value / this.maxScope()) * 100); }
-  tooltip(point: PluginUsageHistoryPoint): string { return `${point.day}: ${point.requests} ${this.i18n.t('runtime_usage.tooltip_requests','requests')}, ${point.errors} ${this.i18n.t('runtime_usage.tooltip_errors','errors')}, ${point.rate_limited} ${this.i18n.t('runtime_usage.tooltip_limited','rate limited')}`; }
+  async toggleEnabled(plugin: GuildPluginInstallation): Promise<void> {
+    this.busyKey.set(plugin.plugin_key); this.error.set('');
+    try {
+      const updated = plugin.enabled ? await this.guildPlugins.disable(this.guildId, plugin.plugin_key) : await this.guildPlugins.enable(this.guildId, plugin.plugin_key);
+      this.installations.update(items => items.map(item => item.plugin_key === updated.plugin_key ? updated : item));
+    } catch { this.error.set(this.i18n.t('runtime_usage.toggle_error', 'Unable to change plugin state.')); }
+    finally { this.busyKey.set(''); }
+  }
+
+  async start(plugin: GuildPluginInstallation): Promise<void> {
+    this.busyKey.set(plugin.plugin_key); this.error.set('');
+    try { this.upsertRuntime(await this.runtimeService.start(this.guildId, plugin.plugin_key)); }
+    catch { this.error.set(this.i18n.t('runtime_usage.start_error', 'Unable to start plugin runtime.')); }
+    finally { this.busyKey.set(''); }
+  }
+
+  async stop(plugin: GuildPluginInstallation): Promise<void> {
+    this.busyKey.set(plugin.plugin_key); this.error.set('');
+    try { this.upsertRuntime(await this.runtimeService.stop(this.guildId, plugin.plugin_key)); }
+    catch { this.error.set(this.i18n.t('runtime_usage.stop_error', 'Unable to stop plugin runtime.')); }
+    finally { this.busyKey.set(''); }
+  }
+
+  openSettings(plugin: GuildPluginInstallation): void {
+    this.editingKey.set(plugin.plugin_key);
+    this.settingsText = JSON.stringify(plugin.configuration || {}, null, 2);
+  }
+  cancelSettings(): void { this.editingKey.set(''); this.settingsText = '{}'; }
+
+  async saveSettings(plugin: GuildPluginInstallation): Promise<void> {
+    let configuration: Record<string, unknown>;
+    try { configuration = JSON.parse(this.settingsText) as Record<string, unknown>; }
+    catch { this.error.set(this.i18n.t('runtime_usage.invalid_json', 'Configuration must be valid JSON.')); return; }
+    this.busyKey.set(plugin.plugin_key); this.error.set('');
+    try {
+      const updated = await this.guildPlugins.updateSettings(this.guildId, plugin.plugin_key, configuration);
+      this.installations.update(items => items.map(item => item.plugin_key === updated.plugin_key ? updated : item));
+      this.cancelSettings();
+    } catch { this.error.set(this.i18n.t('runtime_usage.settings_error', 'Unable to save plugin settings.')); }
+    finally { this.busyKey.set(''); }
+  }
+
+  private upsertRuntime(updated: PluginRuntimeInstance): void {
+    this.runtimes.update(items => {
+      const exists = items.some(item => item.plugin_key === updated.plugin_key);
+      return exists ? items.map(item => item.plugin_key === updated.plugin_key ? updated : item) : [...items, updated];
+    });
+  }
 }
