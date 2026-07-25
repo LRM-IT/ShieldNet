@@ -43,6 +43,34 @@ export interface PlatformDiscordAdminCreate {
   expires_at?: string | null;
 }
 
+
+export interface PlatformSession {
+  id: string;
+  user_id: string;
+  display_name: string;
+  login: string;
+  discord_user_id?: string | null;
+  auth_source: string;
+  ip_address?: string | null;
+  user_agent?: string | null;
+  created_at: string;
+  expires_at: string;
+  revoked_at?: string | null;
+  active: boolean;
+}
+
+export interface PlatformLoginAttempt {
+  id: number;
+  user_id?: string | null;
+  display_name?: string | null;
+  email?: string | null;
+  ip_address?: string | null;
+  user_agent?: string | null;
+  successful: boolean;
+  failure_reason?: string | null;
+  created_at: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class PlatformAccessService {
   constructor(private readonly http: HttpClient) {}
@@ -73,5 +101,17 @@ export class PlatformAccessService {
 
   deleteDiscordAdmin(id: string): Observable<void> {
     return this.http.delete<void>(`/api/v1/platform/access/discord-admins/${id}`);
+  }
+
+  sessions(): Observable<PlatformSession[]> {
+    return this.http.get<PlatformSession[]>('/api/v1/platform/access/sessions');
+  }
+
+  revokeSession(id: string): Observable<void> {
+    return this.http.post<void>(`/api/v1/platform/access/sessions/${id}/revoke`, {});
+  }
+
+  loginAttempts(): Observable<PlatformLoginAttempt[]> {
+    return this.http.get<PlatformLoginAttempt[]>('/api/v1/platform/access/login-attempts');
   }
 }

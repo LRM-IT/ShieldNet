@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.dependencies.auth import get_current_user
 from app.api.dependencies.platform_access import require_platform_viewer
 from app.db.session import get_db_session
-from app.models.core import PlatformDiscordAdmin, Session, User
+from app.models.core import LoginAttempt, PlatformDiscordAdmin, Session, User
 from app.models.discord import Guild, GuildMembership, MembershipStatus
 from app.services.global_access import GlobalAccessService
 
@@ -216,3 +216,84 @@ async def delete_discord_admin(
     await session.delete(item)
     await session.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+def serialize_session(item: Session, user: User) -> dict:
+    return {
+        "id": str(item.id),
+        "user_id": str(user.id),
+        "display_name": user.display_name or user.login,
+        "login": user.login,
+        "discord_user_id": str(user.discord_user_id) if user.discord_user_id else None,
+        "auth_source": item.auth_source,
+        "ip_address": str(item.ip_address) if item.ip_address else None,
+        "user_agent": item.user_agent,
+        "created_at": item.created_at,
+        "expires_at": item.expires_at,
+        "revoked_at": item.revoked_at,
+        "active": item.revoked_at is None and item.expires_at > datetime.now(UTC),
+    }
+
+
+@router.get("/sessions")
+async def list_platform_sessions(
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+) -> list[dict]:
+    require_local_owner(current_user)
+    rows = (
+        await session.execute(
+            select(Session, User)
+            .join(User, User.id == Session.user_id)
+            .where(Session.auth_source.in_(["local_platform", "discord_platform"]))
+            .order_by(Session.created_at.desc())
+            .limit(250)
+        )
+    ).all()
+    return [serialize_session(item, user) for item, user in rows]
+
+
+@router.post("/sessions/{session_id}/revoke", status_code=status.HTTP_204_NO_CONTENT)
+async def revoke_platform_session(
+    session_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+) -> Response:
+    require_local_owner(current_user)
+    item = await session.get(Session, session_id)
+    if not item:
+        raise HTTPException(status_code=404, detail="Session not found")
+    if item.revoked_at is None:
+        item.revoked_at = datetime.now(UTC)
+        await session.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.get("/login-attempts")
+async def list_platform_login_attempts(
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+) -> list[dict]:
+    require_local_owner(current_user)
+    rows = (
+        await session.execute(
+            select(LoginAttempt, User)
+            .outerjoin(User, User.id == LoginAttempt.user_id)
+            .order_by(LoginAttempt.created_at.desc())
+            .limit(250)
+        )
+    ).all()
+    return [
+        {
+            "id": item.id,
+            "user_id": str(item.user_id) if item.user_id else None,
+            "display_name": (user.display_name or user.login) if user else item.email,
+            "email": item.email,
+            "ip_address": str(item.ip_address) if item.ip_address else None,
+            "user_agent": item.user_agent,
+            "successful": item.successful,
+            "failure_reason": item.failure_reason,
+            "created_at": item.created_at,
+        }
+        for item, user in rows
+    ]

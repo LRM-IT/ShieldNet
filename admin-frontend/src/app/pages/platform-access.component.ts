@@ -9,6 +9,8 @@ import {
   PlatformAccessService,
   PlatformDiscordAdmin,
   PlatformDiscordAdminCreate,
+  PlatformLoginAttempt,
+  PlatformSession,
 } from '../core/platform-access.service';
 import { ShellComponent } from '../shared/shell.component';
 
@@ -84,17 +86,37 @@ import { ShellComponent } from '../shared/shell.component';
             </article>
           </div>
         </section>
+
+        <section class="panel">
+          <div class="panel-head"><div><div class="eyebrow">SECURITY CONTROL</div><h3>Platform sessions</h3></div><button type="button" (click)="loadSecurity()">Refresh</button></div>
+          <div class="empty" *ngIf="!sessions.length">No platform sessions found.</div>
+          <div class="table-wrap" *ngIf="sessions.length">
+            <table><thead><tr><th>User</th><th>Source</th><th>IP</th><th>Created</th><th>Expires</th><th>Status</th><th></th></tr></thead>
+            <tbody><tr *ngFor="let item of sessions"><td><strong>{{ item.display_name }}</strong><small>{{ item.login }}</small></td><td>{{ item.auth_source }}</td><td>{{ item.ip_address || '—' }}</td><td>{{ item.created_at | date:'short' }}</td><td>{{ item.expires_at | date:'short' }}</td><td><span class="state" [class.disabled]="!item.active">{{ item.active ? 'ACTIVE' : 'REVOKED' }}</span></td><td><button *ngIf="item.active" type="button" class="danger" (click)="revokeSession(item)">Revoke</button></td></tr></tbody></table>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head"><div><div class="eyebrow">AUTHENTICATION AUDIT</div><h3>Recent login attempts</h3></div></div>
+          <div class="empty" *ngIf="!attempts.length">No login attempts found.</div>
+          <div class="table-wrap" *ngIf="attempts.length">
+            <table><thead><tr><th>Identity</th><th>IP</th><th>Time</th><th>Result</th><th>Reason</th></tr></thead>
+            <tbody><tr *ngFor="let item of attempts"><td>{{ item.display_name || item.email || 'Unknown' }}</td><td>{{ item.ip_address || '—' }}</td><td>{{ item.created_at | date:'medium' }}</td><td><span class="state" [class.disabled]="!item.successful">{{ item.successful ? 'SUCCESS' : 'FAILED' }}</span></td><td>{{ item.failure_reason || '—' }}</td></tr></tbody></table>
+          </div>
+        </section>
       </ng-container>
     </sn-shell>
   `,
   styles: [`
-    .hero,.panel,.notice,article{border:1px solid var(--line);background:rgba(16,22,38,.72);border-radius:18px}.hero{padding:1.4rem;display:flex;justify-content:space-between;gap:1rem;align-items:center}.eyebrow{color:var(--primary);font-size:.7rem;font-weight:800;letter-spacing:.14em}.badge,.state{padding:.5rem .75rem;border-radius:999px;border:1px solid var(--line);font-size:.7rem;font-weight:800}.badge.active,.state{color:var(--primary);background:var(--primary-soft)}.state.disabled{color:#ff9baa;background:rgba(255,80,100,.08)}p,.meta,small{color:var(--muted)}.cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1rem;margin:1rem 0}.cards article{padding:1rem;display:grid;gap:.4rem}.cards strong{font-size:1.7rem}.panel{padding:1.2rem;margin-top:1rem}.panel-head,.admin-main{display:flex;align-items:center;justify-content:space-between;gap:1rem}.form-grid,.edit-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem;margin-top:1rem}.wide{grid-column:1/-1}label{display:grid;gap:.4rem}label span{font-size:.72rem;color:var(--muted);font-weight:700}input,select,textarea,button{font:inherit}input,select,textarea{width:100%;box-sizing:border-box;padding:.75rem;border:1px solid var(--line);border-radius:10px;background:rgba(5,9,15,.75);color:var(--text)}button{padding:.7rem .9rem;border:1px solid var(--line);border-radius:10px;background:rgba(255,255,255,.03);color:var(--text);cursor:pointer}.primary{border-color:rgba(53,226,178,.35);background:var(--primary-soft);color:var(--primary)}.danger{border-color:rgba(255,80,100,.4);color:#ff9baa}.actions{display:flex;gap:.65rem;justify-content:flex-end}.wrap{flex-wrap:wrap}.admin-list{display:grid;gap:1rem;margin-top:1rem}.admin-card{padding:1rem}.admin-main>div{display:grid;gap:.2rem}.meta{font-size:.75rem;margin:1rem 0}.notice{padding:1rem;margin-bottom:1rem}.error{color:#ff9baa;border-color:rgba(255,80,100,.5)}.success{color:var(--primary)}.locked code{color:var(--primary)}.empty{padding:1rem;color:var(--muted)}@media(max-width:900px){.cards{grid-template-columns:repeat(2,1fr)}}@media(max-width:650px){.hero,.panel-head{align-items:flex-start;flex-direction:column}.cards,.form-grid,.edit-grid{grid-template-columns:1fr}.wide{grid-column:auto}.actions{justify-content:flex-start}}
+    .hero,.panel,.notice,article{border:1px solid var(--line);background:rgba(16,22,38,.72);border-radius:18px}.hero{padding:1.4rem;display:flex;justify-content:space-between;gap:1rem;align-items:center}.eyebrow{color:var(--primary);font-size:.7rem;font-weight:800;letter-spacing:.14em}.badge,.state{padding:.5rem .75rem;border-radius:999px;border:1px solid var(--line);font-size:.7rem;font-weight:800}.badge.active,.state{color:var(--primary);background:var(--primary-soft)}.state.disabled{color:#ff9baa;background:rgba(255,80,100,.08)}p,.meta,small{color:var(--muted)}.cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1rem;margin:1rem 0}.cards article{padding:1rem;display:grid;gap:.4rem}.cards strong{font-size:1.7rem}.panel{padding:1.2rem;margin-top:1rem}.panel-head,.admin-main{display:flex;align-items:center;justify-content:space-between;gap:1rem}.form-grid,.edit-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem;margin-top:1rem}.wide{grid-column:1/-1}label{display:grid;gap:.4rem}label span{font-size:.72rem;color:var(--muted);font-weight:700}input,select,textarea,button{font:inherit}input,select,textarea{width:100%;box-sizing:border-box;padding:.75rem;border:1px solid var(--line);border-radius:10px;background:rgba(5,9,15,.75);color:var(--text)}button{padding:.7rem .9rem;border:1px solid var(--line);border-radius:10px;background:rgba(255,255,255,.03);color:var(--text);cursor:pointer}.primary{border-color:rgba(53,226,178,.35);background:var(--primary-soft);color:var(--primary)}.danger{border-color:rgba(255,80,100,.4);color:#ff9baa}.actions{display:flex;gap:.65rem;justify-content:flex-end}.wrap{flex-wrap:wrap}.admin-list{display:grid;gap:1rem;margin-top:1rem}.admin-card{padding:1rem}.admin-main>div{display:grid;gap:.2rem}.meta{font-size:.75rem;margin:1rem 0}.notice{padding:1rem;margin-bottom:1rem}.error{color:#ff9baa;border-color:rgba(255,80,100,.5)}.success{color:var(--primary)}.locked code{color:var(--primary)}.empty{padding:1rem;color:var(--muted)}.table-wrap{overflow:auto;margin-top:1rem}table{width:100%;border-collapse:collapse;min-width:880px}th,td{padding:.75rem;border-bottom:1px solid var(--line);text-align:left;font-size:.78rem}th{color:var(--muted);font-size:.66rem;letter-spacing:.08em;text-transform:uppercase}td small{display:block;margin-top:.15rem}@media(max-width:900px){.cards{grid-template-columns:repeat(2,1fr)}}@media(max-width:650px){.hero,.panel-head{align-items:flex-start;flex-direction:column}.cards,.form-grid,.edit-grid{grid-template-columns:1fr}.wide{grid-column:auto}.actions{justify-content:flex-start}}
   `],
 })
 export class PlatformAccessComponent implements OnInit {
   identity: PlatformAccessIdentity | null = null;
   overview: PlatformAccessOverview | null = null;
   admins: PlatformDiscordAdmin[] = [];
+  sessions: PlatformSession[] = [];
+  attempts: PlatformLoginAttempt[] = [];
   loading = true;
   saving = false;
   error = '';
@@ -112,7 +134,7 @@ export class PlatformAccessComponent implements OnInit {
     try {
       this.identity = await firstValueFrom(this.access.identity());
       if (this.identity.has_platform_access) this.overview = await firstValueFrom(this.access.overview());
-      if (this.identity.can_manage_platform_admins) await this.loadAdmins();
+      if (this.identity.can_manage_platform_admins) { await this.loadAdmins(); await this.loadSecurity(); }
     } catch (error) { this.error = this.errorText(error); }
     finally { this.loading = false; }
   }
@@ -159,6 +181,28 @@ export class PlatformAccessComponent implements OnInit {
     if (!confirm(`Delete platform access for ${admin.display_name || admin.discord_user_id}?`)) return;
     try { await firstValueFrom(this.access.deleteDiscordAdmin(admin.id)); this.message = 'Administrator deleted and sessions revoked.'; await this.loadAdmins(); }
     catch (error) { this.error = this.errorText(error); }
+  }
+
+
+  async loadSecurity(): Promise<void> {
+    try {
+      const [sessions, attempts] = await Promise.all([
+        firstValueFrom(this.access.sessions()),
+        firstValueFrom(this.access.loginAttempts()),
+      ]);
+      this.sessions = sessions;
+      this.attempts = attempts;
+    } catch (error) { this.error = this.errorText(error); }
+  }
+
+  async revokeSession(item: PlatformSession): Promise<void> {
+    this.clearAlerts();
+    if (!confirm(`Revoke session for ${item.display_name}?`)) return;
+    try {
+      await firstValueFrom(this.access.revokeSession(item.id));
+      this.message = 'Session revoked.';
+      await this.loadSecurity();
+    } catch (error) { this.error = this.errorText(error); }
   }
 
   private clearAlerts(): void { this.error = ''; this.message = ''; }

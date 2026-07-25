@@ -1,7 +1,7 @@
 from datetime import UTC, datetime, timedelta
 
 from fastapi import HTTPException, status
-from sqlalchemy import or_, select
+from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -81,6 +81,27 @@ class AuthService:
         self, identity: str, password: str, ip_address: str | None, user_agent: str | None
     ) -> TokenPair:
         normalized = identity.strip().lower()
+        now = datetime.now(UTC)
+        window_start = now - timedelta(minutes=15)
+        throttle_conditions = []
+        if "@" in normalized:
+            throttle_conditions.append(LoginAttempt.email == normalized)
+        if ip_address:
+            throttle_conditions.append(LoginAttempt.ip_address == ip_address)
+        failed_attempts = 0
+        if throttle_conditions:
+            failed_attempts = await self.session.scalar(
+                select(func.count(LoginAttempt.id)).where(
+                    LoginAttempt.created_at >= window_start,
+                    LoginAttempt.successful.is_(False),
+                    or_(*throttle_conditions),
+                )
+            )
+        if (failed_attempts or 0) >= 5:
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail="Too many failed platform login attempts. Try again in 15 minutes.",
+            )
         result = await self.session.execute(
             select(User).options(selectinload(User.roles)).where(or_(User.email == normalized, User.login == normalized))
         )
