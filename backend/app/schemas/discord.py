@@ -12,3 +12,6 @@ class GuildAccessResponse(BaseModel):
     guild_status: str
     bot_status: str
     access_role: str
+    permissions: list[str] = []
+    expires_at: str | None = None
+    is_owner: bool = False

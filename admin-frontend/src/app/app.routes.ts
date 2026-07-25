@@ -38,6 +38,8 @@ import { ServerSelectorComponent } from './pages/server-selector.component';
 import { AccessDeniedComponent } from './pages/access-denied.component';
 import { GuildAccessComponent } from './pages/guild-access.component';
 
+import { GuildAccessOverviewComponent } from './pages/guild-access-overview.component';
+
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
   { path: 'control/auth', component: PlatformLoginComponent },
@@ -59,50 +61,58 @@ export const routes: Routes = [
     component: GuildComponent,
     canActivate: [guildGuard],
   },
-  { path: 'guild/:guildId/access', component: GuildAccessComponent, canActivate: [guildGuard] },
-  { path: 'guild/:guildId/explorer', component: ExplorerComponent, canActivate: [guildGuard] },
-  { path: 'guild/:guildId/permission-simulator', component: PermissionSimulatorComponent, canActivate: [guildGuard] },
-  { path: 'guild/:guildId/server-diff', component: ServerDiffComponent, canActivate: [guildGuard] },
-  { path: 'guild/:guildId/backups', component: BackupsComponent, canActivate: [guildGuard] },
-  { path: 'guild/:guildId/automations', component: AutomationsComponent, canActivate: [guildGuard] },
-  { path: 'guild/:guildId/plugin-runtime', component: PluginRuntimeUsageComponent, canActivate: [guildGuard] },
-  { path: 'guild/:guildId/automation-monitor', component: AutomationMonitorComponent, canActivate: [guildGuard] },
-  { path: 'guild/:guildId/workflow-scheduler', component: WorkflowSchedulerComponent, canActivate: [guildGuard] },
+  { path: 'guild/:guildId/access-overview', component: GuildAccessOverviewComponent, canActivate: [guildGuard] },
+{ path: 'guild/:guildId/access', component: GuildAccessComponent, canActivate: [guildGuard], data: { guildModule: 'access' } },
+  { path: 'guild/:guildId/explorer', component: ExplorerComponent, canActivate: [guildGuard], data: { guildModule: 'members' } },
+  { path: 'guild/:guildId/permission-simulator', component: PermissionSimulatorComponent, canActivate: [guildGuard], data: { guildModule: 'settings' } },
+  { path: 'guild/:guildId/server-diff', component: ServerDiffComponent, canActivate: [guildGuard], data: { guildModule: 'settings' } },
+  { path: 'guild/:guildId/backups', component: BackupsComponent, canActivate: [guildGuard], data: { guildModule: 'settings' } },
+  { path: 'guild/:guildId/automations', component: AutomationsComponent, canActivate: [guildGuard], data: { guildModule: 'automations' } },
+  { path: 'guild/:guildId/plugin-runtime', component: PluginRuntimeUsageComponent, canActivate: [guildGuard], data: { guildModule: 'plugins' } },
+  { path: 'guild/:guildId/automation-monitor', component: AutomationMonitorComponent, canActivate: [guildGuard], data: { guildModule: 'automations' } },
+  { path: 'guild/:guildId/workflow-scheduler', component: WorkflowSchedulerComponent, canActivate: [guildGuard], data: { guildModule: 'automations' } },
   {
     path: 'guild/:guildId/members',
     component: MembersComponent,
     canActivate: [guildGuard],
+    data: { guildModule: 'members' },
   },
-  { path: 'guild/:guildId/members/:userId', component: MemberInspectorComponent, canActivate: [guildGuard] },
+  { path: 'guild/:guildId/members/:userId', component: MemberInspectorComponent, canActivate: [guildGuard], data: { guildModule: 'members' } },
   {
     path: 'guild/:guildId/moderation',
     component: ModerationOperationsComponent,
     canActivate: [guildGuard],
+    data: { guildModule: 'moderation' },
   },
   {
     path: 'guild/:guildId/security',
     component: SecurityComponent,
     canActivate: [guildGuard],
+    data: { guildModule: 'security' },
   },
   {
     path: 'guild/:guildId/audit',
     component: AuditComponent,
     canActivate: [guildGuard],
+    data: { guildModule: 'audit' },
   },
   {
     path: 'guild/:guildId/permissions',
     component: PermissionsComponent,
     canActivate: [guildGuard],
+    data: { guildModule: 'settings' },
   },
   {
     path: 'guild/:guildId/verification',
     component: VerificationComponent,
     canActivate: [guildGuard],
+    data: { guildModule: 'verification' },
   },
   {
     path: 'guild/:guildId/control',
     component: ServerControlComponent,
     canActivate: [guildGuard],
+    data: { guildModule: 'settings' },
   },
   { path: '**', redirectTo: '' },
 ];

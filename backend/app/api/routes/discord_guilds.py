@@ -31,6 +31,9 @@ async def list_my_guilds(
                 guild_status=g.status.value,
                 bot_status=g.bot_status.value,
                 access_role="admin",
+                permissions=["*"],
+                expires_at=None,
+                is_owner=(g.owner_discord_id == current_user.discord_user_id),
             )
             for g in guilds
         ]
@@ -58,6 +61,9 @@ async def list_my_guilds(
             guild_status=g.status.value,
             bot_status=g.bot_status.value,
             access_role=m.role.value,
+            permissions=(m.permissions or []),
+            expires_at=m.expires_at.isoformat() if m.expires_at else None,
+            is_owner=(g.owner_discord_id == current_user.discord_user_id),
         )
         for g, m in result.all()
     ]

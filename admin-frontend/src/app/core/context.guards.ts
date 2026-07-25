@@ -36,11 +36,20 @@ export const guildGuard: CanActivateFn = async (route: ActivatedRouteSnapshot) =
 
   const guildId = route.paramMap.get('guildId');
   if (!guildId) return router.parseUrl('/servers');
+
   try {
     const allowed = await guilds.list();
-    return allowed.some(item => String(item.guild_id) === String(guildId))
+    const access = allowed.find(item => String(item.guild_id) === String(guildId));
+    if (!access) return router.parseUrl('/access-denied');
+
+    const requiredModule = route.data?.['guildModule'] as string | undefined;
+    if (!requiredModule || access.is_owner || access.permissions?.includes('*')) return true;
+
+    return access.permissions?.includes(requiredModule)
       ? true
-      : router.parseUrl('/access-denied');
+      : router.createUrlTree(['/access-denied'], {
+          queryParams: { guildId, module: requiredModule, reason: 'missing_permission' },
+        });
   } catch {
     return router.parseUrl('/access-denied');
   }
