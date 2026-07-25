@@ -13,7 +13,7 @@ export interface EnterpriseDashboardOverview {
   };
   metrics: Record<string, number>;
   workers: Array<{ name: string; type: string; status: string; reported_status: string; last_seen_at: string; metadata: Record<string, unknown> }>;
-  guilds: Array<{ guild_id: string; name: string; icon_url: string | null; member_count: number; status: string; bot_status: string; last_sync_at: string | null }>;
+  guilds: Array<{ guild_id: string; name: string; icon_url: string | null; member_count: number; status: string; bot_status: string; last_sync_at: string | null; sync_status: 'fresh' | 'stale' | 'never'; enabled_plugins: number }>;
 }
 
 @Injectable({ providedIn: 'root' })

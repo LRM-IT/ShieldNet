@@ -18,6 +18,7 @@ from app.models.jobs import SystemJobRun
 from app.models.member_cases import MemberCase
 from app.models.members import DiscordMember
 from app.models.notifications import PlatformNotification
+from app.models.plugins import GuildPluginInstallation
 from app.models.runtime import RuntimeHeartbeat
 from app.models.security import SecurityFinding, SecuritySeverity
 
@@ -69,6 +70,8 @@ async def enterprise_overview(
     overdue_cases = 0
     critical_security = 0
     audit_24h = 0
+    enabled_plugins_total = 0
+    guild_plugin_counts: dict[int, int] = {}
 
     if guild_ids:
         member_stats = (await session.execute(
@@ -111,6 +114,18 @@ async def enterprise_overview(
                 AuditEvent.created_at >= day_ago,
             )
         ) or 0)
+
+        plugin_rows = (await session.execute(
+            select(
+                GuildPluginInstallation.guild_id,
+                func.count(GuildPluginInstallation.id),
+            ).where(
+                GuildPluginInstallation.guild_id.in_(guild_ids),
+                GuildPluginInstallation.enabled.is_(True),
+            ).group_by(GuildPluginInstallation.guild_id)
+        )).all()
+        guild_plugin_counts = {int(guild_id): int(count or 0) for guild_id, count in plugin_rows}
+        enabled_plugins_total = sum(guild_plugin_counts.values())
 
     workers = list((await session.scalars(
         select(RuntimeHeartbeat).order_by(RuntimeHeartbeat.worker_type, RuntimeHeartbeat.worker_name)
@@ -177,6 +192,12 @@ async def enterprise_overview(
             "status": _enum_value(guild.status),
             "bot_status": _enum_value(guild.bot_status),
             "last_sync_at": guild.last_sync_at.isoformat() if guild.last_sync_at else None,
+            "sync_status": (
+                "never" if guild.last_sync_at is None
+                else "stale" if guild.last_sync_at < now - timedelta(minutes=15)
+                else "fresh"
+            ),
+            "enabled_plugins": guild_plugin_counts.get(int(guild.guild_id), 0),
         })
 
     health_values = ["online", "online", redis_status]
@@ -216,6 +237,7 @@ async def enterprise_overview(
             "queue_depth": queue_depth,
             "failed_jobs_24h": failed_jobs_24h,
             "successful_jobs_7d": successful_jobs_7d,
+            "enabled_plugins": enabled_plugins_total,
         },
         "workers": worker_items,
         "guilds": guild_cards,

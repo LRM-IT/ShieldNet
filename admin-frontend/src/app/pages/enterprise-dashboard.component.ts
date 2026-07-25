@@ -28,7 +28,7 @@ import { AuthService } from '../core/auth.service';
     <sn-shell [title]="'dashboard.title' | snT:'Command Center'">
       <section class="dashboard-head">
         <div>
-          <div class="eyebrow">SHIELDNET ADMIN V4 · STAGE 14.7</div>
+          <div class="eyebrow">SHIELDNET ADMIN V4 · STAGE 14.9</div>
           <h2>{{ 'dashboard.heading' | snT:'Discord infrastructure overview' }}</h2>
           <p>{{ 'dashboard.description' | snT:'Live servers, services, alerts and recent activity in one workspace.' }}</p>
         </div>
@@ -51,7 +51,7 @@ import { AuthService } from '../core/auth.service';
           <article class="kpi-card"><span>Guilds</span><strong>{{ overview.metrics['guilds'] | number }}</strong><small>Managed servers</small></article>
           <article class="kpi-card"><span>Members</span><strong>{{ overview.metrics['members'] | number }}</strong><small>{{ overview.metrics['active_members'] | number }} active</small></article>
           <article class="kpi-card"><span>Bots online</span><strong>{{ onlineWorkers() }}/{{ botWorkers() }}</strong><small>{{ workerStatusLabel() }}</small></article>
-          <article class="kpi-card"><span>Open alerts</span><strong [class.danger]="openAlerts() > 0">{{ openAlerts() | number }}</strong><small>{{ criticalAlerts() | number }} critical</small></article>
+          <article class="kpi-card"><span>Plugins enabled</span><strong>{{ overview.metrics['enabled_plugins'] | number }}</strong><small>Across visible servers</small></article>
           <article class="kpi-card compact"><span>API</span><strong [class.status-ok]="apiOnline()" [class.danger]="!apiOnline()">{{ apiOnline() ? 'ONLINE' : 'OFFLINE' }}</strong><small>{{ overview.overall_status }} control plane</small></article>
           <article class="kpi-card compact"><span>Scheduler</span><strong [class.status-ok]="schedulerOnline()" [class.danger]="!schedulerOnline()">{{ schedulerOnline() ? 'ONLINE' : 'OFFLINE' }}</strong><small>Runtime worker</small></article>
         </section>
@@ -102,17 +102,18 @@ import { AuthService } from '../core/auth.service';
                   @if (guild.icon_url) { <img [src]="guild.icon_url" alt=""> }
                   @else { <div class="avatar">{{ guild.name.slice(0, 1) }}</div> }
                   <div><h4>{{ guild.name }}</h4><small>{{ guild.guild_id }}</small></div>
-                  <span class="node-state" [class.online]="guild.bot_status === 'online'"><i></i>{{ guild.bot_status }}</span>
+                  <span class="node-state" [class.online]="guild.bot_status === 'online'" [class.stale]="guild.sync_status === 'stale'"><i></i>{{ guild.bot_status }} · {{ guild.sync_status }}</span>
                 </div>
                 <div class="guild-stats">
                   <div><span>Members</span><strong>{{ guild.member_count | number }}</strong></div>
                   <div><span>Last sync</span><strong>{{ guild.last_sync_at ? (guild.last_sync_at | date:'short') : 'Never' }}</strong></div>
-                  <div><span>Status</span><strong>{{ guild.status }}</strong></div>
+                  <div><span>Plugins</span><strong>{{ guild.enabled_plugins | number }}</strong></div>
                 </div>
                 <div class="guild-actions">
                   <a [routerLink]="['/guild', guild.guild_id]">Open server</a>
                   <a [routerLink]="['/guild', guild.guild_id, 'members']">Members</a>
                   <a [routerLink]="['/guild', guild.guild_id, 'security']">Security</a>
+                  <a [routerLink]="['/guild', guild.guild_id, 'plugins']">Plugins</a>
                 </div>
               </article>
             }
