@@ -37,6 +37,6 @@ class GuildMembership(Base, TimestampMixin):
     discord_user_id: Mapped[int]=mapped_column(BigInteger,nullable=False)
     role: Mapped[MembershipRole]=mapped_column(Enum(MembershipRole,name='membership_role',schema='discord',values_callable=lambda c:[i.value for i in c]),nullable=False)
     status: Mapped[MembershipStatus]=mapped_column(Enum(MembershipStatus,name='membership_status',schema='discord',values_callable=lambda c:[i.value for i in c]),nullable=False,server_default='pending')
-    created_by: Mapped[uuid.UUID|None]=mapped_column(UUID(as_uuid=True),ForeignKey('core.users.id',ondelete='SET NULL'))
-    permissions: Mapped[dict]=mapped_column(JSONB,nullable=False,default=dict,server_default='{}')
+    permissions: Mapped[list[str]]=mapped_column(JSONB,nullable=False,default=list,server_default='[]')
     expires_at: Mapped[datetime|None]=mapped_column(DateTime(timezone=True))
+    created_by: Mapped[uuid.UUID|None]=mapped_column(UUID(as_uuid=True),ForeignKey('core.users.id',ondelete='SET NULL'))
