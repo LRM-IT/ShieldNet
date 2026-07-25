@@ -21,7 +21,7 @@ import { TranslationService } from '../core/translation.service';
           <div>
             <div class="eyebrow">{{ 'security.configuration_risk' | snT:'Configuration risk' }}</div>
             <h2>{{ riskLabel(summary.risk_score) }}</h2>
-            <p>{{ 'security.description' | snT:'ShieldNet analyses Discord roles, channels, webhooks and the bot\'s effective permissions.' }}</p>
+            <p>{{ descriptionText() }}</p>
           </div>
           <div class="score" [class.high]="summary.risk_score >= 50" [class.critical]="summary.risk_score >= 75">
             <strong>{{ summary.risk_score }}</strong><span>/100</span>
@@ -113,6 +113,14 @@ export class SecurityComponent implements OnInit {
   }
 
   count(level: string): number { return Number(this.summary?.counts?.[level] || 0); }
+
+
+  descriptionText(): string {
+    return this.i18n.t(
+      'security.description',
+      "ShieldNet analyses Discord roles, channels, webhooks and the bot's effective permissions.",
+    );
+  }
 
 
   findingText(value: string | null | undefined): string {

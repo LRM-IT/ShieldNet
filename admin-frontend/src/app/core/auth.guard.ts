@@ -8,7 +8,8 @@ export const authGuard: CanActivateFn = async () => {
   const router = inject(Router);
 
   if (!auth.accessToken) {
-    return router.parseUrl('/login');
+    const refreshed = await auth.refreshAccessToken();
+    if (!refreshed) return router.parseUrl('/login');
   }
 
   if (!auth.profile()) {

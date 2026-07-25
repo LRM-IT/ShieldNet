@@ -28,7 +28,7 @@ import { AuthService } from '../core/auth.service';
     <sn-shell [title]="'dashboard.title' | snT:'Command Center'">
       <section class="dashboard-head">
         <div>
-          <div class="eyebrow">SHIELDNET ADMIN V4 · STAGE 14.9</div>
+          <div class="eyebrow">SHIELDNET ADMIN V4 · STAGE 14.10</div>
           <h2>{{ 'dashboard.heading' | snT:'Discord infrastructure overview' }}</h2>
           <p>{{ 'dashboard.description' | snT:'Live servers, services, alerts and recent activity in one workspace.' }}</p>
         </div>
@@ -113,7 +113,7 @@ import { AuthService } from '../core/auth.service';
                   <a [routerLink]="['/guild', guild.guild_id]">Open server</a>
                   <a [routerLink]="['/guild', guild.guild_id, 'members']">Members</a>
                   <a [routerLink]="['/guild', guild.guild_id, 'security']">Security</a>
-                  <a [routerLink]="['/guild', guild.guild_id, 'plugins']">Plugins</a>
+                  <a [routerLink]="['/guild', guild.guild_id, 'plugin-runtime']">Plugins</a>
                 </div>
               </article>
             }
