@@ -1,0 +1,5 @@
+import { Component } from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { AuthService } from '../core/auth.service';
+@Component({standalone:true,imports:[RouterLink],template:`<main class="denied"><section><div>ACCESS RESTRICTED</div><h1>You do not have permission to open this workspace.</h1><p>Sign in with another account or ask the platform/server owner to grant access.</p><nav><a routerLink="/">Return</a><button (click)="auth.logout()">Sign out</button></nav></section></main>`,styles:[`.denied{min-height:100vh;display:grid;place-items:center;padding:2rem;background:#070b11;color:#eef9f6}.denied section{max-width:680px;padding:2rem;border:1px solid #20313a;border-radius:18px;background:#0b1218}.denied div{color:#ff8b90;font-size:.68rem;font-weight:900;letter-spacing:.16em}.denied h1{font-size:2rem}.denied p{color:#8da0aa}.denied nav{display:flex;gap:.7rem;margin-top:1.5rem}.denied a,.denied button{padding:.7rem 1rem;border:1px solid #29414a;border-radius:10px;background:#101c23;color:#fff;text-decoration:none;cursor:pointer}`]})
+export class AccessDeniedComponent{constructor(public auth:AuthService){}}

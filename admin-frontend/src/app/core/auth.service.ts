@@ -124,8 +124,9 @@ export class AuthService {
         this.http.post('/api/v1/auth/logout', { refresh_token: refreshToken }),
       ).catch(() => undefined);
     }
+    const source = this.profile()?.auth_source;
     this.clearSession();
-    void this.router.navigateByUrl('/login');
+    void this.router.navigateByUrl(source === 'local_platform' ? '/control/auth' : '/login');
   }
 
   private clearSession(): void {

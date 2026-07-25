@@ -27,77 +27,80 @@ import { AuditComponent } from './pages/audit.component';
 import { Routes } from '@angular/router';
 
 import { authGuard } from './core/auth.guard';
+import { guildGuard, platformGuard } from './core/context.guards';
 import { LoginComponent } from './pages/login.component';
 import { PlatformLoginComponent } from './pages/platform-login.component';
 import { EnterpriseDashboardComponent } from './pages/enterprise-dashboard.component';
 import { GuildComponent } from './pages/guild.component';
 import { ProfileComponent } from './pages/profile.component';
+import { LandingComponent } from './pages/landing.component';
+import { ServerSelectorComponent } from './pages/server-selector.component';
+import { AccessDeniedComponent } from './pages/access-denied.component';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
   { path: 'control/auth', component: PlatformLoginComponent },
   { path: 'profile', component: ProfileComponent, canActivate: [authGuard] },
-  { path: 'platform/access', component: PlatformAccessComponent, canActivate: [authGuard] },
-  { path: 'platform/plugins', component: PluginsComponent, canActivate: [authGuard] },
-  { path: 'platform/jobs', component: JobsCenterComponent, canActivate: [authGuard] },
-  { path: 'platform/operations', component: OperationsComponent, canActivate: [authGuard] },
-  { path: 'platform/health', component: HealthMonitorComponent, canActivate: [authGuard] },
-  { path: 'platform/logs', component: LiveLogsComponent, canActivate: [authGuard] },
-  { path: 'platform/notifications', component: NotificationsComponent, canActivate: [authGuard] },
-  { path: 'platform/doctor', component: DoctorComponent, canActivate: [authGuard] },
-  {
-    path: '',
-    component: EnterpriseDashboardComponent,
-    canActivate: [authGuard],
-  },
+  { path: 'access-denied', component: AccessDeniedComponent },
+  { path: 'servers', component: ServerSelectorComponent, canActivate: [authGuard] },
+  { path: 'platform/access', component: PlatformAccessComponent, canActivate: [platformGuard] },
+  { path: 'platform/plugins', component: PluginsComponent, canActivate: [platformGuard] },
+  { path: 'platform/jobs', component: JobsCenterComponent, canActivate: [platformGuard] },
+  { path: 'platform/operations', component: OperationsComponent, canActivate: [platformGuard] },
+  { path: 'platform/health', component: HealthMonitorComponent, canActivate: [platformGuard] },
+  { path: 'platform/logs', component: LiveLogsComponent, canActivate: [platformGuard] },
+  { path: 'platform/notifications', component: NotificationsComponent, canActivate: [platformGuard] },
+  { path: 'platform/doctor', component: DoctorComponent, canActivate: [platformGuard] },
+  { path: '', component: LandingComponent, canActivate: [authGuard] },
+  { path: 'platform', component: EnterpriseDashboardComponent, canActivate: [platformGuard] },
   {
     path: 'guild/:guildId',
     component: GuildComponent,
-    canActivate: [authGuard],
+    canActivate: [guildGuard],
   },
-  { path: 'guild/:guildId/explorer', component: ExplorerComponent, canActivate: [authGuard] },
-  { path: 'guild/:guildId/permission-simulator', component: PermissionSimulatorComponent, canActivate: [authGuard] },
-  { path: 'guild/:guildId/server-diff', component: ServerDiffComponent, canActivate: [authGuard] },
-  { path: 'guild/:guildId/backups', component: BackupsComponent, canActivate: [authGuard] },
-  { path: 'guild/:guildId/automations', component: AutomationsComponent, canActivate: [authGuard] },
-  { path: 'guild/:guildId/plugin-runtime', component: PluginRuntimeUsageComponent, canActivate: [authGuard] },
-  { path: 'guild/:guildId/automation-monitor', component: AutomationMonitorComponent, canActivate: [authGuard] },
-  { path: 'guild/:guildId/workflow-scheduler', component: WorkflowSchedulerComponent, canActivate: [authGuard] },
+  { path: 'guild/:guildId/explorer', component: ExplorerComponent, canActivate: [guildGuard] },
+  { path: 'guild/:guildId/permission-simulator', component: PermissionSimulatorComponent, canActivate: [guildGuard] },
+  { path: 'guild/:guildId/server-diff', component: ServerDiffComponent, canActivate: [guildGuard] },
+  { path: 'guild/:guildId/backups', component: BackupsComponent, canActivate: [guildGuard] },
+  { path: 'guild/:guildId/automations', component: AutomationsComponent, canActivate: [guildGuard] },
+  { path: 'guild/:guildId/plugin-runtime', component: PluginRuntimeUsageComponent, canActivate: [guildGuard] },
+  { path: 'guild/:guildId/automation-monitor', component: AutomationMonitorComponent, canActivate: [guildGuard] },
+  { path: 'guild/:guildId/workflow-scheduler', component: WorkflowSchedulerComponent, canActivate: [guildGuard] },
   {
     path: 'guild/:guildId/members',
     component: MembersComponent,
-    canActivate: [authGuard],
+    canActivate: [guildGuard],
   },
-  { path: 'guild/:guildId/members/:userId', component: MemberInspectorComponent, canActivate: [authGuard] },
+  { path: 'guild/:guildId/members/:userId', component: MemberInspectorComponent, canActivate: [guildGuard] },
   {
     path: 'guild/:guildId/moderation',
     component: ModerationOperationsComponent,
-    canActivate: [authGuard],
+    canActivate: [guildGuard],
   },
   {
     path: 'guild/:guildId/security',
     component: SecurityComponent,
-    canActivate: [authGuard],
+    canActivate: [guildGuard],
   },
   {
     path: 'guild/:guildId/audit',
     component: AuditComponent,
-    canActivate: [authGuard],
+    canActivate: [guildGuard],
   },
   {
     path: 'guild/:guildId/permissions',
     component: PermissionsComponent,
-    canActivate: [authGuard],
+    canActivate: [guildGuard],
   },
   {
     path: 'guild/:guildId/verification',
     component: VerificationComponent,
-    canActivate: [authGuard],
+    canActivate: [guildGuard],
   },
   {
     path: 'guild/:guildId/control',
     component: ServerControlComponent,
-    canActivate: [authGuard],
+    canActivate: [guildGuard],
   },
   { path: '**', redirectTo: '' },
 ];

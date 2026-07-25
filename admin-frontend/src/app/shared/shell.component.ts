@@ -41,7 +41,7 @@ interface PluginNavDefinition {
   template: `
     <div class="workspace" [class.menu-open]="mobileMenu()" [class.menu-collapsed]="menuCollapsed()">
       <aside class="rail">
-        <a routerLink="/" class="brand" aria-label="ShieldNet home">
+        <a [routerLink]="homeLink()" class="brand" aria-label="ShieldNet home">
           <span class="brand-symbol"><span></span><span></span><span></span></span>
           <span class="brand-copy">
             <strong>SHIELDNET</strong>
@@ -60,17 +60,19 @@ interface PluginNavDefinition {
         <nav aria-label="Main navigation">
           <div class="nav-group">
             <div class="nav-label">{{ "shell.workspace" | snT:"Workspace" }}</div>
-            <a routerLink="/" routerLinkActive="active"
-               [routerLinkActiveOptions]="{ exact: true }">
-              <span class="nav-icon">⌂</span><span>{{ 'shell.servers' | snT:'Servers' }}</span>
-            </a>
-            <a routerLink="/platform/plugins" routerLinkActive="active">
-              <span class="nav-icon">⬡</span><span>{{ 'shell.plugin_fabric' | snT:'Plugin fabric' }}</span>
-            </a>
-            <a routerLink="/platform/jobs" routerLinkActive="active">
-              <span class="nav-icon">⌁</span><span>{{ 'shell.jobs_center' | snT:'Jobs center' }}</span>
-            </a>
-            @if (hasPlatformOperations()) {
+            @if (isPlatformContext()) {
+              <a routerLink="/platform" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+                <span class="nav-icon">⌂</span><span>Platform overview</span>
+              </a>
+              <a routerLink="/servers" routerLinkActive="active">
+                <span class="nav-icon">◫</span><span>Guild Control Centers</span>
+              </a>
+              <a routerLink="/platform/plugins" routerLinkActive="active">
+                <span class="nav-icon">⬡</span><span>{{ 'shell.plugin_fabric' | snT:'Plugin fabric' }}</span>
+              </a>
+              <a routerLink="/platform/jobs" routerLinkActive="active">
+                <span class="nav-icon">⌁</span><span>{{ 'shell.jobs_center' | snT:'Jobs center' }}</span>
+              </a>
               <a routerLink="/platform/operations" routerLinkActive="active">
                 <span class="nav-icon">◎</span><span>{{ 'shell.operations' | snT:'Operations' }}</span>
               </a>
@@ -82,6 +84,13 @@ interface PluginNavDefinition {
               </a>
               <a routerLink="/platform/notifications" routerLinkActive="active">
                 <span class="nav-icon">◌</span><span>Notifications</span>
+              </a>
+              <a routerLink="/platform/access" routerLinkActive="active">
+                <span class="nav-icon">⚿</span><span>Platform access</span>
+              </a>
+            } @else {
+              <a routerLink="/servers" routerLinkActive="active">
+                <span class="nav-icon">⌂</span><span>{{ 'shell.servers' | snT:'Servers' }}</span>
               </a>
             }
           </div>
@@ -120,7 +129,7 @@ interface PluginNavDefinition {
           }
           <div class="operator-copy">
             <strong>{{ auth.profile()?.display_name || auth.profile()?.login || 'Operator' }}</strong>
-            <small>{{ 'shell.authenticated_operator' | snT:'Authenticated operator' }}</small>
+            <small>{{ authSourceLabel() }}</small>
           </div>
           <span class="profile-arrow">→</span>
         </a>
@@ -272,9 +281,15 @@ export class ShellComponent implements OnInit, OnDestroy {
   readonly installedPlugins = signal<GuildPluginInstallation[]>([]);
   readonly currentTime = signal('');
   readonly appearanceIcon = computed(() => ({ auto: '◐', dark: '●', light: '○' }[this.themes.appearanceMode()]));
-  readonly hasPlatformOperations = computed(() => {
-    const profile = this.auth.profile();
-    return Boolean(profile?.is_superadmin || profile?.roles?.some(role => ['superadmin', 'admin'].includes(role.toLowerCase())));
+  readonly isPlatformContext = computed(() => Boolean(this.auth.profile()?.platform_context));
+  readonly hasPlatformOperations = this.isPlatformContext;
+  readonly homeLink = computed(() => this.isPlatformContext() ? '/platform' : (this.guildId() ? `/guild/${this.guildId()}` : '/servers'));
+  readonly authSourceLabel = computed(() => {
+    const source = this.auth.profile()?.auth_source;
+    if (source === 'local_platform') return 'Local platform';
+    if (source === 'discord_platform') return 'Discord platform';
+    if (source === 'discord_guild') return 'Discord guild';
+    return 'Authenticated operator';
   });
   private timerId: ReturnType<typeof setInterval> | null = null;
 
@@ -282,14 +297,17 @@ export class ShellComponent implements OnInit, OnDestroy {
   readonly paletteCommands = computed<PaletteCommand[]>(() => {
     const id = this.guildId();
     const commands: PaletteCommand[] = [
-      { id: 'dashboard', label: 'palette.dashboard', fallback: 'Open Command Center', icon: '⌂', path: '/' },
-      { id: 'plugins', label: 'palette.plugins', fallback: 'Open Plugin Platform', icon: '⬡', path: '/platform/plugins' },
-      { id: 'jobs', label: 'palette.jobs', fallback: 'Open Jobs Center', icon: '⌁', path: '/platform/jobs' },
-      { id: 'doctor', label: 'palette.doctor', fallback: 'Run Platform Doctor', icon: '✚', path: '/platform/doctor' },
+      { id: 'home', label: 'palette.dashboard', fallback: 'Open Control Center', icon: '⌂', path: this.homeLink() },
+      { id: 'servers', label: 'shell.servers', fallback: 'Open Server Selector', icon: '◫', path: '/servers' },
       { id: 'profile', label: 'palette.profile', fallback: 'Open Profile', icon: '◉', path: '/profile' },
     ];
 
-    if (this.hasPlatformOperations()) {
+    if (this.isPlatformContext()) {
+      commands.push(
+        { id: 'plugins', label: 'palette.plugins', fallback: 'Open Plugin Platform', icon: '⬡', path: '/platform/plugins' },
+        { id: 'jobs', label: 'palette.jobs', fallback: 'Open Jobs Center', icon: '⌁', path: '/platform/jobs' },
+        { id: 'doctor', label: 'palette.doctor', fallback: 'Run Platform Doctor', icon: '✚', path: '/platform/doctor' },
+      );
       commands.push(
         { id: 'operations', label: 'palette.operations', fallback: 'Open Live Operations', icon: '◎', path: '/platform/operations' },
         { id: 'health', label: 'palette.health', fallback: 'Open Health Monitor', icon: '✚', path: '/platform/health' },
