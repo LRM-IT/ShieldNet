@@ -30,7 +30,7 @@ export class TranslationService {
   async initialize(preferred?: string | null): Promise<void> {
     const docs = await Promise.all(
       ['en', 'uk', 'ru'].map((code) =>
-        firstValueFrom(this.http.get<Dictionary>(`/locales/${code}.json`)),
+        firstValueFrom(this.http.get<Dictionary>(`/locales/${code}.json?v=14.27`)),
       ),
     );
     this.languages.set(
@@ -53,7 +53,7 @@ export class TranslationService {
   async setLocale(code: string, persist = true): Promise<void> {
     const selected = this.languages().some((item) => item.code === code) ? code : 'en';
     const dictionary = await firstValueFrom(
-      this.http.get<Dictionary>(`/locales/${selected}.json`),
+      this.http.get<Dictionary>(`/locales/${selected}.json?v=14.27`),
     );
     this.dictionary.set(dictionary);
     this.locale.set(selected);
