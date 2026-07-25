@@ -1,4 +1,6 @@
 from fastapi import HTTPException, status
+from datetime import UTC, datetime
+
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -71,6 +73,7 @@ async def require_guild_management(
             GuildMembership.guild_id == guild_id,
             or_(*identity_filters),
             GuildMembership.status == MembershipStatus.ACTIVE,
+            or_(GuildMembership.expires_at.is_(None), GuildMembership.expires_at > datetime.now(UTC)),
             GuildMembership.role.in_(
                 [MembershipRole.ADMIN, MembershipRole.MODERATOR]
             ),

@@ -1,7 +1,7 @@
 import enum, uuid
 from datetime import datetime
 from sqlalchemy import BigInteger, DateTime, Enum, ForeignKey, Index, Integer, String, Text, UniqueConstraint, func
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 from app.db.base import Base, TimestampMixin
 
@@ -38,3 +38,5 @@ class GuildMembership(Base, TimestampMixin):
     role: Mapped[MembershipRole]=mapped_column(Enum(MembershipRole,name='membership_role',schema='discord',values_callable=lambda c:[i.value for i in c]),nullable=False)
     status: Mapped[MembershipStatus]=mapped_column(Enum(MembershipStatus,name='membership_status',schema='discord',values_callable=lambda c:[i.value for i in c]),nullable=False,server_default='pending')
     created_by: Mapped[uuid.UUID|None]=mapped_column(UUID(as_uuid=True),ForeignKey('core.users.id',ondelete='SET NULL'))
+    permissions: Mapped[dict]=mapped_column(JSONB,nullable=False,default=dict,server_default='{}')
+    expires_at: Mapped[datetime|None]=mapped_column(DateTime(timezone=True))

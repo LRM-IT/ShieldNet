@@ -36,6 +36,7 @@ import { ProfileComponent } from './pages/profile.component';
 import { LandingComponent } from './pages/landing.component';
 import { ServerSelectorComponent } from './pages/server-selector.component';
 import { AccessDeniedComponent } from './pages/access-denied.component';
+import { GuildAccessComponent } from './pages/guild-access.component';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -58,6 +59,7 @@ export const routes: Routes = [
     component: GuildComponent,
     canActivate: [guildGuard],
   },
+  { path: 'guild/:guildId/access', component: GuildAccessComponent, canActivate: [guildGuard] },
   { path: 'guild/:guildId/explorer', component: ExplorerComponent, canActivate: [guildGuard] },
   { path: 'guild/:guildId/permission-simulator', component: PermissionSimulatorComponent, canActivate: [guildGuard] },
   { path: 'guild/:guildId/server-diff', component: ServerDiffComponent, canActivate: [guildGuard] },
