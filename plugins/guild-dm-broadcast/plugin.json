@@ -1,0 +1,27 @@
+{
+  "id": "guild-dm-broadcast",
+  "name": "Guild DM Broadcast",
+  "version": "1.0.0",
+  "description": "Administrative Discord DM messages for members of a managed guild.",
+  "author": "ShieldNet",
+  "min_core": "7.0.0",
+  "components": {
+    "backend": true,
+    "frontend": false,
+    "bot": false
+  },
+  "entrypoints": {
+    "backend": "backend.plugin:GuildDMBroadcastPlugin"
+  },
+  "capabilities": [
+    "guild.members.read",
+    "audit.write"
+  ],
+  "permissions": [
+    "guild_dm_broadcast.view",
+    "guild_dm_broadcast.create",
+    "guild_dm_broadcast.send",
+    "guild_dm_broadcast.cancel"
+  ],
+  "dependencies": {}
+}

@@ -22,6 +22,7 @@ from app.models.plugins import (
     PluginRuntimeState,
 )
 from app.plugin_worker.config import WorkerSettings
+from app.plugin_worker.activation import PluginActivator
 from app.plugin_worker.security import (
     PackageValidationError,
     load_and_validate_manifest,
@@ -129,6 +130,11 @@ class PluginValidationWorker:
 
                 await self._record_validated(
                     session, job, item.version, final_path, manifest
+                )
+                await PluginActivator().activate(
+                    session,
+                    job=job,
+                    validated_path=final_path,
                 )
             except Exception as exc:
                 logger.exception("plugin validation job failed: %s", job.id)

@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+exec /opt/shieldnet/backend/venv/bin/python /opt/shieldnet/bin/shieldnet-plugin.py "$@"
