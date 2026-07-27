@@ -57,6 +57,7 @@ class PluginInstallJournal:
             "target_path": str(target_path),
             "temporary_path": str(temporary_path),
             "backup_path": str(backup_path) if backup_path else None,
+            "displaced_path": None,
             "stage": "prepared",
             "created_at": now,
             "updated_at": now,
@@ -65,6 +66,11 @@ class PluginInstallJournal:
         journal = cls(JOURNAL_ROOT / f"{job_id}.json", payload)
         journal._write()
         return journal
+
+    def set_displaced_path(self, path: Path) -> None:
+        self.payload["displaced_path"] = str(path)
+        self.payload["updated_at"] = datetime.now(timezone.utc).isoformat()
+        self._write()
 
     def advance(self, stage: str) -> None:
         self.payload["stage"] = stage
@@ -129,7 +135,19 @@ def _restore_files(payload: dict[str, Any]) -> str:
     temporary = _safe_path(payload.get("temporary_path"), "temporary_path")
     backup_raw = payload.get("backup_path")
     backup = _safe_path(backup_raw, "backup_path") if backup_raw else None
+    displaced_raw = payload.get("displaced_path")
+    displaced = (
+        _safe_path(displaced_raw, "displaced_path")
+        if displaced_raw
+        else None
+    )
     shutil.rmtree(temporary, ignore_errors=True)
+
+    if displaced is not None and displaced.is_dir():
+        shutil.rmtree(target, ignore_errors=True)
+        os.replace(displaced, target)
+        PluginInstallJournal._fsync_directory(target.parent)
+        return "displaced_directory_restored"
 
     if backup is not None and backup.is_dir():
         shutil.rmtree(target, ignore_errors=True)

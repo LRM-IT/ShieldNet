@@ -26,6 +26,12 @@ from app.plugin_worker.migration_preflight import (
 from app.plugins.manifest import PluginManifest
 from app.plugin_worker.runtime_host import runtime_host
 from app.plugin_worker.install_journal import PluginInstallJournal
+from app.plugin_worker.atomic_filesystem import (
+    atomic_commit,
+    finalize_commit,
+    prepare_staging,
+    rollback_commit,
+)
 
 
 PLUGIN_ROOT = Path("/opt/shieldnet/plugins")
@@ -117,21 +123,24 @@ class PluginActivator:
             )
 
             PLUGIN_ROOT.mkdir(parents=True, exist_ok=True)
-            shutil.rmtree(temporary, ignore_errors=True)
-            shutil.copytree(validated_path, temporary)
+            checksum = prepare_staging(
+                validated_path=validated_path,
+                staging=temporary,
+                expected_plugin_key=manifest.plugin_key,
+                expected_version=manifest.version,
+                checksum_function=directory_checksum,
+            )
+            journal.advance("staging_synced")
 
-            copied_manifest = PluginManifest.from_path(temporary / "plugin.json")
-            if copied_manifest.plugin_key != manifest.plugin_key:
-                raise PluginActivationError("Copied package plugin key mismatch")
-            if copied_manifest.version != manifest.version:
-                raise PluginActivationError("Copied package version mismatch")
-
-            if target.exists():
-                shutil.rmtree(target)
-            os.replace(temporary, target)
+            filesystem_commit = atomic_commit(
+                target=target,
+                staging=temporary,
+                job_id=job.id,
+                checksum_sha256=checksum,
+                checksum_function=directory_checksum,
+            )
+            journal.set_displaced_path(filesystem_commit.displaced)
             journal.advance("filesystem_swapped")
-
-            checksum = directory_checksum(target)
 
             await self._set_job_status(
                 session,
@@ -157,6 +166,7 @@ class PluginActivator:
                 runtime_health=runtime.snapshot.health,
             )
             journal.advance("database_committed")
+            finalize_commit(filesystem_commit)
             journal.complete()
 
             return PluginActivationResult(
@@ -177,7 +187,16 @@ class PluginActivator:
             except Exception:
                 pass
             shutil.rmtree(temporary, ignore_errors=True)
-            if backup is not None and backup.exists():
+            if "filesystem_commit" in locals():
+                try:
+                    rollback_commit(filesystem_commit)
+                except Exception:
+                    if backup is not None and backup.exists():
+                        shutil.rmtree(target, ignore_errors=True)
+                        shutil.copytree(backup, target)
+                    elif backup is None:
+                        shutil.rmtree(target, ignore_errors=True)
+            elif backup is not None and backup.exists():
                 shutil.rmtree(target, ignore_errors=True)
                 shutil.copytree(backup, target)
             elif backup is None:
