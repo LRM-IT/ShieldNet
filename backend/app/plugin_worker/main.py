@@ -136,6 +136,7 @@ class PluginValidationWorker:
                     job=job,
                     validated_path=final_path,
                 )
+                await self._complete_job(session, job.id)
             except Exception as exc:
                 logger.exception("plugin validation job failed: %s", job.id)
                 await session.rollback()
@@ -280,15 +281,15 @@ class PluginValidationWorker:
             )
         )
         job.status = "validated"
-        job.progress = 100
-        job.finished_at = now
+        job.progress = 78
+        job.finished_at = None
         session.add(
             PluginInstallLog(
                 job_id=job.id,
                 level="info",
                 message=(
-                    "package validated and prepared; "
-                    "no plugin code was executed"
+                    "package validated and prepared for activation; "
+                    "installation is not complete yet"
                 ),
                 metadata_json={
                     "path": str(final_path),
@@ -306,6 +307,42 @@ class PluginValidationWorker:
                     "version": version,
                     "path": str(final_path),
                 },
+            )
+        )
+        await session.commit()
+
+    async def _complete_job(
+        self,
+        session: AsyncSession,
+        job_id: UUID,
+    ) -> None:
+        job = (
+            await session.execute(
+                select(PluginInstallJob).where(
+                    PluginInstallJob.id == job_id
+                )
+            )
+        ).scalar_one()
+        now = datetime.now(timezone.utc)
+        job.status = "installed"
+        job.progress = 100
+        job.error = None
+        job.finished_at = now
+        session.add(
+            PluginInstallLog(
+                job_id=job.id,
+                level="info",
+                message="plugin installation completed",
+                metadata_json={"progress": 100},
+            )
+        )
+        session.add(
+            PluginRuntimeEvent(
+                plugin_key=job.plugin_key,
+                job_id=job.id,
+                event_type="install_completed",
+                message="Plugin installation completed",
+                metadata_json={"progress": 100},
             )
         )
         await session.commit()
@@ -331,7 +368,7 @@ class PluginValidationWorker:
             PluginInstallLog(
                 job_id=job.id,
                 level="error",
-                message="package validation failed",
+                message="plugin installation failed",
                 metadata_json={"error": error[:4000]},
             )
         )
@@ -339,8 +376,8 @@ class PluginValidationWorker:
             PluginRuntimeEvent(
                 plugin_key=job.plugin_key,
                 job_id=job.id,
-                event_type="package_validation_failed",
-                message="Plugin package validation failed",
+                event_type="install_failed",
+                message="Plugin installation failed",
                 metadata_json={"error": error[:4000]},
             )
         )

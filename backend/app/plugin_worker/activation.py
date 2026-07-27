@@ -24,6 +24,7 @@ from app.plugin_worker.migration_preflight import (
     run_migration_preflight,
 )
 from app.plugins.manifest import PluginManifest
+from app.plugin_worker.runtime_host import runtime_host
 
 
 PLUGIN_ROOT = Path("/opt/shieldnet/plugins")
@@ -121,6 +122,19 @@ class PluginActivator:
             os.replace(temporary, target)
 
             checksum = directory_checksum(target)
+
+            await self._set_job_status(
+                session,
+                job=job,
+                status="starting",
+                progress=88,
+                message="plugin runtime activation started",
+            )
+            runtime = await runtime_host.activate(
+                manifest=manifest,
+                plugin_root=target,
+            )
+
             await self._record_installation(
                 session,
                 job=job,
@@ -129,6 +143,7 @@ class PluginActivator:
                 backup_path=backup,
                 checksum_sha256=checksum,
                 preflight=preflight,
+                runtime_health=runtime.snapshot.health,
             )
 
             return PluginActivationResult(
@@ -140,6 +155,10 @@ class PluginActivator:
             )
         except Exception as exc:
             await session.rollback()
+            try:
+                await runtime_host.deactivate(manifest.plugin_key)
+            except Exception:
+                pass
             shutil.rmtree(temporary, ignore_errors=True)
             if backup is not None and backup.exists():
                 shutil.rmtree(target, ignore_errors=True)
@@ -217,6 +236,7 @@ class PluginActivator:
         backup_path: Path | None,
         checksum_sha256: str,
         preflight: PluginMigrationPreflight,
+        runtime_health: dict,
     ) -> None:
         now = datetime.now(timezone.utc)
 
@@ -279,7 +299,7 @@ class PluginActivator:
         registry.manifest_path = str(install_path / "plugin.json")
         registry.manifest = manifest.raw
         registry.checksum = checksum_sha256
-        registry.enabled = False
+        registry.enabled = True
         registry.healthy = True
         registry.last_error = None
 
@@ -290,7 +310,7 @@ class PluginActivator:
                 prepared_version=manifest.version,
                 package_path=str(install_path),
                 manifest_json=manifest.raw,
-                state="installed",
+                state="running",
                 last_job_id=job.id,
                 last_error=None,
                 updated_at=now,
@@ -301,7 +321,7 @@ class PluginActivator:
                     "prepared_version": manifest.version,
                     "package_path": str(install_path),
                     "manifest_json": manifest.raw,
-                    "state": "installed",
+                    "state": "running",
                     "last_job_id": job.id,
                     "last_error": None,
                     "updated_at": now,
@@ -309,14 +329,15 @@ class PluginActivator:
             )
         )
 
-        job.status = "installed"
-        job.progress = 90
+        job.status = "committing"
+        job.progress = 95
+        job.finished_at = None
 
         session.add(
             PluginInstallLog(
                 job_id=job.id,
                 level="info",
-                message="plugin package activated",
+                message="plugin package activated; awaiting final commit",
                 metadata_json={
                     "version": manifest.version,
                     "path": str(install_path),
@@ -325,6 +346,7 @@ class PluginActivator:
                     "pending_migration_count": len(preflight.pending),
                     "migration_schema": preflight.schema_name,
                     "migration_execution": "disabled",
+                    "runtime_health": runtime_health,
                 },
             )
         )
@@ -332,8 +354,8 @@ class PluginActivator:
             PluginRuntimeEvent(
                 plugin_key=manifest.plugin_key,
                 job_id=job.id,
-                event_type="plugin_activated",
-                message="Plugin package activated",
+                event_type="plugin_runtime_started",
+                message="Plugin runtime started and passed health check",
                 metadata_json={
                     "version": manifest.version,
                     "path": str(install_path),
