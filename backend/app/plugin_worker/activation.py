@@ -25,6 +25,7 @@ from app.plugin_worker.migration_preflight import (
 )
 from app.plugins.manifest import PluginManifest
 from app.plugin_worker.runtime_host import runtime_host
+from app.plugin_worker.runtime_transaction import runtime_transaction
 from app.plugin_worker.install_journal import PluginInstallJournal
 from app.plugin_worker.atomic_filesystem import (
     atomic_commit,
@@ -149,11 +150,16 @@ class PluginActivator:
                 progress=88,
                 message="plugin runtime activation started",
             )
-            runtime = await runtime_host.activate(
+            runtime_tx = runtime_transaction(
+                runtime_host,
                 manifest=manifest,
                 plugin_root=target,
             )
-            journal.advance("runtime_running")
+            journal.advance("runtime_preparing")
+            runtime = await runtime_tx.prepare()
+            journal.advance("runtime_prepared")
+            runtime = await runtime_tx.commit()
+            journal.advance("runtime_committed")
 
             await self._record_installation(
                 session,
@@ -182,10 +188,16 @@ class PluginActivator:
             except Exception:
                 pass
             await session.rollback()
-            try:
-                await runtime_host.deactivate(manifest.plugin_key)
-            except Exception:
-                pass
+            if "runtime_tx" in locals() and not runtime_tx.committed:
+                try:
+                    await runtime_tx.rollback()
+                except Exception:
+                    pass
+            else:
+                try:
+                    await runtime_host.deactivate(manifest.plugin_key)
+                except Exception:
+                    pass
             shutil.rmtree(temporary, ignore_errors=True)
             if "filesystem_commit" in locals():
                 try:
