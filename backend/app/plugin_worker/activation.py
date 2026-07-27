@@ -25,6 +25,7 @@ from app.plugin_worker.migration_preflight import (
 )
 from app.plugins.manifest import PluginManifest
 from app.plugin_worker.runtime_host import runtime_host
+from app.plugin_worker.install_journal import PluginInstallJournal
 
 
 PLUGIN_ROOT = Path("/opt/shieldnet/plugins")
@@ -97,6 +98,14 @@ class PluginActivator:
             plugin_key=manifest.plugin_key,
             target=target,
         )
+        journal = PluginInstallJournal.begin(
+            job_id=job.id,
+            plugin_key=manifest.plugin_key,
+            candidate_version=manifest.version,
+            target_path=target,
+            temporary_path=temporary,
+            backup_path=backup,
+        )
 
         try:
             await self._set_job_status(
@@ -120,6 +129,7 @@ class PluginActivator:
             if target.exists():
                 shutil.rmtree(target)
             os.replace(temporary, target)
+            journal.advance("filesystem_swapped")
 
             checksum = directory_checksum(target)
 
@@ -134,6 +144,7 @@ class PluginActivator:
                 manifest=manifest,
                 plugin_root=target,
             )
+            journal.advance("runtime_running")
 
             await self._record_installation(
                 session,
@@ -145,6 +156,8 @@ class PluginActivator:
                 preflight=preflight,
                 runtime_health=runtime.snapshot.health,
             )
+            journal.advance("database_committed")
+            journal.complete()
 
             return PluginActivationResult(
                 plugin_key=manifest.plugin_key,
@@ -154,6 +167,10 @@ class PluginActivator:
                 checksum_sha256=checksum,
             )
         except Exception as exc:
+            try:
+                journal.fail(str(exc))
+            except Exception:
+                pass
             await session.rollback()
             try:
                 await runtime_host.deactivate(manifest.plugin_key)
@@ -163,6 +180,12 @@ class PluginActivator:
             if backup is not None and backup.exists():
                 shutil.rmtree(target, ignore_errors=True)
                 shutil.copytree(backup, target)
+            elif backup is None:
+                shutil.rmtree(target, ignore_errors=True)
+            try:
+                journal.complete()
+            except Exception:
+                pass
             if isinstance(exc, PluginActivationError):
                 raise
             raise PluginActivationError(str(exc)) from exc

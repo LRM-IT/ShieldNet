@@ -23,6 +23,7 @@ from app.models.plugins import (
 )
 from app.plugin_worker.config import WorkerSettings
 from app.plugin_worker.activation import PluginActivator
+from app.plugin_worker.install_journal import recover_install_journals
 from app.plugin_worker.security import (
     PackageValidationError,
     load_and_validate_manifest,
@@ -385,6 +386,23 @@ class PluginValidationWorker:
 
     async def run(self) -> None:
         self.prepare_directories()
+        async with AsyncSessionFactory() as recovery_session:
+            reports = await recover_install_journals(recovery_session)
+        for report in reports:
+            if report.error:
+                logger.error(
+                    "plugin install recovery failed: %s: %s",
+                    report.journal_path,
+                    report.error,
+                )
+            else:
+                logger.warning(
+                    "plugin install recovery completed: "
+                    "plugin=%s stage=%s action=%s",
+                    report.plugin_key,
+                    report.stage,
+                    report.action,
+                )
         logger.info("ShieldNet plugin validation worker started")
         while True:
             try:
