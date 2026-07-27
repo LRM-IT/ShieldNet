@@ -19,6 +19,10 @@ from app.models.plugins import (
     PluginRuntimeEvent,
     PluginRuntimeState,
 )
+from app.plugin_worker.migration_preflight import (
+    PluginMigrationPreflight,
+    run_migration_preflight,
+)
 from app.plugins.manifest import PluginManifest
 
 
@@ -78,6 +82,13 @@ class PluginActivator:
                 "Validated package plugin key does not match installation job"
             )
 
+        preflight = await self._run_migration_preflight(
+            session,
+            job=job,
+            manifest=manifest,
+            validated_path=validated_path,
+        )
+
         target = PLUGIN_ROOT / manifest.plugin_key
         temporary = PLUGIN_ROOT / f".{manifest.plugin_key}.installing-{job.id}"
         backup = await self._backup_existing(
@@ -117,6 +128,7 @@ class PluginActivator:
                 install_path=target,
                 backup_path=backup,
                 checksum_sha256=checksum,
+                preflight=preflight,
             )
 
             return PluginActivationResult(
@@ -135,6 +147,40 @@ class PluginActivator:
             if isinstance(exc, PluginActivationError):
                 raise
             raise PluginActivationError(str(exc)) from exc
+
+    async def _run_migration_preflight(
+        self,
+        session: AsyncSession,
+        *,
+        job: PluginInstallJob,
+        manifest: PluginManifest,
+        validated_path: Path,
+    ) -> PluginMigrationPreflight:
+        try:
+            result = run_migration_preflight(
+                validated_path,
+                plugin_key=manifest.plugin_key,
+            )
+        except Exception as exc:
+            raise PluginActivationError(
+                f"Plugin migration preflight failed: {exc}"
+            ) from exc
+
+        session.add(
+            PluginInstallLog(
+                job_id=job.id,
+                level="info",
+                message="plugin migration preflight passed",
+                metadata_json={
+                    "schema": result.schema_name,
+                    "migration_count": len(result.migrations),
+                    "pending_count": len(result.pending),
+                    "execution": "disabled",
+                },
+            )
+        )
+        await session.commit()
+        return result
 
     async def _backup_existing(
         self,
@@ -170,6 +216,7 @@ class PluginActivator:
         install_path: Path,
         backup_path: Path | None,
         checksum_sha256: str,
+        preflight: PluginMigrationPreflight,
     ) -> None:
         now = datetime.now(timezone.utc)
 
@@ -274,6 +321,10 @@ class PluginActivator:
                     "version": manifest.version,
                     "path": str(install_path),
                     "backup": str(backup_path) if backup_path else None,
+                    "migration_count": len(preflight.migrations),
+                    "pending_migration_count": len(preflight.pending),
+                    "migration_schema": preflight.schema_name,
+                    "migration_execution": "disabled",
                 },
             )
         )
