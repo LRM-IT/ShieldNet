@@ -501,8 +501,10 @@ export class GuildComponent implements OnInit {
     );
 
     return this.modules().filter((module) => {
+      const key = this.normalize(module.module_key);
+      if (key === 'welcome') return false;
       if (module.is_core) return true;
-      return installed.has(this.normalize(module.module_key));
+      return installed.has(key);
     });
   });
 
@@ -578,7 +580,6 @@ export class GuildComponent implements OnInit {
   modulePath(key: string): string | null {
     const map: Record<string, string> = {
       core: 'control',
-      welcome: 'control',
       verification: 'verification',
       moderation: 'moderation',
       translator: 'control',
