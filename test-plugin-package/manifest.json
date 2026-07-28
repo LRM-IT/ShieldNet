@@ -1,8 +1,0 @@
-{
-  "plugin_key": "shieldnet-test",
-  "version": "1.0.0",
-  "name": "ShieldNet Test Plugin",
-  "entrypoint": "main.py",
-  "permissions": [],
-  "dependencies": []
-}

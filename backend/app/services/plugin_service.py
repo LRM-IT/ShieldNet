@@ -2,10 +2,17 @@ import hashlib
 from pathlib import Path
 from typing import Any
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.plugins import PluginEvent, PluginRegistry
+from app.models.plugins import (
+    GuildPluginInstallation,
+    PluginEvent,
+    PluginInstalledVersion,
+    PluginRegistry,
+    PluginRuntimeInstance,
+    PluginRuntimeState,
+)
 from app.plugins.manifest import PluginManifest, PluginManifestError
 from app.schemas.plugins import PluginManifestResponse, PluginScanResponse
 
@@ -67,11 +74,31 @@ class PluginService:
 
         missing = 0
         for key, item in existing.items():
-            if key not in seen:
-                item.healthy = False
-                item.enabled = False
-                item.last_error = "Plugin manifest is missing from disk"
-                missing += 1
+            if key in seen:
+                continue
+
+            await self.session.execute(
+                delete(PluginRuntimeInstance).where(
+                    PluginRuntimeInstance.plugin_key == key
+                )
+            )
+            await self.session.execute(
+                delete(GuildPluginInstallation).where(
+                    GuildPluginInstallation.plugin_key == key
+                )
+            )
+            await self.session.execute(
+                delete(PluginRuntimeState).where(
+                    PluginRuntimeState.plugin_key == key
+                )
+            )
+            await self.session.execute(
+                delete(PluginInstalledVersion).where(
+                    PluginInstalledVersion.plugin_key == key
+                )
+            )
+            await self.session.delete(item)
+            missing += 1
 
         self.session.add(
             PluginEvent(
