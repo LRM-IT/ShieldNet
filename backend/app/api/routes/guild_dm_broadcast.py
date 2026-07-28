@@ -19,6 +19,7 @@ class CampaignCreate(BaseModel):
     name: str = Field(min_length=1, max_length=160)
     message: str = Field(min_length=1, max_length=2000)
     role_ids: list[int] = Field(default_factory=list)
+    member_ids: list[int] = Field(default_factory=list)
     exclude_bots: bool = True
     delay_ms: int = Field(default=1200, ge=750, le=10000)
 
@@ -51,7 +52,7 @@ async def dashboard(guild_id:int,current_user:User=Depends(get_current_user),ses
 async def list_campaigns(guild_id:int,current_user:User=Depends(get_current_user),session:AsyncSession=Depends(get_db_session)):
     await auth(guild_id,current_user,session)
     rows=(await session.execute(text("""
-    SELECT id,guild_id,name,message,role_ids,exclude_bots,delay_ms,status,
+    SELECT id,guild_id,name,message,role_ids,member_ids,exclude_bots,delay_ms,status,
     total_count,sent_count,failed_count,skipped_count,last_error,created_at,
     started_at,finished_at,cancelled_at
     FROM plugin_guild_dm_broadcast.campaigns WHERE guild_id=:g
@@ -71,11 +72,11 @@ async def create_campaign(guild_id:int,payload:CampaignCreate,current_user:User=
     cid=uuid.uuid4(); now=datetime.now(timezone.utc)
     await session.execute(text("""
     INSERT INTO plugin_guild_dm_broadcast.campaigns
-    (id,guild_id,name,message,role_ids,exclude_bots,delay_ms,status,
+    (id,guild_id,name,message,role_ids,member_ids,exclude_bots,delay_ms,status,
     created_by_user_id,created_at,updated_at)
-    VALUES(:id,:g,:n,:m,CAST(:r AS jsonb),:b,:d,'queued',:u,:now,:now)
+    VALUES(:id,:g,:n,:m,CAST(:r AS jsonb),CAST(:members AS jsonb),:b,:d,'queued',:u,:now,:now)
     """),{"id":cid,"g":guild_id,"n":payload.name.strip(),"m":payload.message,
-    "r":json.dumps([str(x) for x in payload.role_ids]),"b":payload.exclude_bots,
+    "r":json.dumps([str(x) for x in payload.role_ids]),"members":json.dumps([str(x) for x in payload.member_ids]),"b":payload.exclude_bots,
     "d":payload.delay_ms,"u":current_user.id,"now":now})
     await session.commit()
     return {"id":str(cid),"status":"queued"}
@@ -99,7 +100,7 @@ dependencies=[Depends(verify_internal_service_token)])
 @internal_router.get("/campaigns/pending")
 async def pending(session:AsyncSession=Depends(get_db_session)):
     row=(await session.execute(text("""
-    SELECT id,guild_id,name,message,role_ids,exclude_bots,delay_ms
+    SELECT id,guild_id,name,message,role_ids,member_ids,exclude_bots,delay_ms
     FROM plugin_guild_dm_broadcast.campaigns WHERE status='queued'
     ORDER BY created_at ASC FOR UPDATE SKIP LOCKED LIMIT 1
     """))).mappings().first()

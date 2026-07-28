@@ -57,72 +57,110 @@ interface PluginNavDefinition {
           </div>
         </div>
 
-        <nav aria-label="Main navigation">
-          <div class="nav-group">
-            <div class="nav-label">{{ "shell.workspace" | snT:"Workspace" }}</div>
+                  <nav aria-label="Main navigation" class="accordion-nav">
             @if (isPlatformContext()) {
-              <a routerLink="/platform" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
-                <span class="nav-icon">⌂</span><span>Platform overview</span>
-              </a>
-              <a routerLink="/servers" routerLinkActive="active">
-                <span class="nav-icon">◫</span><span>Guild Control Centers</span>
-              </a>
-              <a routerLink="/platform/plugins" routerLinkActive="active">
-                <span class="nav-icon">⬡</span><span>{{ 'shell.plugin_fabric' | snT:'Plugin fabric' }}</span>
-              </a>
-              <a routerLink="/platform/jobs" routerLinkActive="active">
-                <span class="nav-icon">⌁</span><span>{{ 'shell.jobs_center' | snT:'Jobs center' }}</span>
-              </a>
-              <a routerLink="/platform/operations" routerLinkActive="active">
-                <span class="nav-icon">◎</span><span>{{ 'shell.operations' | snT:'Operations' }}</span>
-              </a>
-              <a routerLink="/platform/health" routerLinkActive="active">
-                <span class="nav-icon">✚</span><span>Health monitor</span>
-              </a>
-              <a routerLink="/platform/logs" routerLinkActive="active">
-                <span class="nav-icon">≡</span><span>Live logs</span>
-              </a>
-              <a routerLink="/platform/notifications" routerLinkActive="active">
-                <span class="nav-icon">◌</span><span>Notifications</span>
-              </a>
-              <a routerLink="/platform/ai" routerLinkActive="active">
-                <span class="nav-icon">AI</span><span>AI Center</span>
-              </a>
-              <a routerLink="/platform/access" routerLinkActive="active">
-                <span class="nav-icon">⚿</span><span>Platform access</span>
-              </a>
-            } @else {
-              <a routerLink="/servers" routerLinkActive="active">
-                <span class="nav-icon">⌂</span><span>{{ 'shell.servers' | snT:'Servers' }}</span>
-              </a>
-            }
-          </div>
-
-          @if (guildId()) {
-            <div class="nav-group">
-              <div class="nav-label">{{ "shell.core_server" | snT:"Core server" }}</div>
-              @for (item of coreNavigation(); track item.label) {
-                <a [routerLink]="item.path" routerLinkActive="active"
-                   [routerLinkActiveOptions]="{ exact: !!item.exact }">
-                  <span class="nav-icon">{{ item.icon }}</span>
-                  <span>{{ item.label | snT:item.label }}</span>
-                </a>
-              }
-            </div>
-
-            @if (pluginNavigation().length > 0) {
-              <div class="nav-group">
-                <div class="nav-label">{{ "shell.installed_plugins" | snT:"Installed plugins" }}</div>
-                @for (item of pluginNavigation(); track item.label) {
-                  <a [routerLink]="item.path" routerLinkActive="active">
-                    <span class="nav-icon">{{ item.icon }}</span>
-                    <span>{{ item.label | snT:item.label }}</span>
-                  </a>
+              <section class="accordion-section" [class.open]="accordionOpen('platform')">
+                <button type="button" class="accordion-trigger" (click)="toggleAccordion('platform')" [attr.aria-expanded]="accordionOpen('platform')">
+                  <span class="accordion-icon">⌂</span>
+                  <span class="accordion-title"><strong>Platform</strong><small>Global control plane</small></span>
+                  <span class="accordion-arrow">›</span>
+                </button>
+                @if (accordionOpen('platform')) {
+                  <div class="accordion-items">
+                    <a routerLink="/platform" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }"><span class="nav-icon">⌂</span><span>Platform overview</span></a>
+                    <a routerLink="/servers" routerLinkActive="active"><span class="nav-icon">◫</span><span>Guild Control Centers</span></a>
+                    <a routerLink="/platform/plugins" routerLinkActive="active"><span class="nav-icon">⬡</span><span>{{ 'shell.plugin_fabric' | snT:'Plugin fabric' }}</span></a>
+                    <a routerLink="/platform/access" routerLinkActive="active"><span class="nav-icon">⚿</span><span>Platform access</span></a>
+                  </div>
                 }
-              </div>
+              </section>
+
+              <section class="accordion-section" [class.open]="accordionOpen('operations')">
+                <button type="button" class="accordion-trigger" (click)="toggleAccordion('operations')" [attr.aria-expanded]="accordionOpen('operations')">
+                  <span class="accordion-icon">◎</span>
+                  <span class="accordion-title"><strong>Operations</strong><small>Jobs, health and diagnostics</small></span>
+                  <span class="accordion-arrow">›</span>
+                </button>
+                @if (accordionOpen('operations')) {
+                  <div class="accordion-items">
+                    <a routerLink="/platform/jobs" routerLinkActive="active"><span class="nav-icon">⌁</span><span>{{ 'shell.jobs_center' | snT:'Jobs center' }}</span></a>
+                    <a routerLink="/platform/operations" routerLinkActive="active"><span class="nav-icon">◎</span><span>{{ 'shell.operations' | snT:'Operations' }}</span></a>
+                    <a routerLink="/platform/health" routerLinkActive="active"><span class="nav-icon">✚</span><span>Health monitor</span></a>
+                    <a routerLink="/platform/logs" routerLinkActive="active"><span class="nav-icon">≡</span><span>Live logs</span></a>
+                    <a routerLink="/platform/notifications" routerLinkActive="active"><span class="nav-icon">◌</span><span>Notifications</span></a>
+                  </div>
+                }
+              </section>
+
+              <section class="accordion-section" [class.open]="accordionOpen('intelligence')">
+                <button type="button" class="accordion-trigger" (click)="toggleAccordion('intelligence')" [attr.aria-expanded]="accordionOpen('intelligence')">
+                  <span class="accordion-icon">AI</span>
+                  <span class="accordion-title"><strong>Intelligence</strong><small>AI and analysis</small></span>
+                  <span class="accordion-arrow">›</span>
+                </button>
+                @if (accordionOpen('intelligence')) {
+                  <div class="accordion-items">
+                    <a routerLink="/platform/ai" routerLinkActive="active"><span class="nav-icon">AI</span><span>AI Center</span></a>
+                  </div>
+                }
+              </section>
+            } @else {
+              <section class="accordion-section open">
+                <div class="accordion-items standalone">
+                  <a routerLink="/servers" routerLinkActive="active"><span class="nav-icon">⌂</span><span>{{ 'shell.servers' | snT:'Servers' }}</span></a>
+                </div>
+              </section>
             }
-          }
-        </nav>
+
+            @if (guildId()) {
+              <section class="accordion-section" [class.open]="accordionOpen('server-core')">
+                <button type="button" class="accordion-trigger" (click)="toggleAccordion('server-core')" [attr.aria-expanded]="accordionOpen('server-core')">
+                  <span class="accordion-icon">◫</span>
+                  <span class="accordion-title"><strong>Core server</strong><small>Members and security</small></span>
+                  <span class="accordion-arrow">›</span>
+                </button>
+                @if (accordionOpen('server-core')) {
+                  <div class="accordion-items">
+                    @for (item of serverCoreNavigation(); track item.label) {
+                      <a [routerLink]="item.path" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: !!item.exact }"><span class="nav-icon">{{item.icon}}</span><span>{{item.label | snT:item.label}}</span></a>
+                    }
+                  </div>
+                }
+              </section>
+
+              <section class="accordion-section" [class.open]="accordionOpen('server-admin')">
+                <button type="button" class="accordion-trigger" (click)="toggleAccordion('server-admin')" [attr.aria-expanded]="accordionOpen('server-admin')">
+                  <span class="accordion-icon">⌬</span>
+                  <span class="accordion-title"><strong>Administration</strong><small>Runtime, audit and access</small></span>
+                  <span class="accordion-arrow">›</span>
+                </button>
+                @if (accordionOpen('server-admin')) {
+                  <div class="accordion-items">
+                    @for (item of serverAdminNavigation(); track item.label) {
+                      <a [routerLink]="item.path" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: !!item.exact }"><span class="nav-icon">{{item.icon}}</span><span>{{item.label | snT:item.label}}</span></a>
+                    }
+                  </div>
+                }
+              </section>
+
+              @if (pluginNavigation().length > 0) {
+                <section class="accordion-section" [class.open]="accordionOpen('plugins')">
+                  <button type="button" class="accordion-trigger" (click)="toggleAccordion('plugins')" [attr.aria-expanded]="accordionOpen('plugins')">
+                    <span class="accordion-icon">⬡</span>
+                    <span class="accordion-title"><strong>Installed plugins</strong><small>{{pluginNavigation().length}} active modules</small></span>
+                    <span class="accordion-arrow">›</span>
+                  </button>
+                  @if (accordionOpen('plugins')) {
+                    <div class="accordion-items">
+                      @for (item of pluginNavigation(); track item.label) {
+                        <a [routerLink]="item.path" routerLinkActive="active"><span class="nav-icon">{{item.icon}}</span><span>{{item.label | snT:item.label}}</span></a>
+                      }
+                    </div>
+                  }
+                </section>
+              }
+            }
+          </nav>
 
         <a routerLink="/profile" class="operator" aria-label="Open profile">
           @if (auth.profile()?.avatar_url) {
@@ -225,6 +263,12 @@ interface PluginNavDefinition {
   styles: [`
     .workspace{min-height:100vh;display:grid;grid-template-columns:276px minmax(0,1fr);transition:grid-template-columns .2s ease}
     .workspace.menu-collapsed{grid-template-columns:86px minmax(0,1fr)}
+    .workspace.menu-collapsed .accordion-title,
+    .workspace.menu-collapsed .accordion-arrow,
+    .workspace.menu-collapsed .accordion-items span:not(.nav-icon){display:none}
+    .workspace.menu-collapsed .accordion-trigger{grid-template-columns:1fr;padding:.55rem}
+    .workspace.menu-collapsed .accordion-icon{margin:auto}
+    .workspace.menu-collapsed .accordion-items{padding-left:0;margin-left:0;border-left:0}
     .rail{position:sticky;top:0;height:100vh;z-index:30;display:flex;flex-direction:column;padding:1rem;overflow:auto;background:linear-gradient(180deg,rgba(16,29,38,.96),rgba(6,10,16,.98)),#080d14;border-right:1px solid var(--line)}
     .brand{min-height:68px;display:flex;align-items:center;gap:.85rem;padding:.7rem .75rem;border-bottom:1px solid var(--line)}
     .brand-symbol{position:relative;width:38px;height:38px;display:grid;place-items:center;border:1px solid rgba(53,226,178,.34);border-radius:10px;transform:rotate(45deg);background:rgba(53,226,178,.07)}
@@ -235,7 +279,18 @@ interface PluginNavDefinition {
     .rail-state{margin:1rem .35rem .5rem;padding:.75rem;display:grid;grid-template-columns:auto 1fr;align-items:center;gap:.65rem;border:1px solid rgba(53,226,178,.14);border-radius:10px;background:rgba(53,226,178,.035)}
     .pulse{width:.52rem;height:.52rem;border-radius:50%;background:var(--primary);box-shadow:0 0 0 5px rgba(53,226,178,.07),0 0 14px rgba(53,226,178,.7)}
     .rail-state div{display:grid;gap:.15rem}.rail-state strong{font-size:.65rem;letter-spacing:.12em}.rail-state small{font-size:.62rem;color:var(--muted)}
-    nav{display:grid;gap:1.15rem;margin-top:.65rem}.nav-group{display:grid;gap:.25rem}
+    nav{display:grid;gap:.55rem;margin-top:.65rem}
+    .accordion-nav{align-content:start}
+    .accordion-section{display:grid;gap:.28rem}
+    .accordion-trigger{width:100%;min-height:48px;display:grid;grid-template-columns:30px minmax(0,1fr) auto;align-items:center;gap:.65rem;padding:.58rem .68rem;border:1px solid rgba(126,160,166,.12);border-radius:10px;background:rgba(255,255,255,.018);color:#8da0ad;text-align:left;cursor:pointer}
+    .accordion-trigger:hover{color:var(--text);border-color:rgba(53,226,178,.16);background:rgba(53,226,178,.035)}
+    .accordion-section.open>.accordion-trigger{color:#dffff5;border-color:rgba(53,226,178,.2);background:rgba(53,226,178,.055)}
+    .accordion-icon{width:30px;height:30px;display:grid;place-items:center;border:1px solid rgba(126,160,166,.14);border-radius:8px;color:#75a99d;font-size:.72rem}
+    .accordion-title{min-width:0;display:grid;gap:.08rem}.accordion-title strong{font-size:.76rem}.accordion-title small{font-size:.56rem;color:#607887;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .accordion-arrow{font-size:1.15rem;transition:transform .18s ease;color:#607887}.accordion-section.open .accordion-arrow{transform:rotate(90deg);color:var(--primary)}
+    .accordion-items{display:grid;gap:.2rem;padding:.12rem 0 .2rem .55rem;border-left:1px solid rgba(53,226,178,.12);margin-left:1rem}
+    .accordion-items.standalone{padding-left:0;border-left:0;margin-left:0}
+    .nav-group{display:grid;gap:.25rem}
     .nav-label{margin:.6rem .75rem .35rem;color:#577083;font-size:.59rem;font-weight:900;letter-spacing:.16em;text-transform:uppercase}
     nav a{min-height:43px;display:grid;grid-template-columns:28px 1fr;align-items:center;gap:.6rem;padding:.55rem .75rem;color:#8496a4;border:1px solid transparent;border-radius:9px;font-size:.82rem;font-weight:650}
     nav a:hover{color:var(--text);background:rgba(255,255,255,.025)}
@@ -346,6 +401,38 @@ export class ShellComponent implements OnInit, OnDestroy {
     );
   });
 
+  readonly openAccordion = signal<string>(
+    localStorage.getItem('shieldnet_nav_accordion') || ''
+  );
+
+  accordionOpen(section: string): boolean {
+    return this.openAccordion() === section;
+  }
+
+  toggleAccordion(section: string): void {
+    const next = this.openAccordion() === section ? '' : section;
+    this.openAccordion.set(next);
+    localStorage.setItem('shieldnet_nav_accordion', next);
+  }
+
+  private syncAccordionWithRoute(): void {
+    const url = this.router.url;
+    let section = '';
+    if (url.startsWith('/platform/jobs') || url.startsWith('/platform/operations') ||
+        url.startsWith('/platform/health') || url.startsWith('/platform/logs') ||
+        url.startsWith('/platform/notifications')) section = 'operations';
+    else if (url.startsWith('/platform/ai')) section = 'intelligence';
+    else if (url.startsWith('/platform')) section = 'platform';
+    else if (url.includes('/plugins/')) section = 'plugins';
+    else if (url.includes('/plugin-runtime') || url.includes('/audit') ||
+             url.includes('/control') || url.includes('/access')) section = 'server-admin';
+    else if (url.startsWith('/guild/')) section = 'server-core';
+    if (section) {
+      this.openAccordion.set(section);
+      localStorage.setItem('shieldnet_nav_accordion', section);
+    }
+  }
+
   readonly guildId = computed(() => {
     let route: ActivatedRoute | null = this.route;
     while (route) {
@@ -356,13 +443,25 @@ export class ShellComponent implements OnInit, OnDestroy {
     return null;
   });
 
-  readonly coreNavigation = computed<NavItem[]>(() => {
+  readonly coreNavigation = computed<NavItem[]>(() => [
+    ...this.serverCoreNavigation(),
+    ...this.serverAdminNavigation(),
+  ]);
+
+  readonly serverCoreNavigation = computed<NavItem[]>(() => {
     const id = this.guildId();
     if (!id) return [];
     return [
       { label: 'shell.overview', icon: '◫', path: ['/guild', id], exact: true },
       { label: 'shell.members', icon: '◉', path: ['/guild', id, 'members'] },
       { label: 'shell.security', icon: '◇', path: ['/guild', id, 'security'] },
+    ];
+  });
+
+  readonly serverAdminNavigation = computed<NavItem[]>(() => {
+    const id = this.guildId();
+    if (!id) return [];
+    return [
       { label: 'shell.plugin_runtime', icon: '⬢', path: ['/guild', id, 'plugin-runtime'] },
       { label: 'shell.audit_trail', icon: '≡', path: ['/guild', id, 'audit'] },
       { label: 'shell.server_control', icon: '⌬', path: ['/guild', id, 'control'] },
@@ -398,7 +497,7 @@ export class ShellComponent implements OnInit, OnDestroy {
       .map((definition) => ({
         label: definition.label,
         icon: definition.icon,
-        path: ['/guild', id, definition.path],
+        path: ['/guild', id, ...definition.path.split('/').filter(Boolean)],
       }));
   });
 
@@ -463,6 +562,7 @@ export class ShellComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.eventBus.connect();
     this.updateTime();
+    this.syncAccordionWithRoute();
     this.timerId = setInterval(() => this.updateTime(), 1000);
 
     const id = this.guildId();

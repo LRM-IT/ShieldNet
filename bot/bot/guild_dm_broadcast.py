@@ -26,9 +26,12 @@ class GuildDMBroadcastWorker:
             if guild is None:raise RuntimeError("Discord guild is unavailable")
             if not guild.chunked:await guild.chunk(cache=True)
             roles={int(x) for x in(item.get("role_ids") or [])}
+            member_ids={int(x) for x in(item.get("member_ids") or [])}
             delay=max(int(item.get("delay_ms",1200)),750)/1000
             members=[]
             for member in guild.members:
+                if member_ids and member.id not in member_ids:
+                    skipped+=1;continue
                 if item.get("exclude_bots",True) and member.bot:
                     skipped+=1;continue
                 if roles and not roles.intersection(r.id for r in member.roles):
