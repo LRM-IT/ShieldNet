@@ -1,7 +1,7 @@
 {
   "id": "welcome",
   "name": "Welcome",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Welcomes new members in a selected channel and redirects them to verification until a configured role is received.",
   "author": "LRM-IT",
   "min_core_version": "5.1.0",

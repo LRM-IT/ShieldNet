@@ -35,5 +35,5 @@ async def health(context: Any) -> dict[str, Any]:
     return {
         "status": "ready" if _started else "stopped",
         "plugin_key": "welcome",
-        "version": "1.0.2",
+        "version": "1.0.3",
     }
