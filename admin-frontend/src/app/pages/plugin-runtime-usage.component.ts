@@ -130,6 +130,9 @@ import { TranslatePipe } from '../core/translate.pipe';
               <button type="button" class="settings" [disabled]="busy(plugin.plugin_key)" (click)="openSettings(plugin)">
                 {{ 'plugins.settings' | snT:'Settings' }}
               </button>
+              <button type="button" class="uninstall" [disabled]="busy(plugin.plugin_key)" (click)="uninstall(plugin)">
+                {{ busy(plugin.plugin_key) ? ('runtime_usage.removing' | snT:'Removing…') : ('runtime_usage.uninstall' | snT:'Uninstall') }}
+              </button>
             </div>
 
             @if (editingKey() === plugin.plugin_key) {
@@ -150,7 +153,7 @@ import { TranslatePipe } from '../core/translate.pipe';
     </sn-shell>
   `,
   styles: [`
-    :host{display:block}.head{display:flex;justify-content:space-between;align-items:flex-end;gap:1rem;margin-bottom:1rem}.eyebrow{font-size:.68rem;font-weight:900;letter-spacing:.14em;color:var(--accent)}.head h2{margin:.3rem 0}.head p{margin:0;color:var(--muted)}.head-actions{display:flex;gap:.55rem}.head-actions a,.head-actions button,.actions button,.editor-actions button{border:1px solid var(--line);background:var(--panel-2);color:var(--text);border-radius:9px;padding:.62rem .78rem;text-decoration:none;cursor:pointer}.head-actions button{background:var(--accent);color:#07110e;font-weight:800}.head-actions .install-open{background:rgba(53,226,178,.14);color:#35e2b2}.catalog{margin-bottom:1rem;padding:1rem;border:1px solid var(--line);border-radius:14px;background:var(--panel)}.catalog-head h3{margin:0}.catalog-head p{margin:.3rem 0 0;color:var(--muted)}.catalog-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.7rem;margin-top:.9rem}.catalog-card{display:flex;justify-content:space-between;align-items:center;gap:1rem;padding:.9rem;border:1px solid var(--line);border-radius:12px;background:var(--panel-2)}.catalog-card h4{margin:0 0 .15rem}.catalog-card small,.catalog-card p{color:var(--muted)}.catalog-card p{margin:.45rem 0 0}.catalog-card .install{border:1px solid rgba(53,226,178,.45);background:rgba(53,226,178,.14);color:#35e2b2;border-radius:9px;padding:.65rem .9rem;font-weight:800;cursor:pointer}.catalog-card .install:disabled{opacity:.45;cursor:not-allowed}.notice{padding:1rem;border:1px solid var(--line);background:var(--panel);border-radius:12px}.error,.plugin-error{color:#ff8e98;border-color:rgba(255,80,95,.4)}.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:.8rem;margin-bottom:1rem}.metrics article{padding:1rem;border:1px solid var(--line);border-radius:13px;background:var(--panel);display:grid;gap:.35rem}.metrics span,.details span{font-size:.7rem;text-transform:uppercase;color:var(--muted)}.metrics strong{font-size:1.5rem}.danger{color:#ff6874}.plugin-grid{display:grid;gap:1rem}.plugin-card{border:1px solid var(--line);background:var(--panel);border-radius:16px;padding:1.1rem}.plugin-head{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:.75rem}.plugin-icon{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:rgba(53,226,178,.12);color:var(--accent);font-weight:900}.plugin-title h3{margin:0 0 .2rem}.plugin-title small{color:var(--muted)}.badges{display:flex;gap:.4rem;flex-wrap:wrap}.badges span{font-size:.65rem;padding:.3rem .5rem;border:1px solid var(--line);border-radius:999px}.badges .good{color:#35e2b2}.badges .warn{color:#f2b15a}.muted-badge{color:var(--muted)}.details{display:grid;grid-template-columns:repeat(4,1fr);gap:.6rem;margin:1rem 0}.details div{padding:.75rem;border:1px solid var(--line);border-radius:10px;display:grid;gap:.25rem}.details strong{font-size:.86rem;overflow:hidden;text-overflow:ellipsis}.plugin-error{padding:.7rem;border:1px solid rgba(255,80,95,.25);border-radius:9px;margin-bottom:.8rem}.actions{display:flex;gap:.5rem;flex-wrap:wrap}.actions button:disabled,.head-actions button:disabled{opacity:.45;cursor:not-allowed}.actions .start{color:#35e2b2}.actions .stop{color:#ff7c85}.actions .toggle.on{border-color:rgba(53,226,178,.45)}.settings-editor{margin-top:1rem;padding-top:1rem;border-top:1px solid var(--line);display:grid;gap:.55rem}.settings-editor label{font-size:.75rem;color:var(--muted)}.settings-editor textarea{width:100%;box-sizing:border-box;background:#090d14;color:#dce7e4;border:1px solid var(--line);border-radius:10px;padding:.8rem;font-family:monospace;resize:vertical}.editor-actions{display:flex;justify-content:flex-end;gap:.5rem}.editor-actions .save{background:var(--accent);color:#07110e;font-weight:800}@media(max-width:900px){.metrics,.details,.catalog-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:620px){.head{align-items:stretch;flex-direction:column}.metrics,.details,.catalog-grid{grid-template-columns:1fr}.catalog-card{align-items:stretch;flex-direction:column}.plugin-head{grid-template-columns:auto 1fr}.badges{grid-column:1/-1}.head-actions{flex-wrap:wrap}}
+    :host{display:block}.head{display:flex;justify-content:space-between;align-items:flex-end;gap:1rem;margin-bottom:1rem}.eyebrow{font-size:.68rem;font-weight:900;letter-spacing:.14em;color:var(--accent)}.head h2{margin:.3rem 0}.head p{margin:0;color:var(--muted)}.head-actions{display:flex;gap:.55rem}.head-actions a,.head-actions button,.actions button,.editor-actions button{border:1px solid var(--line);background:var(--panel-2);color:var(--text);border-radius:9px;padding:.62rem .78rem;text-decoration:none;cursor:pointer}.head-actions button{background:var(--accent);color:#07110e;font-weight:800}.head-actions .install-open{background:rgba(53,226,178,.14);color:#35e2b2}.catalog{margin-bottom:1rem;padding:1rem;border:1px solid var(--line);border-radius:14px;background:var(--panel)}.catalog-head h3{margin:0}.catalog-head p{margin:.3rem 0 0;color:var(--muted)}.catalog-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.7rem;margin-top:.9rem}.catalog-card{display:flex;justify-content:space-between;align-items:center;gap:1rem;padding:.9rem;border:1px solid var(--line);border-radius:12px;background:var(--panel-2)}.catalog-card h4{margin:0 0 .15rem}.catalog-card small,.catalog-card p{color:var(--muted)}.catalog-card p{margin:.45rem 0 0}.catalog-card .install{border:1px solid rgba(53,226,178,.45);background:rgba(53,226,178,.14);color:#35e2b2;border-radius:9px;padding:.65rem .9rem;font-weight:800;cursor:pointer}.catalog-card .install:disabled{opacity:.45;cursor:not-allowed}.notice{padding:1rem;border:1px solid var(--line);background:var(--panel);border-radius:12px}.error,.plugin-error{color:#ff8e98;border-color:rgba(255,80,95,.4)}.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:.8rem;margin-bottom:1rem}.metrics article{padding:1rem;border:1px solid var(--line);border-radius:13px;background:var(--panel);display:grid;gap:.35rem}.metrics span,.details span{font-size:.7rem;text-transform:uppercase;color:var(--muted)}.metrics strong{font-size:1.5rem}.danger{color:#ff6874}.plugin-grid{display:grid;gap:1rem}.plugin-card{border:1px solid var(--line);background:var(--panel);border-radius:16px;padding:1.1rem}.plugin-head{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:.75rem}.plugin-icon{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:rgba(53,226,178,.12);color:var(--accent);font-weight:900}.plugin-title h3{margin:0 0 .2rem}.plugin-title small{color:var(--muted)}.badges{display:flex;gap:.4rem;flex-wrap:wrap}.badges span{font-size:.65rem;padding:.3rem .5rem;border:1px solid var(--line);border-radius:999px}.badges .good{color:#35e2b2}.badges .warn{color:#f2b15a}.muted-badge{color:var(--muted)}.details{display:grid;grid-template-columns:repeat(4,1fr);gap:.6rem;margin:1rem 0}.details div{padding:.75rem;border:1px solid var(--line);border-radius:10px;display:grid;gap:.25rem}.details strong{font-size:.86rem;overflow:hidden;text-overflow:ellipsis}.plugin-error{padding:.7rem;border:1px solid rgba(255,80,95,.25);border-radius:9px;margin-bottom:.8rem}.actions{display:flex;gap:.5rem;flex-wrap:wrap}.actions button:disabled,.head-actions button:disabled{opacity:.45;cursor:not-allowed}.actions .start{color:#35e2b2}.actions .stop{color:#ff7c85}.actions .uninstall{color:#ff7c85;border-color:rgba(255,80,95,.35)}.actions .toggle.on{border-color:rgba(53,226,178,.45)}.settings-editor{margin-top:1rem;padding-top:1rem;border-top:1px solid var(--line);display:grid;gap:.55rem}.settings-editor label{font-size:.75rem;color:var(--muted)}.settings-editor textarea{width:100%;box-sizing:border-box;background:#090d14;color:#dce7e4;border:1px solid var(--line);border-radius:10px;padding:.8rem;font-family:monospace;resize:vertical}.editor-actions{display:flex;justify-content:flex-end;gap:.5rem}.editor-actions .save{background:var(--accent);color:#07110e;font-weight:800}@media(max-width:900px){.metrics,.details,.catalog-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:620px){.head{align-items:stretch;flex-direction:column}.metrics,.details,.catalog-grid{grid-template-columns:1fr}.catalog-card{align-items:stretch;flex-direction:column}.plugin-head{grid-template-columns:auto 1fr}.badges{grid-column:1/-1}.head-actions{flex-wrap:wrap}}
   `],
 })
 export class PluginRuntimeUsageComponent implements OnInit {
@@ -234,6 +237,38 @@ export class PluginRuntimeUsageComponent implements OnInit {
       this.installations.update(items => items.map(item => item.plugin_key === updated.plugin_key ? updated : item));
     } catch { this.error.set(this.i18n.t('runtime_usage.toggle_error', 'Unable to change plugin state.')); }
     finally { this.busyKey.set(''); }
+  }
+
+  async uninstall(plugin: GuildPluginInstallation): Promise<void> {
+    if (this.busy(plugin.plugin_key)) return;
+
+    const confirmed = window.confirm(
+      this.i18n.t(
+        'runtime_usage.uninstall_confirm',
+        `Remove ${this.displayName(plugin)} from this server?`,
+      ),
+    );
+    if (!confirmed) return;
+
+    this.busyKey.set(plugin.plugin_key);
+    this.error.set('');
+    try {
+      await this.guildPlugins.uninstall(
+        this.guildId,
+        plugin.plugin_key,
+      );
+      this.editingKey.set('');
+      await this.load();
+    } catch {
+      this.error.set(
+        this.i18n.t(
+          'runtime_usage.uninstall_error',
+          'Unable to remove plugin from this server.',
+        ),
+      );
+    } finally {
+      this.busyKey.set('');
+    }
   }
 
   async start(plugin: GuildPluginInstallation): Promise<void> {

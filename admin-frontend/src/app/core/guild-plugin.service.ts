@@ -52,6 +52,14 @@ export class GuildPluginService {
     );
   }
 
+  uninstall(guildId: string, pluginKey: string): Promise<void> {
+    return firstValueFrom(
+      this.http.delete<void>(
+        `/api/v1/discord/guilds/${encodeURIComponent(guildId)}/plugins/${encodeURIComponent(pluginKey)}`,
+      ),
+    );
+  }
+
   listInstalled(guildId: string): Promise<GuildPluginInstallation[]> {
     return firstValueFrom(
       this.http.get<GuildPluginInstallation[]>(
