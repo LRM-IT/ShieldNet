@@ -23,6 +23,7 @@ from bot.automation_runtime import AutomationRuntimeClient
 from bot.leadership import LeadershipSyncClient
 from bot.discord_management import DiscordManagementWorker
 from bot.guild_dm_broadcast import GuildDMBroadcastWorker
+from bot.plugin_welcome import WelcomeWorker
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +51,7 @@ class ShieldNetBot(discord.Client):
         self.leadership_sync = LeadershipSyncClient(self)
         self.discord_management = DiscordManagementWorker(self)
         self.guild_dm_broadcast = GuildDMBroadcastWorker(self)
+        self.welcome = WelcomeWorker(self)
         self._initial_sync_done = False
         self.redis = Redis.from_url(settings.redis_url, decode_responses=True)
         self.worker_name = f"discord-worker:{socket.gethostname()}"
@@ -261,6 +263,7 @@ class ShieldNetBot(discord.Client):
         self.leadership_sync_loop.start()
         self.discord_management_loop.start()
         self.guild_dm_broadcast_loop.start()
+        self.welcome_loop.start()
         self.member_action_loop.start()
         self.security_snapshot_loop.start()
         self.explorer_snapshot_loop.start()
@@ -353,6 +356,7 @@ class ShieldNetBot(discord.Client):
         try:
             await self.member_sync.sync_member(member)
             await self.automation_runtime.emit(member.guild, "member.joined", f"{member.id}:{member.joined_at.isoformat() if member.joined_at else datetime.now(UTC).isoformat()}", self._member_context(member))
+            await self.welcome.member_join(member)
         except Exception:
             logger.exception("Member join sync/automation failed: %s", member.id)
 
@@ -360,6 +364,7 @@ class ShieldNetBot(discord.Client):
         try:
             await self.member_sync.mark_left(member.guild.id, member.id)
             await self.automation_runtime.emit(member.guild, "member.left", f"{member.id}:{datetime.now(UTC).isoformat()}", self._member_context(member))
+            await self.welcome.member_left(member)
         except Exception:
             logger.exception("Member leave sync/automation failed: %s", member.id)
 
@@ -372,6 +377,7 @@ class ShieldNetBot(discord.Client):
                     context = self._member_context(after)
                     context["role"] = {"id": str(role.id), "name": role.name}
                     await self.automation_runtime.emit(after.guild, "member.role_added", f"{after.id}:{role.id}:{datetime.now(UTC).isoformat()}", context)
+            await self.welcome.member_roles(after)
         except Exception:
             logger.exception("Member update sync/automation failed: %s", after.id)
 
@@ -403,6 +409,18 @@ class ShieldNetBot(discord.Client):
             await self.member_sync.mark_activity(message.guild.id, message.author.id)
         except Exception:
             logger.exception("Member activity sync failed: %s", message.author.id)
+
+    @tasks.loop(seconds=5)
+    async def welcome_loop(self) -> None:
+        try:
+            await self.welcome.run_once()
+        except Exception:
+            logger.exception("Welcome queue failed")
+
+    @welcome_loop.before_loop
+    async def before_welcome_loop(self) -> None:
+        await self.wait_until_ready()
+
 
     @tasks.loop(seconds=10)
     async def member_action_loop(self) -> None:

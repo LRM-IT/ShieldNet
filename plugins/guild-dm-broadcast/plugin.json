@@ -25,7 +25,7 @@
     "guild_dm_broadcast.cancel"
   ],
   "dependencies": {},
-  "entrypoint": "backend/runtime.py",
+  "entrypoint": "runtime.py",
   "ui": {
     "navigation": {
       "label": "Guild DM Broadcast",
