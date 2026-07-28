@@ -2,6 +2,18 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 
+export interface GuildPluginMarketplaceItem {
+  plugin_key: string;
+  name: string;
+  summary: string | null;
+  category: string;
+  icon_url: string | null;
+  verified: boolean;
+  installed: boolean;
+  enabled: boolean;
+  installation_status: string | null;
+}
+
 export interface GuildPluginInstallation {
   id: string;
   guild_id: number | string;
@@ -22,6 +34,23 @@ export interface GuildPluginInstallation {
 @Injectable({ providedIn: 'root' })
 export class GuildPluginService {
   constructor(private readonly http: HttpClient) {}
+
+  marketplace(guildId: string): Promise<GuildPluginMarketplaceItem[]> {
+    return firstValueFrom(
+      this.http.get<GuildPluginMarketplaceItem[]>(
+        `/api/v1/discord/guilds/${encodeURIComponent(guildId)}/marketplace`,
+      ),
+    );
+  }
+
+  install(guildId: string, pluginKey: string): Promise<GuildPluginInstallation> {
+    return firstValueFrom(
+      this.http.post<GuildPluginInstallation>(
+        `/api/v1/discord/guilds/${encodeURIComponent(guildId)}/plugins/${encodeURIComponent(pluginKey)}/install`,
+        {},
+      ),
+    );
+  }
 
   listInstalled(guildId: string): Promise<GuildPluginInstallation[]> {
     return firstValueFrom(

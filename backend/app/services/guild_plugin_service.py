@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.plugins import (
     GuildPluginInstallation,
     PluginMarketplaceItem,
+    PluginRegistry,
 )
 from app.schemas.guild_plugins import (
     GuildPluginInstallationResponse,
@@ -27,7 +28,7 @@ class GuildPluginService:
         self.session = session
 
     async def marketplace(self, guild_id: int):
-        plugins = list(
+        marketplace_plugins = list(
             (
                 await self.session.execute(
                     select(PluginMarketplaceItem)
@@ -42,7 +43,15 @@ class GuildPluginService:
                 )
             ).scalars().all()
         )
-
+        discovered_plugins = list(
+            (
+                await self.session.execute(
+                    select(PluginRegistry)
+                    .where(PluginRegistry.healthy.is_(True))
+                    .order_by(PluginRegistry.name.asc())
+                )
+            ).scalars().all()
+        )
         installs = list(
             (
                 await self.session.execute(
@@ -57,28 +66,51 @@ class GuildPluginService:
             installation.plugin_key: installation
             for installation in installs
         }
+        available: dict[str, GuildPluginMarketplaceItemResponse] = {}
 
-        return [
-            GuildPluginMarketplaceItemResponse(
+        for plugin in marketplace_plugins:
+            installation = by_key.get(plugin.plugin_key)
+            available[plugin.plugin_key] = GuildPluginMarketplaceItemResponse(
                 plugin_key=plugin.plugin_key,
                 name=plugin.name,
                 summary=plugin.summary,
                 category=plugin.category,
                 icon_url=plugin.icon_url,
                 verified=plugin.verified,
-                installed=plugin.plugin_key in by_key,
-                enabled=bool(
-                    by_key.get(plugin.plugin_key)
-                    and by_key[plugin.plugin_key].enabled
-                ),
+                installed=installation is not None,
+                enabled=bool(installation and installation.enabled),
                 installation_status=(
-                    by_key[plugin.plugin_key].status
-                    if plugin.plugin_key in by_key
-                    else None
+                    installation.status if installation else None
                 ),
             )
-            for plugin in plugins
-        ]
+
+        for plugin in discovered_plugins:
+            installation = by_key.get(plugin.plugin_key)
+            existing = available.get(plugin.plugin_key)
+            available[plugin.plugin_key] = GuildPluginMarketplaceItemResponse(
+                plugin_key=plugin.plugin_key,
+                name=plugin.name,
+                summary=plugin.description,
+                category=(
+                    str((plugin.manifest or {}).get("category") or "local")
+                ),
+                icon_url=(
+                    str((plugin.manifest or {}).get("icon_url"))
+                    if (plugin.manifest or {}).get("icon_url")
+                    else None
+                ),
+                verified=existing.verified if existing else False,
+                installed=installation is not None,
+                enabled=bool(installation and installation.enabled),
+                installation_status=(
+                    installation.status if installation else None
+                ),
+            )
+
+        return sorted(
+            available.values(),
+            key=lambda item: (item.installed, item.name.lower()),
+        )
 
     async def list_installed(self, guild_id: int):
         rows = list(
@@ -103,7 +135,7 @@ class GuildPluginService:
         plugin_key: str,
         user_id: UUID | None,
     ):
-        plugin = (
+        marketplace_plugin = (
             await self.session.execute(
                 select(PluginMarketplaceItem).where(
                     PluginMarketplaceItem.plugin_key == plugin_key,
@@ -112,10 +144,18 @@ class GuildPluginService:
                 )
             )
         ).scalar_one_or_none()
+        discovered_plugin = (
+            await self.session.execute(
+                select(PluginRegistry).where(
+                    PluginRegistry.plugin_key == plugin_key,
+                    PluginRegistry.healthy.is_(True),
+                )
+            )
+        ).scalar_one_or_none()
 
-        if plugin is None:
+        if marketplace_plugin is None and discovered_plugin is None:
             raise LookupError(
-                "published Marketplace plugin not found"
+                "available plugin not found"
             )
 
         if await self._find(guild_id, plugin_key):

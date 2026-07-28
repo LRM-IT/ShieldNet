@@ -3,7 +3,11 @@ import { Component, OnInit, computed, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 
-import { GuildPluginInstallation, GuildPluginService } from '../core/guild-plugin.service';
+import {
+  GuildPluginInstallation,
+  GuildPluginMarketplaceItem,
+  GuildPluginService,
+} from '../core/guild-plugin.service';
 import { PluginRuntimeInstance, PluginRuntimeService } from '../core/plugin-runtime.service';
 import { TranslationService } from '../core/translation.service';
 import { ShellComponent } from '../shared/shell.component';
@@ -22,6 +26,9 @@ import { TranslatePipe } from '../core/translate.pipe';
           <p>{{ 'runtime_usage.description' | snT:'Manage installed plugins, runtime processes and server-specific settings.' }}</p>
         </div>
         <div class="head-actions">
+          <button type="button" class="install-open" (click)="toggleCatalog()">
+            {{ showCatalog() ? ('common.close' | snT:'Close') : ('runtime_usage.add_plugin' | snT:'Add plugin') }}
+          </button>
           <a [routerLink]="['/guild', guildId]">{{ 'common.back' | snT:'Back to server' }}</a>
           <button type="button" (click)="load()" [disabled]="loading()">
             {{ loading() ? ('runtime_usage.refreshing' | snT:'Refreshing…') : ('runtime_usage.refresh' | snT:'Refresh') }}
@@ -30,6 +37,46 @@ import { TranslatePipe } from '../core/translate.pipe';
       </section>
 
       @if (error()) { <div class="notice error">{{ error() }}</div> }
+
+
+      @if (showCatalog()) {
+        <section class="catalog">
+          <div class="catalog-head">
+            <div>
+              <h3>{{ 'runtime_usage.available_plugins' | snT:'Available plugins' }}</h3>
+              <p>{{ 'runtime_usage.available_description' | snT:'Install a discovered plugin on this server.' }}</p>
+            </div>
+          </div>
+
+          <div class="catalog-grid">
+            @for (plugin of availablePlugins(); track plugin.plugin_key) {
+              <article class="catalog-card">
+                <div>
+                  <h4>{{ plugin.name }}</h4>
+                  <small>{{ plugin.plugin_key }}</small>
+                  <p>{{ plugin.summary || ('plugins.no_description' | snT:'No description supplied.') }}</p>
+                </div>
+                <button
+                  type="button"
+                  class="install"
+                  [disabled]="plugin.installed || busy(plugin.plugin_key)"
+                  (click)="install(plugin)"
+                >
+                  {{
+                    plugin.installed
+                      ? ('runtime_usage.already_installed' | snT:'Installed')
+                      : busy(plugin.plugin_key)
+                        ? ('runtime_usage.installing' | snT:'Installing…')
+                        : ('runtime_usage.install' | snT:'Install')
+                  }}
+                </button>
+              </article>
+            } @empty {
+              <div class="notice">{{ 'runtime_usage.no_available_plugins' | snT:'No available plugins were found.' }}</div>
+            }
+          </div>
+        </section>
+      }
 
       <section class="metrics">
         <article><span>{{ 'plugins.installed' | snT:'Installed' }}</span><strong>{{ installations().length }}</strong></article>
@@ -103,13 +150,15 @@ import { TranslatePipe } from '../core/translate.pipe';
     </sn-shell>
   `,
   styles: [`
-    :host{display:block}.head{display:flex;justify-content:space-between;align-items:flex-end;gap:1rem;margin-bottom:1rem}.eyebrow{font-size:.68rem;font-weight:900;letter-spacing:.14em;color:var(--accent)}.head h2{margin:.3rem 0}.head p{margin:0;color:var(--muted)}.head-actions{display:flex;gap:.55rem}.head-actions a,.head-actions button,.actions button,.editor-actions button{border:1px solid var(--line);background:var(--panel-2);color:var(--text);border-radius:9px;padding:.62rem .78rem;text-decoration:none;cursor:pointer}.head-actions button{background:var(--accent);color:#07110e;font-weight:800}.notice{padding:1rem;border:1px solid var(--line);background:var(--panel);border-radius:12px}.error,.plugin-error{color:#ff8e98;border-color:rgba(255,80,95,.4)}.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:.8rem;margin-bottom:1rem}.metrics article{padding:1rem;border:1px solid var(--line);border-radius:13px;background:var(--panel);display:grid;gap:.35rem}.metrics span,.details span{font-size:.7rem;text-transform:uppercase;color:var(--muted)}.metrics strong{font-size:1.5rem}.danger{color:#ff6874}.plugin-grid{display:grid;gap:1rem}.plugin-card{border:1px solid var(--line);background:var(--panel);border-radius:16px;padding:1.1rem}.plugin-head{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:.75rem}.plugin-icon{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:rgba(53,226,178,.12);color:var(--accent);font-weight:900}.plugin-title h3{margin:0 0 .2rem}.plugin-title small{color:var(--muted)}.badges{display:flex;gap:.4rem;flex-wrap:wrap}.badges span{font-size:.65rem;padding:.3rem .5rem;border:1px solid var(--line);border-radius:999px}.badges .good{color:#35e2b2}.badges .warn{color:#f2b15a}.muted-badge{color:var(--muted)}.details{display:grid;grid-template-columns:repeat(4,1fr);gap:.6rem;margin:1rem 0}.details div{padding:.75rem;border:1px solid var(--line);border-radius:10px;display:grid;gap:.25rem}.details strong{font-size:.86rem;overflow:hidden;text-overflow:ellipsis}.plugin-error{padding:.7rem;border:1px solid rgba(255,80,95,.25);border-radius:9px;margin-bottom:.8rem}.actions{display:flex;gap:.5rem;flex-wrap:wrap}.actions button:disabled,.head-actions button:disabled{opacity:.45;cursor:not-allowed}.actions .start{color:#35e2b2}.actions .stop{color:#ff7c85}.actions .toggle.on{border-color:rgba(53,226,178,.45)}.settings-editor{margin-top:1rem;padding-top:1rem;border-top:1px solid var(--line);display:grid;gap:.55rem}.settings-editor label{font-size:.75rem;color:var(--muted)}.settings-editor textarea{width:100%;box-sizing:border-box;background:#090d14;color:#dce7e4;border:1px solid var(--line);border-radius:10px;padding:.8rem;font-family:monospace;resize:vertical}.editor-actions{display:flex;justify-content:flex-end;gap:.5rem}.editor-actions .save{background:var(--accent);color:#07110e;font-weight:800}@media(max-width:900px){.metrics,.details{grid-template-columns:repeat(2,1fr)}}@media(max-width:620px){.head{align-items:stretch;flex-direction:column}.metrics,.details{grid-template-columns:1fr}.plugin-head{grid-template-columns:auto 1fr}.badges{grid-column:1/-1}.head-actions{flex-wrap:wrap}}
+    :host{display:block}.head{display:flex;justify-content:space-between;align-items:flex-end;gap:1rem;margin-bottom:1rem}.eyebrow{font-size:.68rem;font-weight:900;letter-spacing:.14em;color:var(--accent)}.head h2{margin:.3rem 0}.head p{margin:0;color:var(--muted)}.head-actions{display:flex;gap:.55rem}.head-actions a,.head-actions button,.actions button,.editor-actions button{border:1px solid var(--line);background:var(--panel-2);color:var(--text);border-radius:9px;padding:.62rem .78rem;text-decoration:none;cursor:pointer}.head-actions button{background:var(--accent);color:#07110e;font-weight:800}.head-actions .install-open{background:rgba(53,226,178,.14);color:#35e2b2}.catalog{margin-bottom:1rem;padding:1rem;border:1px solid var(--line);border-radius:14px;background:var(--panel)}.catalog-head h3{margin:0}.catalog-head p{margin:.3rem 0 0;color:var(--muted)}.catalog-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.7rem;margin-top:.9rem}.catalog-card{display:flex;justify-content:space-between;align-items:center;gap:1rem;padding:.9rem;border:1px solid var(--line);border-radius:12px;background:var(--panel-2)}.catalog-card h4{margin:0 0 .15rem}.catalog-card small,.catalog-card p{color:var(--muted)}.catalog-card p{margin:.45rem 0 0}.catalog-card .install{border:1px solid rgba(53,226,178,.45);background:rgba(53,226,178,.14);color:#35e2b2;border-radius:9px;padding:.65rem .9rem;font-weight:800;cursor:pointer}.catalog-card .install:disabled{opacity:.45;cursor:not-allowed}.notice{padding:1rem;border:1px solid var(--line);background:var(--panel);border-radius:12px}.error,.plugin-error{color:#ff8e98;border-color:rgba(255,80,95,.4)}.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:.8rem;margin-bottom:1rem}.metrics article{padding:1rem;border:1px solid var(--line);border-radius:13px;background:var(--panel);display:grid;gap:.35rem}.metrics span,.details span{font-size:.7rem;text-transform:uppercase;color:var(--muted)}.metrics strong{font-size:1.5rem}.danger{color:#ff6874}.plugin-grid{display:grid;gap:1rem}.plugin-card{border:1px solid var(--line);background:var(--panel);border-radius:16px;padding:1.1rem}.plugin-head{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:.75rem}.plugin-icon{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:rgba(53,226,178,.12);color:var(--accent);font-weight:900}.plugin-title h3{margin:0 0 .2rem}.plugin-title small{color:var(--muted)}.badges{display:flex;gap:.4rem;flex-wrap:wrap}.badges span{font-size:.65rem;padding:.3rem .5rem;border:1px solid var(--line);border-radius:999px}.badges .good{color:#35e2b2}.badges .warn{color:#f2b15a}.muted-badge{color:var(--muted)}.details{display:grid;grid-template-columns:repeat(4,1fr);gap:.6rem;margin:1rem 0}.details div{padding:.75rem;border:1px solid var(--line);border-radius:10px;display:grid;gap:.25rem}.details strong{font-size:.86rem;overflow:hidden;text-overflow:ellipsis}.plugin-error{padding:.7rem;border:1px solid rgba(255,80,95,.25);border-radius:9px;margin-bottom:.8rem}.actions{display:flex;gap:.5rem;flex-wrap:wrap}.actions button:disabled,.head-actions button:disabled{opacity:.45;cursor:not-allowed}.actions .start{color:#35e2b2}.actions .stop{color:#ff7c85}.actions .toggle.on{border-color:rgba(53,226,178,.45)}.settings-editor{margin-top:1rem;padding-top:1rem;border-top:1px solid var(--line);display:grid;gap:.55rem}.settings-editor label{font-size:.75rem;color:var(--muted)}.settings-editor textarea{width:100%;box-sizing:border-box;background:#090d14;color:#dce7e4;border:1px solid var(--line);border-radius:10px;padding:.8rem;font-family:monospace;resize:vertical}.editor-actions{display:flex;justify-content:flex-end;gap:.5rem}.editor-actions .save{background:var(--accent);color:#07110e;font-weight:800}@media(max-width:900px){.metrics,.details,.catalog-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:620px){.head{align-items:stretch;flex-direction:column}.metrics,.details,.catalog-grid{grid-template-columns:1fr}.catalog-card{align-items:stretch;flex-direction:column}.plugin-head{grid-template-columns:auto 1fr}.badges{grid-column:1/-1}.head-actions{flex-wrap:wrap}}
   `],
 })
 export class PluginRuntimeUsageComponent implements OnInit {
   readonly guildId = this.route.snapshot.paramMap.get('guildId') ?? '';
   readonly installations = signal<GuildPluginInstallation[]>([]);
+  readonly availablePlugins = signal<GuildPluginMarketplaceItem[]>([]);
   readonly runtimes = signal<PluginRuntimeInstance[]>([]);
+  readonly showCatalog = signal(false);
   readonly loading = signal(false);
   readonly error = signal('');
   readonly busyKey = signal('');
@@ -132,14 +181,40 @@ export class PluginRuntimeUsageComponent implements OnInit {
   async load(): Promise<void> {
     if (this.loading()) return;
     this.loading.set(true); this.error.set('');
-    const [plugins, runtimes] = await Promise.allSettled([
+    const [plugins, marketplace, runtimes] = await Promise.allSettled([
       this.guildPlugins.listInstalled(this.guildId),
+      this.guildPlugins.marketplace(this.guildId),
       this.runtimeService.list(this.guildId),
     ]);
     if (plugins.status === 'fulfilled') this.installations.set(plugins.value);
     else this.error.set(this.i18n.t('runtime_usage.load_plugins_error', 'Unable to load installed plugins.'));
+    this.availablePlugins.set(marketplace.status === 'fulfilled' ? marketplace.value : []);
     this.runtimes.set(runtimes.status === 'fulfilled' ? runtimes.value : []);
     this.loading.set(false);
+  }
+
+  toggleCatalog(): void {
+    this.showCatalog.update(value => !value);
+  }
+
+  async install(plugin: GuildPluginMarketplaceItem): Promise<void> {
+    if (plugin.installed || this.busy(plugin.plugin_key)) return;
+    this.busyKey.set(plugin.plugin_key);
+    this.error.set('');
+    try {
+      await this.guildPlugins.install(this.guildId, plugin.plugin_key);
+      await this.load();
+      this.showCatalog.set(false);
+    } catch {
+      this.error.set(
+        this.i18n.t(
+          'runtime_usage.install_error',
+          'Unable to install plugin on this server.',
+        ),
+      );
+    } finally {
+      this.busyKey.set('');
+    }
   }
 
   runtime(pluginKey: string): PluginRuntimeInstance | null { return this.runtimes().find(item => item.plugin_key === pluginKey) || null; }
