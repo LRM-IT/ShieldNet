@@ -14,8 +14,9 @@
     "backend": "backend.plugin:GuildDMBroadcastPlugin"
   },
   "capabilities": [
-    "guild.members.read",
-    "audit.write"
+    "discord.read.members",
+    "discord.send.message",
+    "events.publish"
   ],
   "permissions": [
     "guild_dm_broadcast.view",
@@ -23,5 +24,6 @@
     "guild_dm_broadcast.send",
     "guild_dm_broadcast.cancel"
   ],
-  "dependencies": {}
+  "dependencies": {},
+  "entrypoint": "backend/runtime.py"
 }

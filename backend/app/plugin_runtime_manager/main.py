@@ -111,7 +111,7 @@ class PluginRuntimeManager:
         entrypoint = self.resolve_entrypoint(instance)
 
         manifest = instance.manifest_json or {}
-        raw_permissions = manifest.get("permissions", [])
+        raw_permissions = manifest.get("capabilities", [])
 
         if not isinstance(raw_permissions, list) or any(
             not isinstance(permission, str)

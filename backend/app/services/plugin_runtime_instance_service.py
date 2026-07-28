@@ -1,8 +1,14 @@
 from datetime import datetime, timezone
+from pathlib import Path
 from uuid import uuid4
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.models.plugins import GuildPluginInstallation, PluginRuntimeInstance, PluginRuntimeState
+from app.models.plugins import (
+    GuildPluginInstallation,
+    PluginRegistry,
+    PluginRuntimeInstance,
+    PluginRuntimeState,
+)
 from app.schemas.plugin_runtime_instances import PluginRuntimeInstanceResponse
 
 class PluginRuntimeConflictError(Exception):
@@ -33,11 +39,52 @@ class PluginRuntimeInstanceService:
         prepared=(await self.session.execute(
             select(PluginRuntimeState).where(
                 PluginRuntimeState.plugin_key==plugin_key,
-                PluginRuntimeState.state=="validated",
             )
         )).scalar_one_or_none()
-        if prepared is None or not prepared.package_path or not prepared.prepared_version:
-            raise LookupError("validated plugin package is not prepared")
+
+        package_path = None
+        package_version = None
+        manifest_json = {}
+
+        if (
+            prepared is not None
+            and prepared.package_path
+            and prepared.prepared_version
+        ):
+            prepared_path = Path(prepared.package_path).resolve()
+            if prepared_path.is_dir():
+                package_path = str(prepared_path)
+                package_version = prepared.prepared_version
+                manifest_json = prepared.manifest_json or {}
+
+        if package_path is None:
+            registry=(await self.session.execute(
+                select(PluginRegistry).where(
+                    PluginRegistry.plugin_key==plugin_key,
+                    PluginRegistry.healthy.is_(True),
+                )
+            )).scalar_one_or_none()
+
+            if registry is None:
+                raise LookupError(
+                    "validated plugin package is not prepared and "
+                    "healthy local plugin is not found"
+                )
+
+            manifest_path = Path(registry.manifest_path).resolve()
+            if not manifest_path.is_file():
+                raise LookupError("plugin manifest is missing from disk")
+
+            plugin_root = manifest_path.parent
+            if not plugin_root.is_dir():
+                raise LookupError("plugin directory is missing from disk")
+
+            package_path = str(plugin_root)
+            package_version = registry.version
+            manifest_json = registry.manifest or {}
+
+        if not package_version:
+            raise LookupError("plugin version is missing")
         item=await self._instance(guild_id,plugin_key)
         now=datetime.now(timezone.utc)
         if item and item.state=="running":
@@ -46,18 +93,18 @@ class PluginRuntimeInstanceService:
             item=PluginRuntimeInstance(
                 id=uuid4(), guild_id=guild_id, plugin_key=plugin_key,
                 state="running", generation=1,
-                package_version=prepared.prepared_version,
-                package_path=prepared.package_path,
-                manifest_json=prepared.manifest_json or {},
+                package_version=package_version,
+                package_path=package_path,
+                manifest_json=manifest_json,
                 started_at=now,last_heartbeat_at=now,
                 created_at=now,updated_at=now,
             )
             self.session.add(item)
         else:
             item.state="running"; item.generation+=1
-            item.package_version=prepared.prepared_version
-            item.package_path=prepared.package_path
-            item.manifest_json=prepared.manifest_json or {}
+            item.package_version=package_version
+            item.package_path=package_path
+            item.manifest_json=manifest_json
             item.started_at=now; item.stopped_at=None
             item.last_heartbeat_at=now; item.last_error=None; item.updated_at=now
         await self.session.commit(); await self.session.refresh(item)
