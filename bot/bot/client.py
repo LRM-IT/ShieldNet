@@ -22,6 +22,7 @@ from bot.explorer_sync import ExplorerSyncClient
 from bot.automation_runtime import AutomationRuntimeClient
 from bot.leadership import LeadershipSyncClient
 from bot.discord_management import DiscordManagementWorker
+from bot.guild_dm_broadcast import GuildDMBroadcastWorker
 
 logger = logging.getLogger(__name__)
 
@@ -48,6 +49,7 @@ class ShieldNetBot(discord.Client):
         self.automation_runtime = AutomationRuntimeClient(self)
         self.leadership_sync = LeadershipSyncClient(self)
         self.discord_management = DiscordManagementWorker(self)
+        self.guild_dm_broadcast = GuildDMBroadcastWorker(self)
         self._initial_sync_done = False
         self.redis = Redis.from_url(settings.redis_url, decode_responses=True)
         self.worker_name = f"discord-worker:{socket.gethostname()}"
@@ -258,6 +260,7 @@ class ShieldNetBot(discord.Client):
         self.verification_review_loop.start()
         self.leadership_sync_loop.start()
         self.discord_management_loop.start()
+        self.guild_dm_broadcast_loop.start()
         self.member_action_loop.start()
         self.security_snapshot_loop.start()
         self.explorer_snapshot_loop.start()
@@ -615,6 +618,18 @@ class ShieldNetBot(discord.Client):
 
     @discord_management_loop.before_loop
     async def before_discord_management_loop(self) -> None:
+        await self.wait_until_ready()
+
+
+    @tasks.loop(seconds=5)
+    async def guild_dm_broadcast_loop(self) -> None:
+        try:
+            await self.guild_dm_broadcast.run_once()
+        except Exception:
+            logger.exception("Guild DM Broadcast queue failed")
+
+    @guild_dm_broadcast_loop.before_loop
+    async def before_guild_dm_broadcast_loop(self) -> None:
         await self.wait_until_ready()
 
 

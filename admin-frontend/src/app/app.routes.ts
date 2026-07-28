@@ -2,6 +2,7 @@ import { PlatformAIComponent } from './pages/platform-ai.component';
 import { HealthMonitorComponent } from './pages/health-monitor.component';
 import { LiveLogsComponent } from './pages/live-logs.component';
 import { PluginRuntimeUsageComponent } from './pages/plugin-runtime-usage.component';
+import { GuildDMBroadcastComponent } from './pages/guild-dm-broadcast.component';
 import { PluginsComponent } from './pages/plugins.component';
 import { AIIntegrationsComponent } from './pages/ai-integrations.component';
 import { LeadershipComponent } from './pages/leadership.component';
@@ -71,6 +72,7 @@ export const routes: Routes = [
   { path: 'guild/:guildId/backups', component: BackupsComponent, canActivate: [guildGuard], data: { guildModule: 'settings' } },
   { path: 'guild/:guildId/automations', component: AutomationsComponent, canActivate: [guildGuard], data: { guildModule: 'automations' } },
   { path: 'guild/:guildId/plugin-runtime', component: PluginRuntimeUsageComponent, canActivate: [guildGuard], data: { guildModule: 'plugins' } },
+  { path: 'guild/:guildId/plugins/guild-dm-broadcast', component: GuildDMBroadcastComponent, canActivate: [guildGuard], data: { guildModule: 'plugins' } },
   { path: 'guild/:guildId/automation-monitor', component: AutomationMonitorComponent, canActivate: [guildGuard], data: { guildModule: 'automations' } },
   { path: 'guild/:guildId/workflow-scheduler', component: WorkflowSchedulerComponent, canActivate: [guildGuard], data: { guildModule: 'automations' } },
   {

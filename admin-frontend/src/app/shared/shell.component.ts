@@ -380,6 +380,7 @@ export class ShellComponent implements OnInit, OnDestroy {
     { keys: ['reaction_roles', 'reaction-roles', 'reactionroles'], label: 'Reaction Roles', icon: '◈', path: 'reaction-roles' },
     { keys: ['tickets', 'ticketing'], label: 'Tickets', icon: '▣', path: 'tickets' },
     { keys: ['logging', 'logs'], label: 'Logging', icon: '≡', path: 'logging' },
+    { keys: ['guild_dm_broadcast', 'guild-dm-broadcast'], label: 'Guild DM Broadcast', icon: '✉', path: 'plugins/guild-dm-broadcast' },
   ];
 
   readonly pluginNavigation = computed<NavItem[]>(() => {

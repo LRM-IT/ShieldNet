@@ -7,7 +7,7 @@
   "min_core": "7.0.0",
   "components": {
     "backend": true,
-    "frontend": false,
+    "frontend": true,
     "bot": false
   },
   "entrypoints": {
@@ -25,5 +25,12 @@
     "guild_dm_broadcast.cancel"
   ],
   "dependencies": {},
-  "entrypoint": "backend/runtime.py"
+  "entrypoint": "backend/runtime.py",
+  "ui": {
+    "navigation": {
+      "label": "Guild DM Broadcast",
+      "icon": "✉",
+      "route": "plugins/guild-dm-broadcast"
+    }
+  }
 }

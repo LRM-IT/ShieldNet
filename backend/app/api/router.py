@@ -72,6 +72,7 @@ from app.api.routes.plugin_control import router as plugin_control_router
 from app.api.routes.plugin_runtime_instances import router as plugin_runtime_instances_router
 from app.api.routes.guild_plugins import router as guild_plugins_router
 from app.api.routes.guild_access import router as guild_access_router
+from app.api.routes.guild_dm_broadcast import router as guild_dm_broadcast_router, internal_router as internal_guild_dm_broadcast_router
 
 api_router = APIRouter()
 
@@ -133,6 +134,8 @@ api_router.include_router(plugin_control_router)
 api_router.include_router(plugin_runtime_instances_router)
 api_router.include_router(guild_plugins_router)
 api_router.include_router(guild_access_router)
+api_router.include_router(guild_dm_broadcast_router)
+api_router.include_router(internal_guild_dm_broadcast_router)
 api_router.include_router(settings_router)
 api_router.include_router(moderation_router)
 api_router.include_router(events_router)
