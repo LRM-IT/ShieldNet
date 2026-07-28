@@ -4,6 +4,7 @@ from typing import AsyncIterator
 from fastapi import FastAPI
 
 from app.api.router import api_router
+from app.api.routes.guild_plugins import router as guild_plugins_router
 from app.core.config import settings
 from app.core.events import event_bus
 from app.db.session import close_database
@@ -33,6 +34,7 @@ app = FastAPI(
 )
 
 app.include_router(api_router, prefix="/api/v1")
+app.include_router(guild_plugins_router, prefix="/api/v1")
 
 
 @app.get("/")
