@@ -1,39 +1,45 @@
 from __future__ import annotations
 
+import logging
 from typing import Any
 
-_context: Any | None = None
+logger = logging.getLogger(__name__)
 _started = False
 
 
-async def on_load(context: Any) -> None:
-    global _context
-    _context = context
-    context.logger.info("Welcome plugin loaded")
+async def setup(context: Any) -> None:
+    logger.info(
+        "Welcome plugin setup guild_id=%s plugin_key=%s generation=%s",
+        getattr(context, "guild_id", None),
+        getattr(context, "plugin_key", None),
+        getattr(context, "generation", None),
+    )
 
 
-async def on_start(context: Any) -> None:
-    global _context, _started
-    _context = context
+async def start(context: Any) -> None:
+    global _started
     _started = True
-    context.logger.info("Welcome plugin started")
+    logger.info(
+        "Welcome plugin started guild_id=%s plugin_key=%s",
+        getattr(context, "guild_id", None),
+        getattr(context, "plugin_key", None),
+    )
 
 
-async def on_stop(context: Any) -> None:
+async def stop(context: Any) -> None:
     global _started
     _started = False
-    context.logger.info("Welcome plugin stopped")
-
-
-async def on_unload(context: Any) -> None:
-    global _context
-    _context = None
-    context.logger.info("Welcome plugin unloaded")
+    logger.info(
+        "Welcome plugin stopped guild_id=%s plugin_key=%s",
+        getattr(context, "guild_id", None),
+        getattr(context, "plugin_key", None),
+    )
 
 
 async def health(context: Any) -> dict[str, Any]:
     return {
         "status": "ready" if _started else "stopped",
         "plugin_key": "welcome",
-        "version": "1.0.3",
+        "version": "1.0.5",
+        "guild_id": getattr(context, "guild_id", None),
     }
