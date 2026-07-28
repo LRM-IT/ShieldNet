@@ -23,6 +23,7 @@ from app.models.plugins import (
 )
 from app.plugin_worker.config import WorkerSettings
 from app.plugin_worker.activation import PluginActivator
+from app.plugin_worker.lifecycle import uninstall_plugin
 from app.plugin_worker.install_journal import recover_install_journals
 from app.plugin_worker.startup_restore import restore_active_plugin_runtimes
 from app.plugin_worker.security import (
@@ -60,7 +61,7 @@ class PluginValidationWorker:
                     select(PluginInstallJob)
                     .where(
                         PluginInstallJob.status == "queued",
-                        PluginInstallJob.action.in_(("install", "update")),
+                        PluginInstallJob.action.in_(("install", "update", "uninstall")),
                     )
                     .order_by(PluginInstallJob.created_at.asc())
                     .with_for_update(skip_locked=True)
@@ -92,6 +93,10 @@ class PluginValidationWorker:
                 )
             ).scalar_one()
             try:
+                if job.action == "uninstall":
+                    await uninstall_plugin(session, job=job)
+                    return
+
                 item = await self._resolve_package(session, job)
                 await self._set_status(session, job, "downloading", 15)
                 archive_path = await asyncio.to_thread(
