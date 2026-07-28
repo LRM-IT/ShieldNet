@@ -24,6 +24,7 @@ from app.models.plugins import (
 from app.plugin_worker.config import WorkerSettings
 from app.plugin_worker.activation import PluginActivator
 from app.plugin_worker.install_journal import recover_install_journals
+from app.plugin_worker.startup_restore import restore_active_plugin_runtimes
 from app.plugin_worker.security import (
     PackageValidationError,
     load_and_validate_manifest,
@@ -403,6 +404,27 @@ class PluginValidationWorker:
                     report.stage,
                     report.action,
                 )
+
+        async with AsyncSessionFactory() as restore_session:
+            runtime_reports = await restore_active_plugin_runtimes(
+                restore_session
+            )
+        for report in runtime_reports:
+            if report.error:
+                logger.error(
+                    "plugin runtime restore failed: "
+                    "plugin=%s version=%s error=%s",
+                    report.plugin_key,
+                    report.version,
+                    report.error,
+                )
+            else:
+                logger.info(
+                    "plugin runtime restored: plugin=%s version=%s",
+                    report.plugin_key,
+                    report.version,
+                )
+
         logger.info("ShieldNet plugin validation worker started")
         while True:
             try:
