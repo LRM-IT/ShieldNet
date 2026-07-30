@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, HostListener, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { DiscordChannelPickerComponent } from '../shared/discord-channel-picker.component';
 import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute } from '@angular/router';
 import { ShellComponent } from '../shared/shell.component';
@@ -29,7 +30,7 @@ interface Settings {
 @Component({
   selector:'sn-plugin-welcome',
   standalone:true,
-  imports:[CommonModule,FormsModule,ShellComponent],
+  imports:[CommonModule,FormsModule,ShellComponent,DiscordChannelPickerComponent],
   template:`
   <sn-shell title="Welcome">
     <section class="page">
@@ -55,53 +56,9 @@ interface Settings {
             </label>
           </div>
 
-          <label class="field">
-            General channel
-            <div class="combo">
-              <input [(ngModel)]="welcomeSearch" name="welcomeSearch"
-                     (focus)="openSelector('welcome')"
-                     (input)="openSelector('welcome')"
-                     placeholder="Search text channel">
-              @if(selectedWelcome()){<button type="button" class="clear" (click)="clearWelcome()">×</button>}
-              @if(welcomeOpen()){
-                <div class="options">
-                  @for(channel of filteredWelcome();track channel.id){
-                    <button type="button" (click)="selectWelcome(channel)">
-                      <strong># {{channel.name}}</strong>
-                      <small>{{categoryName(channel)}} · {{channel.id}}</small>
-                    </button>
-                  } @empty {<div class="empty">No text channels found.</div>}
-                </div>
-              }
-            </div>
-            @if(selectedWelcome();as channel){
-              <span class="selected">Selected: #{{channel.name}}</span>
-            }
-          </label>
+          <label class="field">General channel<sn-discord-channel-picker [guildId]="guildId" [value]="settings.welcome_channel_id" (valueChange)="settings.welcome_channel_id = $event" /></label>
 
-          <label class="field">
-            Verification channel
-            <div class="combo">
-              <input [(ngModel)]="verificationSearch" name="verificationSearch"
-                     (focus)="openSelector('verification')"
-                     (input)="openSelector('verification')"
-                     placeholder="Search verification channel">
-              @if(selectedVerification()){<button type="button" class="clear" (click)="clearVerification()">×</button>}
-              @if(verificationOpen()){
-                <div class="options">
-                  @for(channel of filteredVerification();track channel.id){
-                    <button type="button" (click)="selectVerification(channel)">
-                      <strong># {{channel.name}}</strong>
-                      <small>{{categoryName(channel)}} · {{channel.id}}</small>
-                    </button>
-                  } @empty {<div class="empty">No text channels found.</div>}
-                </div>
-              }
-            </div>
-            @if(selectedVerification();as channel){
-              <span class="selected">Selected: #{{channel.name}}</span>
-            }
-          </label>
+          <label class="field">Verification channel<sn-discord-channel-picker [guildId]="guildId" [value]="settings.verification_channel_id" (valueChange)="settings.verification_channel_id = $event" /></label>
 
           <label class="field">
             Stop when member receives role
@@ -247,7 +204,7 @@ export class PluginWelcomeComponent implements OnInit{
     delete_after_verified:true,ignore_bots:true
   };
 
-  private get guildId(){return this.route.snapshot.paramMap.get('guildId')||''}
+  get guildId(){return this.route.snapshot.paramMap.get('guildId')||''}
   private get base(){return `/api/v1/discord/guilds/${this.guildId}/plugins/welcome`}
 
   selectedWelcome=computed(()=>this.channels().find(x=>x.id===this.settings.welcome_channel_id)||null);

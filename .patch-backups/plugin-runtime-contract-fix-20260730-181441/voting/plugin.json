@@ -1,0 +1,32 @@
+{
+  "id": "voting",
+  "name": "ShieldNet Voting",
+  "version": "2.1.0",
+  "description": "Multilingual Discord polls with manual and AI-assisted translations.",
+  "author": "LRM-IT",
+  "min_core_version": "5.1.0",
+  "components": {
+    "backend": true,
+    "frontend": true,
+    "bot": true
+  },
+  "capabilities": [
+    "discord.read.channels",
+    "discord.read.roles",
+    "discord.send.message",
+    "events.publish"
+  ],
+  "ui": {
+    "navigation": {
+      "label": "Voting",
+      "icon": "🗳️",
+      "route": "plugins/voting"
+    }
+  },
+  "entrypoints": {
+    "backend": "runtime.py",
+    "frontend": "admin-frontend/src/app/pages/plugin-voting.component.ts",
+    "bot": "bot/bot/plugin_voting.py"
+  },
+  "entrypoint": "runtime.py"
+}

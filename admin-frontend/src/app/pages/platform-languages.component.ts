@@ -1,0 +1,225 @@
+import { CommonModule } from '@angular/common';
+import { Component, OnInit, inject, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { ShellComponent } from '../shared/shell.component';
+import {
+  GlobalLanguage,
+  GlobalLanguageService,
+} from '../core/global-language.service';
+
+@Component({
+  selector: 'sn-platform-languages',
+  standalone: true,
+  imports: [CommonModule, FormsModule, ShellComponent],
+  template: `
+    <sn-shell title="Languages">
+      <main class="page">
+        <header>
+          <div>
+            <small>GLOBAL DIRECTORY</small>
+            <h2>Languages</h2>
+            <p>Shared language list for all ShieldNet modules and plugins.</p>
+          </div>
+          <button class="primary" type="button" (click)="startCreate()">
+            + Add language
+          </button>
+        </header>
+
+        @if (error()) {
+          <div class="notice error">{{ error() }}</div>
+        }
+
+        @if (editing()) {
+          <section class="panel form">
+            <div class="head">
+              <h3>{{ form.id ? 'Edit language' : 'New language' }}</h3>
+              <button type="button" (click)="cancel()">Close</button>
+            </div>
+
+            <div class="grid">
+              <label>Code<input [(ngModel)]="form.code" [disabled]="!!form.id" placeholder="uk"></label>
+              <label>Name<input [(ngModel)]="form.name" placeholder="Ukrainian"></label>
+              <label>Native name<input [(ngModel)]="form.native_name" placeholder="Українська"></label>
+              <label>Flag<input [(ngModel)]="form.flag" placeholder="🇺🇦"></label>
+              <label>Locale<input [(ngModel)]="form.locale" placeholder="uk-UA"></label>
+              <label>Sort order<input type="number" [(ngModel)]="form.sort_order"></label>
+              <label class="check"><input type="checkbox" [(ngModel)]="form.is_active"> Active</label>
+            </div>
+
+            <div class="actions">
+              <button class="primary" type="button" (click)="save()">Save</button>
+            </div>
+          </section>
+        }
+
+        <section class="panel">
+          <div class="head">
+            <h3>Directory</h3>
+            <span>{{ languages().length }} languages</span>
+          </div>
+
+          <article *ngFor="let item of languages()" class="language">
+            <div class="identity">
+              <b>{{ item.flag || '🌐' }}</b>
+              <div>
+                <strong>{{ item.native_name }}</strong>
+                <span>{{ item.name }} · {{ item.code }}</span>
+              </div>
+            </div>
+
+            <div class="meta">
+              <span>{{ item.locale || '—' }}</span>
+              <span>Order {{ item.sort_order }}</span>
+              <span [class.active]="item.is_active">
+                {{ item.is_active ? 'Active' : 'Disabled' }}
+              </span>
+            </div>
+
+            <div class="buttons">
+              <button type="button" (click)="edit(item)">Edit</button>
+              <button class="danger" type="button" (click)="remove(item)">Delete</button>
+            </div>
+          </article>
+        </section>
+      </main>
+    </sn-shell>
+  `,
+  styles: [`
+    .page{display:grid;gap:1rem;padding:1rem}
+    header,.head,.language,.actions{display:flex;align-items:center;justify-content:space-between;gap:1rem}
+    h2,h3,p{margin:0}
+    small{color:var(--primary);letter-spacing:.12em}
+    .panel,.notice{border:1px solid var(--line);border-radius:14px;background:var(--surface);padding:1rem}
+    .form{display:grid;gap:1rem}
+    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.8rem}
+    label{display:grid;gap:.35rem;color:var(--muted);font-size:.78rem}
+    input,button{font:inherit;border:1px solid var(--line);border-radius:9px;background:#081019;color:var(--text);padding:.7rem}
+    .check{display:flex;align-items:center;gap:.5rem}
+    button{cursor:pointer}
+    .primary{background:var(--primary);color:#03130e}
+    .danger{color:#ff8290}
+    .language{padding:.85rem 0;border-bottom:1px solid var(--line)}
+    .language:last-child{border-bottom:0}
+    .identity{display:flex;align-items:center;gap:.8rem;min-width:260px}
+    .identity>b{font-size:1.6rem}
+    .identity div{display:grid}
+    .identity span,.meta{color:var(--muted)}
+    .meta{display:flex;gap:1rem;flex-wrap:wrap}
+    .meta .active{color:var(--success)}
+    .buttons{display:flex;gap:.5rem}
+    .error{color:#ff8290}
+    @media(max-width:900px){
+      .grid{grid-template-columns:1fr}
+      .language,header{align-items:flex-start;flex-direction:column}
+      .meta{display:grid}
+    }
+  `],
+})
+export class PlatformLanguagesComponent implements OnInit {
+  private readonly api = inject(GlobalLanguageService);
+
+  readonly languages = signal<GlobalLanguage[]>([]);
+  readonly editing = signal(false);
+  readonly error = signal('');
+  form: any = this.emptyForm();
+
+  ngOnInit(): void {
+    void this.reload();
+  }
+
+  async reload(): Promise<void> {
+    try {
+      this.languages.set(await this.api.listAll());
+    } catch (error: any) {
+      this.error.set(this.formatError(error, 'Unable to load languages.'));
+    }
+  }
+
+  startCreate(): void {
+    this.form = this.emptyForm();
+    this.editing.set(true);
+  }
+
+  edit(item: GlobalLanguage): void {
+    this.form = { ...item };
+    this.editing.set(true);
+  }
+
+  cancel(): void {
+    this.editing.set(false);
+    this.form = this.emptyForm();
+  }
+
+  async save(): Promise<void> {
+    this.error.set('');
+    try {
+      if (this.form.id) {
+        await this.api.update(this.form.id, {
+          name: this.form.name,
+          native_name: this.form.native_name,
+          flag: this.form.flag || null,
+          locale: this.form.locale || null,
+          is_active: this.form.is_active,
+          sort_order: Number(this.form.sort_order) || 0,
+        });
+      } else {
+        await this.api.create({
+          code: this.form.code,
+          name: this.form.name,
+          native_name: this.form.native_name,
+          flag: this.form.flag || null,
+          locale: this.form.locale || null,
+          is_active: this.form.is_active,
+          sort_order: Number(this.form.sort_order) || 0,
+        });
+      }
+      this.cancel();
+      await this.reload();
+    } catch (error: any) {
+      this.error.set(this.formatError(error, 'Unable to save language.'));
+    }
+  }
+
+  async remove(item: GlobalLanguage): Promise<void> {
+    if (!confirm(`Delete ${item.native_name}?`)) return;
+    try {
+      await this.api.remove(item.id);
+      await this.reload();
+    } catch (error: any) {
+      this.error.set(this.formatError(error, 'Unable to delete language.'));
+    }
+  }
+
+  private formatError(error: any, fallback: string): string {
+    const detail = error?.error?.detail;
+
+    if (typeof detail === 'string') {
+      return detail;
+    }
+
+    if (Array.isArray(detail)) {
+      return detail
+        .map((item: any) => item?.msg || item?.message || JSON.stringify(item))
+        .join('; ');
+    }
+
+    if (detail && typeof detail === 'object') {
+      return detail.message || JSON.stringify(detail);
+    }
+
+    return fallback;
+  }
+
+  private emptyForm(): any {
+    return {
+      id: null,
+      code: '',
+      name: '',
+      native_name: '',
+      flag: '',
+      locale: '',
+      is_active: true,
+      sort_order: 100,
+    };
+  }
+}

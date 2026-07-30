@@ -1,0 +1,7 @@
+{
+  "plugin.name": "Верификация Level 1",
+  "verify.success": "Вы успешно верифицированы",
+  "rename.success": "Альянс и имя успешно изменены",
+  "error.role": "Не удалось назначить роль",
+  "error.nickname": "Не удалось изменить Discord-имя"
+}

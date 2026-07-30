@@ -19,7 +19,7 @@
     }
   },
   "entrypoints": {
-    "backend": "runtime.py",
+    "backend": "runtime:WelcomePlugin",
     "frontend": "admin-frontend/src/app/pages/plugin-welcome.component.ts"
   },
   "entrypoint": "runtime.py"

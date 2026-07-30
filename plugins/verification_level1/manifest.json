@@ -1,0 +1,16 @@
+{
+  "id": "verification_level1",
+  "name": "Verification Level 1",
+  "version": "1.0.2",
+  "description": "Self verification, nickname mask, role assignment, rename/alliance update and temporary welcome messages.",
+  "entrypoint": "runtime.py",
+  "backend_router": "backend.router:router",
+  "frontend_path": "frontend",
+  "permissions": [
+    "manage_nicknames",
+    "manage_roles",
+    "send_messages",
+    "manage_messages",
+    "use_application_commands"
+  ]
+}

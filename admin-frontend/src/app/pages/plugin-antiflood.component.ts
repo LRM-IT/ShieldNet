@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, HostListener, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { DiscordChannelPickerComponent } from '../shared/discord-channel-picker.component';
 import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute } from '@angular/router';
 import { ShellComponent } from '../shared/shell.component';
@@ -22,7 +23,7 @@ interface Settings {
 
 @Component({
  selector:'sn-plugin-antiflood', standalone:true,
- imports:[CommonModule,FormsModule,ShellComponent],
+ imports:[CommonModule,FormsModule,ShellComponent,DiscordChannelPickerComponent],
  template:`
  <sn-shell title="AntiFlood"><section class="page">
   @if(error()){<div class="notice error">{{error()}}</div>}
@@ -36,18 +37,12 @@ interface Settings {
      <button type="button" (click)="addRule()">Add rule</button></div>
     @for(rule of settings.rules;track $index){
      <div class="rule">
-      <div class="combo">
-       <input [ngModel]="channelText(rule)" (ngModelChange)="searchRule($index,$event)"
-        [name]="'channel'+$index" (focus)="openRule($index)" placeholder="Search channel">
-       @if(openRuleIndex()===$index){<div class="options">
-        @for(channel of filteredChannels($index);track channel.id){
-         <button type="button" (click)="selectChannel(rule,channel)">
-          <strong># {{channel.name}}</strong><small>{{channel.id}}</small>
-         </button>
-        } @empty {<div class="empty">No channels found.</div>}
-       </div>}
-      </div>
-      <label>Cooldown, seconds
+      <sn-discord-channel-picker
+        [guildId]="guildId"
+        [value]="rule.channel_id"
+        (valueChange)="rule.channel_id = $event || ''"
+       />
+       <label>Cooldown, seconds
        <input type="number" min="1" [max]="rule.use_slowmode?21600:604800"
         [(ngModel)]="rule.cooldown_seconds" [name]="'cooldown'+$index">
       </label>
@@ -114,7 +109,7 @@ export class PluginAntiFloodComponent implements OnInit{
  settings:Settings={enabled:true,ignore_bots:true,ignore_administrators:true,ignore_moderators:true,
  warning_text:'⏳ {user}, please wait {remaining} seconds before sending another message in {channel}.',
  rules:[],excluded_role_ids:[],excluded_user_ids:[]};
- private get guildId(){return this.route.snapshot.paramMap.get('guildId')||''}
+ get guildId(){return this.route.snapshot.paramMap.get('guildId')||''}
  private get base(){return `/api/v1/discord/guilds/${this.guildId}/plugins/antiflood`}
  filteredRoles=computed(()=>{const q=this.roleSearch.trim().toLowerCase();return this.roles().filter(r=>r.name!=='@everyone'&&!r.managed&&(!q||r.name.toLowerCase().includes(q)||r.id.includes(q))).slice(0,50)});
  ngOnInit(){this.reload()}

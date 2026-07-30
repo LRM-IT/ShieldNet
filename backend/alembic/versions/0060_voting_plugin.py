@@ -9,7 +9,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 revision = "0060_voting_plugin"
-down_revision = "0059_platform_ai_center"
+down_revision = "0060"
 branch_labels = None
 depends_on = None
 

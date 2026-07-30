@@ -19,7 +19,7 @@
     }
   },
   "entrypoints": {
-    "backend": "runtime.py",
+    "backend": "runtime:AntiFloodPlugin",
     "frontend": "admin-frontend/src/app/pages/plugin-antiflood.component.ts"
   },
   "entrypoint": "runtime.py"

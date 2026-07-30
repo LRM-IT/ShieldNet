@@ -1,0 +1,125 @@
+<section class="plugin-page">
+  <header>
+    <div>
+      <h1>Verification Level 1</h1>
+      <p>Самоверифікація, зміна альянсу та імені, роль і тимчасове привітання.</p>
+    </div>
+    <label class="switch">
+      <input type="checkbox" [(ngModel)]="settings.enabled">
+      <span>Плагін увімкнено</span>
+    </label>
+  </header>
+
+  <div class="grid" *ngIf="!loading">
+    <article class="card">
+      <h2>Канали та роль</h2>
+
+      <label>Канал верифікації</label>
+      <select [(ngModel)]="settings.verification_channel_id">
+        <option [ngValue]="null">Не вибрано</option>
+        <option *ngFor="let channel of channels" [ngValue]="channel.id"># {{ channel.name }}</option>
+      </select>
+
+      <label>Роль після верифікації або rename</label>
+      <select [(ngModel)]="settings.verified_role_id">
+        <option [ngValue]="null">Не вибрано</option>
+        <option *ngFor="let role of roles" [ngValue]="role.id">{{ role.name }}</option>
+      </select>
+
+      <label>Канал журналу</label>
+      <select [(ngModel)]="settings.log_channel_id">
+        <option [ngValue]="null">Не вибрано</option>
+        <option *ngFor="let channel of channels" [ngValue]="channel.id"># {{ channel.name }}</option>
+      </select>
+
+      <label class="check">
+        <input type="checkbox" [(ngModel)]="settings.assign_role_on_verify">
+        Призначати роль під час верифікації
+      </label>
+      <label class="check">
+        <input type="checkbox" [(ngModel)]="settings.assign_role_on_rename">
+        Призначати роль під час зміни імені або альянсу
+      </label>
+    </article>
+
+    <article class="card">
+      <h2>Маска Discord-ніка</h2>
+      <label>Маска</label>
+      <input [(ngModel)]="settings.nickname_mask" maxlength="128">
+      <small>Змінні: <code>{ALLIANCE}</code>, <code>{NICKNAME}</code></small>
+      <div class="preview">{{ preview }}</div>
+
+      <label class="check">
+        <input type="checkbox" [(ngModel)]="settings.alliance_uppercase">
+        Альянс великими літерами
+      </label>
+      <label class="check">
+        <input type="checkbox" [(ngModel)]="settings.trim_values">
+        Прибирати зайві пробіли
+      </label>
+      <label class="check">
+        <input type="checkbox" [(ngModel)]="settings.allow_reverification">
+        Дозволити повторну верифікацію
+      </label>
+    </article>
+
+    <article class="card">
+      <h2>Команди</h2>
+
+      <label class="check"><input type="checkbox" [(ngModel)]="settings.slash_verify_enabled"> Slash verify</label>
+      <input [(ngModel)]="settings.slash_verify_name" placeholder="verify">
+
+      <label class="check"><input type="checkbox" [(ngModel)]="settings.slash_rename_enabled"> Slash rename</label>
+      <input [(ngModel)]="settings.slash_rename_name" placeholder="rename">
+
+      <label>Префікс</label>
+      <input [(ngModel)]="settings.command_prefix" maxlength="8">
+
+      <label class="check"><input type="checkbox" [(ngModel)]="settings.prefix_verify_enabled"> Текстова verify</label>
+      <input [(ngModel)]="settings.prefix_verify_name">
+
+      <label class="check"><input type="checkbox" [(ngModel)]="settings.prefix_rename_enabled"> Текстова rename</label>
+      <input [(ngModel)]="settings.prefix_rename_name">
+
+      <label>Cooldown, секунд</label>
+      <input type="number" [(ngModel)]="settings.cooldown_seconds" min="0" max="86400">
+
+      <label class="check">
+        <input type="checkbox" [(ngModel)]="settings.delete_user_command">
+        Видаляти текстову команду користувача
+      </label>
+    </article>
+
+    <article class="card">
+      <h2>Повідомлення верифікації</h2>
+      <label>Текст постійного повідомлення</label>
+      <textarea rows="5" [(ngModel)]="settings.verification_message"></textarea>
+
+      <label>Текст кнопки</label>
+      <input [(ngModel)]="settings.verification_button_text" maxlength="80">
+
+      <h3>Повідомлення після успіху</h3>
+      <label class="check">
+        <input type="checkbox" [(ngModel)]="settings.success_message_enabled">
+        Надсилати повідомлення
+      </label>
+
+      <textarea rows="6" [(ngModel)]="settings.success_message_text"></textarea>
+      <small>
+        {MENTION}, {USERNAME}, {DISPLAY_NAME}, {NICKNAME}, {ALLIANCE},
+        {ROLE}, {SERVER}, {RENDERED_NICKNAME}
+      </small>
+
+      <label>Видалити через, секунд</label>
+      <input type="number" [(ngModel)]="settings.success_message_delete_after" min="0" max="86400">
+      <small>300 секунд = 5 хвилин; 0 = не видаляти.</small>
+    </article>
+  </div>
+
+  <footer>
+    <button type="button" (click)="save()" [disabled]="saving || loading">
+      {{ saving ? 'Збереження…' : 'Зберегти' }}
+    </button>
+    <span>{{ message }}</span>
+  </footer>
+</section>

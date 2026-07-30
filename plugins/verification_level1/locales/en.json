@@ -1,0 +1,7 @@
+{
+  "plugin.name": "Verification Level 1",
+  "verify.success": "You have been successfully verified",
+  "rename.success": "Alliance and nickname changed successfully",
+  "error.role": "Could not assign the role",
+  "error.nickname": "Could not change the Discord nickname"
+}
