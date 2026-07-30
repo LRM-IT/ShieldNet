@@ -25,7 +25,6 @@ from bot.discord_management import DiscordManagementWorker
 from bot.guild_dm_broadcast import GuildDMBroadcastWorker
 from bot.plugin_welcome import WelcomeWorker
 from bot.plugin_antiflood import AntiFloodWorker
-from bot.plugin_voting import VotingWorker
 
 logger = logging.getLogger(__name__)
 
@@ -55,7 +54,6 @@ class ShieldNetBot(discord.Client):
         self.guild_dm_broadcast = GuildDMBroadcastWorker(self)
         self.welcome = WelcomeWorker(self)
         self.antiflood = AntiFloodWorker(self)
-        self.voting = VotingWorker(self)
         self._initial_sync_done = False
         self.redis = Redis.from_url(settings.redis_url, decode_responses=True)
         self.worker_name = f"discord-worker:{socket.gethostname()}"
@@ -272,7 +270,6 @@ class ShieldNetBot(discord.Client):
         self.security_snapshot_loop.start()
         self.explorer_snapshot_loop.start()
         self.runtime_heartbeat_loop.start()
-        self.voting.loop.start()
         asyncio.create_task(self.queue_worker())
 
     async def close(self) -> None:
