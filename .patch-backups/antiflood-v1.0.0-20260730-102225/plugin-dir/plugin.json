@@ -1,0 +1,26 @@
+{
+  "id": "antiflood",
+  "name": "AntiFlood",
+  "version": "1.0.1",
+  "description": "Limits how often each member may post in selected Discord channels.",
+  "author": "LRM-IT",
+  "min_core_version": "5.1.0",
+  "components": {
+    "backend": true,
+    "frontend": true,
+    "bot": false
+  },
+  "capabilities": [],
+  "ui": {
+    "navigation": {
+      "label": "AntiFlood",
+      "icon": "⏱️",
+      "route": "plugins/antiflood"
+    }
+  },
+  "entrypoints": {
+    "backend": "runtime.py",
+    "frontend": "admin-frontend/src/app/pages/plugin-antiflood.component.ts"
+  },
+  "entrypoint": "runtime.py"
+}

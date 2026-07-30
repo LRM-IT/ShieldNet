@@ -74,7 +74,6 @@ from app.api.routes.guild_plugins import router as guild_plugins_router
 from app.api.routes.guild_access import router as guild_access_router
 from app.api.routes.guild_dm_broadcast import router as guild_dm_broadcast_router, internal_router as internal_guild_dm_broadcast_router
 from app.api.routes.plugin_welcome import router as plugin_welcome_router, internal_router as internal_plugin_welcome_router
-from app.api.routes.plugin_antiflood import router as plugin_antiflood_router, internal_router as internal_plugin_antiflood_router
 
 api_router = APIRouter()
 
@@ -140,8 +139,6 @@ api_router.include_router(guild_dm_broadcast_router)
 api_router.include_router(internal_guild_dm_broadcast_router)
 api_router.include_router(plugin_welcome_router)
 api_router.include_router(internal_plugin_welcome_router)
-api_router.include_router(plugin_antiflood_router)
-api_router.include_router(internal_plugin_antiflood_router)
 api_router.include_router(settings_router)
 api_router.include_router(moderation_router)
 api_router.include_router(events_router)

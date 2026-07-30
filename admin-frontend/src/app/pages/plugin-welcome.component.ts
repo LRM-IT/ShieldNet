@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, HostListener, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute } from '@angular/router';
@@ -59,8 +59,8 @@ interface Settings {
             General channel
             <div class="combo">
               <input [(ngModel)]="welcomeSearch" name="welcomeSearch"
-                     (focus)="welcomeOpen.set(true)"
-                     (input)="welcomeOpen.set(true)"
+                     (focus)="openSelector('welcome')"
+                     (input)="openSelector('welcome')"
                      placeholder="Search text channel">
               @if(selectedWelcome()){<button type="button" class="clear" (click)="clearWelcome()">×</button>}
               @if(welcomeOpen()){
@@ -83,8 +83,8 @@ interface Settings {
             Verification channel
             <div class="combo">
               <input [(ngModel)]="verificationSearch" name="verificationSearch"
-                     (focus)="verificationOpen.set(true)"
-                     (input)="verificationOpen.set(true)"
+                     (focus)="openSelector('verification')"
+                     (input)="openSelector('verification')"
                      placeholder="Search verification channel">
               @if(selectedVerification()){<button type="button" class="clear" (click)="clearVerification()">×</button>}
               @if(verificationOpen()){
@@ -107,8 +107,8 @@ interface Settings {
             Stop when member receives role
             <div class="combo">
               <input [(ngModel)]="roleSearch" name="roleSearch"
-                     (focus)="roleOpen.set(true)"
-                     (input)="roleOpen.set(true)"
+                     (focus)="openSelector('role')"
+                     (input)="openSelector('role')"
                      placeholder="Search role">
               @if(selectedRole()){<button type="button" class="clear" (click)="clearRole()">×</button>}
               @if(roleOpen()){
@@ -270,6 +270,31 @@ export class PluginWelcomeComponent implements OnInit{
       .replaceAll('{verification_channel}',wc?`#${wc.name}`:'#verification');
   });
 
+  @HostListener('document:mousedown', ['$event'])
+  closeSelectorsOnOutsideClick(event: MouseEvent): void {
+    const target = event.target;
+    if (!(target instanceof Element) || !target.closest('.combo')) {
+      this.closeSelectors();
+    }
+  }
+
+  @HostListener('document:keydown.escape')
+  closeSelectorsOnEscape(): void {
+    this.closeSelectors();
+  }
+
+  openSelector(selector: 'welcome' | 'verification' | 'role'): void {
+    this.welcomeOpen.set(selector === 'welcome');
+    this.verificationOpen.set(selector === 'verification');
+    this.roleOpen.set(selector === 'role');
+  }
+
+  closeSelectors(): void {
+    this.welcomeOpen.set(false);
+    this.verificationOpen.set(false);
+    this.roleOpen.set(false);
+  }
+
   ngOnInit(){this.reload()}
   reload(){
     this.error.set('');
@@ -285,9 +310,9 @@ export class PluginWelcomeComponent implements OnInit{
     return this.channels().filter(c=>!q||c.name.toLowerCase().includes(q)||c.id.includes(q)).slice(0,50);
   }
   categoryName(channel:ChannelItem){const p=this.channels().find(x=>x.id===channel.parent_id);return p?.name||'No category'}
-  selectWelcome(c:ChannelItem){this.settings.welcome_channel_id=Number(c.id);this.welcomeSearch=c.name;this.welcomeOpen.set(false)}
-  selectVerification(c:ChannelItem){this.settings.verification_channel_id=Number(c.id);this.verificationSearch=c.name;this.verificationOpen.set(false)}
-  selectRole(r:RoleItem){if(r.managed)return;this.settings.required_role_id=Number(r.id);this.roleSearch=r.name;this.roleOpen.set(false)}
+  selectWelcome(c:ChannelItem){this.settings.welcome_channel_id=Number(c.id);this.welcomeSearch=c.name;this.closeSelectors()}
+  selectVerification(c:ChannelItem){this.settings.verification_channel_id=Number(c.id);this.verificationSearch=c.name;this.closeSelectors()}
+  selectRole(r:RoleItem){if(r.managed)return;this.settings.required_role_id=Number(r.id);this.roleSearch=r.name;this.closeSelectors()}
   clearWelcome(){this.settings.welcome_channel_id=null;this.welcomeSearch=''}
   clearVerification(){this.settings.verification_channel_id=null;this.verificationSearch=''}
   clearRole(){this.settings.required_role_id=null;this.roleSearch=''}

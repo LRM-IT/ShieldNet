@@ -24,7 +24,6 @@ from bot.leadership import LeadershipSyncClient
 from bot.discord_management import DiscordManagementWorker
 from bot.guild_dm_broadcast import GuildDMBroadcastWorker
 from bot.plugin_welcome import WelcomeWorker
-from bot.plugin_antiflood import AntiFloodWorker
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +52,6 @@ class ShieldNetBot(discord.Client):
         self.discord_management = DiscordManagementWorker(self)
         self.guild_dm_broadcast = GuildDMBroadcastWorker(self)
         self.welcome = WelcomeWorker(self)
-        self.antiflood = AntiFloodWorker(self)
         self._initial_sync_done = False
         self.redis = Redis.from_url(settings.redis_url, decode_responses=True)
         self.worker_name = f"discord-worker:{socket.gethostname()}"
@@ -405,13 +403,7 @@ class ShieldNetBot(discord.Client):
             logger.exception("Member voice sync failed: %s", member.id)
 
     async def on_message(self, message: discord.Message) -> None:
-        if message.guild is None:
-            return
-        try:
-            await self.antiflood.process(message)
-        except Exception:
-            logger.exception("AntiFlood processing failed: %s", message.id)
-        if message.author.bot:
+        if message.guild is None or message.author.bot:
             return
         try:
             await self.member_sync.mark_activity(message.guild.id, message.author.id)
