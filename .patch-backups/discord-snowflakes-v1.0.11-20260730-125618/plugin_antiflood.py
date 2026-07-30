@@ -1,11 +1,12 @@
 from __future__ import annotations
 
+from datetime import datetime
 import logging
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
-from sqlalchemy import select, text
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.dependencies.auth import get_current_user
@@ -13,14 +14,8 @@ from app.api.dependencies.guild_access import require_guild_management
 from app.api.dependencies.internal import verify_internal_service_token
 from app.db.session import get_db_session
 from app.models.core import User
-from app.models.explorer import GuildChannel
 
 logger = logging.getLogger(__name__)
-
-DEFAULT_WARNING_TEXT = (
-    "⏳ {user}, please wait {remaining} seconds before sending another "
-    "message in {channel}."
-)
 
 router = APIRouter(tags=["AntiFlood plugin"])
 internal_router = APIRouter(
@@ -34,7 +29,6 @@ class AntiFloodRule(BaseModel):
     channel_id: int
     cooldown_seconds: int = Field(ge=1, le=604800)
     enabled: bool = True
-    use_slowmode: bool = False
 
 
 class AntiFloodSettings(BaseModel):
@@ -42,7 +36,6 @@ class AntiFloodSettings(BaseModel):
     ignore_bots: bool = True
     ignore_administrators: bool = True
     ignore_moderators: bool = True
-    warning_text: str = Field(default=DEFAULT_WARNING_TEXT, max_length=1800)
     rules: list[AntiFloodRule] = Field(default_factory=list)
     excluded_role_ids: list[int] = Field(default_factory=list)
     excluded_user_ids: list[int] = Field(default_factory=list)
@@ -66,8 +59,7 @@ async def _read_settings(session: AsyncSession, guild_id: int) -> dict[str, Any]
     settings = (
         await session.execute(
             text("""
-                SELECT enabled,ignore_bots,ignore_administrators,
-                       ignore_moderators,warning_text
+                SELECT enabled,ignore_bots,ignore_administrators,ignore_moderators
                 FROM plugin_antiflood.settings
                 WHERE guild_id=:guild_id
             """),
@@ -78,7 +70,7 @@ async def _read_settings(session: AsyncSession, guild_id: int) -> dict[str, Any]
     rules = (
         await session.execute(
             text("""
-                SELECT channel_id,cooldown_seconds,enabled,use_slowmode
+                SELECT channel_id,cooldown_seconds,enabled
                 FROM plugin_antiflood.rules
                 WHERE guild_id=:guild_id
                 ORDER BY id
@@ -112,21 +104,12 @@ async def _read_settings(session: AsyncSession, guild_id: int) -> dict[str, Any]
         "ignore_bots": True,
         "ignore_administrators": True,
         "ignore_moderators": True,
-        "warning_text": DEFAULT_WARNING_TEXT,
     }
     if settings:
         base.update(dict(settings))
-    base["rules"] = [
-        {
-            "channel_id": str(row["channel_id"]),
-            "cooldown_seconds": row["cooldown_seconds"],
-            "enabled": row["enabled"],
-            "use_slowmode": row["use_slowmode"],
-        }
-        for row in rules
-    ]
-    base["excluded_role_ids"] = [str(role_id) for role_id in roles]
-    base["excluded_user_ids"] = [str(user_id) for user_id in users]
+    base["rules"] = [dict(row) for row in rules]
+    base["excluded_role_ids"] = list(roles)
+    base["excluded_user_ids"] = list(users)
     return base
 
 
@@ -149,62 +132,23 @@ async def save_settings(
 ):
     await _auth(guild_id, current_user, session)
 
-    requested_channel_ids = [rule.channel_id for rule in payload.rules]
-    if len(requested_channel_ids) != len(set(requested_channel_ids)):
-        raise HTTPException(422, "Each AntiFlood channel may be selected only once")
-
-    for rule in payload.rules:
-        if rule.use_slowmode and rule.cooldown_seconds > 21600:
-            raise HTTPException(
-                422,
-                "Discord Slow Mode supports a maximum of 21600 seconds",
-            )
-
-    if requested_channel_ids:
-        valid_channel_ids = set(
-            (
-                await session.execute(
-                    select(GuildChannel.discord_channel_id).where(
-                        GuildChannel.guild_id == guild_id,
-                        GuildChannel.discord_channel_id.in_(requested_channel_ids),
-                    )
-                )
-            ).scalars().all()
-        )
-        invalid = sorted(set(requested_channel_ids) - valid_channel_ids)
-        if invalid:
-            raise HTTPException(
-                422,
-                {
-                    "message": "One or more channels do not belong to this Discord server",
-                    "guild_id": str(guild_id),
-                    "invalid_channel_ids": [str(value) for value in invalid],
-                },
-            )
-
     await session.execute(
         text("""
             INSERT INTO plugin_antiflood.settings(
                 guild_id,enabled,ignore_bots,ignore_administrators,
-                ignore_moderators,warning_text,updated_at
+                ignore_moderators,updated_at
             ) VALUES(
                 :guild_id,:enabled,:ignore_bots,:ignore_administrators,
-                :ignore_moderators,:warning_text,now()
+                :ignore_moderators,now()
             )
             ON CONFLICT(guild_id) DO UPDATE SET
                 enabled=excluded.enabled,
                 ignore_bots=excluded.ignore_bots,
                 ignore_administrators=excluded.ignore_administrators,
                 ignore_moderators=excluded.ignore_moderators,
-                warning_text=excluded.warning_text,
                 updated_at=now()
         """),
-        {
-            "guild_id": guild_id,
-            **payload.model_dump(
-                exclude={"rules", "excluded_role_ids", "excluded_user_ids"}
-            ),
-        },
+        {"guild_id": guild_id, **payload.model_dump(exclude={"rules", "excluded_role_ids", "excluded_user_ids"})},
     )
 
     await session.execute(
@@ -215,12 +159,8 @@ async def save_settings(
         await session.execute(
             text("""
                 INSERT INTO plugin_antiflood.rules(
-                    guild_id,channel_id,cooldown_seconds,enabled,use_slowmode,
-                    created_at,updated_at
-                ) VALUES(
-                    :guild_id,:channel_id,:cooldown_seconds,:enabled,
-                    :use_slowmode,now(),now()
-                )
+                    guild_id,channel_id,cooldown_seconds,enabled,created_at,updated_at
+                ) VALUES(:guild_id,:channel_id,:cooldown_seconds,:enabled,now(),now())
             """),
             {"guild_id": guild_id, **rule.model_dump()},
         )
@@ -263,8 +203,7 @@ async def check_message(
     settings = (
         await session.execute(
             text("""
-                SELECT enabled,ignore_bots,ignore_administrators,
-                       ignore_moderators,warning_text
+                SELECT enabled,ignore_bots,ignore_administrators,ignore_moderators
                 FROM plugin_antiflood.settings
                 WHERE guild_id=:guild_id
             """),
@@ -272,35 +211,39 @@ async def check_message(
         )
     ).mappings().first()
 
-    if settings is None or not settings["enabled"]:
+    if settings is None:
+        logger.info(
+            "AntiFlood allow: settings_missing guild=%s channel=%s user=%s",
+            payload.guild_id, payload.channel_id, payload.user_id,
+        )
+        return {"action": "allow", "reason": "settings_missing"}
+
+    if not settings["enabled"]:
+        logger.info(
+            "AntiFlood allow: plugin_disabled guild=%s channel=%s user=%s",
+            payload.guild_id, payload.channel_id, payload.user_id,
+        )
         return {"action": "allow", "reason": "plugin_disabled"}
 
     rule = (
         await session.execute(
             text("""
-                SELECT cooldown_seconds,use_slowmode
+                SELECT cooldown_seconds
                 FROM plugin_antiflood.rules
                 WHERE guild_id=:guild_id
                   AND channel_id=:channel_id
                   AND enabled=true
             """),
-            {
-                "guild_id": payload.guild_id,
-                "channel_id": payload.channel_id,
-            },
+            {"guild_id": payload.guild_id, "channel_id": payload.channel_id},
         )
     ).mappings().first()
 
     if rule is None:
+        logger.info(
+            "AntiFlood allow: rule_missing guild=%s channel=%s user=%s",
+            payload.guild_id, payload.channel_id, payload.user_id,
+        )
         return {"action": "allow", "reason": "rule_missing"}
-
-    cooldown = int(rule["cooldown_seconds"])
-    if rule["use_slowmode"]:
-        return {
-            "action": "slowmode",
-            "reason": "discord_slowmode",
-            "cooldown": min(cooldown, 21600),
-        }
 
     if payload.bot and settings["ignore_bots"]:
         return {"action": "allow", "reason": "ignored_bot"}
@@ -312,13 +255,11 @@ async def check_message(
     excluded_user = (
         await session.execute(
             text("""
-                SELECT 1 FROM plugin_antiflood.user_exceptions
+                SELECT 1
+                FROM plugin_antiflood.user_exceptions
                 WHERE guild_id=:guild_id AND user_id=:user_id
             """),
-            {
-                "guild_id": payload.guild_id,
-                "user_id": payload.user_id,
-            },
+            {"guild_id": payload.guild_id, "user_id": payload.user_id},
         )
     ).scalar_one_or_none()
     if excluded_user:
@@ -328,20 +269,19 @@ async def check_message(
         excluded_role = (
             await session.execute(
                 text("""
-                    SELECT 1 FROM plugin_antiflood.role_exceptions
+                    SELECT 1
+                    FROM plugin_antiflood.role_exceptions
                     WHERE guild_id=:guild_id
                       AND role_id = ANY(CAST(:role_ids AS bigint[]))
                     LIMIT 1
                 """),
-                {
-                    "guild_id": payload.guild_id,
-                    "role_ids": payload.role_ids,
-                },
+                {"guild_id": payload.guild_id, "role_ids": payload.role_ids},
             )
         ).scalar_one_or_none()
         if excluded_role:
             return {"action": "allow", "reason": "excluded_role"}
 
+    cooldown = int(rule["cooldown_seconds"])
     params = {
         "guild_id": payload.guild_id,
         "channel_id": payload.channel_id,
@@ -368,6 +308,10 @@ async def check_message(
 
     if accepted is not None:
         await session.commit()
+        logger.info(
+            "AntiFlood allow: accepted guild=%s channel=%s user=%s cooldown=%s",
+            payload.guild_id, payload.channel_id, payload.user_id, cooldown,
+        )
         return {"action": "allow", "reason": "accepted", "cooldown": cooldown}
 
     remaining = (
@@ -376,7 +320,9 @@ async def check_message(
                 SELECT GREATEST(
                     1,
                     CEIL(EXTRACT(EPOCH FROM (
-                        last_message_at + make_interval(secs=>:cooldown) - now()
+                        last_message_at
+                        + make_interval(secs=>:cooldown)
+                        - now()
                     )))
                 )::int
                 FROM plugin_antiflood.cooldowns
@@ -387,12 +333,18 @@ async def check_message(
             params,
         )
     ).scalar_one_or_none()
-    await session.rollback()
 
+    await session.rollback()
+    remaining_seconds = max(1, int(remaining or cooldown))
+
+    logger.info(
+        "AntiFlood delete: cooldown_active guild=%s channel=%s user=%s remaining=%s cooldown=%s",
+        payload.guild_id, payload.channel_id, payload.user_id,
+        remaining_seconds, cooldown,
+    )
     return {
         "action": "delete",
         "reason": "cooldown_active",
-        "remaining": max(1, int(remaining or cooldown)),
+        "remaining": remaining_seconds,
         "cooldown": cooldown,
-        "warning_text": settings["warning_text"] or "",
     }

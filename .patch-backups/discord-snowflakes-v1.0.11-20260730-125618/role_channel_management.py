@@ -62,8 +62,8 @@ async def get_structure(guild_id: int, current_user: User = Depends(get_current_
     roles = (await session.execute(select(DiscordGuildRole).where(DiscordGuildRole.guild_id == guild_id).order_by(DiscordGuildRole.position.desc()))).scalars().all()
     channels = (await session.execute(select(GuildChannel).where(GuildChannel.guild_id == guild_id).order_by(GuildChannel.position.asc()))).scalars().all()
     return {
-        "roles": [{"id": str(x.discord_role_id), "name": x.name, "position": x.position, "color": x.color, "permissions": str(x.permissions), "managed": x.managed, "assignable": x.assignable} for x in roles],
-        "channels": [{"id": str(x.discord_channel_id), "parent_id": str(x.parent_id) if x.parent_id is not None else None, "name": x.name, "type": x.channel_type, "position": x.position, "nsfw": x.nsfw, "topic": x.topic} for x in channels],
+        "roles": [{"id": x.discord_role_id, "name": x.name, "position": x.position, "color": x.color, "permissions": x.permissions, "managed": x.managed, "assignable": x.assignable} for x in roles],
+        "channels": [{"id": x.discord_channel_id, "parent_id": x.parent_id, "name": x.name, "type": x.channel_type, "position": x.position, "nsfw": x.nsfw, "topic": x.topic} for x in channels],
     }
 
 @router.post("/discord/guilds/{guild_id}/structure/preview")

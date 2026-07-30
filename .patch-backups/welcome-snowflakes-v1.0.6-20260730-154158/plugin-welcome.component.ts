@@ -15,9 +15,9 @@ interface RoleItem {
 }
 interface Settings {
   enabled:boolean;
-  welcome_channel_id:string|null;
-  verification_channel_id:string|null;
-  required_role_id:string|null;
+  welcome_channel_id:number|null;
+  verification_channel_id:number|null;
+  required_role_id:number|null;
   message_template:string;
   repeat_enabled:boolean;
   repeat_minutes:number;
@@ -250,9 +250,9 @@ export class PluginWelcomeComponent implements OnInit{
   private get guildId(){return this.route.snapshot.paramMap.get('guildId')||''}
   private get base(){return `/api/v1/discord/guilds/${this.guildId}/plugins/welcome`}
 
-  selectedWelcome=computed(()=>this.channels().find(x=>x.id===this.settings.welcome_channel_id)||null);
-  selectedVerification=computed(()=>this.channels().find(x=>x.id===this.settings.verification_channel_id)||null);
-  selectedRole=computed(()=>this.roles().find(x=>x.id===this.settings.required_role_id)||null);
+  selectedWelcome=computed(()=>this.channels().find(x=>Number(x.id)===this.settings.welcome_channel_id)||null);
+  selectedVerification=computed(()=>this.channels().find(x=>Number(x.id)===this.settings.verification_channel_id)||null);
+  selectedRole=computed(()=>this.roles().find(x=>Number(x.id)===this.settings.required_role_id)||null);
 
   filteredWelcome=computed(()=>this.filterChannels(this.welcomeSearch));
   filteredVerification=computed(()=>this.filterChannels(this.verificationSearch));
@@ -298,24 +298,11 @@ export class PluginWelcomeComponent implements OnInit{
   ngOnInit(){this.reload()}
   reload(){
     this.error.set('');
-    this.channels.set([]);
-    this.roles.set([]);
-    this.tasks.set([]);
-    this.welcomeSearch='';
-    this.verificationSearch='';
-    this.roleSearch='';
     this.http.get<any>(`/api/v1/discord/guilds/${this.guildId}/structure`).subscribe({
-      next:v=>{
-        this.channels.set((v.channels||[]).filter((x:ChannelItem)=>['text','0','guild_text'].includes(String(x.type).toLowerCase())));
-        this.roles.set(v.roles||[]);
-        this.syncSelectionLabels();
-      },
+      next:v=>{this.channels.set((v.channels||[]).filter((x:ChannelItem)=>['text','0','guild_text'].includes(String(x.type).toLowerCase())));this.roles.set(v.roles||[])},
       error:()=>this.error.set('Unable to load Discord channels and roles.')
     });
-    this.http.get<Settings>(`${this.base}/settings`).subscribe({
-      next:v=>{this.settings={...this.settings,...v};this.syncSelectionLabels()},
-      error:()=>this.error.set('Unable to load Welcome settings.')
-    });
+    this.http.get<Settings>(`${this.base}/settings`).subscribe({next:v=>this.settings={...this.settings,...v},error:()=>this.error.set('Unable to load Welcome settings.')});
     this.http.get<any>(`${this.base}/tasks`).subscribe({next:v=>this.tasks.set(v.items||[])});
   }
   filterChannels(query:string){
@@ -323,42 +310,19 @@ export class PluginWelcomeComponent implements OnInit{
     return this.channels().filter(c=>!q||c.name.toLowerCase().includes(q)||c.id.includes(q)).slice(0,50);
   }
   categoryName(channel:ChannelItem){const p=this.channels().find(x=>x.id===channel.parent_id);return p?.name||'No category'}
-  syncSelectionLabels(){
-    this.welcomeSearch=this.selectedWelcome()?.name||'';
-    this.verificationSearch=this.selectedVerification()?.name||'';
-    this.roleSearch=this.selectedRole()?.name||'';
-  }
-  selectWelcome(c:ChannelItem){this.settings.welcome_channel_id=c.id;this.welcomeSearch=c.name;this.closeSelectors()}
-  selectVerification(c:ChannelItem){this.settings.verification_channel_id=c.id;this.verificationSearch=c.name;this.closeSelectors()}
-  selectRole(r:RoleItem){if(r.managed)return;this.settings.required_role_id=r.id;this.roleSearch=r.name;this.closeSelectors()}
+  selectWelcome(c:ChannelItem){this.settings.welcome_channel_id=Number(c.id);this.welcomeSearch=c.name;this.closeSelectors()}
+  selectVerification(c:ChannelItem){this.settings.verification_channel_id=Number(c.id);this.verificationSearch=c.name;this.closeSelectors()}
+  selectRole(r:RoleItem){if(r.managed)return;this.settings.required_role_id=Number(r.id);this.roleSearch=r.name;this.closeSelectors()}
   clearWelcome(){this.settings.welcome_channel_id=null;this.welcomeSearch=''}
   clearVerification(){this.settings.verification_channel_id=null;this.verificationSearch=''}
   clearRole(){this.settings.required_role_id=null;this.roleSearch=''}
   roleColor(role:RoleItem){return role.color?`#${role.color.toString(16).padStart(6,'0')}`:'#7289da'}
   date(v:string|null){return v?new Date(v).toLocaleString():'—'}
   save(){
-    const channelIds=new Set(this.channels().map(channel=>channel.id));
-    const roleIds=new Set(this.roles().map(role=>role.id));
-    if(this.settings.enabled&&(!this.settings.welcome_channel_id||!this.settings.verification_channel_id||!this.settings.required_role_id)){
-      this.error.set('Welcome channel, verification channel and required role are required.');
-      return;
-    }
-    if(this.settings.welcome_channel_id&&!channelIds.has(this.settings.welcome_channel_id)){
-      this.error.set('The selected welcome channel does not belong to this Discord server.');
-      return;
-    }
-    if(this.settings.verification_channel_id&&!channelIds.has(this.settings.verification_channel_id)){
-      this.error.set('The selected verification channel does not belong to this Discord server.');
-      return;
-    }
-    if(this.settings.required_role_id&&!roleIds.has(this.settings.required_role_id)){
-      this.error.set('The selected role does not belong to this Discord server.');
-      return;
-    }
     this.saving.set(true);this.error.set('');this.success.set('');
     this.http.put<Settings>(`${this.base}/settings`,this.settings).subscribe({
       next:v=>{this.settings=v;this.saving.set(false);this.success.set('Welcome settings saved.')},
-      error:r=>{this.saving.set(false);this.error.set(r?.error?.detail?.message||r?.error?.detail||'Unable to save settings.')}
+      error:r=>{this.saving.set(false);this.error.set(r?.error?.detail||'Unable to save settings.')}
     });
   }
 }

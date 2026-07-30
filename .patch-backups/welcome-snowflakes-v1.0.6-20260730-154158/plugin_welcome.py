@@ -5,7 +5,7 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
-from sqlalchemy import select, text
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.dependencies.auth import get_current_user
@@ -13,8 +13,6 @@ from app.api.dependencies.guild_access import require_guild_management
 from app.api.dependencies.internal import verify_internal_service_token
 from app.db.session import get_db_session
 from app.models.core import User
-from app.models.explorer import GuildChannel
-from app.models.guild_roles import DiscordGuildRole
 
 router = APIRouter(tags=["Welcome plugin"])
 internal_router = APIRouter(
@@ -67,11 +65,9 @@ async def _auth(guild_id: int, user: User, session: AsyncSession) -> None:
     await require_guild_management(session, user, guild_id)
 
 def _settings(row: Any | None) -> dict[str, Any]:
-    data = WelcomeSettings().model_dump() if row is None else dict(row)
-    for key in ("welcome_channel_id", "verification_channel_id", "required_role_id"):
-        value = data.get(key)
-        data[key] = str(value) if value is not None else None
-    return data
+    if row is None:
+        return WelcomeSettings().model_dump()
+    return dict(row)
 
 @router.get("/discord/guilds/{guild_id}/plugins/welcome/settings")
 async def get_settings(
@@ -112,54 +108,6 @@ async def save_settings(
             422,
             "Welcome channel, verification channel and required role are required",
         )
-
-    channel_ids = [
-        value for value in (
-            payload.welcome_channel_id,
-            payload.verification_channel_id,
-        ) if value is not None
-    ]
-    if channel_ids:
-        valid_channel_ids = set(
-            (
-                await session.execute(
-                    select(GuildChannel.discord_channel_id).where(
-                        GuildChannel.guild_id == guild_id,
-                        GuildChannel.discord_channel_id.in_(channel_ids),
-                    )
-                )
-            ).scalars().all()
-        )
-        invalid_channel_ids = sorted(set(channel_ids) - valid_channel_ids)
-        if invalid_channel_ids:
-            raise HTTPException(
-                422,
-                {
-                    "message": "One or more selected channels do not belong to this Discord server",
-                    "guild_id": str(guild_id),
-                    "invalid_channel_ids": [str(value) for value in invalid_channel_ids],
-                },
-            )
-
-    if payload.required_role_id is not None:
-        valid_role = (
-            await session.execute(
-                select(DiscordGuildRole.discord_role_id).where(
-                    DiscordGuildRole.guild_id == guild_id,
-                    DiscordGuildRole.discord_role_id == payload.required_role_id,
-                )
-            )
-        ).scalar_one_or_none()
-        if valid_role is None:
-            raise HTTPException(
-                422,
-                {
-                    "message": "The selected role does not belong to this Discord server",
-                    "guild_id": str(guild_id),
-                    "invalid_role_id": str(payload.required_role_id),
-                },
-            )
-
     values = payload.model_dump()
     values["guild_id"] = guild_id
     await session.execute(
@@ -189,7 +137,7 @@ async def save_settings(
         values,
     )
     await session.commit()
-    return _settings(payload.model_dump())
+    return payload.model_dump()
 
 @router.get("/discord/guilds/{guild_id}/plugins/welcome/tasks")
 async def list_tasks(
@@ -231,7 +179,7 @@ async def internal_settings(
             {"guild_id": guild_id},
         )
     ).mappings().first()
-    return {"settings": _settings(row) if row else None}
+    return {"settings": dict(row) if row else None}
 
 @internal_router.post("/member-join")
 async def member_join(
