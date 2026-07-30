@@ -1,20 +1,228 @@
-from fastapi import APIRouter,Depends
-from sqlalchemy import func,select
+from __future__ import annotations
+
+import json
+import os
+
+from fastapi import APIRouter, Depends, HTTPException, status
+from redis.asyncio import Redis
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.api.dependencies.auth import get_current_user
 from app.api.dependencies.guild_access import require_guild_management
 from app.db.session import get_db_session
 from app.models.core import User
 from app.models.discord import Guild
+from app.models.explorer import GuildChannel, GuildEmoji, GuildInvite, GuildWebhook
 from app.models.guild_roles import DiscordGuildRole
 from app.models.members import DiscordMember
-from app.models.explorer import GuildChannel,GuildWebhook,GuildEmoji,GuildInvite
-router=APIRouter(tags=["Discord Explorer"])
+
+router = APIRouter(tags=["Discord Explorer"])
+
+REDIS_URL = os.getenv("SHIELDNET_REDIS_URL", "redis://127.0.0.1:6379/0")
+DISCORD_WORKER_QUEUE = os.getenv(
+    "SHIELDNET_WORKER_QUEUE",
+    "shieldnet:discord:jobs",
+)
+
+
 @router.get("/discord/guilds/{guild_id}/explorer")
-async def explorer(guild_id:int,current_user:User=Depends(get_current_user),session:AsyncSession=Depends(get_db_session)):
- await require_guild_management(session,current_user,guild_id)
- guild=(await session.execute(select(Guild).where(Guild.guild_id==guild_id))).scalar_one()
- async def rows(model,order): return list((await session.execute(select(model).where(model.guild_id==guild_id).order_by(order))).scalars().all())
- roles=await rows(DiscordGuildRole,DiscordGuildRole.position.desc()); channels=await rows(GuildChannel,GuildChannel.position.asc()); webhooks=await rows(GuildWebhook,GuildWebhook.name.asc()); emojis=await rows(GuildEmoji,GuildEmoji.name.asc()); invites=await rows(GuildInvite,GuildInvite.code.asc())
- members=(await session.execute(select(func.count()).select_from(DiscordMember).where(DiscordMember.guild_id==guild_id,DiscordMember.is_active.is_(True)))).scalar_one()
- return {"guild":{"guild_id":guild.guild_id,"name":guild.name,"icon_url":guild.icon_url,"member_count":guild.member_count,"bot_status":guild.bot_status.value,"last_sync_at":guild.last_sync_at},"counts":{"members":members,"roles":len(roles),"channels":len(channels),"webhooks":len(webhooks),"emojis":len(emojis),"invites":len(invites)},"roles":[{"id":r.discord_role_id,"name":r.name,"position":r.position,"color":r.color,"permissions":r.permissions,"managed":r.managed,"assignable":r.assignable} for r in roles],"channels":[{"id":x.discord_channel_id,"parent_id":x.parent_id,"name":x.name,"type":x.channel_type,"position":x.position,"nsfw":x.nsfw,"topic":x.topic} for x in channels],"webhooks":[{"id":x.discord_webhook_id,"channel_id":x.channel_id,"name":x.name,"type":x.webhook_type,"owner_id":x.owner_id} for x in webhooks],"emojis":[{"id":x.discord_emoji_id,"name":x.name,"animated":x.animated,"managed":x.managed,"available":x.available} for x in emojis],"invites":[{"code":x.code,"channel_id":x.channel_id,"inviter_id":x.inviter_id,"uses":x.uses,"max_uses":x.max_uses,"temporary":x.temporary,"expires_at":x.expires_at} for x in invites]}
+async def explorer(
+    guild_id: int,
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+):
+    await require_guild_management(session, current_user, guild_id)
+
+    guild = (
+        await session.execute(
+            select(Guild).where(Guild.guild_id == guild_id)
+        )
+    ).scalar_one()
+
+    async def rows(model, order):
+        return list(
+            (
+                await session.execute(
+                    select(model)
+                    .where(model.guild_id == guild_id)
+                    .order_by(order)
+                )
+            )
+            .scalars()
+            .all()
+        )
+
+    roles = await rows(
+        DiscordGuildRole,
+        DiscordGuildRole.position.desc(),
+    )
+    channels = await rows(
+        GuildChannel,
+        GuildChannel.position.asc(),
+    )
+    webhooks = await rows(
+        GuildWebhook,
+        GuildWebhook.name.asc(),
+    )
+    emojis = await rows(
+        GuildEmoji,
+        GuildEmoji.name.asc(),
+    )
+    invites = await rows(
+        GuildInvite,
+        GuildInvite.code.asc(),
+    )
+
+    members = (
+        await session.execute(
+            select(func.count())
+            .select_from(DiscordMember)
+            .where(
+                DiscordMember.guild_id == guild_id,
+                DiscordMember.is_active.is_(True),
+            )
+        )
+    ).scalar_one()
+
+    return {
+        "guild": {
+            "guild_id": guild.guild_id,
+            "name": guild.name,
+            "icon_url": guild.icon_url,
+            "member_count": guild.member_count,
+            "bot_status": guild.bot_status.value,
+            "last_sync_at": guild.last_sync_at,
+        },
+        "counts": {
+            "members": members,
+            "roles": len(roles),
+            "channels": len(channels),
+            "webhooks": len(webhooks),
+            "emojis": len(emojis),
+            "invites": len(invites),
+        },
+        "roles": [
+            {
+                "id": role.discord_role_id,
+                "name": role.name,
+                "position": role.position,
+                "color": role.color,
+                "permissions": role.permissions,
+                "managed": role.managed,
+                "assignable": role.assignable,
+            }
+            for role in roles
+        ],
+        "channels": [
+            {
+                "id": channel.discord_channel_id,
+                "parent_id": channel.parent_id,
+                "name": channel.name,
+                "type": channel.channel_type,
+                "position": channel.position,
+                "nsfw": channel.nsfw,
+                "topic": channel.topic,
+            }
+            for channel in channels
+        ],
+        "webhooks": [
+            {
+                "id": webhook.discord_webhook_id,
+                "channel_id": webhook.channel_id,
+                "name": webhook.name,
+                "type": webhook.webhook_type,
+                "owner_id": webhook.owner_id,
+            }
+            for webhook in webhooks
+        ],
+        "emojis": [
+            {
+                "id": emoji.discord_emoji_id,
+                "name": emoji.name,
+                "animated": emoji.animated,
+                "managed": emoji.managed,
+                "available": emoji.available,
+            }
+            for emoji in emojis
+        ],
+        "invites": [
+            {
+                "code": invite.code,
+                "channel_id": invite.channel_id,
+                "inviter_id": invite.inviter_id,
+                "uses": invite.uses,
+                "max_uses": invite.max_uses,
+                "temporary": invite.temporary,
+                "expires_at": invite.expires_at,
+            }
+            for invite in invites
+        ],
+    }
+
+
+@router.post(
+    "/discord/guilds/{guild_id}/structure/refresh",
+    status_code=status.HTTP_202_ACCEPTED,
+)
+async def refresh_discord_structure(
+    guild_id: int,
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+):
+    await require_guild_management(session, current_user, guild_id)
+
+    guild = (
+        await session.execute(
+            select(Guild).where(Guild.guild_id == guild_id)
+        )
+    ).scalar_one_or_none()
+
+    if guild is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Discord server was not found.",
+        )
+
+    redis = Redis.from_url(REDIS_URL, decode_responses=True)
+
+    try:
+        # BRPOP у Discord worker читає елементи справа.
+        # LPUSH зберігає нормальну FIFO-послідовність завдань.
+        await redis.lpush(
+            DISCORD_WORKER_QUEUE,
+            json.dumps(
+                {
+                    "job": "sync_roles",
+                    "guild_id": guild_id,
+                    "source": "admin_explorer",
+                }
+            ),
+        )
+        await redis.lpush(
+            DISCORD_WORKER_QUEUE,
+            json.dumps(
+                {
+                    "job": "sync_explorer",
+                    "guild_id": guild_id,
+                    "source": "admin_explorer",
+                }
+            ),
+        )
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Discord synchronization queue is unavailable.",
+        ) from exc
+    finally:
+        await redis.aclose()
+
+    return {
+        "success": True,
+        "status": "queued",
+        "guild_id": guild_id,
+        "message": (
+            "Discord channel and role synchronization was queued. "
+            "The updated inventory will appear in a few seconds."
+        ),
+    }
