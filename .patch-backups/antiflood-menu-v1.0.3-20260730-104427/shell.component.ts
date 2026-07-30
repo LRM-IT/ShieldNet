@@ -471,7 +471,6 @@ export class ShellComponent implements OnInit, OnDestroy {
 
   private readonly pluginNavDefinitions: PluginNavDefinition[] = [
     { keys: ['welcome'], label: 'Welcome', icon: '👋', path: 'plugins/welcome' },
-    { keys: ['antiflood', 'anti_flood', 'anti-flood'], label: 'AntiFlood', icon: '⏱', path: 'plugins/antiflood' },
 
     { keys: ['verification'], label: 'Verification', icon: '✓', path: 'verification' },
     { keys: ['leadership', 'r5_r4', 'r5-r4'], label: 'Leadership', icon: '★', path: 'leadership' },
