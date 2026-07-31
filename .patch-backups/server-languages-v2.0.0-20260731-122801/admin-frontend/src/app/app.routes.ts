@@ -1,5 +1,6 @@
 import { PlatformLanguagesComponent } from './pages/platform-languages.component';
 import { GuildLanguagesComponent } from './pages/guild-languages.component';
+import { MyLanguagesComponent } from './pages/my-languages.component';
 import { PluginVotingComponent } from './pages/plugin-voting.component';
 import { PlatformAIComponent } from './pages/platform-ai.component';
 import { HealthMonitorComponent } from './pages/health-monitor.component';
@@ -51,6 +52,7 @@ export const routes: Routes = [
   { path: 'login', component: LoginComponent },
   { path: 'control/auth', component: PlatformLoginComponent },
   { path: 'profile', component: ProfileComponent, canActivate: [authGuard] },
+  { path: 'my-languages', component: MyLanguagesComponent, canActivate: [authGuard] },
   { path: 'access-denied', component: AccessDeniedComponent },
   { path: 'servers', component: ServerSelectorComponent, canActivate: [authGuard] },
   { path: 'platform/ai', component: PlatformAIComponent, canActivate: [platformGuard] },

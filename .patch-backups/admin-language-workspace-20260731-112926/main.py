@@ -5,8 +5,6 @@ from fastapi import FastAPI
 
 from app.api.router import api_router
 from app.api.routes.global_languages import router as global_languages_router
-from app.api.routes.guild_languages import router as guild_languages_router
-from app.api.routes.user_languages import router as user_languages_router
 from app.api.routes.plugin_antiflood import router as plugin_antiflood_router
 from app.api.routes.plugin_voting import router as plugin_voting_router
 from app.api.routes.internal_plugin_voting import router as internal_plugin_voting_router
@@ -42,8 +40,6 @@ app.include_router(plugin_antiflood_router, prefix="/api/v1")
 app.include_router(plugin_voting_router, prefix="/api/v1")
 app.include_router(internal_plugin_voting_router, prefix="/api/v1")
 app.include_router(global_languages_router, prefix="/api/v1")
-app.include_router(guild_languages_router, prefix="/api/v1")
-app.include_router(user_languages_router, prefix="/api/v1")
 app.include_router(api_router, prefix="/api/v1")
 
 

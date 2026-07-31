@@ -162,7 +162,8 @@ interface PluginNavDefinition {
               }
             }
           </nav>
-<a routerLink="/profile" class="operator" aria-label="Open profile">
+
+        <a routerLink="/profile" class="operator" aria-label="Open profile">
           @if (auth.profile()?.avatar_url) {
             <img [src]="auth.profile()?.avatar_url" alt="" />
           } @else {
@@ -377,7 +378,6 @@ export class ShellComponent implements OnInit, OnDestroy {
     if (id) {
       commands.push(
         { id: 'members', label: 'palette.members', fallback: 'Open Members', icon: '◉', path: ['/guild', id, 'members'], guildOnly: true },
-        { id: 'guild-languages', label: 'Server languages', fallback: 'Open Server Languages', icon: '🌐', path: ['/guild', id, 'languages'], guildOnly: true },
         { id: 'security', label: 'palette.security', fallback: 'Open Security Center', icon: '◇', path: ['/guild', id, 'security'], guildOnly: true },
         { id: 'runtime', label: 'palette.runtime', fallback: 'Open Plugin Runtime', icon: '⬢', path: ['/guild', id, 'plugin-runtime'], guildOnly: true },
         { id: 'audit', label: 'palette.audit', fallback: 'Open Audit Trail', icon: '≡', path: ['/guild', id, 'audit'], guildOnly: true },
@@ -451,8 +451,7 @@ export class ShellComponent implements OnInit, OnDestroy {
 
   readonly serverCoreNavigation = computed<NavItem[]>(() => {
     const id = this.guildId();
-    if (!id) return [
-      { label: 'Server languages', icon: '🌐', path: ['/guild', id, 'languages'] },];
+    if (!id) return [];
     return [
       { label: 'shell.overview', icon: '◫', path: ['/guild', id], exact: true },
       { label: 'shell.members', icon: '◉', path: ['/guild', id, 'members'] },

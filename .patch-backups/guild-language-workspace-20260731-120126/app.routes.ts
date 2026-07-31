@@ -1,5 +1,5 @@
 import { PlatformLanguagesComponent } from './pages/platform-languages.component';
-import { GuildLanguagesComponent } from './pages/guild-languages.component';
+import { MyLanguagesComponent } from './pages/my-languages.component';
 import { PluginVotingComponent } from './pages/plugin-voting.component';
 import { PlatformAIComponent } from './pages/platform-ai.component';
 import { HealthMonitorComponent } from './pages/health-monitor.component';
@@ -51,6 +51,7 @@ export const routes: Routes = [
   { path: 'login', component: LoginComponent },
   { path: 'control/auth', component: PlatformLoginComponent },
   { path: 'profile', component: ProfileComponent, canActivate: [authGuard] },
+  { path: 'my-languages', component: MyLanguagesComponent, canActivate: [authGuard] },
   { path: 'access-denied', component: AccessDeniedComponent },
   { path: 'servers', component: ServerSelectorComponent, canActivate: [authGuard] },
   { path: 'platform/ai', component: PlatformAIComponent, canActivate: [platformGuard] },
@@ -73,7 +74,6 @@ export const routes: Routes = [
   { path: 'guild/:guildId/access-overview', component: GuildAccessOverviewComponent, canActivate: [guildGuard] },
 { path: 'guild/:guildId/access', component: GuildAccessComponent, canActivate: [guildGuard], data: { guildModule: 'access' } },
   { path: 'guild/:guildId/explorer', component: ExplorerComponent, canActivate: [guildGuard], data: { guildModule: 'members' } },
-  { path: 'guild/:guildId/languages', component: GuildLanguagesComponent, canActivate: [guildGuard], data: { guildModule: 'settings' } },
   { path: 'guild/:guildId/permission-simulator', component: PermissionSimulatorComponent, canActivate: [guildGuard], data: { guildModule: 'settings' } },
   { path: 'guild/:guildId/server-diff', component: ServerDiffComponent, canActivate: [guildGuard], data: { guildModule: 'settings' } },
   { path: 'guild/:guildId/backups', component: BackupsComponent, canActivate: [guildGuard], data: { guildModule: 'settings' } },

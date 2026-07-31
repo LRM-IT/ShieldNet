@@ -1,5 +1,3 @@
-import {GlobalLanguage} from '../core/global-language.service';
-import {GuildLanguageService} from '../core/guild-language.service';
 import {CommonModule} from '@angular/common';
 import {Component,OnInit,inject,signal} from '@angular/core';
 import {FormsModule} from '@angular/forms';
@@ -7,6 +5,8 @@ import { DiscordChannelPickerComponent } from '../shared/discord-channel-picker.
 import {ActivatedRoute} from '@angular/router';
 import {ShellComponent} from '../shared/shell.component';
 import {VotingService} from '../core/voting.service';
+import {GlobalLanguage} from '../core/global-language.service';
+import {UserLanguageService} from '../core/user-language.service';
 
 @Component({
  selector:'sn-plugin-voting',standalone:true,
@@ -66,7 +66,7 @@ import {VotingService} from '../core/voting.service';
  `]
 })
 export class PluginVotingComponent implements OnInit{
- private route=inject(ActivatedRoute);private api=inject(VotingService);private languageApi=inject(GuildLanguageService);
+ private route=inject(ActivatedRoute);private api=inject(VotingService);private languageApi=inject(UserLanguageService);
  polls=signal<any[]>([]);error=signal('');success=signal('');directoryLanguages=signal<GlobalLanguage[]>([]);selectedLanguageCode='';
  guildId=this.route.snapshot.paramMap.get('guildId')||'';
  languages:any[]=[{code:'en',title:'',description:''}];
@@ -74,7 +74,7 @@ export class PluginVotingComponent implements OnInit{
  form:any={primary_language:'en',fallback_language:'en',language_selection_mode:'automatic_with_selector',channel_id:'',selection_mode:'single',anonymous:true,allow_change_vote:true,show_live_results:true,min_choices:1,max_choices:1,allowed_role_ids:[],closes_at:''};
  ngOnInit(){this.reload();this.loadLanguages()}
  reload(){this.api.list(this.guildId).subscribe({next:v=>this.polls.set(v.items||[]),error:r=>this.error.set(r?.error?.detail||'Unable to load polls.')})}
- async loadLanguages(){try{const items=await this.languageApi.available(this.guildId);this.directoryLanguages.set(items);if(items.length&&!items.some(x=>x.code===this.form.primary_language)){this.form.primary_language=items[0].code;this.form.fallback_language=items[0].code;this.languages=[{code:items[0].code,title:'',description:''}];this.options=[{labels:{[items[0].code]:''}},{labels:{[items[0].code]:''}}]}}catch(e:any){this.error.set(e?.error?.detail||'Unable to load language directory.')}}availableLanguages(){return this.directoryLanguages().filter(x=>!this.languages.some(y=>y.code===x.code))}addSelectedLanguage(){const code=this.selectedLanguageCode;if(!code||this.languages.some(x=>x.code===code))return;this.languages.push({code,title:'',description:''});for(const o of this.options)o.labels[code]='';this.selectedLanguageCode=''}setPrimaryLanguage(code:string){if(!this.languages.some(x=>x.code===code)){this.languages.unshift({code,title:'',description:''});for(const o of this.options)o.labels[code]=''}this.form.fallback_language=code}
+ async loadLanguages(){try{const items=await this.languageApi.listForGuild(this.guildId);this.directoryLanguages.set(items);if(items.length&&!items.some(x=>x.code===this.form.primary_language)){this.form.primary_language=items[0].code;this.form.fallback_language=items[0].code;this.languages=[{code:items[0].code,title:'',description:''}];this.options=[{labels:{[items[0].code]:''}},{labels:{[items[0].code]:''}}]}}catch(e:any){this.error.set(e?.error?.detail||'Unable to load language directory.')}}availableLanguages(){return this.directoryLanguages().filter(x=>!this.languages.some(y=>y.code===x.code))}addSelectedLanguage(){const code=this.selectedLanguageCode;if(!code||this.languages.some(x=>x.code===code))return;this.languages.push({code,title:'',description:''});for(const o of this.options)o.labels[code]='';this.selectedLanguageCode=''}setPrimaryLanguage(code:string){if(!this.languages.some(x=>x.code===code)){this.languages.unshift({code,title:'',description:''});for(const o of this.options)o.labels[code]=''}this.form.fallback_language=code}
  removeLanguage(i:number){const code=this.languages[i].code;this.languages.splice(i,1);for(const o of this.options)delete o.labels[code]}
  addOption(){if(this.options.length>=10)return;const labels:any={};for(const l of this.languages)labels[l.code]='';this.options.push({labels})}
  copyPrimary(code:string){const src=this.languages.find(x=>x.code===this.form.primary_language);const dst=this.languages.find(x=>x.code===code);if(src&&dst){dst.title=src.title;dst.description=src.description}for(const o of this.options)o.labels[code]=o.labels[this.form.primary_language]||''}
