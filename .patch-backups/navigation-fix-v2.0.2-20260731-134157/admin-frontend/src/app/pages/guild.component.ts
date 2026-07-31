@@ -513,6 +513,7 @@ export class GuildComponent implements OnInit {
   );
 
   readonly quickActions: QuickAction[] = [
+    { title: 'Voting', description: 'Multilingual Discord polls', icon: '◉', path: 'plugins/voting', code: 'PLUGIN-VOTE' },
     { title: 'Members', description: 'Identity and member management', icon: '◉', path: 'members', code: 'CORE-01' },
     { title: 'Security', description: 'Risks and security controls', icon: '◇', path: 'security', code: 'CORE-02' },
     { title: 'Explorer', description: 'Discord roles and channels', icon: '⌁', path: 'explorer', code: 'CORE-03' },

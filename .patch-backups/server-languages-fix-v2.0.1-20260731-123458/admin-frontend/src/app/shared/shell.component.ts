@@ -451,12 +451,12 @@ export class ShellComponent implements OnInit, OnDestroy {
 
   readonly serverCoreNavigation = computed<NavItem[]>(() => {
     const id = this.guildId();
-    if (!id) return [];
+    if (!id) return [
+      { label: 'Server languages', icon: '🌐', path: ['/guild', id, 'languages'] },];
     return [
       { label: 'shell.overview', icon: '◫', path: ['/guild', id], exact: true },
       { label: 'shell.members', icon: '◉', path: ['/guild', id, 'members'] },
       { label: 'shell.security', icon: '◇', path: ['/guild', id, 'security'] },
-      { label: 'Server languages', icon: '🌐', path: ['/guild', id, 'languages'] },
     ];
   });
 
