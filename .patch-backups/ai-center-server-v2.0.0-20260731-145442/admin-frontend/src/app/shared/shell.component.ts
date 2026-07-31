@@ -101,6 +101,7 @@ interface PluginNavDefinition {
                 </button>
                 @if (accordionOpen('intelligence')) {
                   <div class="accordion-items">
+                    <a routerLink="/platform/ai" routerLinkActive="active"><span class="nav-icon">AI</span><span>AI Center</span></a>
                   </div>
                 }
               </section>
@@ -421,6 +422,7 @@ export class ShellComponent implements OnInit, OnDestroy {
     if (url.startsWith('/platform/jobs') || url.startsWith('/platform/operations') ||
         url.startsWith('/platform/health') || url.startsWith('/platform/logs') ||
         url.startsWith('/platform/notifications')) section = 'operations';
+    else if (url.startsWith('/platform/ai')) section = 'intelligence';
     else if (url.startsWith('/platform')) section = 'platform';
     else if (url.includes('/plugins/')) section = 'plugins';
     else if (url.includes('/plugin-runtime') || url.includes('/audit') ||

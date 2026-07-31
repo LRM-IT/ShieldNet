@@ -1,14 +1,14 @@
-import asyncio
 import time
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
 from typing import Any
+from uuid import UUID
 
 import httpx
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.ai_gateway import GuildAIProvider, GuildAIRequestLog, GuildAIRoute, GuildAIRouteTarget, GuildAIUsage
+from app.models.ai_gateway import GuildAIModuleSetting, GuildAIProvider, GuildAIRequestLog, GuildAIUsage
+from app.models.platform_ai import PlatformAIProvider, PlatformAISettings
 from app.services.ai_gateway import DEFAULT_BASE_URLS
 from app.services.ai_secrets import AISecretService
 
@@ -23,12 +23,6 @@ class AIResult:
 
 
 class AIRuntimeService:
-    """Central server AI entry point used by every plugin.
-
-    Plugins specify only guild_id, module_key and capability. Provider selection,
-    retries, fallback and circuit breaking are resolved from the server AI Center.
-    """
-
     def __init__(self, session: AsyncSession):
         self.session = session
 
@@ -37,113 +31,109 @@ class AIRuntimeService:
                       target_language: str | None = None, model: str | None = None,
                       temperature: float | None = None, max_output_tokens: int | None = None,
                       metadata: dict[str, Any] | None = None) -> tuple[GuildAIProvider, AIResult]:
-        route = await self._route(guild_id, capability)
-        if route is None or not route.enabled:
-            raise LookupError(f"No enabled server AI route configured for capability '{capability}'")
+        platform_settings = await self.session.get(PlatformAISettings, 1)
+        if platform_settings and platform_settings.emergency_stop:
+            raise RuntimeError("Platform AI emergency stop is enabled")
 
-        targets = await self._targets(route)
-        if not targets:
-            raise LookupError(f"AI route '{capability}' has no enabled providers")
+        setting = await self._setting(guild_id, module_key, capability)
+        candidates = await self._providers(guild_id, setting)
+        if not candidates:
+            raise LookupError(f"No enabled AI provider configured for {module_key}/{capability}")
+
+        defaults = (platform_settings.defaults or {}) if platform_settings else {}
+        platform_default_model = (
+            defaults.get(f"{module_key}:{capability}")
+            or defaults.get(capability)
+            or defaults.get(module_key)
+        )
 
         failures: list[str] = []
-        attempts = 0
-        for target, provider in targets:
-            if attempts >= route.max_total_attempts:
-                break
-            if provider.circuit_open_until and provider.circuit_open_until > datetime.now(timezone.utc):
-                failures.append(f"{provider.name}: circuit open")
-                continue
+        for provider in candidates:
+            selected_model = (
+                model
+                or (setting.model if setting else None)
+                or provider.default_model
+                or platform_default_model
+            )
+            try:
+                result = await self._call_provider(
+                    provider=provider, capability=capability, input_text=input_text,
+                    system_prompt=system_prompt, source_language=source_language,
+                    target_language=target_language, model=selected_model,
+                    temperature=temperature, max_output_tokens=max_output_tokens,
+                )
+                await self._record(provider, guild_id, module_key, capability, result, "success", metadata or {})
+                await self.session.commit()
+                return provider, result
+            except Exception as exc:
+                failures.append(f"{provider.name}: {str(exc)[:250]}")
+                await self._record_failure(provider, guild_id, module_key, capability, selected_model, exc, metadata or {})
+                await self.session.commit()
+        raise RuntimeError("All configured AI providers failed: " + " | ".join(failures))
 
-            retry_count = max(0, target.retries)
-            for retry in range(retry_count + 1):
-                if attempts >= route.max_total_attempts:
-                    break
-                attempts += 1
-                selected_model = model or target.model or provider.default_model
-                try:
-                    result = await self._call_provider(
-                        provider=provider, capability=capability, input_text=input_text,
-                        system_prompt=system_prompt, source_language=source_language,
-                        target_language=target_language, model=selected_model,
-                        temperature=temperature, max_output_tokens=max_output_tokens,
-                        timeout_seconds=target.timeout_seconds,
-                    )
-                    provider.consecutive_failures = 0
-                    provider.circuit_open_until = None
-                    provider.last_error = None
-                    await self._record(provider, guild_id, module_key, capability, result, "success", {
-                        **(metadata or {}), "route_id": str(route.id), "route_position": target.position,
-                        "attempt": attempts, "retry": retry,
-                    })
-                    await self.session.commit()
-                    return provider, result
-                except Exception as exc:
-                    failures.append(f"{provider.name}[{attempts}]: {str(exc)[:250]}")
-                    provider.consecutive_failures = (provider.consecutive_failures or 0) + 1
-                    provider.last_error = str(exc)[:2000]
-                    if provider.consecutive_failures >= route.failure_threshold:
-                        provider.circuit_open_until = datetime.now(timezone.utc) + timedelta(seconds=route.cooldown_seconds)
-                    await self._record_failure(provider, guild_id, module_key, capability, selected_model, exc, {
-                        **(metadata or {}), "route_id": str(route.id), "route_position": target.position,
-                        "attempt": attempts, "retry": retry,
-                    })
-                    await self.session.commit()
-                    if retry < retry_count:
-                        await asyncio.sleep(min(2 ** retry, 5))
-
-        raise RuntimeError("All providers in the server AI route failed: " + " | ".join(failures))
-
-    async def translate(self, *, guild_id: int, module_key: str, text: str,
-                        target_language: str, source_language: str = "auto",
-                        **kwargs: Any) -> str:
-        _, result = await self.execute(
-            guild_id=guild_id, module_key=module_key, capability="translation",
-            input_text=text, source_language=source_language, target_language=target_language, **kwargs,
-        )
-        return result.text
-
-    async def recognize(self, *, guild_id: int, module_key: str, text: str,
-                        instruction: str | None = None, **kwargs: Any) -> str:
-        _, result = await self.execute(
-            guild_id=guild_id, module_key=module_key, capability="recognition",
-            input_text=text, system_prompt=instruction, **kwargs,
-        )
-        return result.text
-
-    async def _route(self, guild_id: int, capability: str) -> GuildAIRoute | None:
-        result = await self.session.execute(select(GuildAIRoute).where(
-            GuildAIRoute.guild_id == guild_id,
-            GuildAIRoute.capability == capability.strip().lower(),
+    async def _setting(self, guild_id: int, module_key: str, capability: str) -> GuildAIModuleSetting | None:
+        result = await self.session.execute(select(GuildAIModuleSetting).where(
+            GuildAIModuleSetting.guild_id == guild_id,
+            GuildAIModuleSetting.module_key == module_key,
+            GuildAIModuleSetting.capability == capability,
+            GuildAIModuleSetting.enabled.is_(True),
         ))
         return result.scalar_one_or_none()
 
-    async def _targets(self, route: GuildAIRoute) -> list[tuple[GuildAIRouteTarget, GuildAIProvider]]:
-        result = await self.session.execute(
-            select(GuildAIRouteTarget, GuildAIProvider)
-            .join(GuildAIProvider, GuildAIProvider.id == GuildAIRouteTarget.provider_id)
-            .where(
-                GuildAIRouteTarget.route_id == route.id,
-                GuildAIRouteTarget.enabled.is_(True),
-                GuildAIProvider.guild_id == route.guild_id,
-                GuildAIProvider.enabled.is_(True),
-            )
-            .order_by(GuildAIRouteTarget.position)
+    async def _providers(
+        self,
+        guild_id: int,
+        setting: GuildAIModuleSetting | None,
+    ) -> list[GuildAIProvider | PlatformAIProvider]:
+        ids: list[UUID] = []
+        if setting and setting.provider_id:
+            ids.append(setting.provider_id)
+        if setting:
+            for raw in setting.fallback_provider_ids or []:
+                try:
+                    value = UUID(str(raw))
+                    if value not in ids:
+                        ids.append(value)
+                except ValueError:
+                    continue
+
+        query = select(GuildAIProvider).where(
+            GuildAIProvider.guild_id == guild_id,
+            GuildAIProvider.enabled.is_(True),
         )
-        return list(result.all())
+        result = await self.session.execute(
+            query.order_by(GuildAIProvider.priority, GuildAIProvider.name)
+        )
+        available = list(result.scalars().all())
+
+        if ids:
+            by_id = {item.id: item for item in available}
+            available = [by_id[item_id] for item_id in ids if item_id in by_id]
+
+        if available:
+            return available
+
+        platform_result = await self.session.execute(
+            select(PlatformAIProvider)
+            .where(PlatformAIProvider.enabled.is_(True))
+            .order_by(
+                PlatformAIProvider.priority,
+                PlatformAIProvider.name,
+            )
+        )
+        return list(platform_result.scalars().all())
 
     async def _call_provider(self, *, provider: GuildAIProvider, capability: str, input_text: str,
                              system_prompt: str | None, source_language: str | None,
                              target_language: str | None, model: str | None,
-                             temperature: float | None, max_output_tokens: int | None,
-                             timeout_seconds: int | None) -> AIResult:
+                             temperature: float | None, max_output_tokens: int | None) -> AIResult:
         started = time.perf_counter()
         key = AISecretService.decrypt(provider.encrypted_api_key)
         base = (provider.api_base_url or DEFAULT_BASE_URLS.get(provider.provider_type) or "").rstrip("/")
         if not base:
             raise ValueError("Provider API base URL is missing")
         prompt = self._prompt(capability, input_text, system_prompt, source_language, target_language)
-        timeout = timeout_seconds or provider.timeout_seconds
-        async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as client:
+        async with httpx.AsyncClient(timeout=provider.timeout_seconds, follow_redirects=True) as client:
             if provider.provider_type in {"openai", "xai", "groq", "openai_compatible"}:
                 data = await self._openai(client, base, key, model, prompt, temperature, max_output_tokens, provider)
             elif provider.provider_type == "anthropic":
@@ -163,19 +153,24 @@ class AIRuntimeService:
             direction = f" from {source}" if source and source != "auto" else ""
             instruction = f"Translate the following text{direction} to {target or 'the requested target language'}. Preserve Discord mentions, URLs, Markdown, emoji, names and line breaks. Return only the translation."
         else:
-            instruction = system_prompt or "Analyze the supplied input and return only the requested result."
+            instruction = system_prompt or "Respond to the supplied input accurately and concisely."
         if system_prompt and capability == "translation":
             instruction += "\nAdditional rules: " + system_prompt
         return instruction + "\n\nINPUT:\n" + text
 
     async def _openai(self, client, base, key, model, prompt, temperature, max_tokens, provider) -> AIResult:
-        if not model: raise ValueError("Model is required")
+        if not model:
+            raise ValueError("Model is required")
         headers = {"Authorization": f"Bearer {key}", "Content-Type": "application/json"}
-        if provider.organization_id: headers["OpenAI-Organization"] = provider.organization_id
-        if provider.project_id: headers["OpenAI-Project"] = provider.project_id
+        if provider.organization_id:
+            headers["OpenAI-Organization"] = provider.organization_id
+        if provider.project_id:
+            headers["OpenAI-Project"] = provider.project_id
         payload: dict[str, Any] = {"model": model, "input": prompt, "store": False}
-        if temperature is not None: payload["temperature"] = temperature
-        if max_tokens is not None: payload["max_output_tokens"] = max_tokens
+        if temperature is not None:
+            payload["temperature"] = temperature
+        if max_tokens is not None:
+            payload["max_output_tokens"] = max_tokens
         response = await client.post(f"{base}/responses", headers=headers, json=payload)
         if response.status_code == 404:
             chat_payload: dict[str, Any] = {"model": model, "messages": [{"role": "user", "content": prompt}]}
@@ -239,13 +234,52 @@ class AIRuntimeService:
         if response.status_code >= 400:
             raise RuntimeError(f"Provider HTTP {response.status_code}: {response.text[:500]}")
 
+    @staticmethod
+    def _provider_log_data(provider, metadata):
+        is_platform = isinstance(provider, PlatformAIProvider)
+        result = dict(metadata)
+        if is_platform:
+            result.update({
+                "provider_scope": "platform",
+                "platform_provider_id": str(provider.id),
+                "platform_provider_name": provider.name,
+            })
+        else:
+            result.setdefault("provider_scope", "guild")
+        return (None if is_platform else provider.id), result
+
     async def _record(self, provider, guild_id, module_key, capability, result, status, metadata):
-        self.session.add(GuildAIUsage(guild_id=guild_id, provider_id=provider.id, module_key=module_key,
-            capability=capability, model=result.model, input_units=result.input_units, output_units=result.output_units))
-        self.session.add(GuildAIRequestLog(guild_id=guild_id, provider_id=provider.id, module_key=module_key,
-            capability=capability, model=result.model, status=status, latency_ms=result.latency_ms, metadata_json=metadata))
+        provider_id, metadata_json = self._provider_log_data(provider, metadata)
+        self.session.add(GuildAIUsage(
+            guild_id=guild_id,
+            provider_id=provider_id,
+            module_key=module_key,
+            capability=capability,
+            model=result.model,
+            input_units=result.input_units,
+            output_units=result.output_units,
+        ))
+        self.session.add(GuildAIRequestLog(
+            guild_id=guild_id,
+            provider_id=provider_id,
+            module_key=module_key,
+            capability=capability,
+            model=result.model,
+            status=status,
+            latency_ms=result.latency_ms,
+            metadata_json=metadata_json,
+        ))
 
     async def _record_failure(self, provider, guild_id, module_key, capability, model, exc, metadata):
-        self.session.add(GuildAIRequestLog(guild_id=guild_id, provider_id=provider.id, module_key=module_key,
-            capability=capability, model=model, status="error", error_code=exc.__class__.__name__,
-            error_message=str(exc)[:2000], metadata_json=metadata))
+        provider_id, metadata_json = self._provider_log_data(provider, metadata)
+        self.session.add(GuildAIRequestLog(
+            guild_id=guild_id,
+            provider_id=provider_id,
+            module_key=module_key,
+            capability=capability,
+            model=model,
+            status="error",
+            error_code=exc.__class__.__name__,
+            error_message=str(exc)[:2000],
+            metadata_json=metadata_json,
+        ))

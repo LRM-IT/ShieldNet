@@ -1,13 +1,13 @@
 """Global language directory.
 
 Revision ID: 0061_global_languages
-Revises: 0060_voting_plugin
+Revises: 0061_global_languages
 """
 from alembic import op
 import sqlalchemy as sa
 
 revision = "0061_global_languages"
-down_revision = "0060_voting_plugin"
+down_revision = "0061_global_languages"
 branch_labels = None
 depends_on = None
 

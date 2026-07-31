@@ -2,6 +2,7 @@ import { GuildAIComponent } from './pages/guild-ai.component';
 import { PlatformLanguagesComponent } from './pages/platform-languages.component';
 import { GuildLanguagesComponent } from './pages/guild-languages.component';
 import { PluginVotingComponent } from './pages/plugin-voting.component';
+import { PlatformAIComponent } from './pages/platform-ai.component';
 import { HealthMonitorComponent } from './pages/health-monitor.component';
 import { LiveLogsComponent } from './pages/live-logs.component';
 import { PluginRuntimeUsageComponent } from './pages/plugin-runtime-usage.component';
