@@ -122,15 +122,13 @@ export class DiscordChannelPickerComponent implements OnInit, OnChanges {
   readonly channels = signal<ChannelOption[]>([]);
   query = '';
 
-  normalizedValue(): string {
-    return this.value === null || this.value === undefined || this.value === ''
-      ? ''
-      : String(this.value);
-  }
+  readonly normalizedValue = computed(() =>
+    this.value === null || this.value === undefined || this.value === '' ? '' : String(this.value)
+  );
 
-  selected(): ChannelOption | null {
-    return this.channels().find((item) => item.id === this.normalizedValue()) || null;
-  }
+  readonly selected = computed(() =>
+    this.channels().find((item) => item.id === this.normalizedValue()) || null
+  );
 
   readonly groupedOptions = computed(() => {
     const query = this.query.trim().toLowerCase();
@@ -163,9 +161,8 @@ export class DiscordChannelPickerComponent implements OnInit, OnChanges {
   toggle(): void { this.open.update((value) => !value); }
 
   choose(channel: ChannelOption | null): void {
-    const selectedId = channel?.id ?? null;
-    this.value = selectedId;
-    this.valueChange.emit(selectedId);
+    this.value = channel?.id || null;
+    this.valueChange.emit(channel?.id || null);
     this.open.set(false);
     this.query = '';
   }

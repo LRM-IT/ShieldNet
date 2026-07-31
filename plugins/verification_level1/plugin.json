@@ -1,0 +1,41 @@
+{
+  "id": "verification_level1",
+  "name": "Verification Level 1",
+  "version": "1.1.0",
+  "description": "Self-verification with configurable alliance/name mask, role assignment, rename command and temporary success messages.",
+  "author": "LRM-IT",
+  "min_core_version": "5.1.0",
+  "components": {
+    "backend": true,
+    "frontend": true,
+    "bot": true
+  },
+  "capabilities": [
+    "discord.read.guild",
+    "discord.read.members",
+    "discord.send.message",
+    "discord.manage.member",
+    "events.publish"
+  ],
+  "permissions": [
+    "manage_nicknames",
+    "manage_roles",
+    "send_messages",
+    "manage_messages",
+    "use_application_commands"
+  ],
+  "dependencies": {},
+  "ui": {
+    "navigation": {
+      "label": "Verification Level 1",
+      "icon": "✅",
+      "route": "plugins/verification-level1"
+    }
+  },
+  "entrypoints": {
+    "backend": "runtime:VerificationLevel1Plugin",
+    "frontend": "admin-frontend/src/app/pages/plugin-verification-level1.component.ts",
+    "bot": "bot/bot/plugin_verification_level1.py"
+  },
+  "entrypoint": "runtime.py"
+}

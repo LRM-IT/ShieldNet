@@ -32,7 +32,7 @@ import {GlobalLanguage,GlobalLanguageService} from '../core/global-language.serv
     <label><input type="checkbox" [(ngModel)]="form.show_live_results"> Live results</label>
    </div>
    <section class="language" *ngFor="let lang of languages;let li=index">
-    <div class="head"><h4 class="language-title">{{languageLabel(lang.code)}}</h4><div>
+    <div class="head"><h4>{{lang.code}}</h4><div>
       <button (click)="copyPrimary(lang.code)">Copy source</button>
       <button (click)="removeLanguage(li)" [disabled]="lang.code===form.primary_language">Remove</button>
     </div></div>
@@ -57,7 +57,7 @@ import {GlobalLanguage,GlobalLanguageService} from '../core/global-language.serv
  styles:[`
  .page{display:grid;gap:1rem;padding:1rem}header,.head,.poll,.actions{display:flex;justify-content:space-between;align-items:center;gap:1rem}
  h2,h3,h4,p{margin:0}small{color:var(--primary);letter-spacing:.12em}.panel,.language,.poll,.notice{border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:1rem}
- .panel,.language{display:grid;gap:1rem}.language-title{display:flex;align-items:center;gap:.45rem;font-size:1rem}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.7rem}label{display:grid;gap:.35rem;color:var(--muted);font-size:.78rem}
+ .panel,.language{display:grid;gap:1rem}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.7rem}label{display:grid;gap:.35rem;color:var(--muted);font-size:.78rem}
  input,textarea,select,button{font:inherit;border:1px solid var(--line);border-radius:8px;background:#081019;color:var(--text);padding:.7rem}textarea{min-height:90px}
  .toggles{display:flex;gap:1rem}.toggles label{display:flex;align-items:center}.option{display:grid;grid-template-columns:30px 1fr;align-items:center;gap:.5rem}
  button{cursor:pointer}.primary{background:var(--primary);color:#03130e}.poll{margin-top:.55rem}.success{color:var(--success)}.error{color:#ff8290}
@@ -80,16 +80,6 @@ export class PluginVotingComponent implements OnInit{
  create(){this.error.set('');const translations:any={};for(const l of this.languages)translations[l.code]={title:l.title,description:l.description};const payload={...this.form,channel_id:this.form.channel_id?String(this.form.channel_id):null,closes_at:this.form.closes_at||null,translations,options:this.options.map(o=>({emoji:null,translations:o.labels}))};this.api.create(this.guildId,payload).subscribe({next:()=>{this.success.set('Poll saved.');this.reload()},error:r=>this.error.set(r?.error?.detail||'Unable to save poll.')})}
  publish(p:any){this.api.publish(this.guildId,p.id).subscribe({next:()=>{this.success.set('Publication queued.');this.reload()},error:r=>this.error.set(r?.error?.detail||'Unable to publish.')})}
  close(p:any){this.api.close(this.guildId,p.id).subscribe({next:()=>this.reload(),error:r=>this.error.set(r?.error?.detail||'Unable to close.')})}
- languageLabel(code:string){
-  const language=this.directoryLanguages().find(item=>item.code===code);
-  if(!language)return `🌐 ${code.toUpperCase()}`;
-  const flag=(language.flag||'🌐').trim();
-  const name=(language.name||language.native_name||code.toUpperCase()).trim();
-  const nativeName=(language.native_name||'').trim();
-  return nativeName&&nativeName.toLocaleLowerCase()!==name.toLocaleLowerCase()
-    ? `${flag} ${name} — ${nativeName}`
-    : `${flag} ${name}`;
- }
  title(p:any){return p.translations?.[p.primary_language]?.title||'Untitled poll'}
  total(p:any){return (p.options||[]).reduce((n:number,x:any)=>n+(x.votes||0),0)}
 }

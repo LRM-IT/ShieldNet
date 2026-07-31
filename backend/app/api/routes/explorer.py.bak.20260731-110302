@@ -116,8 +116,8 @@ async def explorer(
         ],
         "channels": [
             {
-                "id": str(channel.discord_channel_id),
-                "parent_id": str(channel.parent_id) if channel.parent_id is not None else None,
+                "id": channel.discord_channel_id,
+                "parent_id": channel.parent_id,
                 "name": channel.name,
                 "type": channel.channel_type,
                 "position": channel.position,
