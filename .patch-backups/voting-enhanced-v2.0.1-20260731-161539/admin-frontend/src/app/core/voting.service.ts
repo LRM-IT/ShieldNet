@@ -11,7 +11,6 @@ export class VotingService {
   remove(guildId:string,pollId:string){return this.http.delete<void>(`/api/v1/discord/guilds/${guildId}/plugins/voting/polls/${pollId}`)}
   publish(guildId:string,pollId:string){return this.http.post<any>(`/api/v1/discord/guilds/${guildId}/plugins/voting/polls/${pollId}/publish`,{})}
   close(guildId:string,pollId:string){return this.http.post<any>(`/api/v1/discord/guilds/${guildId}/plugins/voting/polls/${pollId}/close`,{})}
-  previewTranslation(guildId:string,payload:any){return this.http.post<any>(`/api/v1/discord/guilds/${guildId}/plugins/voting/translations/preview`,payload)}
   generate(guildId:string,pollId:string,language:string,payload:any){
     return this.http.post<any>(`/api/v1/discord/guilds/${guildId}/plugins/voting/polls/${pollId}/translations/${language}/generate`,payload)
   }

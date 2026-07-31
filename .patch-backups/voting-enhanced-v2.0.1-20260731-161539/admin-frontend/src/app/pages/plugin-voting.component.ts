@@ -56,7 +56,7 @@ import {VotingService} from '../core/voting.service';
       <h4>{{languageLabel(lang.code)}}</h4>
       <div class="lang-actions">
         <button (click)="copyPrimary(lang.code)" [disabled]="lang.code===form.primary_language">Copy source</button>
-        <button class="ai" (click)="translateLanguage(lang.code)" [disabled]="lang.code===form.primary_language || translating">
+        <button class="ai" (click)="translateLanguage(lang.code)" [disabled]="!editingId || lang.code===form.primary_language || translating">
           {{translating ? 'Translating…' : '✨ Translate with AI'}}
         </button>
       </div>
@@ -129,35 +129,7 @@ export class PluginVotingComponent implements OnInit{
  payload(){const translations:any={};for(const l of this.languages)translations[l.code]={title:l.title,description:l.description};return {...this.form,channel_id:this.form.channel_id?String(this.form.channel_id):null,closes_at:this.form.closes_at||null,translations,options:this.options.map(o=>({emoji:null,translations:o.labels}))}}
  save(){this.error.set('');const req=this.editingId?this.api.update(this.guildId,this.editingId,this.payload()):this.api.create(this.guildId,this.payload());req.subscribe({next:()=>{this.success.set(this.editingId?'Poll updated.':'Poll saved.');this.newPoll();this.reload()},error:r=>this.error.set(r?.error?.detail||'Unable to save poll.')})}
  edit(p:any){this.editingId=p.id;this.form={primary_language:p.primary_language,fallback_language:p.fallback_language,language_selection_mode:p.language_selection_mode,channel_id:p.channel_id||'',selection_mode:p.selection_mode,anonymous:p.anonymous,allow_change_vote:p.allow_change_vote,show_live_results:p.show_live_results,min_choices:p.min_choices,max_choices:p.max_choices,allowed_role_ids:p.allowed_role_ids||[],closes_at:p.closes_at?String(p.closes_at).slice(0,16):''};this.languages=Object.entries(p.translations||{}).map(([code,v]:any)=>({code,title:v.title||'',description:v.description||''}));this.options=(p.options||[]).map((o:any)=>({labels:Object.fromEntries(Object.entries(o.translations||{}).map(([code,v]:any)=>[code,v.label||'']))}));this.activeLanguage=p.primary_language;window.scrollTo({top:0,behavior:'smooth'})}
- translateLanguage(code:string){
-  const source=this.languages.find(x=>x.code===this.form.primary_language);
-  const target=this.languages.find(x=>x.code===code);
-  if(!source||!target||code===this.form.primary_language)return;
-  if(!String(source.title||'').trim()){this.error.set('Fill in the title in the primary language first.');this.activeLanguage=this.form.primary_language;return}
-  this.error.set('');this.translating=true;
-  const apply=(r:any)=>{
-    target.title=r.translation?.title||'';
-    target.description=r.translation?.description||'';
-    for(const item of r.options||[]){
-      const index=Number(item.position);
-      if(Number.isInteger(index)&&this.options[index])this.options[index].labels[code]=item.label||'';
-    }
-    this.success.set('AI translation completed.');this.translating=false;
-  };
-  const fail=(e:any)=>{this.error.set(e?.error?.detail||'AI translation failed.');this.translating=false};
-  if(this.editingId){
-    this.api.generate(this.guildId,this.editingId,code,{source_language:this.form.primary_language,overwrite_existing:true})
-      .subscribe({next:apply,error:fail});
-  }else{
-    this.api.previewTranslation(this.guildId,{
-      source_language:this.form.primary_language,
-      target_language:code,
-      title:source.title,
-      description:source.description||null,
-      options:this.options.map((o:any)=>o.labels[this.form.primary_language]||'')
-    }).subscribe({next:apply,error:fail});
-  }
- }
+ translateLanguage(code:string){if(!this.editingId)return;this.translating=true;this.api.generate(this.guildId,this.editingId,code,{source_language:this.form.primary_language,overwrite_existing:true}).subscribe({next:r=>{const lang=this.languages.find(x=>x.code===code);if(lang){lang.title=r.translation?.title||'';lang.description=r.translation?.description||''}for(const item of r.options||[]){const idx=(this.options||[]).findIndex((_:any,i:number)=>i===(r.options||[]).indexOf(item));if(idx>=0)this.options[idx].labels[code]=item.label}this.success.set('AI translation completed.');this.translating=false},error:e=>{this.error.set(e?.error?.detail||'AI translation failed.');this.translating=false}})}
  publish(p:any){this.api.publish(this.guildId,p.id).subscribe({next:()=>{this.success.set('Publication queued.');this.reload()},error:r=>this.error.set(r?.error?.detail||'Unable to publish.')})}
  close(p:any){this.api.close(this.guildId,p.id).subscribe({next:()=>this.reload(),error:r=>this.error.set(r?.error?.detail||'Unable to close.')})}
  removePoll(p:any){if(!confirm(`Delete poll "${this.title(p)}"?`))return;this.api.remove(this.guildId,p.id).subscribe({next:()=>{if(this.editingId===p.id)this.newPoll();this.success.set('Poll deleted.');this.reload()},error:r=>this.error.set(r?.error?.detail||'Unable to delete poll.')})}

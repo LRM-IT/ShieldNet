@@ -42,14 +42,6 @@ class PollCreate(BaseModel):
     options: list[OptionIn]
 
 
-
-class TranslationPreview(BaseModel):
-    source_language: str
-    target_language: str
-    title: str
-    description: str | None = None
-    options: list[str] = Field(default_factory=list)
-
 class TranslationGenerate(BaseModel):
     source_language: str | None = None
     overwrite_existing: bool = False
@@ -253,63 +245,6 @@ async def close_poll(guild_id: int, poll_id: UUID,
     session.add(VotingPublicationJob(poll_id=poll.id, action="refresh"))
     await session.commit()
     return {"status": "closed"}
-
-
-
-@router.post("/discord/guilds/{guild_id}/plugins/voting/translations/preview")
-async def preview_translation(guild_id: int, payload: TranslationPreview,
-                              current_user: User = Depends(get_current_user),
-                              session: AsyncSession = Depends(get_db_session)):
-    await require_guild_management(session, current_user, guild_id)
-    source = payload.source_language.strip().lower()
-    target = payload.target_language.strip().lower()
-    if not payload.title.strip():
-        raise HTTPException(422, "Source title is required.")
-    if source == target:
-        return {
-            "status": "translated",
-            "source_language": source,
-            "target_language": target,
-            "translation": {
-                "title": payload.title,
-                "description": payload.description,
-            },
-            "options": [{"position": i, "label": text} for i, text in enumerate(payload.options)],
-        }
-
-    runtime = AIRuntimeService(session)
-    title = await runtime.translate(
-        guild_id=guild_id, module_key="voting",
-        text=payload.title, source_language=source, target_language=target,
-        metadata={"mode": "preview", "field": "title"},
-    )
-    description = None
-    if payload.description and payload.description.strip():
-        description = await runtime.translate(
-            guild_id=guild_id, module_key="voting",
-            text=payload.description, source_language=source, target_language=target,
-            metadata={"mode": "preview", "field": "description"},
-        )
-
-    translated_options = []
-    for index, text in enumerate(payload.options):
-        if not str(text or "").strip():
-            translated_options.append({"position": index, "label": ""})
-            continue
-        label = await runtime.translate(
-            guild_id=guild_id, module_key="voting",
-            text=text, source_language=source, target_language=target,
-            metadata={"mode": "preview", "field": "option", "position": index},
-        )
-        translated_options.append({"position": index, "label": label})
-
-    return {
-        "status": "translated",
-        "source_language": source,
-        "target_language": target,
-        "translation": {"title": title, "description": description},
-        "options": translated_options,
-    }
 
 
 @router.post("/discord/guilds/{guild_id}/plugins/voting/polls/{poll_id}/translations/{language_code}/generate")
