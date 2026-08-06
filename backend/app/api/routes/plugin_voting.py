@@ -38,6 +38,11 @@ class PollCreate(BaseModel):
     max_choices: int = 1
     allowed_role_ids: list[int] = Field(default_factory=list)
     closes_at: datetime | None = None
+    result_template_id: UUID | None = None
+    result_language: str | None = None
+    result_qr_url: str | None = None
+    publish_result_image: bool = True
+    result_settings: dict = Field(default_factory=dict)
     translations: dict[str, dict[str, str | None]]
     options: list[OptionIn]
 
@@ -95,6 +100,12 @@ async def serialize_poll(session: AsyncSession, poll: VotingPoll):
         "min_choices": poll.min_choices, "max_choices": poll.max_choices,
         "allowed_role_ids": [str(x) for x in (poll.allowed_role_ids or [])],
         "closes_at": poll.closes_at,
+        "result_template_id": str(poll.result_template_id) if poll.result_template_id else None,
+        "result_language": poll.result_language,
+        "result_qr_url": poll.result_qr_url,
+        "publish_result_image": poll.publish_result_image,
+        "result_settings": poll.result_settings or {},
+        "result_message_id": str(poll.result_message_id) if getattr(poll, "result_message_id", None) else None,
         "translations": {
             t.language_code: {
                 "title": t.title, "description": t.description,
@@ -132,6 +143,11 @@ async def apply_payload(session: AsyncSession, poll: VotingPoll, payload: PollCr
     poll.max_choices = payload.max_choices
     poll.allowed_role_ids = [int(x) for x in payload.allowed_role_ids]
     poll.closes_at = payload.closes_at
+    poll.result_template_id = payload.result_template_id
+    poll.result_language = payload.result_language or payload.primary_language
+    poll.result_qr_url = str(payload.result_qr_url).strip() if payload.result_qr_url else None
+    poll.publish_result_image = payload.publish_result_image
+    poll.result_settings = payload.result_settings or {}
 
     await session.execute(delete(VotingPollTranslation).where(VotingPollTranslation.poll_id == poll.id))
     existing_options = list((await session.execute(
@@ -250,7 +266,7 @@ async def close_poll(guild_id: int, poll_id: UUID,
     poll = await get_poll_row(session, guild_id, poll_id)
     poll.status = "closed"
     poll.closed_at = datetime.now(UTC)
-    session.add(VotingPublicationJob(poll_id=poll.id, action="refresh"))
+    session.add(VotingPublicationJob(poll_id=poll.id, action="close_result"))
     await session.commit()
     return {"status": "closed"}
 

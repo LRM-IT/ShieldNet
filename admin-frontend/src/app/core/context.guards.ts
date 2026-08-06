@@ -18,11 +18,22 @@ async function ensureProfile(auth: AuthService, router: Router): Promise<UserPro
   }
 }
 
+function hasPlatformAccess(profile: UserProfile): boolean {
+  const roles = (profile.roles || []).map(role => String(role).toLowerCase());
+  return Boolean(
+    profile.platform_context ||
+    profile.is_superadmin ||
+    roles.includes('superadmin') ||
+    roles.includes('super_admin') ||
+    roles.includes('platform_admin')
+  );
+}
+
 export const platformGuard: CanActivateFn = async () => {
   const auth = inject(AuthService);
   const router = inject(Router);
   const profile = await ensureProfile(auth, router);
-  if (!('platform_context' in profile) || !profile.platform_context) return router.parseUrl('/access-denied');
+  if (!('id' in profile) || !hasPlatformAccess(profile)) return router.parseUrl('/access-denied');
   return true;
 };
 
@@ -32,7 +43,7 @@ export const guildGuard: CanActivateFn = async (route: ActivatedRouteSnapshot) =
   const guilds = inject(GuildService);
   const profile = await ensureProfile(auth, router);
   if (!('id' in profile)) return profile;
-  if (profile.platform_context) return true;
+  if (hasPlatformAccess(profile)) return true;
 
   const guildId = route.paramMap.get('guildId');
   if (!guildId) return router.parseUrl('/servers');

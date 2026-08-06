@@ -39,8 +39,16 @@ class VotingPoll(Base):
     allowed_role_ids: Mapped[list] = mapped_column(JSONB, default=list)
     scheduled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     closes_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    result_template_id: Mapped[UUID | None] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("media.templates.id", ondelete="SET NULL")
+    )
+    result_language: Mapped[str | None] = mapped_column(String(16))
+    result_qr_url: Mapped[str | None] = mapped_column(String(1000))
+    publish_result_image: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
     published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     closed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    result_settings: Mapped[dict] = mapped_column(JSONB, default=dict, server_default='{}')
+    result_message_id: Mapped[int | None] = mapped_column(BigInteger)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
