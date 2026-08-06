@@ -10,7 +10,6 @@ from app.api.routes.user_languages import router as user_languages_router
 from app.api.routes.plugin_antiflood import router as plugin_antiflood_router
 from app.api.routes.plugin_voting import router as plugin_voting_router
 from app.api.routes.internal_plugin_voting import router as internal_plugin_voting_router
-from app.api.routes.internal_voting_result import router as internal_voting_result_router
 from app.api.routes.template_bank import router as template_bank_router
 from app.api.routes.template_renderer import router as template_renderer_router
 from app.api.routes.media_variables import router as media_variables_router
@@ -46,7 +45,6 @@ app = FastAPI(
 app.include_router(plugin_antiflood_router, prefix="/api/v1")
 app.include_router(plugin_voting_router, prefix="/api/v1")
 app.include_router(internal_plugin_voting_router, prefix="/api/v1")
-app.include_router(internal_voting_result_router, prefix="/api/v1")
 app.include_router(template_bank_router, prefix="/api/v1")
 app.include_router(template_renderer_router, prefix="/api/v1")
 app.include_router(media_variables_router, prefix="/api/v1")

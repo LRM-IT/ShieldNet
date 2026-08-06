@@ -11,7 +11,6 @@ from PIL import Image, ImageColor, ImageDraw, ImageFont
 
 from app.models.media_assets import MediaAsset
 from app.models.template_bank import MediaTemplate, TemplateBankSettings
-from app.services.template_repeat import expand_repeat_layers
 
 
 def _color(value: str | None, fallback: str = "#ffffff") -> tuple[int, int, int, int]:
@@ -80,9 +79,8 @@ class TemplateRenderer:
                 image.alpha_composite(background)
 
         draw = ImageDraw.Draw(image)
-        raw_layers = [layer for layer in manifest.get("layers", []) if layer.get("visible", True)]
         layers = sorted(
-            expand_repeat_layers(raw_layers, data),
+            [layer for layer in manifest.get("layers", []) if layer.get("visible", True)],
             key=lambda layer: int(layer.get("zIndex", 0)),
         )
 

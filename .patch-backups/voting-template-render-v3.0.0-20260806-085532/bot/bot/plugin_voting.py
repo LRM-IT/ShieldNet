@@ -9,7 +9,6 @@ from discord.ext import tasks
 from PIL import Image, ImageDraw, ImageFont
 
 from bot.config import settings
-from bot.voting_template_result import fetch_template_result_image
 
 log = logging.getLogger(__name__)
 
@@ -333,10 +332,9 @@ class VotingWorker:
             message_id = message.id
 
         result_message_id = None
-        if closed and poll.get("publish_result_image", True):
-            card = await fetch_template_result_image(self, poll)
-            if card is None:
-                card = result_card(poll, language)
+        settings_data = poll.get("result_settings") or {}
+        if closed and settings_data.get("publish_result_image", True):
+            card = result_card(poll, language)
             result_message = await channel.send(
                 content="🏁 **Voting closed — final results**",
                 file=discord.File(card, filename=f"poll-{poll['id']}-results.png"),

@@ -5,7 +5,7 @@ import { ShellComponent } from '../shared/shell.component';
 import { TemplateDesignerService } from '../core/template-designer.service';
 import { MediaVariablesService } from '../core/media-variables.service';
 
-type LayerType = 'text'|'image'|'qr'|'progress'|'rectangle'|'repeat';
+type LayerType = 'text'|'image'|'qr'|'progress'|'rectangle';
 
 interface DesignerLayer {
   id:string;
@@ -31,10 +31,6 @@ interface DesignerLayer {
   borderWidth?:number;
   borderRadius?:number;
   assetId?:string|null;
-  repeatSource?:string;
-  repeatGap?:number;
-  repeatMaxItems?:number;
-  children?:DesignerLayer[];
 }
 
 @Component({
@@ -61,10 +57,6 @@ interface DesignerLayer {
         </select>
       </label>
       <button (click)="undo()" [disabled]="!history.length">Undo</button>
-      <label class="snap-control"><input type="checkbox" [(ngModel)]="snapEnabled"> Snap {{gridSize}}px</label>
-      <button (click)="addSmartWinner()">Winner card</button>
-      <button (click)="addSmartOptions()">Options block</button>
-      <button (click)="addDynamicOptions()">Dynamic options</button>
       <button class="primary" (click)="save()" [disabled]="!selectedTemplateId">Save layout</button>
     </div>
    </section>
@@ -82,7 +74,6 @@ interface DesignerLayer {
         <button (click)="addLayer('qr')">▦ QR</button>
         <button (click)="addLayer('progress')">▰ Progress</button>
         <button (click)="addLayer('rectangle')">□ Shape</button>
-        <button (click)="addLayer('repeat')">↕ Dynamic list</button>
       </div>
 
       <div class="layers">
@@ -96,12 +87,9 @@ interface DesignerLayer {
               <b>{{layer.name}}</b>
               <small>{{layer.type}} · z{{layer.zIndex}}</small>
             </div>
-            <div class="layer-actions">
-              <button title="Move up" (click)="moveLayer(layer,1);$event.stopPropagation()">↑</button>
-              <button title="Move down" (click)="moveLayer(layer,-1);$event.stopPropagation()">↓</button>
-              <button title="Duplicate" (click)="duplicateLayer(layer);$event.stopPropagation()">⧉</button>
-              <button title="Visibility" (click)="toggleVisible(layer);$event.stopPropagation()">{{layer.visible?'◉':'○'}}</button>
-            </div>
+            <button (click)="toggleVisible(layer);$event.stopPropagation()">
+              {{layer.visible?'◉':'○'}}
+            </button>
           </article>
         }
       </div>
@@ -131,7 +119,6 @@ interface DesignerLayer {
             [style.width.px]="canvas.width"
             [style.height.px]="canvas.height"
             [style.transform]="'scale('+zoom+')'"
-            [class.grid-enabled]="snapEnabled"
             [style.background-image]="backgroundUrl ? 'url('+backgroundUrl+')' : ''"
             (mousedown)="clearSelection($event)"
           >
@@ -181,13 +168,6 @@ interface DesignerLayer {
                         [style.border-color]="layer.borderColor"
                         [style.border-width.px]="layer.borderWidth"
                         [style.border-radius.px]="layer.borderRadius">
-                      </div>
-                    }
-                    @case('repeat'){
-                      <div class="repeat-preview">
-                        @for(item of repeatPreview(layer);track item.position){
-                          <div><b>{{item.position}}</b><span>{{item.label}}</span><em>{{item.result}}</em></div>
-                        }
                       </div>
                     }
                   }
@@ -283,12 +263,6 @@ interface DesignerLayer {
             </div>
           }
 
-          @if(layer.type==='repeat'){
-            <label>Data source<select [(ngModel)]="layer.repeatSource" (change)="snapshot()"><option value="OPTIONS">Voting options</option><option value="ENTRIES">Ranking entries</option></select></label>
-            <div class="two"><label>Row gap<input type="number" min="0" [(ngModel)]="layer.repeatGap" (change)="snapshot()"></label><label>Maximum items<input type="number" min="1" max="50" [(ngModel)]="layer.repeatMaxItems" (change)="snapshot()"></label></div>
-            <p class="property-help">One component renders every result row automatically.</p>
-          }
-
           <div class="checks">
             <label><input type="checkbox" [(ngModel)]="layer.visible" (change)="snapshot()"> Visible</label>
             <label><input type="checkbox" [(ngModel)]="layer.locked" (change)="snapshot()"> Locked</label>
@@ -316,10 +290,7 @@ interface DesignerLayer {
  button,input,select{font:inherit;border:1px solid var(--line);border-radius:8px;background:var(--surface-2);color:var(--text);padding:.6rem}.primary{background:var(--primary);color:#03130e;font-weight:850}.danger{color:#ff9aa8;border-color:rgba(255,92,114,.3)}button{cursor:pointer}button:disabled{opacity:.45;cursor:not-allowed}
  label{display:grid;gap:.3rem;color:var(--muted);font-size:.62rem}.notice{padding:.7rem 1rem;border-radius:10px}.error{color:#ff9aa8}.success{color:var(--success)}
  .designer{display:grid;grid-template-columns:250px minmax(0,1fr) 290px;gap:.8rem;min-height:720px}.left,.right{padding:.8rem;min-width:0}.section-title{display:flex;justify-content:space-between;align-items:center;gap:.5rem}.add-grid{display:grid;grid-template-columns:1fr 1fr;gap:.4rem;margin:.8rem 0}.add-grid button{text-align:left}
- .snap-control{display:flex;align-items:center;gap:.35rem;white-space:nowrap}
- .layer-actions{display:flex!important;gap:.18rem}.layer-actions button{padding:.28rem;min-width:28px}
- .canvas.grid-enabled{background-image:linear-gradient(rgba(53,226,178,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(53,226,178,.08) 1px,transparent 1px);background-size:20px 20px}
- .repeat-preview{width:100%;height:100%;display:grid;gap:8px;padding:8px;overflow:hidden;background:rgba(8,25,35,.85)} .repeat-preview>div{display:grid;grid-template-columns:45px 1fr 180px;align-items:center;gap:10px;min-height:48px;padding:0 12px;border:1px solid rgba(53,226,178,.3);border-radius:10px} .repeat-preview em{text-align:right;color:var(--primary);font-style:normal}.property-help{color:var(--muted);font-size:.6rem} .layers{display:grid;gap:.35rem}.layers article{display:grid;grid-template-columns:20px 1fr 34px;align-items:center;gap:.45rem;padding:.55rem;border:1px solid transparent;border-radius:9px;cursor:pointer}.layers article:hover,.layers article.active{background:var(--primary-soft);border-color:var(--line-strong)}.layers article div{display:grid;gap:.1rem}.layers small{color:var(--muted);font-size:.54rem}.drag{color:var(--muted)}
+ .layers{display:grid;gap:.35rem}.layers article{display:grid;grid-template-columns:20px 1fr 34px;align-items:center;gap:.45rem;padding:.55rem;border:1px solid transparent;border-radius:9px;cursor:pointer}.layers article:hover,.layers article.active{background:var(--primary-soft);border-color:var(--line-strong)}.layers article div{display:grid;gap:.1rem}.layers small{color:var(--muted);font-size:.54rem}.drag{color:var(--muted)}
  .workspace{display:grid;grid-template-rows:auto 1fr;min-width:0;overflow:hidden}.workspace-head{display:flex;justify-content:space-between;align-items:center;padding:.7rem .9rem;border-bottom:1px solid var(--line)}.workspace-head>div:first-child{display:grid;gap:.15rem}.zoom{display:flex;align-items:center;gap:.4rem}.zoom span{min-width:52px;text-align:center;color:var(--muted);font-size:.62rem}
  .canvas-scroll{overflow:auto;display:grid;place-items:start center;padding:2rem;background:radial-gradient(circle at center,rgba(53,226,178,.035),transparent 55%),#03070b}.canvas-frame{position:relative}.canvas{position:absolute;left:0;top:0;transform-origin:top left;background-color:#08131c;background-size:cover;background-position:center;box-shadow:0 18px 70px #000;overflow:hidden}
  .canvas-layer{position:absolute;user-select:none;cursor:move}.canvas-layer.selected{outline:2px solid var(--primary);outline-offset:2px}.canvas-layer.locked{cursor:not-allowed}.canvas-layer img,.shape,.text-layer{width:100%;height:100%}.canvas-layer img{object-fit:contain;pointer-events:none}.text-layer{display:flex;align-items:center;white-space:pre-wrap;overflow:hidden}.placeholder,.qr-placeholder{width:100%;height:100%;display:grid;place-items:center;background:rgba(53,226,178,.08);border:2px dashed rgba(53,226,178,.3);color:var(--primary)}.qr-placeholder{font-size:3rem}.qr-placeholder small{font-size:.55rem}.progress{width:100%;height:100%;display:flex;align-items:center}.progress:before{content:'';position:absolute;inset:30% 0;background:#17323c;border-radius:999px}.progress div{position:relative;height:40%;background:var(--primary);border-radius:999px}.shape{border-style:solid}.resize{position:absolute;right:-12px;bottom:-12px;width:24px;height:24px;padding:0;display:grid;place-items:center;background:var(--primary);color:#03130e;border:0}
@@ -346,8 +317,6 @@ export class TemplateDesignerComponent implements OnInit {
  canvas={width:1536,height:2048};
  backgroundUrl='';
  zoom=.42;
- snapEnabled=true;
- gridSize=10;
  history: string[] = [];
 
  variables:string[]=[];
@@ -420,79 +389,9 @@ export class TemplateDesignerComponent implements OnInit {
    variable:type==='qr'?'{{QR_URL}}':'',text:type==='text'?'New text':'',
    fontSize:56,fontWeight:'700',color:'#ffffff',align:'left',
    background:'#15313c',borderColor:'#35e2b2',borderWidth:2,borderRadius:18,
-   assetId:null,
-   repeatSource:type==='repeat'?'OPTIONS':undefined,
-   repeatGap:type==='repeat'?18:undefined,
-   repeatMaxItems:type==='repeat'?10:undefined,
-   children:type==='repeat'?this.defaultRepeatChildren():undefined
+   assetId:null
   };
   this.layers.push(layer);this.selectedLayerId=layer.id;
- }
-
-
- snap(value:number){
-  return this.snapEnabled?Math.round(value/this.gridSize)*this.gridSize:value;
- }
-
- duplicateLayer(layer:DesignerLayer){
-  this.pushHistory();
-  const copy=structuredClone(layer);
-  copy.id=crypto.randomUUID();
-  copy.name=`${layer.name} copy`;
-  copy.x+=this.gridSize*2;
-  copy.y+=this.gridSize*2;
-  copy.zIndex=Math.max(0,...this.layers.map(item=>item.zIndex))+1;
-  this.layers.push(copy);
-  this.selectedLayerId=copy.id;
- }
-
- addSmartWinner(){
-  this.pushHistory();
-  const z=Math.max(0,...this.layers.map(item=>item.zIndex))+1;
-  this.layers.push(
-   {id:crypto.randomUUID(),type:'rectangle',name:'Winner card',x:120,y:340,width:1200,height:300,rotation:0,opacity:1,zIndex:z,visible:true,locked:false,background:'#102f38',borderColor:'#35e2b2',borderWidth:3,borderRadius:30},
-   {id:crypto.randomUUID(),type:'text',name:'Winner label',x:180,y:390,width:1080,height:115,rotation:0,opacity:1,zIndex:z+1,visible:true,locked:false,variable:'{{WINNER_LABEL}}',text:'Winner',fontSize:72,fontWeight:'900',color:'#ffffff',align:'center'},
-   {id:crypto.randomUUID(),type:'text',name:'Winner votes',x:280,y:530,width:880,height:60,rotation:0,opacity:1,zIndex:z+2,visible:true,locked:false,text:'{{WINNER_VOTES}} votes · {{WINNER_PERCENTAGE}}%',fontSize:34,fontWeight:'700',color:'#35e2b2',align:'center'}
-  );
-  this.selectedLayerId=this.layers[this.layers.length-2].id;
- }
-
- addSmartOptions(){
-  this.pushHistory();
-  const z=Math.max(0,...this.layers.map(item=>item.zIndex))+1;
-  for(let i=1;i<=5;i++){
-   const y=720+(i-1)*120;
-   this.layers.push(
-    {id:crypto.randomUUID(),type:'rectangle',name:`Option ${i} row`,x:130,y,width:1180,height:92,rotation:0,opacity:1,zIndex:z,visible:true,locked:false,background:'#0f2730',borderColor:'#285661',borderWidth:2,borderRadius:16},
-    {id:crypto.randomUUID(),type:'text',name:`Option ${i} label`,x:180,y:y+16,width:760,height:60,rotation:0,opacity:1,zIndex:z+1,visible:true,locked:false,variable:`{{OPTION_${i}_LABEL}}`,text:`Option ${i}`,fontSize:30,fontWeight:'700',color:'#ffffff',align:'left'},
-    {id:crypto.randomUUID(),type:'text',name:`Option ${i} result`,x:980,y:y+16,width:280,height:60,rotation:0,opacity:1,zIndex:z+1,visible:true,locked:false,text:`{{OPTION_${i}_VOTES}} · {{OPTION_${i}_PERCENTAGE}}%`,fontSize:26,fontWeight:'700',color:'#35e2b2',align:'right'}
-   );
-  }
-  this.selectedLayerId=this.layers[this.layers.length-2].id;
- }
-
-
- defaultRepeatChildren():DesignerLayer[]{
-  return [
-   {id:crypto.randomUUID(),type:'rectangle',name:'Row background',x:0,y:0,width:1200,height:76,rotation:0,opacity:1,zIndex:0,visible:true,locked:false,background:'#0f2730',borderColor:'#35e2b2',borderWidth:1,borderRadius:14},
-   {id:crypto.randomUUID(),type:'text',name:'Position',x:22,y:8,width:70,height:60,rotation:0,opacity:1,zIndex:1,visible:true,locked:false,text:'{{ITEM_POSITION}}',fontSize:28,fontWeight:'700',color:'#35e2b2',align:'center'},
-   {id:crypto.randomUUID(),type:'text',name:'Label',x:110,y:8,width:720,height:60,rotation:0,opacity:1,zIndex:1,visible:true,locked:false,text:'{{ITEM_LABEL}}',fontSize:28,fontWeight:'700',color:'#ffffff',align:'left'},
-   {id:crypto.randomUUID(),type:'text',name:'Result',x:900,y:8,width:260,height:60,rotation:0,opacity:1,zIndex:1,visible:true,locked:false,text:'{{ITEM_VOTES}} · {{ITEM_PERCENTAGE}}%',fontSize:24,fontWeight:'700',color:'#35e2b2',align:'right'}
-  ];
- }
-
- repeatPreview(layer:DesignerLayer){
-  return [
-   {position:1,label:'NAP 15',result:'72 · 56.3%'},
-   {position:2,label:'Full server NAP',result:'38 · 29.7%'},
-   {position:3,label:'NAP 20',result:'18 · 14.0%'}
-  ].slice(0,Math.min(3,layer.repeatMaxItems||10));
- }
-
- addDynamicOptions(){
-  this.addLayer('repeat');
-  const layer=this.selectedLayer();
-  if(layer){layer.name='Dynamic voting options';layer.x=130;layer.y=720;layer.width=1200;layer.height=76;}
  }
 
  selectLayer(id:string){this.selectedLayerId=id}
@@ -522,13 +421,13 @@ export class TemplateDesignerComponent implements OnInit {
  onMove=(e:MouseEvent)=>{
   if(this.dragState){
    const d=this.dragState;
-   d.layer.x=this.snap(Math.round(d.x+(e.clientX-d.startX)/this.zoom));
-   d.layer.y=this.snap(Math.round(d.y+(e.clientY-d.startY)/this.zoom));
+   d.layer.x=Math.round(d.x+(e.clientX-d.startX)/this.zoom);
+   d.layer.y=Math.round(d.y+(e.clientY-d.startY)/this.zoom);
   }
   if(this.resizeState){
    const r=this.resizeState;
-   r.layer.width=Math.max(20,this.snap(Math.round(r.w+(e.clientX-r.startX)/this.zoom)));
-   r.layer.height=Math.max(20,this.snap(Math.round(r.h+(e.clientY-r.startY)/this.zoom)));
+   r.layer.width=Math.max(20,Math.round(r.w+(e.clientX-r.startX)/this.zoom));
+   r.layer.height=Math.max(20,Math.round(r.h+(e.clientY-r.startY)/this.zoom));
   }
  }
 
@@ -541,7 +440,7 @@ export class TemplateDesignerComponent implements OnInit {
    ...(current.manifest||{}),
    schema_version:2,
    canvas:{width:this.canvas.width,height:this.canvas.height},
-   layers:this.layers.map(layer=>layer.type==='repeat'?{...layer,source:layer.repeatSource||'OPTIONS',gap:layer.repeatGap||0,maxItems:layer.repeatMaxItems||10}:layer),
+   layers:this.layers,
    variables:[...new Set(this.layers.map(x=>x.variable).filter(Boolean))],
    updated_by:'template-designer'
   };
