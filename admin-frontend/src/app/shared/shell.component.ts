@@ -498,6 +498,7 @@ export class ShellComponent implements OnInit, OnDestroy {
     { keys: ['logging', 'logs'], label: 'Logging', icon: '≡', path: 'logging' },
     { keys: ['guild_dm_broadcast', 'guild-dm-broadcast'], label: 'Guild DM Broadcast', icon: '✉', path: 'plugins/guild-dm-broadcast' },
     { keys: ['first_introduction'], label: 'Language Selection', icon: '🌐', path: 'plugins/language-selection' },
+    { keys: ['translator_groups'], label: 'Translator Groups', icon: '◎', path: 'plugins/translator-groups' },
   ];
 
   readonly pluginNavigation = computed<NavItem[]>(() => {

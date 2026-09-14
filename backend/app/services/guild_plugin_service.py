@@ -197,6 +197,10 @@ class GuildPluginService:
             config = row.configuration or {}
             if not config.get("language_roles") or not config.get("channel_id"):
                 raise ValueError("Configure language roles and a thread before enabling")
+        if enabled and plugin_key == "translator_groups":
+            groups = (row.configuration or {}).get("groups", [])
+            if not any(group.get("enabled") and len({item.get("language") for item in group.get("channels", [])}) >= 2 for group in groups):
+                raise ValueError("Configure an enabled translation group with channels in at least two languages")
 
         previous_enabled = row.enabled
         previous_status = row.status
@@ -259,6 +263,8 @@ class GuildPluginService:
     ):
         if plugin_key == "first_introduction":
             raise ValueError("Use the Language Selection settings page")
+        if plugin_key == "translator_groups":
+            raise ValueError("Use the Translator Groups settings page")
         row = await self._required(guild_id, plugin_key)
 
         row.configuration = configuration

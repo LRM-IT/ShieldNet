@@ -27,6 +27,7 @@ from bot.plugin_welcome import WelcomeWorker
 from bot.plugin_antiflood import AntiFloodWorker
 from bot.plugin_voting import VotingWorker
 from bot.plugin_first_introduction import LanguageSelection
+from bot.plugin_translator_groups import TranslatorGroups
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +38,7 @@ class ShieldNetBot(discord.Client):
         intents.guilds = True
         intents.members = True
         intents.reactions = True
+        intents.message_content = True
         intents.presences = True
         intents.voice_states = True
         super().__init__(intents=intents, chunk_guilds_at_startup=False)
@@ -59,6 +61,7 @@ class ShieldNetBot(discord.Client):
         self.antiflood = AntiFloodWorker(self)
         self.voting = VotingWorker(self)
         self.language_selection = LanguageSelection(self)
+        self.translator_groups = TranslatorGroups(self, self.backend)
         self._initial_sync_done = False
         self.redis = Redis.from_url(settings.redis_url, decode_responses=True)
         self.worker_name = f"discord-worker:{socket.gethostname()}"
@@ -152,6 +155,46 @@ class ShieldNetBot(discord.Client):
                     await interaction.followup.send("Could not post the language panel.", ephemeral=True)
                 else:
                     await interaction.response.send_message("Could not post the language panel.", ephemeral=True)
+
+        @self.tree.command(name="group_add", description="Create a translation group.")
+        async def group_add(interaction: discord.Interaction, name: str) -> None:
+            if not await self._can_manage(interaction):
+                return
+            try:
+                result = await self.translator_groups.command("/groups", {"guild_id": interaction.guild_id, "name": name})
+                await interaction.response.send_message(f"Translation group **{result['name']}** created.", ephemeral=True)
+            except Exception:
+                logger.exception("Could not create translation group guild=%s", interaction.guild_id)
+                await interaction.response.send_message("Could not create the group. Check the web settings.", ephemeral=True)
+
+        @self.tree.command(name="group_language", description="Bind this channel and its language to a translation group.")
+        async def group_language(interaction: discord.Interaction, group: str, language: str) -> None:
+            if not await self._can_manage(interaction):
+                return
+            if not isinstance(interaction.channel, discord.TextChannel):
+                await interaction.response.send_message("Use this command in a text channel.", ephemeral=True)
+                return
+            try:
+                result = await self.translator_groups.command("/bindings", {
+                    "guild_id": interaction.guild_id, "name": group,
+                    "channel_id": str(interaction.channel_id), "language": language,
+                })
+                await interaction.response.send_message(
+                    f"Channel bound to **{result['group']}** as **{result['language']}**.", ephemeral=True)
+            except Exception:
+                logger.exception("Could not bind translation channel guild=%s", interaction.guild_id)
+                await interaction.response.send_message("Could not bind the channel. Check the group and server languages.", ephemeral=True)
+
+        @self.tree.command(name="group_unlanguage", description="Remove this channel from a translation group.")
+        async def group_unlanguage(interaction: discord.Interaction, group: str) -> None:
+            if not await self._can_manage(interaction):
+                return
+            try:
+                await self.translator_groups.unbind(interaction.guild_id, group, interaction.channel_id)
+                await interaction.response.send_message("Channel removed from the group.", ephemeral=True)
+            except Exception:
+                logger.exception("Could not unbind translation channel guild=%s", interaction.guild_id)
+                await interaction.response.send_message("Could not remove the channel binding.", ephemeral=True)
 
 
         @self.tree.command(
@@ -452,12 +495,16 @@ class ShieldNetBot(discord.Client):
             await self.antiflood.process(message)
         except Exception:
             logger.exception("AntiFlood processing failed: %s", message.id)
-        if message.author.bot:
+        if message.author.bot or message.webhook_id:
             return
         try:
             await self.member_sync.mark_activity(message.guild.id, message.author.id)
         except Exception:
             logger.exception("Member activity sync failed: %s", message.author.id)
+        try:
+            await self.translator_groups.process(message)
+        except Exception:
+            logger.exception("Translator Groups processing failed: %s", message.id)
 
     @tasks.loop(seconds=5)
     async def welcome_loop(self) -> None:

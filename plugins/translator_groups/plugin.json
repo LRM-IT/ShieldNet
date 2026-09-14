@@ -1,0 +1,19 @@
+{
+  "id": "translator_groups",
+  "name": "Translator Groups",
+  "version": "1.0.0",
+  "description": "Translate messages between language channels in a group through the server AI Center.",
+  "author": "LRM-IT",
+  "min_core_version": "5.1.0",
+  "components": {"backend": true, "frontend": true, "bot": true},
+  "capabilities": ["discord.read.guild", "discord.read.messages", "discord.send.message", "ai.translation"],
+  "permissions": ["view_channel", "send_messages", "read_message_history", "manage_webhooks", "use_application_commands"],
+  "dependencies": {},
+  "ui": {"navigation": {"label": "Translator Groups", "icon": "🌐", "route": "plugins/translator-groups"}},
+  "entrypoints": {
+    "backend": "runtime:TranslatorGroupsPlugin",
+    "frontend": "admin-frontend/src/app/pages/plugin-translator-groups.component.ts",
+    "bot": "bot/bot/plugin_translator_groups.py"
+  },
+  "entrypoint": "runtime.py"
+}
