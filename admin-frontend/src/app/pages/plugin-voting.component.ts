@@ -1,7 +1,7 @@
 import {GlobalLanguage} from '../core/global-language.service';
 import {GuildLanguageService} from '../core/guild-language.service';
 import {CommonModule} from '@angular/common';
-import {Component,OnInit,inject,signal} from '@angular/core';
+import {Component,HostListener,OnInit,inject,signal} from '@angular/core';
 import {FormsModule} from '@angular/forms';
 import {DiscordChannelPickerComponent} from '../shared/discord-channel-picker.component';
 import {ActivatedRoute} from '@angular/router';
@@ -69,15 +69,16 @@ import {VotingService} from '../core/voting.service';
     </div>
    </section>
 
+   <div class="add-option-row"><button (click)="addOption()" [disabled]="options.length>=10">＋ Add option</button></div>
    <section class="result-settings">
     <div><small>RESULT PRESENTATION</small><h4>Final result image</h4></div>
     <div class="grid">
       <label>Template<select [(ngModel)]="form.result_template_id"><option [ngValue]="null">Platform default</option><option *ngFor="let template of templates()" [value]="template.id">{{template.name}}</option></select></label>
       <label><input type="checkbox" [(ngModel)]="form.publish_result_image"> Publish template image after close</label>
     </div>
+    <button class="preview-button" type="button" (click)="openPreview()">Предпросмотр</button>
    </section>
    <div class="actions">
-    <button (click)="addOption()">＋ Option</button>
     <div>
       <button *ngIf="editingId" (click)="newPoll()">Cancel</button>
       <button class="primary" (click)="save()">{{editingId ? 'Save changes' : 'Save draft'}}</button>
@@ -98,7 +99,19 @@ import {VotingService} from '../core/voting.service';
     </div>
    </article>
   </section>
- </main></sn-shell>`,
+ </main>
+ @if(previewOpen()){
+  <div class="preview-backdrop" (click)="closePreview()" role="presentation">
+   <section class="preview-modal" role="dialog" aria-modal="true" aria-label="Предпросмотр результатов голосования" (click)="$event.stopPropagation()">
+    <div class="head"><div><small>ДЕМО РЕЗУЛЬТАТУ</small><h3>Предпросмотр голосования</h3></div><button type="button" (click)="closePreview()" aria-label="Закрыть">✕</button></div>
+    <p>Приклад із поточною темою та варіантами. Голоси для демонстрації умовні.</p>
+    @if(previewLoading()){<div class="preview-state">Створюємо зображення…</div>}
+    @if(previewError()){<div class="notice error">{{previewError()}}</div>}
+    @if(previewUrl()){<img class="preview-image" [src]="previewUrl()" alt="Приклад фінального зображення голосування">}
+   </section>
+  </div>
+ }
+ </sn-shell>`,
  styles:[`
  .page{display:grid;gap:1rem}.panel,.language,.poll,.notice{border:1px solid var(--line);border-radius:16px;background:var(--surface-1);padding:1rem}
  .hero,.head,.poll,.actions,.poll-actions,.language-add,.lang-actions{display:flex;justify-content:space-between;align-items:center;gap:.75rem}
@@ -108,7 +121,8 @@ import {VotingService} from '../core/voting.service';
  textarea{min-height:90px}button{cursor:pointer}.primary,.ai{background:var(--primary);color:#03130e}.danger{color:#ff9aa8;border-color:rgba(255,92,114,.28);background:rgba(255,92,114,.08)}
  .toggles{display:flex;gap:1rem;flex-wrap:wrap}.toggles label{display:flex;align-items:center}.language-tabs{display:flex;gap:.45rem;flex-wrap:wrap}
  .language-tabs button.active{color:var(--primary);border-color:var(--line-strong);background:var(--primary-soft)}.language-tabs span{margin-left:.4rem}
- .result-settings{display:grid;gap:.7rem;padding:1rem;border:1px solid var(--line);border-radius:12px;background:var(--surface-2)}.option{display:grid;grid-template-columns:34px 1fr 42px;align-items:center;gap:.5rem}.actions>div{display:flex;gap:.5rem}.poll{margin-top:.6rem}.poll-copy{display:grid;gap:.2rem}
+ .result-settings{display:grid;gap:.7rem;padding:1rem;border:1px solid var(--line);border-radius:12px;background:var(--surface-2)}.option{display:grid;grid-template-columns:34px 1fr 42px;align-items:center;gap:.5rem}.actions>div,.add-option-row{display:flex;gap:.5rem}.actions{justify-content:flex-end}.preview-button{justify-self:start}.poll{margin-top:.6rem}.poll-copy{display:grid;gap:.2rem}
+ .preview-backdrop{position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.78);display:grid;place-items:center;padding:1rem}.preview-modal{width:min(1100px,100%);max-height:92vh;overflow:auto;background:var(--surface-1);border:1px solid var(--line);border-radius:16px;padding:1rem;display:grid;gap:1rem}.preview-modal p{color:var(--muted)}.preview-image{display:block;width:100%;height:auto;border-radius:10px}.preview-state{padding:3rem;text-align:center;color:var(--muted)}
  .poll-copy span{color:var(--muted);font-size:.65rem}.count{padding:.25rem .5rem;border-radius:999px;background:var(--primary-soft);color:var(--primary)}.success{color:var(--success)}.error{color:#ff8290}
  @media(max-width:950px){.grid{grid-template-columns:1fr 1fr}.poll,.hero{align-items:flex-start;flex-direction:column}}
  @media(max-width:620px){.grid{grid-template-columns:1fr}.head,.actions{align-items:flex-start;flex-direction:column}.poll-actions{flex-wrap:wrap}}
@@ -117,6 +131,7 @@ import {VotingService} from '../core/voting.service';
 export class PluginVotingComponent implements OnInit{
  private route=inject(ActivatedRoute);private api=inject(VotingService);private languageApi=inject(GuildLanguageService);
  polls=signal<any[]>([]);templates=signal<any[]>([]);error=signal('');success=signal('');directoryLanguages=signal<GlobalLanguage[]>([]);
+ previewOpen=signal(false);previewLoading=signal(false);previewError=signal('');previewUrl=signal('');private previewRequest=0;
  selectedLanguageCode='';editingId='';activeLanguage='en';translating=false;
  guildId=this.route.snapshot.paramMap.get('guildId')||'';
  languages:any[]=[];options:any[]=[];form:any={};
@@ -133,6 +148,22 @@ export class PluginVotingComponent implements OnInit{
  removeOption(i:number){if(this.options.length>2)this.options.splice(i,1)}
  copyPrimary(code:string){const src=this.languages.find(x=>x.code===this.form.primary_language);const dst=this.languages.find(x=>x.code===code);if(src&&dst){dst.title=src.title;dst.description=src.description}for(const o of this.options)o.labels[code]=o.labels[this.form.primary_language]||''}
  currentLanguage(){return this.languages.find(x=>x.code===this.activeLanguage)||this.languages[0]}
+ openPreview(){
+  const language=this.currentLanguage()?.code||this.form.primary_language||'en';
+  const source=this.languages.find(x=>x.code===language)||this.languages[0];
+  const primary=this.languages.find(x=>x.code===this.form.primary_language)||source;
+  const title=String(source?.title||primary?.title||'Voting topic').trim();
+  const options=this.options.map((item,index)=>String(item.labels?.[language]||item.labels?.[this.form.primary_language]||`Option ${index+1}`).trim());
+  const request=++this.previewRequest;
+  if(this.previewUrl())URL.revokeObjectURL(this.previewUrl());
+  this.previewUrl.set('');this.previewError.set('');this.previewLoading.set(true);this.previewOpen.set(true);
+  this.api.previewResult(this.guildId,{result_template_id:this.form.result_template_id||null,language,title,options}).subscribe({
+   next:blob=>{if(request!==this.previewRequest)return;this.previewUrl.set(URL.createObjectURL(blob));this.previewLoading.set(false)},
+   error:r=>{if(request!==this.previewRequest)return;this.previewError.set(r?.status===404?'Шаблон не знайдено. Виберіть активний шаблон або налаштуйте типовий.':'Не вдалося створити попередній перегляд.');this.previewLoading.set(false)}
+  });
+ }
+ closePreview(){this.previewRequest++;this.previewOpen.set(false);this.previewLoading.set(false);if(this.previewUrl())URL.revokeObjectURL(this.previewUrl());this.previewUrl.set('')}
+ @HostListener('document:keydown.escape') onEscape(){if(this.previewOpen())this.closePreview()}
  payload(){const translations:any={};for(const l of this.languages)translations[l.code]={title:l.title,description:l.description};return {...this.form,channel_id:this.form.channel_id?String(this.form.channel_id):null,closes_at:this.form.closes_at||null,translations,options:this.options.map(o=>({emoji:null,translations:o.labels}))}}
  save(){this.error.set('');const req=this.editingId?this.api.update(this.guildId,this.editingId,this.payload()):this.api.create(this.guildId,this.payload());req.subscribe({next:()=>{this.success.set(this.editingId?'Poll updated.':'Poll saved.');this.newPoll();this.reload()},error:r=>this.error.set(r?.error?.detail||'Unable to save poll.')})}
  edit(p:any){this.editingId=p.id;this.form={primary_language:p.primary_language,fallback_language:p.fallback_language,language_selection_mode:p.language_selection_mode,channel_id:p.channel_id||'',selection_mode:p.selection_mode,anonymous:p.anonymous,allow_change_vote:p.allow_change_vote,show_live_results:p.show_live_results,min_choices:p.min_choices,max_choices:p.max_choices,allowed_role_ids:p.allowed_role_ids||[],closes_at:p.closes_at?String(p.closes_at).slice(0,16):'',result_template_id:p.result_template_id||null,publish_result_image:p.publish_result_image,result_settings:{}};this.languages=Object.entries(p.translations||{}).map(([code,v]:any)=>({code,title:v.title||'',description:v.description||''}));this.options=(p.options||[]).map((o:any)=>({labels:Object.fromEntries(Object.entries(o.translations||{}).map(([code,v]:any)=>[code,v.label||'']))}));this.activeLanguage=p.primary_language;window.scrollTo({top:0,behavior:'smooth'})}

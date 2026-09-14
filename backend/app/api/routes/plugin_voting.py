@@ -12,6 +12,8 @@ from app.api.dependencies.guild_access import require_guild_management
 from app.db.session import get_db_session
 from app.models.core import User
 from app.models.template_bank import MediaTemplate
+from app.services.template_renderer import TemplateRenderer
+from app.services.voting_template_result import build_voting_render_data
 from app.models.plugin_voting import (
     VotingOption, VotingOptionTranslation, VotingPoll, VotingPollTranslation,
     VotingPublicationJob, VotingVote,
@@ -59,6 +61,13 @@ class TranslationPreview(BaseModel):
 class TranslationGenerate(BaseModel):
     source_language: str | None = None
     overwrite_existing: bool = False
+
+
+class ResultPreviewIn(BaseModel):
+    result_template_id: UUID | None = None
+    language: str = Field(default="en", min_length=2, max_length=16)
+    title: str = Field(default="Voting topic", max_length=300)
+    options: list[str] = Field(min_length=2, max_length=10)
 
 
 async def get_poll_row(session: AsyncSession, guild_id: int, poll_id: UUID) -> VotingPoll:
@@ -198,6 +207,36 @@ async def list_polls(guild_id: int, current_user: User = Depends(get_current_use
         .order_by(VotingPoll.created_at.desc())
     )).scalars())
     return {"items": [await serialize_poll(session, x) for x in polls]}
+
+
+@router.post("/discord/guilds/{guild_id}/plugins/voting/result-preview")
+async def preview_result_image(guild_id: int, payload: ResultPreviewIn,
+                               current_user: User = Depends(get_current_user),
+                               session: AsyncSession = Depends(get_db_session)):
+    await require_guild_management(session, current_user, guild_id)
+    if payload.result_template_id:
+        template = await session.get(MediaTemplate, payload.result_template_id)
+        if not template or template.category != "voting" or not template.is_active:
+            raise HTTPException(404, "Selected voting template is unavailable.")
+    else:
+        template = (await session.execute(select(MediaTemplate).where(
+            MediaTemplate.category == "voting", MediaTemplate.is_active.is_(True),
+            MediaTemplate.is_default.is_(True)).order_by(MediaTemplate.updated_at.desc()).limit(1)
+        )).scalar_one_or_none()
+        if not template:
+            raise HTTPException(404, "No default voting template is available.")
+
+    votes = [max(1, round(72 * (0.55 ** index))) for index in range(len(payload.options))]
+    serialized = {
+        "guild_id": str(guild_id), "primary_language": payload.language,
+        "translations": {payload.language: {"title": payload.title.strip() or "Voting topic"}},
+        "options": [{"votes": count, "translations": {payload.language: {
+            "label": label.strip() or f"Option {index + 1}"}}}
+            for index, (label, count) in enumerate(zip(payload.options, votes))],
+    }
+    data = build_voting_render_data(serialized, payload.language)
+    content = await TemplateRenderer(session).render(template, data)
+    return Response(content=content.getvalue(), media_type="image/png")
 
 
 @router.post("/discord/guilds/{guild_id}/plugins/voting/polls")
