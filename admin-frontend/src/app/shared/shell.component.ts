@@ -489,7 +489,7 @@ export class ShellComponent implements OnInit, OnDestroy {
     { keys: ['antiflood', 'anti_flood', 'anti-flood'], label: 'AntiFlood', icon: '⏱', path: 'plugins/antiflood' },
     { keys: ['voting', 'polls', 'polling'], label: 'Voting', icon: '🗳', path: 'plugins/voting' },
 
-    { keys: ['verification'], label: 'Verification', icon: '✓', path: 'verification' },
+    { keys: ['verification_level1', 'verification'], label: 'Verification Level 1', icon: '✓', path: 'verification' },
     { keys: ['leadership', 'r5_r4', 'r5-r4'], label: 'Leadership', icon: '★', path: 'leadership' },
     { keys: ['moderation'], label: 'Moderation', icon: '⚖', path: 'moderation' },
     { keys: ['translator', 'translation'], label: 'Translator', icon: '◎', path: 'translator' },
