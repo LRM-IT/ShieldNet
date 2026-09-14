@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import asyncio
 
 import discord
 import httpx
@@ -63,7 +64,45 @@ class LanguageSelection:
                 await previous.delete()
             except discord.HTTPException:
                 logger.warning("Could not remove prior language panel guild=%s message=%s", guild.id, previous_id)
+        if group.get("default_language_code"):
+            asyncio.create_task(self.sync_default_roles(guild, group["id"]))
         return message
+
+    async def sync_default_roles(self, guild: discord.Guild, group_id: str) -> None:
+        try:
+            await guild.chunk(cache=True)
+            config = await self.configuration(guild.id)
+            for member in guild.members:
+                await self.ensure_default_roles(member, group_id, config)
+                await asyncio.sleep(.15)
+        except Exception:
+            logger.exception("Default language backfill failed guild=%s group=%s", guild.id, group_id)
+
+    async def ensure_default_roles(self, member: discord.Member, group_id: str | None = None,
+                                   config: dict | None = None) -> None:
+        if member.bot:
+            return
+        config = config or await self.configuration(member.guild.id)
+        if not config["enabled"]:
+            return
+        me = member.guild.me
+        if me is None:
+            return
+        for group in config["groups"]:
+            if not group.get("enabled") or (group_id and group["id"] != group_id):
+                continue
+            code = group.get("default_language_code")
+            role_id = (group.get("language_roles") or {}).get(code) if code else None
+            role = member.guild.get_role(int(role_id)) if role_id else None
+            if role is None or role >= me.top_role:
+                continue
+            access_role_id = group.get("access_role_id")
+            if access_role_id and not any(str(item.id) == access_role_id for item in member.roles):
+                if role in member.roles:
+                    await member.remove_roles(role, reason="GuildConsole language group access removed")
+                continue
+            if role not in member.roles:
+                await member.add_roles(role, reason="GuildConsole default language")
 
     async def on_reaction(self, payload: discord.RawReactionActionEvent, added: bool) -> None:
         if payload.guild_id is None or self.bot.user is None or payload.user_id == self.bot.user.id:
@@ -101,12 +140,16 @@ class LanguageSelection:
         if bot_member is None or role >= bot_member.top_role:
             logger.warning("Language role above bot guild=%s role=%s", guild.id, role.id)
             return
+        default_code = group.get("default_language_code")
+        default_role_id = roles_by_code.get(default_code) if default_code else None
         if added:
             access_role_id = group.get("access_role_id")
             if access_role_id and not any(str(current.id) == access_role_id for current in member.roles):
                 return
+            await self.ensure_default_roles(member, group["id"])
             old_roles = [current for current in member.roles
-                         if current.id != role.id and str(current.id) in roles_by_code.values()]
+                         if current.id != role.id and str(current.id) != default_role_id
+                         and str(current.id) in roles_by_code.values()]
             if any(old >= bot_member.top_role for old in old_roles):
                 return
             if role not in member.roles:
@@ -124,5 +167,5 @@ class LanguageSelection:
                             await message.remove_reaction(language["flag"], member)
                         except discord.HTTPException:
                             logger.warning("Could not clear old language reaction guild=%s user=%s", guild.id, member.id)
-        elif role in member.roles:
+        elif role in member.roles and str(role.id) != default_role_id:
             await member.remove_roles(role, reason="GuildConsole language flag removed")

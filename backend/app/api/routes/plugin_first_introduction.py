@@ -39,6 +39,7 @@ class GroupInput(BaseModel):
     access_role_id: str | None = None
     role_name_mask: str = Field(default="{group} - {name}", min_length=1, max_length=100)
     language_roles: dict[str, str] = Field(default_factory=dict)
+    default_language_code: str | None = None
 
     @field_validator("id")
     @classmethod
@@ -93,9 +94,14 @@ class PanelInput(BaseModel):
     message_id: str
 
 
+class PublishInput(BaseModel):
+    group_id: str
+
+
 def _default_groups() -> list[dict]:
     return [{**group, "channel_id": None, "access_role_id": None,
              "role_name_mask": "{group} - {name}", "language_roles": {},
+             "default_language_code": None,
              "message_id": None} for group in DEFAULT_GROUPS]
 
 
@@ -183,6 +189,8 @@ async def save_settings(guild_id: int, payload: SettingsInput,
         _role_names(group.role_name_mask, languages, group.name)
         if set(group.language_roles) - codes:
             raise HTTPException(422, f"Unknown language role in {group.name}")
+        if group.default_language_code and group.default_language_code not in codes:
+            raise HTTPException(422, f"Unknown default language in {group.name}")
         if installation.enabled and group.enabled and (not group.channel_id or not group.access_role_id or
                               set(group.language_roles) != codes):
             raise HTTPException(422, f"{group.name}: select a channel, access role and every language role")
@@ -195,6 +203,48 @@ async def save_settings(guild_id: int, payload: SettingsInput,
     installation.configuration = {**(installation.configuration or {}), "groups": saved}
     await session.commit()
     return await _settings(session, guild_id)
+
+
+@router.post("/discord/guilds/{guild_id}/plugins/first-introduction/panels/publish")
+async def publish_language_panel(guild_id: int, payload: PublishInput,
+                                 user: User = Depends(get_current_user),
+                                 session: AsyncSession = Depends(get_db_session)):
+    await require_guild_module(session, user, guild_id, "plugins")
+    installation = await _installation(session, guild_id)
+    if not installation or not installation.enabled:
+        raise HTTPException(409, "Enable Language Selection first")
+    group = next((item for item in _groups(installation.configuration or {})
+                  if item["id"] == payload.group_id and item.get("enabled")), None)
+    if not group or not group.get("channel_id") or not group.get("access_role_id"):
+        raise HTTPException(422, "Configure and enable this language group first")
+    languages = await _languages(session, guild_id)
+    if set(group.get("language_roles") or {}) != {item["code"] for item in languages}:
+        raise HTTPException(422, "Create or select all language roles first")
+    pending = await session.scalar(select(DiscordStructureChange).where(
+        DiscordStructureChange.guild_id == guild_id,
+        DiscordStructureChange.object_type == "language_panel",
+        DiscordStructureChange.status.in_(["pending", "processing"])))
+    if pending and (pending.payload or {}).get("group_id") == group["id"]:
+        return {"job_id": str(pending.id)}
+    job = DiscordStructureChange(guild_id=guild_id, object_type="language_panel", operation="publish",
+        payload={"group_id": group["id"]}, preview={"safe_to_apply": True},
+        status="pending", requested_by=user.id)
+    session.add(job)
+    await session.commit()
+    return {"job_id": str(job.id)}
+
+
+@router.get("/discord/guilds/{guild_id}/plugins/first-introduction/panels/jobs/{job_id}")
+async def panel_job_status(guild_id: int, job_id: UUID, user: User = Depends(get_current_user),
+                           session: AsyncSession = Depends(get_db_session)):
+    await require_guild_module(session, user, guild_id, "plugins")
+    job = await session.scalar(select(DiscordStructureChange).where(
+        DiscordStructureChange.id == job_id, DiscordStructureChange.guild_id == guild_id,
+        DiscordStructureChange.object_type == "language_panel"))
+    if not job:
+        raise HTTPException(404, "Publication job not found")
+    return {"status": job.status, "error": job.result_message,
+            "message_id": (job.payload.get("_result") or {}).get("message_id")}
 
 
 @router.post("/discord/guilds/{guild_id}/plugins/first-introduction/roles/ensure")

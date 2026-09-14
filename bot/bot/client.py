@@ -426,6 +426,7 @@ class ShieldNetBot(discord.Client):
 
     async def on_member_join(self, member: discord.Member) -> None:
         try:
+            await self.language_selection.ensure_default_roles(member)
             await self.member_sync.sync_member(member)
             await self.automation_runtime.emit(member.guild, "member.joined", f"{member.id}:{member.joined_at.isoformat() if member.joined_at else datetime.now(UTC).isoformat()}", self._member_context(member))
             await self.welcome.member_join(member)
@@ -442,6 +443,8 @@ class ShieldNetBot(discord.Client):
 
     async def on_member_update(self, before: discord.Member, after: discord.Member) -> None:
         try:
+            if {role.id for role in before.roles} != {role.id for role in after.roles}:
+                await self.language_selection.ensure_default_roles(after)
             await self.member_sync.sync_member(after)
             before_ids = {r.id for r in before.roles}
             for role in after.roles:
