@@ -20,7 +20,14 @@ async def list_my_guilds(
     session: AsyncSession = Depends(get_db_session),
 ):
     if GlobalAccessService.is_superadmin(current_user):
-        guilds = (await session.execute(select(Guild).order_by(Guild.name))).scalars().all()
+        membership_exists = select(GuildMembership.id).where(
+            GuildMembership.guild_id == Guild.guild_id
+        ).exists()
+        guilds = (await session.execute(
+            select(Guild).where(
+                or_(Guild.last_sync_at.is_not(None), membership_exists)
+            ).order_by(Guild.name)
+        )).scalars().all()
         return [
             GuildAccessResponse(
                 guild_id=str(g.guild_id),

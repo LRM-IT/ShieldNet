@@ -193,6 +193,13 @@ class GuildPluginService:
         row = await self._required(guild_id, plugin_key)
         now = datetime.now(timezone.utc)
 
+        if enabled and plugin_key == "first_introduction":
+            config = row.configuration or {}
+            if not config.get("server_numbers") or not config.get("verified_role_id") or not config.get("language_roles"):
+                raise ValueError("Configure server numbers, language roles and verified role before enabling")
+            if config.get("delivery_mode") != "dm" and not config.get("fallback_channel_id"):
+                raise ValueError("Configure an introduction channel before enabling")
+
         previous_enabled = row.enabled
         previous_status = row.status
         previous_enabled_at = row.enabled_at
@@ -252,6 +259,8 @@ class GuildPluginService:
         plugin_key: str,
         configuration: dict,
     ):
+        if plugin_key == "first_introduction":
+            raise ValueError("Use the First Introduction settings page")
         row = await self._required(guild_id, plugin_key)
 
         row.configuration = configuration

@@ -10,8 +10,7 @@ from app.services.global_access import GlobalAccessService
 async def require_platform_viewer(
     user: Annotated[User, Depends(get_current_user)],
 ) -> User:
-    if getattr(user, "_auth_source", None) == "local_platform":
-        GlobalAccessService.require_superadmin(user)
+    if GlobalAccessService.is_superadmin(user):
         return user
     if getattr(user, "_auth_source", None) == "discord_platform" and getattr(user, "_platform_role", None) in {
         "platform_admin", "platform_operator", "platform_auditor"
@@ -23,8 +22,7 @@ async def require_platform_viewer(
 async def require_platform_admin(
     user: Annotated[User, Depends(get_current_user)],
 ) -> User:
-    if getattr(user, "_auth_source", None) == "local_platform":
-        GlobalAccessService.require_superadmin(user)
+    if GlobalAccessService.is_superadmin(user):
         return user
     if getattr(user, "_auth_source", None) == "discord_platform" and getattr(user, "_platform_role", None) == "platform_admin":
         return user

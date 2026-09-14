@@ -39,6 +39,8 @@ async def enable(guild_id: int, plugin_key: str, current_user: User = Depends(ge
         return await GuildPluginService(session).set_enabled(guild_id, plugin_key, True)
     except LookupError as exc:
         raise HTTPException(404, str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(409, str(exc)) from exc
 
 @router.post("/discord/guilds/{guild_id}/plugins/{plugin_key}/disable", response_model=GuildPluginInstallationResponse)
 async def disable(guild_id: int, plugin_key: str, current_user: User = Depends(get_current_user), session: AsyncSession = Depends(get_db_session)):
@@ -55,6 +57,8 @@ async def settings(guild_id: int, plugin_key: str, payload: GuildPluginSettingsU
         return await GuildPluginService(session).update_configuration(guild_id, plugin_key, payload.configuration)
     except LookupError as exc:
         raise HTTPException(404, str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(409, str(exc)) from exc
 
 @router.delete("/discord/guilds/{guild_id}/plugins/{plugin_key}", status_code=204)
 async def uninstall(guild_id: int, plugin_key: str, current_user: User = Depends(get_current_user), session: AsyncSession = Depends(get_db_session)):

@@ -31,8 +31,8 @@ async def require_guild_management(
 ) -> GuildMembership | None:
     """Authorize basic management access to a Discord guild."""
     if GlobalAccessService.is_superadmin(user):
-        from app.services.guild_registry import GuildRegistryService
-        await GuildRegistryService(session).ensure_management_target(guild_id, user)
+        if await session.get(Guild, guild_id) is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Discord server not found")
         return None
 
     guild = await session.get(Guild, guild_id)

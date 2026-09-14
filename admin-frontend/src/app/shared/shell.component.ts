@@ -71,9 +71,6 @@ interface PluginNavDefinition {
                     <a routerLink="/servers" routerLinkActive="active"><span class="nav-icon">◫</span><span>Guild Control Centers</span></a>
                     <a routerLink="/platform/plugins" routerLinkActive="active"><span class="nav-icon">⬡</span><span>{{ 'shell.plugin_fabric' | snT:'Plugin fabric' }}</span></a>
                     <a routerLink="/platform/languages" routerLinkActive="active"><span class="nav-icon">🌐</span><span>Languages</span></a>
-                    <a routerLink="/platform/template-bank" routerLinkActive="active"><span class="nav-icon">▧</span><span>Template Bank</span></a>
-                    <a routerLink="/platform/media-assets" routerLinkActive="active"><span class="nav-icon">◩</span><span>Asset Library</span></a>
-                    <a routerLink="/platform/template-designer" routerLinkActive="active"><span class="nav-icon">✥</span><span>Template Designer</span></a>
                     <a routerLink="/platform/access" routerLinkActive="active"><span class="nav-icon">⚿</span><span>Platform access</span></a>
                   </div>
                 }
@@ -376,7 +373,6 @@ export class ShellComponent implements OnInit, OnDestroy {
     if (this.isPlatformContext()) {
       commands.push(
         { id: 'platform-home', label: 'Platform', fallback: 'Open Platform Dashboard', icon: '⌂', path: '/platform' },
-        { id: 'template-bank', label: 'Template Bank', fallback: 'Open Template Bank', icon: '▧', path: '/platform/template-bank' },
         { id: 'platform-languages', label: 'Languages', fallback: 'Open Platform Languages', icon: '🌐', path: '/platform/languages' },
         { id: 'plugins', label: 'palette.plugins', fallback: 'Open Plugin Platform', icon: '⬡', path: '/platform/plugins' },
         { id: 'jobs', label: 'palette.jobs', fallback: 'Open Jobs Center', icon: '⌁', path: '/platform/jobs' },
@@ -501,6 +497,7 @@ export class ShellComponent implements OnInit, OnDestroy {
     { keys: ['tickets', 'ticketing'], label: 'Tickets', icon: '▣', path: 'tickets' },
     { keys: ['logging', 'logs'], label: 'Logging', icon: '≡', path: 'logging' },
     { keys: ['guild_dm_broadcast', 'guild-dm-broadcast'], label: 'Guild DM Broadcast', icon: '✉', path: 'plugins/guild-dm-broadcast' },
+    { keys: ['first_introduction'], label: 'First Introduction', icon: '👋', path: 'plugins/first-introduction' },
   ];
 
   readonly pluginNavigation = computed<NavItem[]>(() => {
