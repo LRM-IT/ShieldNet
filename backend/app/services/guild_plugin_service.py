@@ -195,8 +195,8 @@ class GuildPluginService:
 
         if enabled and plugin_key == "first_introduction":
             config = row.configuration or {}
-            if not config.get("language_roles"):
-                raise ValueError("Configure language roles before enabling")
+            if not config.get("language_roles") or not config.get("channel_id"):
+                raise ValueError("Configure language roles and a thread before enabling")
 
         previous_enabled = row.enabled
         previous_status = row.status

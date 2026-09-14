@@ -26,7 +26,7 @@ from bot.guild_dm_broadcast import GuildDMBroadcastWorker
 from bot.plugin_welcome import WelcomeWorker
 from bot.plugin_antiflood import AntiFloodWorker
 from bot.plugin_voting import VotingWorker
-from bot.plugin_first_introduction import LanguageSelection, LanguagePanel
+from bot.plugin_first_introduction import LanguageSelection
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +36,7 @@ class ShieldNetBot(discord.Client):
         intents = discord.Intents.default()
         intents.guilds = True
         intents.members = True
+        intents.reactions = True
         intents.presences = True
         intents.voice_states = True
         super().__init__(intents=intents, chunk_guilds_at_startup=False)
@@ -131,33 +132,25 @@ class ShieldNetBot(discord.Client):
                 VerifyModal(self.verification)
             )
 
-        @self.tree.command(name="language", description="Choose or change your language role.")
-        async def language(interaction: discord.Interaction) -> None:
-            if interaction.guild_id is None:
-                await interaction.response.send_message("Use this command on your server.")
-                return
-            try:
-                await self.language_selection.begin(interaction)
-            except Exception:
-                logger.exception("Could not open language selection guild=%s", interaction.guild_id)
-                if not interaction.response.is_done():
-                    await interaction.response.send_message("Could not load languages. Try again later.", ephemeral=True)
-
-        @self.tree.command(name="language_panel", description="Post a language selection button in this channel.")
+        @self.tree.command(name="language_panel", description="Publish the flag reaction panel in the configured thread.")
         async def language_panel(interaction: discord.Interaction) -> None:
             if interaction.guild is None or not interaction.user.guild_permissions.manage_guild:
                 await interaction.response.send_message("Manage Server permission is required.", ephemeral=True)
                 return
             try:
-                config = await self.language_selection.configuration(interaction.guild.id)
-                if not config["enabled"]:
-                    await interaction.response.send_message("Enable Language Selection first.", ephemeral=True)
-                    return
-                await interaction.channel.send("Choose your server language:", view=LanguagePanel(self.language_selection))
-                await interaction.response.send_message("Language panel posted.", ephemeral=True)
+                await interaction.response.defer(ephemeral=True)
+                message = await self.language_selection.publish_panel(interaction.guild)
+                await interaction.followup.send(f"Flag panel published: {message.jump_url}", ephemeral=True)
+            except ValueError as exc:
+                if interaction.response.is_done():
+                    await interaction.followup.send(str(exc), ephemeral=True)
+                else:
+                    await interaction.response.send_message(str(exc), ephemeral=True)
             except Exception:
                 logger.exception("Could not post language panel guild=%s", interaction.guild_id)
-                if not interaction.response.is_done():
+                if interaction.response.is_done():
+                    await interaction.followup.send("Could not post the language panel.", ephemeral=True)
+                else:
                     await interaction.response.send_message("Could not post the language panel.", ephemeral=True)
 
 
@@ -288,7 +281,6 @@ class ShieldNetBot(discord.Client):
 
     async def setup_hook(self) -> None:
         self.add_view(VerificationReviewView(self.verification))
-        self.add_view(LanguagePanel(self.language_selection))
         if settings.sync_commands_on_start:
             synced = await self.tree.sync()
             logger.info("Commands synchronized: %s", len(synced))
@@ -417,6 +409,20 @@ class ShieldNetBot(discord.Client):
             await self.welcome.member_roles(after)
         except Exception:
             logger.exception("Member update sync/automation failed: %s", after.id)
+
+    async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent) -> None:
+        try:
+            await self.language_selection.on_reaction(payload, added=True)
+        except Exception:
+            logger.exception("Language flag reaction failed guild=%s message=%s user=%s",
+                             payload.guild_id, payload.message_id, payload.user_id)
+
+    async def on_raw_reaction_remove(self, payload: discord.RawReactionActionEvent) -> None:
+        try:
+            await self.language_selection.on_reaction(payload, added=False)
+        except Exception:
+            logger.exception("Language flag removal failed guild=%s message=%s user=%s",
+                             payload.guild_id, payload.message_id, payload.user_id)
 
     @staticmethod
     def _member_context(member: discord.Member) -> dict:

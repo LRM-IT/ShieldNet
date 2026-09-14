@@ -22,91 +22,92 @@ class LanguageSelection:
             response.raise_for_status()
             return response.json()
 
-    async def begin(self, interaction: discord.Interaction) -> None:
-        if interaction.guild is None:
-            await interaction.response.send_message("Use this command on your server.", ephemeral=True)
-            return
-        config = await self.configuration(interaction.guild.id)
-        if not config["enabled"] or not config["languages"]:
-            await interaction.response.send_message("Language selection is not configured here.", ephemeral=True)
-            return
-        await interaction.response.send_message(
-            "Choose your language. You can change it later.",
-            view=LanguageChoices(self, interaction.user.id, config["languages"]),
-            ephemeral=True,
-        )
-
-    async def choose(self, interaction: discord.Interaction, code: str) -> str:
-        guild = interaction.guild
-        if guild is None:
-            raise ValueError("Use language selection on your server")
+    async def publish_panel(self, guild: discord.Guild) -> discord.Message:
         config = await self.configuration(guild.id)
-        languages = {item["code"]: item["name"] for item in config["languages"]}
-        if not config["enabled"] or code not in languages:
-            raise ValueError("This language is no longer available")
-        role_ids = config["language_roles"]
-        selected_id = role_ids.get(code)
-        if not selected_id:
-            raise ValueError("The selected language has no role configured")
-        selected = guild.get_role(int(selected_id))
-        if selected is None:
-            raise ValueError("The selected language role no longer exists")
-        bot_member = guild.me
-        if bot_member is None or selected >= bot_member.top_role:
-            raise ValueError("Move the bot role above the language roles")
-        member = guild.get_member(interaction.user.id) or await guild.fetch_member(interaction.user.id)
-        old_roles = [role for role in member.roles if role.id != selected.id and str(role.id) in role_ids.values()]
-        if any(role >= bot_member.top_role for role in old_roles):
-            raise ValueError("Move the bot role above the language roles")
-        if selected not in member.roles:
-            await member.add_roles(selected, reason="GuildConsole language selection")
-        if old_roles:
-            await member.remove_roles(*old_roles, reason="GuildConsole language selection changed")
-        return languages[code]
-
-
-class LanguagePanel(discord.ui.View):
-    def __init__(self, plugin: LanguageSelection) -> None:
-        super().__init__(timeout=None)
-        self.plugin = plugin
-
-    @discord.ui.button(label="Choose language", style=discord.ButtonStyle.primary,
-                       custom_id="guildconsole:language-selection:open")
-    async def open(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
+        if not config["enabled"] or not config["channel_id"]:
+            raise ValueError("Configure and enable Language Selection first")
+        channel_id = int(config["channel_id"])
+        channel = guild.get_channel_or_thread(channel_id)
+        if channel is None:
+            channel = await self.bot.fetch_channel(channel_id)
+        if not isinstance(channel, (discord.TextChannel, discord.Thread)) or channel.guild.id != guild.id:
+            raise ValueError("Configured channel or thread is unavailable")
+        lines = [f'{item["flag"]} — {item["name"]}' for item in config["languages"]]
+        if not lines or any(not item["flag"] for item in config["languages"]):
+            raise ValueError("Every language needs a flag")
+        message = await channel.send("Choose your language by reacting with one flag:\n" + "\n".join(lines))
         try:
-            await self.plugin.begin(interaction)
+            for item in config["languages"]:
+                await message.add_reaction(item["flag"])
+            async with httpx.AsyncClient(timeout=20) as client:
+                response = await client.post(f"{self.base}/panel", headers=self.headers, json={
+                    "guild_id": guild.id, "channel_id": str(channel_id), "message_id": str(message.id),
+                })
+                response.raise_for_status()
         except Exception:
-            logger.exception("Language selection could not open guild=%s", interaction.guild_id)
-            if not interaction.response.is_done():
-                await interaction.response.send_message("Could not load languages. Try again later.", ephemeral=True)
+            await message.delete()
+            raise
+        previous_id = config.get("message_id")
+        if previous_id and str(message.id) != previous_id:
+            try:
+                previous = await channel.fetch_message(int(previous_id))
+                await previous.delete()
+            except discord.HTTPException:
+                logger.warning("Could not remove prior language panel guild=%s message=%s", guild.id, previous_id)
+        return message
 
-
-class LanguageSelect(discord.ui.Select):
-    def __init__(self, languages: list[dict]) -> None:
-        super().__init__(
-            placeholder="Choose your language", min_values=1, max_values=1,
-            options=[discord.SelectOption(label=item["name"][:100], value=item["code"])
-                     for item in languages[:25]],
-        )
-
-    async def callback(self, interaction: discord.Interaction) -> None:
-        if interaction.user.id != self.view.user_id:
-            await interaction.response.send_message("This selection belongs to another member.", ephemeral=True)
+    async def on_reaction(self, payload: discord.RawReactionActionEvent, added: bool) -> None:
+        if payload.guild_id is None or self.bot.user is None or payload.user_id == self.bot.user.id:
             return
-        await interaction.response.defer(ephemeral=True)
-        try:
-            name = await self.view.plugin.choose(interaction, self.values[0])
-            await interaction.followup.send(f"Language set to **{name}**.", ephemeral=True)
-        except ValueError as exc:
-            await interaction.followup.send(str(exc), ephemeral=True)
-        except Exception:
-            logger.exception("Could not assign language guild=%s user=%s", interaction.guild_id, interaction.user.id)
-            await interaction.followup.send("Could not assign the language role. Try again later.", ephemeral=True)
-
-
-class LanguageChoices(discord.ui.View):
-    def __init__(self, plugin: LanguageSelection, user_id: int, languages: list[dict]) -> None:
-        super().__init__(timeout=300)
-        self.plugin = plugin
-        self.user_id = user_id
-        self.add_item(LanguageSelect(languages))
+        config = await self.configuration(payload.guild_id)
+        if not config["enabled"] or str(payload.message_id) != config.get("message_id"):
+            return
+        if str(payload.channel_id) != config.get("channel_id"):
+            return
+        emoji = str(payload.emoji)
+        item = next((language for language in config["languages"] if language["flag"] == emoji), None)
+        if item is None:
+            return
+        guild = self.bot.get_guild(payload.guild_id)
+        if guild is None:
+            return
+        member = payload.member or guild.get_member(payload.user_id)
+        if member is None:
+            try:
+                member = await guild.fetch_member(payload.user_id)
+            except discord.NotFound:
+                return
+        if member.bot:
+            return
+        roles_by_code = config["language_roles"]
+        role_id = roles_by_code.get(item["code"])
+        role = guild.get_role(int(role_id)) if role_id else None
+        if role is None:
+            logger.warning("Language role missing guild=%s code=%s", guild.id, item["code"])
+            return
+        bot_member = guild.me
+        if bot_member is None or role >= bot_member.top_role:
+            logger.warning("Language role above bot guild=%s role=%s", guild.id, role.id)
+            return
+        if added:
+            old_roles = [current for current in member.roles
+                         if current.id != role.id and str(current.id) in roles_by_code.values()]
+            if any(old >= bot_member.top_role for old in old_roles):
+                return
+            if role not in member.roles:
+                await member.add_roles(role, reason="GuildConsole flag language selection")
+            if old_roles:
+                await member.remove_roles(*old_roles, reason="GuildConsole language changed")
+            channel = guild.get_channel_or_thread(payload.channel_id)
+            if channel is None:
+                channel = await self.bot.fetch_channel(payload.channel_id)
+            if isinstance(channel, (discord.TextChannel, discord.Thread)):
+                message = await channel.fetch_message(payload.message_id)
+                for language in config["languages"]:
+                    if language["flag"] != emoji:
+                        try:
+                            await message.remove_reaction(language["flag"], member)
+                        except discord.HTTPException:
+                            logger.warning("Could not clear old language reaction guild=%s user=%s", guild.id, member.id)
+        elif role in member.roles:
+            await member.remove_roles(role, reason="GuildConsole language flag removed")

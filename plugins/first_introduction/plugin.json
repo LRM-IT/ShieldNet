@@ -1,13 +1,13 @@
 {
   "id": "first_introduction",
   "name": "Language Selection",
-  "version": "2.0.0",
-  "description": "Members choose or change their server language and receive the matching Discord role.",
+  "version": "2.1.0",
+  "description": "Members react with a language flag in a configured thread to receive the matching Discord role.",
   "author": "LRM-IT",
   "min_core_version": "5.1.0",
   "components": {"backend": true, "frontend": true, "bot": true},
   "capabilities": ["discord.read.guild", "discord.read.members", "discord.manage.roles", "discord.send.message"],
-  "permissions": ["manage_roles", "send_messages", "use_application_commands"],
+  "permissions": ["manage_roles", "send_messages", "add_reactions", "read_message_history", "manage_messages", "use_application_commands"],
   "dependencies": {},
   "ui": {"navigation": {"label": "Language Selection", "icon": "🌐", "route": "plugins/language-selection"}},
   "entrypoints": {
