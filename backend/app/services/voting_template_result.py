@@ -84,6 +84,11 @@ def build_voting_render_data(poll: dict[str, Any], language: str) -> dict[str, A
             "IS_WINNER": votes == winner_votes and winner_votes > 0,
         })
 
+    data["RESULT_SCORES"] = "\n".join(
+        f'{item["LABEL"]}: {item["VOTES"]} ({item["PERCENTAGE"]}%)'
+        for item in data["OPTIONS"]
+    ) or "No votes"
+
     return data
 
 

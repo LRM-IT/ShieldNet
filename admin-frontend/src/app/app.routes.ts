@@ -5,6 +5,7 @@ import { GuildAIComponent } from './pages/guild-ai.component';
 import { PlatformLanguagesComponent } from './pages/platform-languages.component';
 import { GuildLanguagesComponent } from './pages/guild-languages.component';
 import { PluginVotingComponent } from './pages/plugin-voting.component';
+import { VotingTemplatesComponent } from './pages/voting-templates.component';
 import { HealthMonitorComponent } from './pages/health-monitor.component';
 import { LiveLogsComponent } from './pages/live-logs.component';
 import { PluginRuntimeUsageComponent } from './pages/plugin-runtime-usage.component';
@@ -60,6 +61,7 @@ export const routes: Routes = [
   { path: 'servers', component: ServerSelectorComponent, canActivate: [authGuard] },
   { path: 'platform/languages', component: PlatformLanguagesComponent },
   { path: 'platform/template-bank', component: TemplateBankComponent, canActivate: [platformGuard] },
+  { path: 'platform/voting-templates', component: VotingTemplatesComponent, canActivate: [platformGuard] },
   { path: 'platform/media-assets', component: MediaAssetsComponent, canActivate: [platformGuard] },
   { path: 'platform/template-designer', component: TemplateDesignerComponent, canActivate: [platformGuard] },
   { path: 'platform/access', component: PlatformAccessComponent, canActivate: [platformGuard] },

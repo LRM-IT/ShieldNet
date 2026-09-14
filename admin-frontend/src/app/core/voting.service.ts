@@ -5,6 +5,7 @@ import { Injectable } from '@angular/core';
 export class VotingService {
   constructor(private http:HttpClient){}
   list(guildId:string){return this.http.get<any>(`/api/v1/discord/guilds/${guildId}/plugins/voting/polls`)}
+  templates(guildId:string){return this.http.get<any>(`/api/v1/discord/guilds/${guildId}/plugins/voting/templates`)}
   get(guildId:string,pollId:string){return this.http.get<any>(`/api/v1/discord/guilds/${guildId}/plugins/voting/polls/${pollId}`)}
   create(guildId:string,payload:any){return this.http.post<any>(`/api/v1/discord/guilds/${guildId}/plugins/voting/polls`,payload)}
   update(guildId:string,pollId:string,payload:any){return this.http.put<any>(`/api/v1/discord/guilds/${guildId}/plugins/voting/polls/${pollId}`,payload)}

@@ -11,6 +11,7 @@ from app.api.dependencies.auth import get_current_user
 from app.api.dependencies.guild_access import require_guild_management
 from app.db.session import get_db_session
 from app.models.core import User
+from app.models.template_bank import MediaTemplate
 from app.models.plugin_voting import (
     VotingOption, VotingOptionTranslation, VotingPoll, VotingPollTranslation,
     VotingPublicationJob, VotingVote,
@@ -130,6 +131,10 @@ async def apply_payload(session: AsyncSession, poll: VotingPoll, payload: PollCr
         raise HTTPException(422, "A poll must contain 2-10 options.")
     if payload.primary_language not in payload.translations:
         raise HTTPException(422, "Primary language translation is required.")
+    if payload.result_template_id:
+        template = await session.get(MediaTemplate, payload.result_template_id)
+        if not template or template.category != "voting" or not template.is_active:
+            raise HTTPException(422, "Select an active voting result template.")
 
     poll.primary_language = payload.primary_language
     poll.fallback_language = payload.fallback_language
