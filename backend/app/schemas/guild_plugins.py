@@ -24,6 +24,7 @@ class GuildPluginInstallationResponse(BaseModel):
 class GuildPluginMarketplaceItemResponse(BaseModel):
     plugin_key: str
     name: str
+    version: str | None = None
     summary: str | None = None
     category: str
     icon_url: str | None = None

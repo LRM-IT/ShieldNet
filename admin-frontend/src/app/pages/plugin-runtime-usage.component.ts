@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import {
   GuildPluginInstallation,
@@ -107,7 +107,7 @@ import { TranslatePipe } from '../core/translate.pipe';
             </div>
 
             <div class="details">
-              <div><span>{{ 'plugins.version' | snT:'Version' }}</span><strong>{{ runtime(plugin.plugin_key)?.package_version || '—' }}</strong></div>
+              <div><span>{{ 'plugins.version' | snT:'Version' }}</span><strong>{{ runtime(plugin.plugin_key)?.package_version || catalogVersion(plugin.plugin_key) || '—' }}</strong></div>
               <div><span>{{ 'runtime_usage.generation' | snT:'Generation' }}</span><strong>{{ runtime(plugin.plugin_key)?.generation ?? 0 }}</strong></div>
               <div><span>{{ 'runtime_usage.last_heartbeat' | snT:'Last heartbeat' }}</span><strong>{{ formatDate(runtime(plugin.plugin_key)?.last_heartbeat_at) }}</strong></div>
               <div><span>{{ 'runtime_usage.updated' | snT:'Updated' }}</span><strong>{{ formatDate(plugin.updated_at) }}</strong></div>
@@ -174,6 +174,7 @@ export class PluginRuntimeUsageComponent implements OnInit {
 
   constructor(
     private readonly route: ActivatedRoute,
+    private readonly router: Router,
     private readonly guildPlugins: GuildPluginService,
     private readonly runtimeService: PluginRuntimeService,
     private readonly i18n: TranslationService,
@@ -224,7 +225,10 @@ export class PluginRuntimeUsageComponent implements OnInit {
   busy(pluginKey: string): boolean { return this.busyKey() === pluginKey; }
   displayName(plugin: GuildPluginInstallation): string {
     const manifest = this.runtime(plugin.plugin_key)?.manifest_json || {};
-    return String(manifest['name'] || plugin.plugin_key);
+    return String(this.availablePlugins().find(item => item.plugin_key === plugin.plugin_key)?.name || manifest['name'] || plugin.plugin_key);
+  }
+  catalogVersion(pluginKey: string): string | null {
+    return this.availablePlugins().find(item => item.plugin_key === pluginKey)?.version || null;
   }
   formatDate(value: string | null | undefined): string {
     if (!value) return '—'; const date = new Date(value); return Number.isNaN(date.getTime()) ? value : new Intl.DateTimeFormat(undefined, { dateStyle: 'short', timeStyle: 'short' }).format(date);
@@ -286,6 +290,12 @@ export class PluginRuntimeUsageComponent implements OnInit {
   }
 
   openSettings(plugin: GuildPluginInstallation): void {
+    const page = plugin.plugin_key === 'translator_groups' ? 'translator-groups'
+      : plugin.plugin_key === 'first_introduction' ? 'language-selection' : null;
+    if (page) {
+      void this.router.navigate(['/guild', this.guildId, 'plugins', page]);
+      return;
+    }
     this.editingKey.set(plugin.plugin_key);
     this.settingsText = JSON.stringify(plugin.configuration || {}, null, 2);
   }

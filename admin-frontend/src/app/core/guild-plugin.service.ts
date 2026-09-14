@@ -5,6 +5,7 @@ import { firstValueFrom } from 'rxjs';
 export interface GuildPluginMarketplaceItem {
   plugin_key: string;
   name: string;
+  version: string | null;
   summary: string | null;
   category: string;
   icon_url: string | null;

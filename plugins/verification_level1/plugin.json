@@ -1,7 +1,7 @@
 {
   "id": "verification_level1",
   "name": "Verification Level 1",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Self-verification with configurable alliance/name mask, role assignment, rename command and temporary success messages.",
   "author": "LRM-IT",
   "min_core_version": "5.1.0",
@@ -14,7 +14,7 @@
     "discord.read.guild",
     "discord.read.members",
     "discord.send.message",
-    "discord.manage.member",
+    "discord.manage.roles",
     "events.publish"
   ],
   "permissions": [

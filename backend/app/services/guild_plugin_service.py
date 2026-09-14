@@ -73,6 +73,7 @@ class GuildPluginService:
             available[plugin.plugin_key] = GuildPluginMarketplaceItemResponse(
                 plugin_key=plugin.plugin_key,
                 name=plugin.name,
+                version=plugin.version,
                 summary=plugin.summary,
                 category=plugin.category,
                 icon_url=plugin.icon_url,
@@ -90,6 +91,7 @@ class GuildPluginService:
             available[plugin.plugin_key] = GuildPluginMarketplaceItemResponse(
                 plugin_key=plugin.plugin_key,
                 name=plugin.name,
+                version=plugin.version,
                 summary=plugin.description,
                 category=(
                     str((plugin.manifest or {}).get("category") or "local")
