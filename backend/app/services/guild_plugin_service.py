@@ -197,7 +197,12 @@ class GuildPluginService:
 
         if enabled and plugin_key == "first_introduction":
             config = row.configuration or {}
-            if not config.get("language_roles") or not config.get("channel_id"):
+            if "groups" in config:
+                groups = [group for group in config["groups"] if group.get("enabled")]
+                if not groups or any(not group.get("language_roles") or not group.get("channel_id")
+                                     or not group.get("access_role_id") for group in groups):
+                    raise ValueError("Configure a channel, access role and language roles for each enabled language group")
+            elif not config.get("language_roles") or not config.get("channel_id"):
                 raise ValueError("Configure language roles and a thread before enabling")
         if enabled and plugin_key == "translator_groups":
             groups = (row.configuration or {}).get("groups", [])

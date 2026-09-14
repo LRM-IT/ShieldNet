@@ -136,13 +136,13 @@ class ShieldNetBot(discord.Client):
             )
 
         @self.tree.command(name="language_panel", description="Publish the flag reaction panel in the configured thread.")
-        async def language_panel(interaction: discord.Interaction) -> None:
+        async def language_panel(interaction: discord.Interaction, group: str | None = None) -> None:
             if interaction.guild is None or not interaction.user.guild_permissions.manage_guild:
                 await interaction.response.send_message("Manage Server permission is required.", ephemeral=True)
                 return
             try:
                 await interaction.response.defer(ephemeral=True)
-                message = await self.language_selection.publish_panel(interaction.guild)
+                message = await self.language_selection.publish_panel(interaction.guild, group)
                 await interaction.followup.send(f"Flag panel published: {message.jump_url}", ephemeral=True)
             except ValueError as exc:
                 if interaction.response.is_done():

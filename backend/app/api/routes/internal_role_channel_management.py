@@ -8,6 +8,7 @@ from app.db.session import get_db_session
 from app.models.role_channel_management import DiscordStructureChange, DiscordBulkRoleOperation
 from app.models.plugins import GuildPluginInstallation
 from app.schemas.role_channel_management import StructureResultRequest, BulkRoleResultRequest
+from app.api.routes.plugin_first_introduction import _groups
 
 router = APIRouter(prefix="/internal/discord-management", tags=["Internal Discord Management"], dependencies=[Depends(verify_internal_service_token)])
 
@@ -32,11 +33,14 @@ async def change_result(item_id: uuid.UUID, payload: StructureResultRequest, ses
             GuildPluginInstallation.plugin_key == "first_introduction").with_for_update())
         if installation:
             config = dict(installation.configuration or {})
-            roles = dict(config.get("language_roles") or {})
+            groups = _groups(config)
+            group = next((entry for entry in groups if entry["id"] == item.payload.get("_group_id", "r1")), None)
+            roles = dict(group.get("language_roles") or {}) if group else {}
             code = item.payload["language_code"]
-            if not roles.get(code):
+            if group and not roles.get(code):
                 roles[code] = str(payload.data["role_id"])
-                config["language_roles"] = roles
+                group["language_roles"] = roles
+                config["groups"] = groups
                 installation.configuration = config
     await session.commit(); return {"status": "ok"}
 

@@ -22,11 +22,20 @@ class LanguageSelection:
             response.raise_for_status()
             return response.json()
 
-    async def publish_panel(self, guild: discord.Guild) -> discord.Message:
+    async def publish_panel(self, guild: discord.Guild, group_key: str | None = None) -> discord.Message:
         config = await self.configuration(guild.id)
-        if not config["enabled"] or not config["channel_id"]:
+        groups = [group for group in config["groups"] if group.get("enabled")]
+        group = next((item for item in groups if group_key and
+                      group_key.casefold() in (item["id"].casefold(), item["name"].casefold())), None)
+        if group_key and group is None:
+            raise ValueError("Unknown language group. Available: " + ", ".join(item["id"] for item in groups))
+        if group is None and len(groups) == 1:
+            group = groups[0]
+        if group is None:
+            raise ValueError("Specify a language group: " + ", ".join(item["id"] for item in groups))
+        if not config["enabled"] or not group.get("channel_id") or not group.get("language_roles"):
             raise ValueError("Configure and enable Language Selection first")
-        channel_id = int(config["channel_id"])
+        channel_id = int(group["channel_id"])
         channel = guild.get_channel_or_thread(channel_id)
         if channel is None:
             channel = await self.bot.fetch_channel(channel_id)
@@ -35,19 +44,19 @@ class LanguageSelection:
         lines = [f'{item["flag"]} — {item["name"]}' for item in config["languages"]]
         if not lines or any(not item["flag"] for item in config["languages"]):
             raise ValueError("Every language needs a flag")
-        message = await channel.send("Choose your language by reacting with one flag:\n" + "\n".join(lines))
+        message = await channel.send(f"**{group['name']} — Choose your language**\nReact with one flag:\n" + "\n".join(lines))
         try:
             for item in config["languages"]:
                 await message.add_reaction(item["flag"])
             async with httpx.AsyncClient(timeout=20) as client:
                 response = await client.post(f"{self.base}/panel", headers=self.headers, json={
-                    "guild_id": guild.id, "channel_id": str(channel_id), "message_id": str(message.id),
+                    "guild_id": guild.id, "group_id": group["id"], "channel_id": str(channel_id), "message_id": str(message.id),
                 })
                 response.raise_for_status()
         except Exception:
             await message.delete()
             raise
-        previous_id = config.get("message_id")
+        previous_id = group.get("message_id")
         if previous_id and str(message.id) != previous_id:
             try:
                 previous = await channel.fetch_message(int(previous_id))
@@ -60,9 +69,12 @@ class LanguageSelection:
         if payload.guild_id is None or self.bot.user is None or payload.user_id == self.bot.user.id:
             return
         config = await self.configuration(payload.guild_id)
-        if not config["enabled"] or str(payload.message_id) != config.get("message_id"):
+        if not config["enabled"]:
             return
-        if str(payload.channel_id) != config.get("channel_id"):
+        group = next((item for item in config["groups"] if item.get("enabled") and
+                      str(payload.message_id) == item.get("message_id") and
+                      str(payload.channel_id) == item.get("channel_id")), None)
+        if group is None:
             return
         emoji = str(payload.emoji)
         item = next((language for language in config["languages"] if language["flag"] == emoji), None)
@@ -79,7 +91,7 @@ class LanguageSelection:
                 return
         if member.bot:
             return
-        roles_by_code = config["language_roles"]
+        roles_by_code = group["language_roles"]
         role_id = roles_by_code.get(item["code"])
         role = guild.get_role(int(role_id)) if role_id else None
         if role is None:
@@ -90,6 +102,9 @@ class LanguageSelection:
             logger.warning("Language role above bot guild=%s role=%s", guild.id, role.id)
             return
         if added:
+            access_role_id = group.get("access_role_id")
+            if access_role_id and not any(str(current.id) == access_role_id for current in member.roles):
+                return
             old_roles = [current for current in member.roles
                          if current.id != role.id and str(current.id) in roles_by_code.values()]
             if any(old >= bot_member.top_role for old in old_roles):
