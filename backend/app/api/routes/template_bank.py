@@ -197,9 +197,11 @@ async def create_voting_template(name:str=Form(...), title_json:str=Form(...), s
     except (ValueError,TypeError,UnidentifiedImageError,KeyError) as exc:
         raise HTTPException(422,f"Invalid template image or markers: {exc}") from exc
     key=f"voting-{uuid4().hex}"
+    has_default=await session.scalar(select(MediaTemplate.id).where(MediaTemplate.category=="voting",
+        MediaTemplate.is_default.is_(True),MediaTemplate.is_active.is_(True)).limit(1))
     row=MediaTemplate(key=key,name=name.strip(),category="voting",canvas_width=width,
         canvas_height=height,background_path="",manifest=manifest,
-        created_by_user_id=current_user.id,is_active=True,is_default=False)
+        created_by_user_id=current_user.id,is_active=True,is_default=has_default is None)
     session.add(row)
     await session.flush()
     path=VOTING_TEMPLATE_ROOT/f"{row.id}.{file.content_type.split('/')[-1].replace('jpeg','jpg')}"

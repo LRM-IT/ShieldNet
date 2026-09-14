@@ -47,6 +47,7 @@ async def render_preview(
         "OPTION_LABEL": "NAP 15",
         "OPTION_VOTES": "72",
         "OPTION_PERCENTAGE": "56.3",
+        "RESULT_SCORES": "NAP 15: 72 (56.3%)\nNAP 10: 56 (43.7%)",
         "SERVER_NAME": "Server 2279",
         "RANK_TITLE": "POWER RANKING",
         "RANK_PERIOD": "Season 1",
