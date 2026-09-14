@@ -34,38 +34,6 @@ class FirstIntroduction:
     async def completed(self, guild_id: int, user_id: int) -> bool:
         return bool((await self.get(f"/guilds/{guild_id}/members/{user_id}"))["completed"])
 
-    async def prompt_on_join(self, member: discord.Member) -> None:
-        if member.bot or member.pending:
-            return
-        config = await self.configuration(member.guild.id)
-        if not config["enabled"] or not config["server_numbers"] or not config["languages"]:
-            return
-        if await self.completed(member.guild.id, member.id):
-            return
-        embed = discord.Embed(
-            title="First introduction",
-            description=str(config["prompt_text"]),
-            colour=discord.Colour.teal(),
-        )
-        embed.set_footer(text=f"guild:{member.guild.id}")
-        view = IntroStartView(self)
-        mode = config.get("delivery_mode", "dm_with_fallback")
-        if mode != "channel":
-            try:
-                await member.send(embed=embed, view=view)
-                return
-            except discord.HTTPException:
-                if mode == "dm":
-                    logger.info("Introduction DM closed guild=%s user=%s", member.guild.id, member.id)
-                    return
-        channel_id = config.get("fallback_channel_id")
-        channel = member.guild.get_channel(int(channel_id)) if channel_id else None
-        if isinstance(channel, discord.TextChannel):
-            await channel.send(content=member.mention, embed=embed, view=view,
-                               allowed_mentions=discord.AllowedMentions(users=True))
-        else:
-            logger.warning("Introduction channel unavailable guild=%s", member.guild.id)
-
     async def begin(self, interaction: discord.Interaction, guild_id: int) -> None:
         guild = self.bot.get_guild(guild_id)
         if guild is None:
@@ -142,29 +110,6 @@ class FirstIntroduction:
             "applied_nickname": applied,
         })
         return applied
-
-
-class IntroStartView(discord.ui.View):
-    def __init__(self, plugin: FirstIntroduction) -> None:
-        super().__init__(timeout=None)
-        self.plugin = plugin
-
-    @discord.ui.button(label="Confirm and introduce yourself", style=discord.ButtonStyle.success,
-                       custom_id="guildconsole:first-introduction:start")
-    async def start(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
-        if interaction.message is None or interaction.message.author != self.plugin.bot.user:
-            await interaction.response.send_message("Invalid introduction prompt.", ephemeral=True)
-            return
-        footer = interaction.message.embeds[0].footer.text if interaction.message.embeds else ""
-        if not footer or not footer.startswith("guild:") or not footer[6:].isdigit():
-            await interaction.response.send_message("Invalid introduction prompt.", ephemeral=True)
-            return
-        try:
-            await self.plugin.begin(interaction, int(footer[6:]))
-        except Exception:
-            logger.exception("Could not open introduction guild=%s", footer[6:])
-            if not interaction.response.is_done():
-                await interaction.response.send_message("Could not load the introduction. Try again later.", ephemeral=True)
 
 
 class IntroLanguageSelect(discord.ui.Select):

@@ -26,7 +26,7 @@ from bot.guild_dm_broadcast import GuildDMBroadcastWorker
 from bot.plugin_welcome import WelcomeWorker
 from bot.plugin_antiflood import AntiFloodWorker
 from bot.plugin_voting import VotingWorker
-from bot.plugin_first_introduction import FirstIntroduction, IntroStartView
+from bot.plugin_first_introduction import FirstIntroduction
 
 logger = logging.getLogger(__name__)
 
@@ -271,7 +271,6 @@ class ShieldNetBot(discord.Client):
 
     async def setup_hook(self) -> None:
         self.add_view(VerificationReviewView(self.verification))
-        self.add_view(IntroStartView(self.first_introduction))
         if settings.sync_commands_on_start:
             synced = await self.tree.sync()
             logger.info("Commands synchronized: %s", len(synced))
@@ -379,10 +378,6 @@ class ShieldNetBot(discord.Client):
             await self.welcome.member_join(member)
         except Exception:
             logger.exception("Member join sync/automation failed: %s", member.id)
-        try:
-            await self.first_introduction.prompt_on_join(member)
-        except Exception:
-            logger.exception("First introduction prompt failed: %s", member.id)
 
     async def on_member_remove(self, member: discord.Member) -> None:
         try:
@@ -393,11 +388,6 @@ class ShieldNetBot(discord.Client):
             logger.exception("Member leave sync/automation failed: %s", member.id)
 
     async def on_member_update(self, before: discord.Member, after: discord.Member) -> None:
-        if before.pending and not after.pending:
-            try:
-                await self.first_introduction.prompt_on_join(after)
-            except Exception:
-                logger.exception("First introduction after screening failed: %s", after.id)
         try:
             await self.member_sync.sync_member(after)
             before_ids = {r.id for r in before.roles}

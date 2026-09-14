@@ -28,9 +28,6 @@ DEFAULT_CONFIG = {
     "nickname_template": "[{alliance}] {nick}",
     "verified_role_id": None,
     "language_roles": {},
-    "fallback_channel_id": None,
-    "delivery_mode": "dm_with_fallback",
-    "prompt_text": "Welcome! Confirm your membership and introduce yourself to continue.",
 }
 ALLOWED_FIELDS = {"server", "alliance", "nick"}
 
@@ -40,9 +37,6 @@ class SettingsInput(BaseModel):
     nickname_template: str = Field(default="[{alliance}] {nick}", min_length=1, max_length=100)
     verified_role_id: str | None = None
     language_roles: dict[str, str] = Field(default_factory=dict)
-    fallback_channel_id: str | None = None
-    delivery_mode: str = "dm_with_fallback"
-    prompt_text: str = Field(default=DEFAULT_CONFIG["prompt_text"], min_length=1, max_length=500)
 
     @field_validator("server_numbers")
     @classmethod
@@ -60,7 +54,7 @@ class SettingsInput(BaseModel):
             raise ValueError("Use only {server}, {alliance}, {nick}; {nick} is required")
         return value
 
-    @field_validator("verified_role_id", "fallback_channel_id")
+    @field_validator("verified_role_id")
     @classmethod
     def validate_id(cls, value: str | None) -> str | None:
         if value is not None and (not value.isdigit() or not 15 <= len(value) <= 22):
@@ -73,14 +67,6 @@ class SettingsInput(BaseModel):
         if any(not role_id.isdigit() or not 15 <= len(role_id) <= 22 for role_id in values.values()):
             raise ValueError("Language role IDs must be Discord ID strings")
         return values
-
-    @field_validator("delivery_mode")
-    @classmethod
-    def validate_delivery(cls, value: str) -> str:
-        if value not in {"dm_with_fallback", "channel", "dm"}:
-            raise ValueError("Invalid delivery mode")
-        return value
-
 
 class CompletionInput(BaseModel):
     guild_id: int
@@ -142,8 +128,6 @@ async def save_settings(guild_id: int, payload: SettingsInput, user: User = Depe
         raise HTTPException(422, "Add at least one server number")
     if payload.verified_role_id is None:
         raise HTTPException(422, "Choose a verified role")
-    if payload.delivery_mode in {"channel", "dm_with_fallback"} and not payload.fallback_channel_id:
-        raise HTTPException(422, "Choose an introduction channel")
     installation.configuration = payload.model_dump()
     await session.commit()
     return await _settings(session, guild_id)

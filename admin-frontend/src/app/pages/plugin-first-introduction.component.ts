@@ -16,9 +16,6 @@ interface IntroSettings {
   nickname_template: string;
   verified_role_id: string | null;
   language_roles: Record<string, string>;
-  fallback_channel_id: string | null;
-  delivery_mode: 'dm_with_fallback' | 'channel' | 'dm';
-  prompt_text: string;
 }
 
 @Component({
@@ -28,7 +25,7 @@ interface IntroSettings {
     <sn-shell title="First Introduction">
       <main class="intro-page">
         <header><span>GUILD PLUGIN</span><h2>First Introduction</h2>
-          <p>Ask new members for their language, server number, alliance and nickname before assigning roles.</p></header>
+          <p>Collect answers in Discord's Apply to Join request, then assign roles and nickname after approval.</p></header>
         @if (error()) { <div class="alert error">{{ error() }}</div> }
         @if (success()) { <div class="alert success">{{ success() }}</div> }
         @if (!settings.installed) {
@@ -36,22 +33,12 @@ interface IntroSettings {
             <button type="button" (click)="install()" [disabled]="busy()">Install plugin</button></section>
         } @else {
           <section class="panel">
-            <div class="heading"><div><h3>Introduction delivery</h3><p>The questionnaire is sent when a member joins for the first time.</p></div>
+            <div class="heading"><div><h3>Discord application</h3><p>In Discord desktop, open Server Settings → Access → Apply to Join and add these four questions:</p></div>
               <button type="button" (click)="toggle()" [disabled]="busy()">{{ settings.enabled ? 'Disable plugin' : 'Enable plugin' }}</button></div>
-            <label>Delivery method
-              <select [(ngModel)]="settings.delivery_mode">
-                <option value="dm_with_fallback">Direct message, then server channel if DMs are closed</option>
-                <option value="channel">Server channel only</option>
-                <option value="dm">Direct message only</option>
-              </select>
-            </label>
-            <label>Introduction channel
-              <select [(ngModel)]="settings.fallback_channel_id">
-                <option [ngValue]="null">Select channel</option>
-                @for (channel of channels(); track channel.id) { <option [value]="channel.id">#{{ channel.name }}</option> }
-              </select>
-            </label>
-            <label>Prompt text<textarea [(ngModel)]="settings.prompt_text" rows="3" maxlength="500"></textarea></label>
+            <ol><li>What language do you use? @for (language of settings.languages; track language.code) { {{ language.name }}{{ $last ? '.' : ', ' }} }</li>
+              <li>What is your server number? {{ serverNumbersText || 'Configure numbers below.' }}</li>
+              <li>What is your alliance name?</li><li>What nickname should appear on this server?</li></ol>
+            <p class="hint">Discord does not expose application answers to bots. After an administrator approves the request, the member runs <strong>/introduction</strong> to enter the same details; the bot then applies the language and verified roles and formats the nickname. GuildConsole does not send a DM or channel prompt automatically.</p>
           </section>
           <section class="panel">
             <h3>Questionnaire and nickname</h3>
@@ -100,7 +87,6 @@ export class PluginFirstIntroductionComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly plugins = inject(GuildPluginService);
   readonly guildId = this.route.snapshot.paramMap.get('guildId') || '';
-  readonly channels = signal<DiscordOption[]>([]);
   readonly roles = signal<DiscordOption[]>([]);
   readonly busy = signal(false);
   readonly error = signal('');
@@ -109,8 +95,7 @@ export class PluginFirstIntroductionComponent implements OnInit {
   settings: IntroSettings = {
     installed: false, enabled: false, languages: [], server_numbers: [],
     nickname_template: '[{alliance}] {nick}', verified_role_id: null,
-    language_roles: {}, fallback_channel_id: null, delivery_mode: 'dm_with_fallback',
-    prompt_text: 'Welcome! Confirm your membership and introduce yourself to continue.',
+    language_roles: {},
   };
   private get url(): string { return `/api/v1/discord/guilds/${this.guildId}/plugins/first-introduction/settings`; }
 
@@ -122,7 +107,6 @@ export class PluginFirstIntroductionComponent implements OnInit {
       ]);
       this.settings = settings;
       this.serverNumbersText = settings.server_numbers.join('\n');
-      this.channels.set((structure.channels || []).filter(item => ['text', '0', 'guild_text'].includes(String(item.type).toLowerCase())));
       this.roles.set((structure.roles || []).filter(item => !item.managed && item.name !== '@everyone'));
     } catch { this.error.set('Could not load introduction settings or Discord structure.'); }
   }
@@ -151,9 +135,6 @@ export class PluginFirstIntroductionComponent implements OnInit {
       nickname_template: this.settings.nickname_template,
       verified_role_id: this.settings.verified_role_id,
       language_roles: Object.fromEntries(Object.entries(this.settings.language_roles).filter(([, value]) => value)),
-      fallback_channel_id: this.settings.fallback_channel_id,
-      delivery_mode: this.settings.delivery_mode,
-      prompt_text: this.settings.prompt_text,
     };
     try {
       this.settings = await firstValueFrom(this.http.put<IntroSettings>(this.url, payload));
