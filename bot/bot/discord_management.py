@@ -33,7 +33,12 @@ class DiscordManagementWorker:
             if kind == "role":
                 role = guild.get_role(int(target_id)) if target_id else None
                 if op == "create":
-                    role = await guild.create_role(name=data.get("name", "New role"), colour=discord.Colour(int(data.get("color", 0))), permissions=discord.Permissions(int(data.get("permissions", 0))), hoist=bool(data.get("hoist", False)), mentionable=bool(data.get("mentionable", False)), reason="ShieldNet")
+                    name=data.get("name", "New role")
+                    if data.get("reuse_existing"):
+                        role=next((candidate for candidate in guild.roles if candidate.name.casefold()==name.casefold()
+                                   and not candidate.managed and candidate < guild.me.top_role), None)
+                    if role is None:
+                        role = await guild.create_role(name=name, colour=discord.Colour(int(data.get("color", 0))), permissions=discord.Permissions(int(data.get("permissions", 0))), hoist=bool(data.get("hoist", False)), mentionable=bool(data.get("mentionable", False)), reason="GuildConsole language role" if data.get("_plugin")=="first_introduction" else "ShieldNet")
                 elif role is None:
                     raise RuntimeError("Role not found")
                 elif role.managed or role >= guild.me.top_role:

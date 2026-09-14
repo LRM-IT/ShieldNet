@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.dependencies.internal import verify_internal_service_token
 from app.db.session import get_db_session
 from app.models.role_channel_management import DiscordStructureChange, DiscordBulkRoleOperation
+from app.models.plugins import GuildPluginInstallation
 from app.schemas.role_channel_management import StructureResultRequest, BulkRoleResultRequest
 
 router = APIRouter(prefix="/internal/discord-management", tags=["Internal Discord Management"], dependencies=[Depends(verify_internal_service_token)])
@@ -24,6 +25,19 @@ async def change_result(item_id: uuid.UUID, payload: StructureResultRequest, ses
     item = await session.get(DiscordStructureChange, item_id)
     if not item: raise HTTPException(404, "Change not found")
     item.status = payload.status; item.result_message = payload.message; item.payload = {**(item.payload or {}), "_result": payload.data}; item.completed_at = datetime.now(UTC)
+    if (payload.status == "completed" and item.payload.get("_plugin") == "first_introduction"
+            and item.payload.get("language_code") and payload.data.get("role_id")):
+        installation = await session.scalar(select(GuildPluginInstallation).where(
+            GuildPluginInstallation.guild_id == item.guild_id,
+            GuildPluginInstallation.plugin_key == "first_introduction").with_for_update())
+        if installation:
+            config = dict(installation.configuration or {})
+            roles = dict(config.get("language_roles") or {})
+            code = item.payload["language_code"]
+            if not roles.get(code):
+                roles[code] = str(payload.data["role_id"])
+                config["language_roles"] = roles
+                installation.configuration = config
     await session.commit(); return {"status": "ok"}
 
 @router.post("/bulk-roles/{item_id}/result")

@@ -198,6 +198,7 @@ export class DiscordChannelPickerComponent implements OnInit, OnChanges {
 
   typeLabel(type: string): string {
     const value = String(type).toLowerCase();
+    if (value.includes('thread') || ['10','11','12'].includes(value)) return 'Thread';
     if (value.includes('forum') || value === '15') return 'Forum';
     if (value.includes('news') || value.includes('announcement') || value === '5') return 'Announcement';
     return 'Text channel';
@@ -274,6 +275,7 @@ export class DiscordChannelPickerComponent implements OnInit, OnChanges {
       'text','guild_text','0',
       'news','announcement','guild_announcement','5',
       'forum','guild_forum','15',
+      'public_thread','private_thread','news_thread','10','11','12',
     ].includes(String(type).toLowerCase());
   }
 }
