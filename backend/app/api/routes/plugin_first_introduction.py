@@ -26,11 +26,7 @@ internal_router = APIRouter(
     dependencies=[Depends(verify_internal_service_token)],
 )
 
-DEFAULT_GROUPS = (
-    {"id": "r1", "name": "R1", "enabled": True},
-    {"id": "r4", "name": "R4", "enabled": False},
-    {"id": "r5", "name": "R5", "enabled": False},
-)
+DEFAULT_GROUPS = ({"id": "language-1", "name": "Основна група", "enabled": True},)
 ROLE_ID = re.compile(r"^[0-9]{15,22}$")
 GROUP_ID = re.compile(r"^[a-z0-9_-]{1,32}$")
 
@@ -107,7 +103,7 @@ def _groups(configuration: dict) -> list[dict]:
     if isinstance(configuration.get("groups"), list):
         return [dict(group) for group in configuration["groups"]]
     if any(key in configuration for key in ("channel_id", "language_roles", "message_id")):
-        legacy = _default_groups()
+        legacy = [{**_default_groups()[0], "id": "r1", "name": "R1"}]
         legacy[0].update({
             "channel_id": configuration.get("channel_id"),
             "language_roles": configuration.get("language_roles") or {},

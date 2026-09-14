@@ -21,18 +21,18 @@ interface Settings { installed: boolean; enabled: boolean; languages: Language[]
     @if (success()) { <div class="panel success">{{success()}}</div> }
     @if (!settings.installed) { <section class="panel"><button (click)="install()" [disabled]="busy()">Установити плагін</button></section> }
     @else {
-      <section class="panel row"><div><h3>Групи мов</h3><p>R1, R4 та R5 мають власні гілки й панелі реакцій.</p></div>
+      <section class="panel row"><div><h3>Групи мов</h3><p>Назвіть групи відповідно до структури вашого сервера. Кожна має власну гілку й панель реакцій.</p></div>
         <button (click)="toggle()" [disabled]="busy()">{{settings.enabled ? 'Вимкнути плагін' : 'Увімкнути плагін'}}</button></section>
       @for (group of settings.groups; track group.id) {
         <section class="panel">
-          <div class="row"><div><h3>{{group.name}} ({{group.id}})</h3><p>/language_panel group:{{group.id}}</p></div>
+          <div class="row"><div><h3>{{group.name}}</h3><p>/language_panel group:{{group.id}}</p></div>
             <label class="inline"><input type="checkbox" [(ngModel)]="group.enabled"> Активна група</label></div>
           <label>Назва групи<input [(ngModel)]="group.name" maxlength="80"></label>
           <label>Гілка або текстовий канал Discord
             <sn-discord-channel-picker [guildId]="guildId" [value]="group.channel_id" (valueChange)="group.channel_id=$event" /></label>
           <label>Роль доступу до групи<select [(ngModel)]="group.access_role_id"><option [ngValue]="null">Виберіть роль доступу</option>
             @for (role of allRoles(); track role.id) { <option [value]="role.id">{{role.name}}</option> }</select></label>
-          <p>Лише учасник з роллю доступу може вибрати мову в цій групі. Для R4/R5 виберіть роль відповідного рівня.</p>
+          <p>Лише учасник з цією роллю доступу може вибрати мову в групі.</p>
           <div class="builder"><h4>Мовні ролі</h4><p>Маска: &#123;group&#125;, &#123;flag&#125;, &#123;name&#125;, &#123;code&#125;.</p>
             <label>Маска назви<input [(ngModel)]="group.role_name_mask" maxlength="100" placeholder="{group} - {name}"></label>
             <div class="preview">@for (language of settings.languages; track language.code) { <small>{{language.code}} → {{rolePreview(group, language)}}</small> }</div>
@@ -44,7 +44,7 @@ interface Settings { installed: boolean; enabled: boolean; languages: Language[]
                 @for (role of assignableRoles(); track role.id) { <option [value]="role.id">{{role.name}}</option> }</select></label>
           } @empty { <p>Спочатку налаштуйте мови сервера.</p> }
           @if (group.message_id) { <p>Опублікована панель: {{group.message_id}}</p> }
-          @if (!['r1','r4','r5'].includes(group.id)) { <button class="secondary" (click)="removeGroup(group.id)" [disabled]="busy()">Видалити групу</button> }
+          <button class="secondary" (click)="removeGroup(group.id)" [disabled]="busy() || settings.groups.length === 1">Видалити групу</button>
         </section>
       }
       <section class="panel"><div class="row"><button class="secondary" (click)="addGroup()" [disabled]="busy() || settings.groups.length >= 10">Додати групу</button>
