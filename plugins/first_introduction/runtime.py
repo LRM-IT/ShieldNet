@@ -14,14 +14,14 @@ class FirstIntroductionPlugin(BackendPlugin):
         return None
 
     async def startup(self) -> None:
-        logger.info("First Introduction backend started plugin_key=%s", self.key)
+        logger.info("Language Selection backend started plugin_key=%s", self.key)
 
     async def shutdown(self) -> None:
-        logger.info("First Introduction backend stopped plugin_key=%s", self.key)
+        logger.info("Language Selection backend stopped plugin_key=%s", self.key)
 
 
 async def setup(context: Any) -> None:
-    logger.info("First Introduction setup guild_id=%s", getattr(context, "guild_id", None))
+    logger.info("Language Selection setup guild_id=%s", getattr(context, "guild_id", None))
 
 
 async def start(context: Any) -> None:

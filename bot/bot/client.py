@@ -26,7 +26,7 @@ from bot.guild_dm_broadcast import GuildDMBroadcastWorker
 from bot.plugin_welcome import WelcomeWorker
 from bot.plugin_antiflood import AntiFloodWorker
 from bot.plugin_voting import VotingWorker
-from bot.plugin_first_introduction import FirstIntroduction
+from bot.plugin_first_introduction import LanguageSelection, LanguagePanel
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +57,7 @@ class ShieldNetBot(discord.Client):
         self.welcome = WelcomeWorker(self)
         self.antiflood = AntiFloodWorker(self)
         self.voting = VotingWorker(self)
-        self.first_introduction = FirstIntroduction(self)
+        self.language_selection = LanguageSelection(self)
         self._initial_sync_done = False
         self.redis = Redis.from_url(settings.redis_url, decode_responses=True)
         self.worker_name = f"discord-worker:{socket.gethostname()}"
@@ -131,17 +131,34 @@ class ShieldNetBot(discord.Client):
                 VerifyModal(self.verification)
             )
 
-        @self.tree.command(name="introduction", description="Complete your first introduction.")
-        async def introduction(interaction: discord.Interaction) -> None:
+        @self.tree.command(name="language", description="Choose or change your language role.")
+        async def language(interaction: discord.Interaction) -> None:
             if interaction.guild_id is None:
                 await interaction.response.send_message("Use this command on your server.")
                 return
             try:
-                await self.first_introduction.begin(interaction, interaction.guild_id)
+                await self.language_selection.begin(interaction)
             except Exception:
-                logger.exception("Could not open first introduction guild=%s", interaction.guild_id)
+                logger.exception("Could not open language selection guild=%s", interaction.guild_id)
                 if not interaction.response.is_done():
-                    await interaction.response.send_message("Could not load the introduction. Try again later.", ephemeral=True)
+                    await interaction.response.send_message("Could not load languages. Try again later.", ephemeral=True)
+
+        @self.tree.command(name="language_panel", description="Post a language selection button in this channel.")
+        async def language_panel(interaction: discord.Interaction) -> None:
+            if interaction.guild is None or not interaction.user.guild_permissions.manage_guild:
+                await interaction.response.send_message("Manage Server permission is required.", ephemeral=True)
+                return
+            try:
+                config = await self.language_selection.configuration(interaction.guild.id)
+                if not config["enabled"]:
+                    await interaction.response.send_message("Enable Language Selection first.", ephemeral=True)
+                    return
+                await interaction.channel.send("Choose your server language:", view=LanguagePanel(self.language_selection))
+                await interaction.response.send_message("Language panel posted.", ephemeral=True)
+            except Exception:
+                logger.exception("Could not post language panel guild=%s", interaction.guild_id)
+                if not interaction.response.is_done():
+                    await interaction.response.send_message("Could not post the language panel.", ephemeral=True)
 
 
         @self.tree.command(
@@ -271,6 +288,7 @@ class ShieldNetBot(discord.Client):
 
     async def setup_hook(self) -> None:
         self.add_view(VerificationReviewView(self.verification))
+        self.add_view(LanguagePanel(self.language_selection))
         if settings.sync_commands_on_start:
             synced = await self.tree.sync()
             logger.info("Commands synchronized: %s", len(synced))

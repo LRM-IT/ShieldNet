@@ -10,180 +10,103 @@ from bot.config import settings
 logger = logging.getLogger(__name__)
 
 
-class FirstIntroduction:
+class LanguageSelection:
     def __init__(self, bot: discord.Client) -> None:
         self.bot = bot
         self.base = settings.backend_url.rstrip("/") + "/api/v1/internal/plugin-first-introduction"
         self.headers = {"X-ShieldNet-Service-Token": settings.internal_service_token}
 
-    async def get(self, path: str) -> dict:
-        async with httpx.AsyncClient(timeout=20) as client:
-            response = await client.get(self.base + path, headers=self.headers)
-            response.raise_for_status()
-            return response.json()
-
-    async def post(self, path: str, payload: dict) -> dict:
-        async with httpx.AsyncClient(timeout=20) as client:
-            response = await client.post(self.base + path, json=payload, headers=self.headers)
-            response.raise_for_status()
-            return response.json()
-
     async def configuration(self, guild_id: int) -> dict:
-        return await self.get(f"/guilds/{guild_id}/configuration")
+        async with httpx.AsyncClient(timeout=20) as client:
+            response = await client.get(f"{self.base}/guilds/{guild_id}/configuration", headers=self.headers)
+            response.raise_for_status()
+            return response.json()
 
-    async def completed(self, guild_id: int, user_id: int) -> bool:
-        return bool((await self.get(f"/guilds/{guild_id}/members/{user_id}"))["completed"])
-
-    async def begin(self, interaction: discord.Interaction, guild_id: int) -> None:
-        guild = self.bot.get_guild(guild_id)
-        if guild is None:
-            await interaction.response.send_message("Server is unavailable.", ephemeral=True)
+    async def begin(self, interaction: discord.Interaction) -> None:
+        if interaction.guild is None:
+            await interaction.response.send_message("Use this command on your server.", ephemeral=True)
             return
-        member = guild.get_member(interaction.user.id)
-        if member is None:
-            try:
-                member = await guild.fetch_member(interaction.user.id)
-            except discord.HTTPException:
-                await interaction.response.send_message("You must be a member of this server.", ephemeral=True)
-                return
-        config = await self.configuration(guild_id)
-        if not config["enabled"]:
-            await interaction.response.send_message("Introduction is not enabled on this server.", ephemeral=True)
-            return
-        if await self.completed(guild_id, member.id):
-            await interaction.response.send_message("You have already completed the introduction.", ephemeral=True)
-            return
-        if not config["languages"] or not config["server_numbers"]:
-            await interaction.response.send_message("The introduction is not configured yet.", ephemeral=True)
+        config = await self.configuration(interaction.guild.id)
+        if not config["enabled"] or not config["languages"]:
+            await interaction.response.send_message("Language selection is not configured here.", ephemeral=True)
             return
         await interaction.response.send_message(
-            "Choose your language and server number, then continue.",
-            view=IntroSelectionsView(self, guild_id, member.id, config),
-            ephemeral=interaction.guild is not None,
+            "Choose your language. You can change it later.",
+            view=LanguageChoices(self, interaction.user.id, config["languages"]),
+            ephemeral=True,
         )
 
-    async def finish(self, interaction: discord.Interaction, guild_id: int, language: str,
-                     server_number: str, alliance: str, nickname: str) -> str:
-        guild = self.bot.get_guild(guild_id)
+    async def choose(self, interaction: discord.Interaction, code: str) -> str:
+        guild = interaction.guild
         if guild is None:
-            raise ValueError("Server is unavailable")
-        member = guild.get_member(interaction.user.id) or await guild.fetch_member(interaction.user.id)
-        if await self.completed(guild_id, member.id):
-            raise ValueError("Introduction was already completed")
-        config = await self.configuration(guild_id)
-        if not config["enabled"] or language not in {item["code"] for item in config["languages"]}:
-            raise ValueError("Language is no longer available")
-        if server_number not in config["server_numbers"]:
-            raise ValueError("Server number is no longer available")
-        role_ids = [config["language_roles"].get(language), config.get("verified_role_id")]
-        if not all(role_ids):
-            raise ValueError("Roles are not configured")
-        roles = [guild.get_role(int(role_id)) for role_id in role_ids]
-        if any(role is None for role in roles):
-            raise ValueError("A configured role no longer exists")
+            raise ValueError("Use language selection on your server")
+        config = await self.configuration(guild.id)
+        languages = {item["code"]: item["name"] for item in config["languages"]}
+        if not config["enabled"] or code not in languages:
+            raise ValueError("This language is no longer available")
+        role_ids = config["language_roles"]
+        selected_id = role_ids.get(code)
+        if not selected_id:
+            raise ValueError("The selected language has no role configured")
+        selected = guild.get_role(int(selected_id))
+        if selected is None:
+            raise ValueError("The selected language role no longer exists")
         bot_member = guild.me
-        if bot_member is None or any(role >= bot_member.top_role for role in roles):
-            raise ValueError("Move the bot role above the configured roles")
-        applied = config["nickname_template"].format(
-            server=server_number, alliance=alliance.strip(), nick=nickname.strip()
-        ).strip()
-        if not 1 <= len(applied) <= 32:
-            raise ValueError("The resulting nickname must be 1-32 characters")
-        if member == guild.owner or member.top_role >= bot_member.top_role:
-            raise ValueError("The bot cannot change this member's nickname")
-        added = [role for role in roles if role not in member.roles]
-        try:
-            if added:
-                await member.add_roles(*added, reason="GuildConsole first introduction")
-            await member.edit(nick=applied, reason="GuildConsole first introduction")
-        except discord.HTTPException:
-            if added:
-                try:
-                    await member.remove_roles(*added, reason="Introduction could not complete")
-                except discord.HTTPException:
-                    logger.exception("Could not roll back introduction roles guild=%s user=%s", guild_id, member.id)
-            raise
-        await self.post("/complete", {
-            "guild_id": guild_id, "discord_user_id": member.id,
-            "language_code": language, "server_number": server_number,
-            "alliance": alliance.strip(), "nickname": nickname.strip(),
-            "applied_nickname": applied,
-        })
-        return applied
+        if bot_member is None or selected >= bot_member.top_role:
+            raise ValueError("Move the bot role above the language roles")
+        member = guild.get_member(interaction.user.id) or await guild.fetch_member(interaction.user.id)
+        old_roles = [role for role in member.roles if role.id != selected.id and str(role.id) in role_ids.values()]
+        if any(role >= bot_member.top_role for role in old_roles):
+            raise ValueError("Move the bot role above the language roles")
+        if selected not in member.roles:
+            await member.add_roles(selected, reason="GuildConsole language selection")
+        if old_roles:
+            await member.remove_roles(*old_roles, reason="GuildConsole language selection changed")
+        return languages[code]
 
 
-class IntroLanguageSelect(discord.ui.Select):
-    def __init__(self, languages: list[dict]) -> None:
-        super().__init__(placeholder="Choose your language", min_values=1, max_values=1,
-                         options=[discord.SelectOption(label=item["name"][:100], value=item["code"])
-                                  for item in languages[:25]])
-
-    async def callback(self, interaction: discord.Interaction) -> None:
-        self.view.language = self.values[0]
-        await interaction.response.edit_message(view=self.view)
-
-
-class IntroServerSelect(discord.ui.Select):
-    def __init__(self, numbers: list[str]) -> None:
-        super().__init__(placeholder="Choose your server number", min_values=1, max_values=1,
-                         options=[discord.SelectOption(label=value[:100], value=value)
-                                  for value in numbers[:25]])
-
-    async def callback(self, interaction: discord.Interaction) -> None:
-        self.view.server_number = self.values[0]
-        await interaction.response.edit_message(view=self.view)
-
-
-class IntroSelectionsView(discord.ui.View):
-    def __init__(self, plugin: FirstIntroduction, guild_id: int, user_id: int, config: dict) -> None:
-        super().__init__(timeout=900)
+class LanguagePanel(discord.ui.View):
+    def __init__(self, plugin: LanguageSelection) -> None:
+        super().__init__(timeout=None)
         self.plugin = plugin
-        self.guild_id = guild_id
-        self.user_id = user_id
-        self.language: str | None = None
-        self.server_number: str | None = None
-        self.add_item(IntroLanguageSelect(config["languages"]))
-        self.add_item(IntroServerSelect(config["server_numbers"]))
 
-    async def interaction_check(self, interaction: discord.Interaction) -> bool:
-        if interaction.user.id != self.user_id:
-            await interaction.response.send_message("This form belongs to another member.", ephemeral=True)
-            return False
-        return True
-
-    @discord.ui.button(label="Continue", style=discord.ButtonStyle.primary)
-    async def continue_form(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
-        if not self.language or not self.server_number:
-            await interaction.response.send_message("Select both language and server number.", ephemeral=True)
-            return
-        await interaction.response.send_modal(IntroDetailsModal(
-            self.plugin, self.guild_id, self.language, self.server_number
-        ))
-
-
-class IntroDetailsModal(discord.ui.Modal, title="First introduction"):
-    alliance = discord.ui.TextInput(label="Alliance name", min_length=1, max_length=32)
-    nickname = discord.ui.TextInput(label="Your nickname", min_length=1, max_length=64)
-
-    def __init__(self, plugin: FirstIntroduction, guild_id: int, language: str, server_number: str) -> None:
-        super().__init__()
-        self.plugin = plugin
-        self.guild_id = guild_id
-        self.language = language
-        self.server_number = server_number
-
-    async def on_submit(self, interaction: discord.Interaction) -> None:
-        await interaction.response.defer(thinking=True, ephemeral=interaction.guild is not None)
+    @discord.ui.button(label="Choose language", style=discord.ButtonStyle.primary,
+                       custom_id="guildconsole:language-selection:open")
+    async def open(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
         try:
-            applied = await self.plugin.finish(
-                interaction, self.guild_id, self.language, self.server_number,
-                str(self.alliance.value), str(self.nickname.value),
-            )
-            await interaction.followup.send(f"Introduction complete. Your nickname is **{applied}**.",
-                                            ephemeral=interaction.guild is not None)
-        except ValueError as exc:
-            await interaction.followup.send(str(exc), ephemeral=interaction.guild is not None)
+            await self.plugin.begin(interaction)
         except Exception:
-            logger.exception("Introduction failed guild=%s user=%s", self.guild_id, interaction.user.id)
-            await interaction.followup.send("Could not finish the introduction. Please try again.",
-                                            ephemeral=interaction.guild is not None)
+            logger.exception("Language selection could not open guild=%s", interaction.guild_id)
+            if not interaction.response.is_done():
+                await interaction.response.send_message("Could not load languages. Try again later.", ephemeral=True)
+
+
+class LanguageSelect(discord.ui.Select):
+    def __init__(self, languages: list[dict]) -> None:
+        super().__init__(
+            placeholder="Choose your language", min_values=1, max_values=1,
+            options=[discord.SelectOption(label=item["name"][:100], value=item["code"])
+                     for item in languages[:25]],
+        )
+
+    async def callback(self, interaction: discord.Interaction) -> None:
+        if interaction.user.id != self.view.user_id:
+            await interaction.response.send_message("This selection belongs to another member.", ephemeral=True)
+            return
+        await interaction.response.defer(ephemeral=True)
+        try:
+            name = await self.view.plugin.choose(interaction, self.values[0])
+            await interaction.followup.send(f"Language set to **{name}**.", ephemeral=True)
+        except ValueError as exc:
+            await interaction.followup.send(str(exc), ephemeral=True)
+        except Exception:
+            logger.exception("Could not assign language guild=%s user=%s", interaction.guild_id, interaction.user.id)
+            await interaction.followup.send("Could not assign the language role. Try again later.", ephemeral=True)
+
+
+class LanguageChoices(discord.ui.View):
+    def __init__(self, plugin: LanguageSelection, user_id: int, languages: list[dict]) -> None:
+        super().__init__(timeout=300)
+        self.plugin = plugin
+        self.user_id = user_id
+        self.add_item(LanguageSelect(languages))

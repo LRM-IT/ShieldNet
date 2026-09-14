@@ -89,7 +89,7 @@ export const routes: Routes = [
   { path: 'guild/:guildId/plugins/guild-dm-broadcast', component: GuildDMBroadcastComponent, canActivate: [guildGuard], data: { guildModule: 'plugins' } },
   { path: 'guild/:guildId/plugins/welcome', component: PluginWelcomeComponent, canActivate: [guildGuard], data: { guildModule: 'plugins' } },
   { path: 'guild/:guildId/plugins/antiflood', component: PluginAntiFloodComponent, canActivate: [guildGuard], data: { guildModule: 'plugins' } },
-  { path: 'guild/:guildId/plugins/first-introduction', component: PluginFirstIntroductionComponent, canActivate: [guildGuard], data: { guildModule: 'plugins' } },
+  { path: 'guild/:guildId/plugins/language-selection', component: PluginFirstIntroductionComponent, canActivate: [guildGuard], data: { guildModule: 'plugins' } },
   { path: 'guild/:guildId/plugins/voting', component: PluginVotingComponent, canActivate: [guildGuard], data: { guildModule: 'plugins' } },
   { path: 'guild/:guildId/automation-monitor', component: AutomationMonitorComponent, canActivate: [guildGuard], data: { guildModule: 'automations' } },
   { path: 'guild/:guildId/workflow-scheduler', component: WorkflowSchedulerComponent, canActivate: [guildGuard], data: { guildModule: 'automations' } },
