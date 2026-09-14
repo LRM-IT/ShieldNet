@@ -29,7 +29,7 @@ interface Campaign {
     <section class="page">
       <header class="topline">
         <div>
-          <div class="eyebrow">SHIELDNET PLUGIN</div>
+          <div class="eyebrow">GUILDCONSOLE PLUGIN</div>
           <h2>Guild DM Broadcast</h2>
           <p>Create targeted Discord direct-message campaigns.</p>
         </div>

@@ -57,7 +57,7 @@
     "discord_id": "Discord ID"
   },
   "dashboard": {
-    "title": "Панель ShieldNet",
+    "title": "Панель GuildConsole",
     "global_fabric": "ГЛОБАЛЬНЫЙ ОПЕРАЦИОННЫЙ КОНТУР",
     "under_control": "Инфраструктура под контролем.",
     "description": "Текущее состояние служб, очереди верификации и активность серверов.",
@@ -135,14 +135,14 @@
     "open_verification": "Верификация",
     "open_audit": "Аудит",
     "load_error": "Не удалось загрузить обзор панели.",
-    "load_error_full": "Не удалось загрузить панель ShieldNet."
+    "load_error_full": "Не удалось загрузить панель GuildConsole."
   },
   "security": {
     "title": "Центр безопасности",
     "loading": "Загрузка последнего снимка безопасности…",
     "load_error": "Не удалось загрузить Центр безопасности.",
     "configuration_risk": "Риск конфигурации",
-    "description": "ShieldNet анализирует роли, каналы, вебхуки Discord и фактические разрешения бота.",
+    "description": "GuildConsole анализирует роли, каналы, вебхуки Discord и фактические разрешения бота.",
     "critical": "Критические",
     "high": "Высокие",
     "medium": "Средние",
@@ -154,7 +154,7 @@
     "waiting_bot": "Ожидание бота",
     "no_data": "Данных пока нет",
     "waiting_snapshot": "Ожидание первого снимка от бота",
-    "snapshot_help": "Бот ShieldNet отправляет снимок безопасности каждые 15 минут. Убедитесь, что бот онлайн, а токен backend-службы корректен.",
+    "snapshot_help": "Бот GuildConsole отправляет снимок безопасности каждые 15 минут. Убедитесь, что бот онлайн, а токен backend-службы корректен.",
     "findings": "НАХОДКИ",
     "detected_risks": "Обнаруженные риски",
     "refresh": "Обновить",
@@ -175,7 +175,7 @@
   },
   "themes": {
     "shieldnet": {
-      "name": "ShieldNet",
+      "name": "GuildConsole",
       "description": "Signature teal theme with a technological grid."
     },
     "midnight": {
@@ -298,7 +298,7 @@
   "plugins": {
     "title": "Платформа плагинов",
     "installed": "Установленные плагины",
-    "description": "Управляйте найденными плагинами ShieldNet и их состоянием выполнения.",
+    "description": "Управляйте найденными плагинами GuildConsole и их состоянием выполнения.",
     "refresh": "Обновить",
     "scanning": "Сканирование…",
     "scan": "Сканировать каталог плагинов",
@@ -525,7 +525,7 @@
     "load_error": "Не удалось загрузить участников.",
     "profile_error": "Не удалось сохранить профиль участника.",
     "active_filter": "Активные",
-    "blocked_filter": "Заблокированные ShieldNet",
+    "blocked_filter": "Заблокированные GuildConsole",
     "inactive_filter": "Неактивные 30 дней",
     "watchlist_filter": "Под наблюдением",
     "review_due_filter": "Требуется проверка",
@@ -541,7 +541,7 @@
     "tags": "Теги",
     "tags_placeholder": "trusted, vip, review",
     "private_note": "Приватная заметка администратора",
-    "private_note_placeholder": "Видима только авторизованному персоналу ShieldNet",
+    "private_note_placeholder": "Видима только авторизованному персоналу GuildConsole",
     "warning": "Предупреждение",
     "spam": "Спам",
     "harassment": "Преследование",
@@ -1039,7 +1039,7 @@
     "operation_error": "Не удалось выполнить операцию с заявкой."
   },
   "doctor": {
-    "title": "Диагностика ShieldNet",
+    "title": "Диагностика GuildConsole",
     "eyebrow": "Диагностика платформы",
     "heading": "Состояние установки и среды выполнения",
     "description": "Проверяет конфигурацию приложения, права PostgreSQL, Valkey, сигналы активности и необходимые ресурсы.",
@@ -1065,7 +1065,7 @@
     "select_plugin": "Выберите плагин",
     "select_help": "Выберите плагин, чтобы открыть панель статистики среды.",
     "selected": "Выбранная среда",
-    "default_description": "Статистика среды плагина ShieldNet.",
+    "default_description": "Статистика среды плагина GuildConsole.",
     "healthy": "Исправен",
     "unknown": "Статус неизвестен",
     "loading": "Загрузка статистики…",
@@ -1151,7 +1151,7 @@
     "authenticate": "Аутентифицировать оператора",
     "failure": "ОШИБКА ДОСТУПА",
     "step_1": "Discord проверяет вашу учётную запись.",
-    "step_2": "ShieldNet проверяет доступ к серверам.",
+    "step_2": "GuildConsole проверяет доступ к серверам.",
     "step_3": "Создаётся ограниченная консольная сессия.",
     "footer": "Продолжая, вы входите в административную среду с мониторингом.",
     "build": "СБОРКА 2.0 // ЗАЩИЩЕНО",
@@ -1160,7 +1160,7 @@
   "permissions_engine": {
     "title": "Разрешения",
     "heading": "Механизм разрешений",
-    "description": "Правила доступа модулей для ролей ShieldNet и Discord.",
+    "description": "Правила доступа модулей для ролей GuildConsole и Discord.",
     "add_rule": "Добавить правило",
     "priority": "приоритет",
     "delete": "Удалить",
@@ -1182,7 +1182,7 @@
     "allow": "Разрешить",
     "deny": "Запретить",
     "subject": "Субъект",
-    "shieldnet_role": "Роль ShieldNet",
+    "shieldnet_role": "Роль GuildConsole",
     "discord_role": "Роль Discord",
     "discord_user": "Discord ID пользователя",
     "everyone": "Все",

@@ -15,12 +15,12 @@ import { TranslationService } from '../core/translation.service';
         <div class="orbit orbit-two"></div>
 
         <div class="visual-content">
-          <a class="brand" href="/" aria-label="ShieldNet">
+          <a class="brand" href="/" aria-label="GuildConsole">
             <span class="brand-symbol">
               <i></i><i></i><i></i>
             </span>
             <span>
-              <strong>SHIELDNET</strong>
+              <strong>GUILDCONSOLE</strong>
               <small>{{ "login.brand_subtitle" | snT:"SECURE CONTROL FABRIC" }}</small>
             </span>
           </a>
@@ -53,7 +53,7 @@ import { TranslationService } from '../core/translation.service';
 
           <div class="visual-footer">
             <span><i></i> {{ "login.online" | snT:"CONTROL PLANE ONLINE" }}</span>
-            <span>SHIELDNET // LRM-IT</span>
+            <span>GUILDCONSOLE // LRM-IT</span>
           </div>
         </div>
       </section>
@@ -103,7 +103,7 @@ import { TranslationService } from '../core/translation.service';
 
           <div class="trust-grid">
             <div><span>01</span><p>{{ "login.step_1" | snT:"Discord verifies your account." }}</p></div>
-            <div><span>02</span><p>{{ "login.step_2" | snT:"ShieldNet checks server access." }}</p></div>
+            <div><span>02</span><p>{{ "login.step_2" | snT:"GuildConsole checks server access." }}</p></div>
             <div><span>03</span><p>{{ "login.step_3" | snT:"A scoped console session is issued." }}</p></div>
           </div>
 

@@ -42,7 +42,7 @@ import { TranslationService } from '../core/translation.service';
         <section class="panel" *ngIf="!summary.snapshot_id">
           <div class="eyebrow">{{ 'security.no_data' | snT:'No data yet' }}</div>
           <h2>{{ 'security.waiting_snapshot' | snT:'Waiting for the first bot snapshot' }}</h2>
-          <p>{{ 'security.snapshot_help' | snT:'The ShieldNet bot sends a security snapshot every 15 minutes. Ensure the bot is online and the backend service token matches.' }}</p>
+          <p>{{ 'security.snapshot_help' | snT:'The GuildConsole bot sends a security snapshot every 15 minutes. Ensure the bot is online and the backend service token matches.' }}</p>
         </section>
 
         <section class="panel" *ngIf="summary.snapshot_id">
@@ -118,7 +118,7 @@ export class SecurityComponent implements OnInit {
   descriptionText(): string {
     return this.i18n.t(
       'security.description',
-      "ShieldNet analyses Discord roles, channels, webhooks and the bot's effective permissions.",
+      "GuildConsole analyses Discord roles, channels, webhooks and the bot's effective permissions.",
     );
   }
 

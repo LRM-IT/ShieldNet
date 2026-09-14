@@ -21,7 +21,7 @@ import { TranslatePipe } from '../core/translate.pipe';
     <sn-shell [title]="'runtime_usage.title' | snT:'Plugin Runtime'">
       <section class="head">
         <div>
-          <div class="eyebrow">SHIELDNET ADMIN V4 · STAGE 14.11</div>
+          <div class="eyebrow">GUILDCONSOLE ADMIN V4 · STAGE 14.11</div>
           <h2>{{ 'runtime_usage.heading' | snT:'Server plugin runtime' }}</h2>
           <p>{{ 'runtime_usage.description' | snT:'Manage installed plugins, runtime processes and server-specific settings.' }}</p>
         </div>

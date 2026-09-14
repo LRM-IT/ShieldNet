@@ -58,7 +58,7 @@
     "discord_id": "Discord ID"
   },
   "dashboard": {
-    "title": "ShieldNet Dashboard",
+    "title": "GuildConsole Dashboard",
     "global_fabric": "GLOBAL OPERATIONS FABRIC",
     "under_control": "Infrastructure under control.",
     "description": "Live service status, verification queues and server activity.",
@@ -136,14 +136,14 @@
     "open_verification": "Verification",
     "open_audit": "Audit",
     "load_error": "Unable to load dashboard overview.",
-    "load_error_full": "Unable to load the ShieldNet dashboard."
+    "load_error_full": "Unable to load the GuildConsole dashboard."
   },
   "security": {
     "title": "Security Center",
     "loading": "Loading latest security snapshot…",
     "load_error": "Unable to load Security Center.",
     "configuration_risk": "Configuration risk",
-    "description": "ShieldNet analyses Discord roles, channels, webhooks and the bot's effective permissions.",
+    "description": "GuildConsole analyses Discord roles, channels, webhooks and the bot's effective permissions.",
     "critical": "Critical",
     "high": "High",
     "medium": "Medium",
@@ -155,7 +155,7 @@
     "waiting_bot": "Waiting for bot",
     "no_data": "No data yet",
     "waiting_snapshot": "Waiting for the first bot snapshot",
-    "snapshot_help": "The ShieldNet bot sends a security snapshot every 15 minutes. Ensure the bot is online and the backend service token matches.",
+    "snapshot_help": "The GuildConsole bot sends a security snapshot every 15 minutes. Ensure the bot is online and the backend service token matches.",
     "findings": "Findings",
     "detected_risks": "Detected risks",
     "refresh": "Refresh",
@@ -176,7 +176,7 @@
   },
   "themes": {
     "shieldnet": {
-      "name": "ShieldNet",
+      "name": "GuildConsole",
       "description": "Signature teal theme with a technological grid."
     },
     "midnight": {
@@ -299,7 +299,7 @@
   "plugins": {
     "title": "Plugin Platform",
     "installed": "Installed plugins",
-    "description": "Manage discovered ShieldNet plugins and their runtime state.",
+    "description": "Manage discovered GuildConsole plugins and their runtime state.",
     "refresh": "Refresh",
     "scanning": "Scanning…",
     "scan": "Scan plugin directory",
@@ -526,7 +526,7 @@
     "load_error": "Unable to load members.",
     "profile_error": "Unable to save member profile.",
     "active_filter": "Active",
-    "blocked_filter": "ShieldNet blocked",
+    "blocked_filter": "GuildConsole blocked",
     "inactive_filter": "Inactive 30d",
     "watchlist_filter": "Watchlist",
     "review_due_filter": "Review due",
@@ -542,7 +542,7 @@
     "tags": "Tags",
     "tags_placeholder": "trusted, vip, review",
     "private_note": "Private admin note",
-    "private_note_placeholder": "Visible only to authorized ShieldNet staff",
+    "private_note_placeholder": "Visible only to authorized GuildConsole staff",
     "warning": "Warning",
     "spam": "Spam",
     "harassment": "Harassment",
@@ -1040,7 +1040,7 @@
     "operation_error": "Unable to complete the leadership operation."
   },
   "doctor": {
-    "title": "ShieldNet Doctor",
+    "title": "GuildConsole Doctor",
     "eyebrow": "Platform diagnostics",
     "heading": "Installation and runtime health",
     "description": "Checks application configuration, PostgreSQL privileges, Valkey, heartbeats and required resources.",
@@ -1066,7 +1066,7 @@
     "select_plugin": "Select plugin",
     "select_help": "Select a plugin to open its Runtime Usage dashboard.",
     "selected": "Selected runtime",
-    "default_description": "ShieldNet plugin runtime statistics.",
+    "default_description": "GuildConsole plugin runtime statistics.",
     "healthy": "Healthy",
     "unknown": "Status unknown",
     "loading": "Loading runtime statistics…",
@@ -1152,7 +1152,7 @@
     "authenticate": "Authenticate authorized operator",
     "failure": "ACCESS FAILURE",
     "step_1": "Discord verifies your account.",
-    "step_2": "ShieldNet checks server access.",
+    "step_2": "GuildConsole checks server access.",
     "step_3": "A scoped console session is issued.",
     "footer": "By continuing, you enter a monitored administrative environment.",
     "build": "BUILD 2.0 // SECURE",
@@ -1161,7 +1161,7 @@
   "permissions_engine": {
     "title": "Permissions",
     "heading": "Permissions Engine",
-    "description": "Module access rules for ShieldNet and Discord roles.",
+    "description": "Module access rules for GuildConsole and Discord roles.",
     "add_rule": "Add rule",
     "priority": "priority",
     "delete": "Delete",
@@ -1183,7 +1183,7 @@
     "allow": "Allow",
     "deny": "Deny",
     "subject": "Subject",
-    "shieldnet_role": "ShieldNet role",
+    "shieldnet_role": "GuildConsole role",
     "discord_role": "Discord role",
     "discord_user": "Discord user ID",
     "everyone": "Everyone",

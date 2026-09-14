@@ -28,7 +28,7 @@ import { AuthService } from '../core/auth.service';
     <sn-shell [title]="'dashboard.title' | snT:'Command Center'">
       <section class="dashboard-head">
         <div>
-          <div class="eyebrow">SHIELDNET ADMIN V4 · STAGE 14.10</div>
+          <div class="eyebrow">GUILDCONSOLE ADMIN V4 · STAGE 14.10</div>
           <h2>{{ 'dashboard.heading' | snT:'Discord infrastructure overview' }}</h2>
           <p>{{ 'dashboard.description' | snT:'Live servers, services, alerts and recent activity in one workspace.' }}</p>
         </div>

@@ -6,7 +6,7 @@ import { GuildService } from '../core/guild.service';
 
 @Component({
   standalone: true,
-  template: `<main class="landing"><div class="mark">SHIELDNET</div><h1>Opening control center…</h1><p>Resolving your access context.</p></main>`,
+  template: `<main class="landing"><div class="mark">GUILDCONSOLE</div><h1>Opening control center…</h1><p>Resolving your access context.</p></main>`,
   styles: [`.landing{min-height:100vh;display:grid;place-content:center;text-align:center;background:#070b11;color:#eaf7f3}.mark{color:#35e2b2;font-weight:900;letter-spacing:.2em}.landing h1{margin:.7rem 0 .35rem}.landing p{margin:0;color:#82959e}`],
 })
 export class LandingComponent implements OnInit {

@@ -18,7 +18,7 @@ import { ToastService } from '../core/toast.service';
       <div class="card heading">
         <div>
           <h2>{{ "permissions_engine.heading" | snT:"Permissions Engine" }}</h2>
-          <p class="muted">{{ "permissions_engine.description" | snT:"Module access rules for ShieldNet and Discord roles." }}</p>
+          <p class="muted">{{ "permissions_engine.description" | snT:"Module access rules for GuildConsole and Discord roles." }}</p>
         </div>
         <button class="btn" (click)="dialog.set(true)">{{ "permissions_engine.add_rule" | snT:"Add rule" }}</button>
       </div>
@@ -72,7 +72,7 @@ import { ToastService } from '../core/toast.service';
 
             <label>{{ "permissions_engine.subject" | snT:"Subject" }}
               <select [(ngModel)]="subjectType" (ngModelChange)="subjectChanged()">
-                <option value="shieldnet_role">{{ "permissions_engine.shieldnet_role" | snT:"ShieldNet role" }}</option>
+                <option value="shieldnet_role">{{ "permissions_engine.shieldnet_role" | snT:"GuildConsole role" }}</option>
                 <option value="discord_role">{{ "permissions_engine.discord_role" | snT:"Discord role" }}</option>
                 <option value="discord_user">{{ "permissions_engine.discord_user" | snT:"Discord user ID" }}</option>
                 <option value="everyone">{{ "permissions_engine.everyone" | snT:"Everyone" }}</option>
@@ -80,7 +80,7 @@ import { ToastService } from '../core/toast.service';
             </label>
 
             @if (subjectType === 'shieldnet_role') {
-              <label>{{ "permissions_engine.shieldnet_role" | snT:"ShieldNet role" }}
+              <label>{{ "permissions_engine.shieldnet_role" | snT:"GuildConsole role" }}
                 <select [(ngModel)]="subjectValue">
                   <option value="moderator">{{ "permissions_engine.moderator" | snT:"Moderator" }}</option>
                   <option value="admin">{{ "permissions_engine.admin" | snT:"Admin" }}</option>

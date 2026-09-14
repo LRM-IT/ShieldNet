@@ -1,0 +1,146 @@
+name: shieldnet
+
+x-backend: &backend
+  build:
+    context: .
+    dockerfile: Dockerfile.backend
+  image: shieldnet/backend:local
+  env_file: .env
+  environment:
+    SHIELDNET_DB_HOST: db
+    SHIELDNET_DB_PORT: 5432
+    SHIELDNET_DB_NAME: shieldnet
+    SHIELDNET_DB_USER: shieldnet
+    SHIELDNET_DB_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+    SHIELDNET_MIGRATION_DB_HOST: db
+    SHIELDNET_MIGRATION_DB_PORT: 5432
+    SHIELDNET_MIGRATION_DB_NAME: shieldnet
+    SHIELDNET_MIGRATION_DB_USER: shieldnet
+    SHIELDNET_MIGRATION_DB_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+    SHIELDNET_REDIS_URL: redis://redis:6379/0
+    PLUGIN_RUNTIME_BACKEND_URL: http://backend:8000/api/v1
+  volumes:
+    - plugins:/opt/shieldnet/plugins
+    - plugin_runtime:/opt/shieldnet/plugin-runtime
+    - templates:/var/lib/shieldnet/templates
+    - media_assets:/var/lib/shieldnet/media-assets
+  depends_on:
+    db:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+  restart: unless-stopped
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: shieldnet
+      POSTGRES_USER: shieldnet
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U shieldnet -d shieldnet"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  migrate:
+    <<: *backend
+    command: ["alembic", "upgrade", "head"]
+    restart: "no"
+    profiles: ["tools"]
+
+  backend:
+    <<: *backend
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers", "--forwarded-allow-ips", "*"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health', timeout=3)"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+
+  bot:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+      args: {COMPONENT: bot}
+    env_file: .env
+    environment:
+      SHIELDNET_BACKEND_URL: http://backend:8000
+      SHIELDNET_REDIS_URL: redis://redis:6379/0
+    command: ["python", "-m", "bot.main"]
+    working_dir: /opt/shieldnet/bot
+    depends_on:
+      backend: {condition: service_healthy}
+    restart: unless-stopped
+
+  scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+      args: {COMPONENT: scheduler}
+    env_file: .env
+    environment:
+      SHIELDNET_BACKEND_URL: http://backend:8000
+      SHIELDNET_REDIS_URL: redis://redis:6379/0
+    command: ["python", "-m", "scheduler.main"]
+    working_dir: /opt/shieldnet/scheduler
+    depends_on:
+      backend: {condition: service_healthy}
+    restart: unless-stopped
+
+  plugin-worker:
+    <<: *backend
+    command: ["python", "-m", "app.plugin_worker.main"]
+    depends_on:
+      backend: {condition: service_healthy}
+
+  plugin-runtime:
+    <<: *backend
+    command: ["python", "-m", "app.plugin_runtime_manager.main"]
+    depends_on:
+      backend: {condition: service_healthy}
+
+  plugin-watchdog:
+    <<: *backend
+    command: ["python", "-m", "app.plugin_runtime_manager.watchdog"]
+    depends_on:
+      backend: {condition: service_healthy}
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "${SHIELDNET_BIND_IP:-10.125.10.238}:80:80"
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      backend: {condition: service_healthy}
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+  plugins:
+  plugin_runtime:
+  templates:
+  media_assets:
+  caddy_data:
+  caddy_config:

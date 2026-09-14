@@ -14,7 +14,7 @@ import { TranslationService } from '../core/translation.service';
   template:`
   <sn-shell [title]="'moderation.title' | snT:'Moderation Operations Center'">
     <section class="hero">
-      <div><div class="eyebrow">SHIELDNET v2.0</div><h2>{{ "moderation.heading" | snT:"Moderation Operations Center" }}</h2><p>{{ "moderation.description" | snT:"One operational queue for active cases, deadlines, ownership and moderator workload." }}</p></div>
+      <div><div class="eyebrow">GUILDCONSOLE v2.0</div><h2>{{ "moderation.heading" | snT:"Moderation Operations Center" }}</h2><p>{{ "moderation.description" | snT:"One operational queue for active cases, deadlines, ownership and moderator workload." }}</p></div>
       <div class="hero-actions"><a class="btn secondary" [routerLink]="['/guild',guildId,'members']">{{ "moderation.members" | snT:"Members" }}</a><button class="btn" (click)="reload()">↻ {{ "moderation.refresh" | snT:"Refresh" }}</button></div>
     </section>
 

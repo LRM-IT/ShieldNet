@@ -18,7 +18,7 @@ import {
           <div>
             <small>GLOBAL DIRECTORY</small>
             <h2>Languages</h2>
-            <p>Shared language list for all ShieldNet modules and plugins.</p>
+            <p>Shared language list for all GuildConsole modules and plugins.</p>
           </div>
           <button class="primary" type="button" (click)="startCreate()">
             + Add language

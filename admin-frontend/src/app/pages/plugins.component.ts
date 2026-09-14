@@ -28,7 +28,7 @@ import { ToastService } from '../core/toast.service';
         <div>
           <h2>{{ "plugins.installed" | snT:"Installed plugins" }}</h2>
           <p class="muted">
-            {{ "plugins.description" | snT:"Manage discovered ShieldNet plugins and their runtime state." }}
+            {{ "plugins.description" | snT:"Manage discovered GuildConsole plugins and their runtime state." }}
           </p>
         </div>
 

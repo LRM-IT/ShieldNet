@@ -18,7 +18,7 @@ export class ThemeService {
   readonly themes: ThemeDefinition[] = [
     {
       id: 'shieldnet',
-      name: 'ShieldNet',
+      name: 'GuildConsole',
       description: 'Фірмова бірюзова тема з технологічною сіткою.',
       icon: '⬡',
       preview: ['#05080d', '#0d141d', '#35e2b2'],

@@ -41,10 +41,10 @@ interface PluginNavDefinition {
   template: `
     <div class="workspace" [class.menu-open]="mobileMenu()" [class.menu-collapsed]="menuCollapsed()">
       <aside class="rail">
-        <a [routerLink]="homeLink()" class="brand" aria-label="ShieldNet home">
+        <a [routerLink]="homeLink()" class="brand" aria-label="GuildConsole home">
           <span class="brand-symbol"><span></span><span></span><span></span></span>
           <span class="brand-copy">
-            <strong>SHIELDNET</strong>
+            <strong>GUILDCONSOLE</strong>
             <small>{{ 'shell.control_fabric' | snT:'CONTROL FABRIC' }}</small>
           </span>
         </a>
@@ -185,7 +185,7 @@ interface PluginNavDefinition {
                     (click)="mobileMenu.set(!mobileMenu())"
                     aria-label="Open navigation">☰</button>
             <div>
-              <div class="breadcrumb"><span>SHIELDNET</span><b>/</b><span>COMMAND</span></div>
+              <div class="breadcrumb"><span>GUILDCONSOLE</span><b>/</b><span>COMMAND</span></div>
               <h1>{{ title }}</h1>
             </div>
           </div>

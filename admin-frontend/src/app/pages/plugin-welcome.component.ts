@@ -36,7 +36,7 @@ interface Settings {
     <section class="page">
       <header class="topline">
         <div>
-          <div class="eyebrow">SHIELDNET PLUGIN</div>
+          <div class="eyebrow">GUILDCONSOLE PLUGIN</div>
           <h2>Welcome</h2>
           <p>Welcome new members and redirect them to verification.</p>
         </div>
@@ -137,7 +137,7 @@ interface Settings {
             <div class="discord">
               <div class="avatar">S</div>
               <div>
-                <div class="author"><strong>ShieldNet</strong><span>BOT</span><small>Today at 12:00</small></div>
+                <div class="author"><strong>GuildConsole</strong><span>BOT</span><small>Today at 12:00</small></div>
                 <div class="message">{{preview()}}</div>
               </div>
             </div>

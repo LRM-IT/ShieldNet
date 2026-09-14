@@ -1,0 +1,12 @@
+FROM node:22-alpine AS build
+WORKDIR /app
+COPY admin-frontend/package*.json ./
+RUN npm ci
+COPY admin-frontend/angular.json admin-frontend/tsconfig*.json ./
+COPY admin-frontend/src ./src
+COPY admin-frontend/public ./public
+RUN npm run build
+
+FROM caddy:2-alpine
+COPY --from=build /app/dist/shieldnet-admin/browser /srv
+COPY docker/Caddyfile /etc/caddy/Caddyfile

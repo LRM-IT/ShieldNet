@@ -10,7 +10,7 @@ import { TranslationService } from '../core/translation.service';
   standalone: true,
   imports: [CommonModule, ShellComponent, TranslatePipe],
   template: `
-    <sn-shell [title]="'doctor.title' | snT:'ShieldNet Doctor'">
+    <sn-shell [title]="'doctor.title' | snT:'GuildConsole Doctor'">
       <section class="hero">
         <div><div class="eyebrow">{{ "doctor.eyebrow" | snT:"Platform diagnostics" }}</div><h2>{{ "doctor.heading" | snT:"Installation and runtime health" }}</h2>
           <p>{{ "doctor.description" | snT:"Checks application configuration, PostgreSQL privileges, Valkey, heartbeats and required resources." }}</p></div>

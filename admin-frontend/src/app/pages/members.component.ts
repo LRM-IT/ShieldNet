@@ -17,7 +17,7 @@ import { ToastService } from '../core/toast.service';
   template:`
   <sn-shell [title]="'members.title' | snT:'Members Control Center'">
     <section class="topline">
-      <div><div class="eyebrow">SHIELDNET v5.1</div><h2>{{ "members.heading" | snT:"Members Control Center" }}</h2><p>{{ "members.description" | snT:"Search, inspect and manage Discord members from one secure console." }}</p></div>
+      <div><div class="eyebrow">GUILDCONSOLE v5.1</div><h2>{{ "members.heading" | snT:"Members Control Center" }}</h2><p>{{ "members.description" | snT:"Search, inspect and manage Discord members from one secure console." }}</p></div>
       <button class="btn secondary" (click)="reload()">↻ {{ "members.refresh" | snT:"Refresh" }}</button>
     </section>
 
@@ -38,7 +38,7 @@ import { ToastService } from '../core/toast.service';
     <section class="card filters">
       <input [(ngModel)]="query" (keyup.enter)="loadMembers()" [placeholder]="'members.search_placeholder' | snT:'Search Discord name, game nickname, alliance, language or ID'">
       <select [(ngModel)]="memberType" (change)="loadMembers()"><option value="all">{{ "members.all_types" | snT:"All types" }}</option><option value="human">{{ "members.humans" | snT:"Humans" }}</option><option value="bot">{{ "members.bots" | snT:"Bots" }}</option></select>
-      <select [(ngModel)]="statusFilter" (change)="loadMembers()"><option value="active">{{ "members.active_filter" | snT:"Active" }}</option><option value="pending">{{ "members.pending" | snT:"Pending" }}</option><option value="timed_out">{{ "members.timed_out" | snT:"Timed out" }}</option><option value="blocked">{{ "members.blocked_filter" | snT:"ShieldNet blocked" }}</option><option value="inactive">{{ "members.inactive_filter" | snT:"Inactive 30d" }}</option><option value="watchlist">{{ "members.watchlist_filter" | snT:"Watchlist" }}</option><option value="review_due">{{ "members.review_due_filter" | snT:"Review due" }}</option><option value="left">{{ "members.left_server" | snT:"Left server" }}</option></select>
+      <select [(ngModel)]="statusFilter" (change)="loadMembers()"><option value="active">{{ "members.active_filter" | snT:"Active" }}</option><option value="pending">{{ "members.pending" | snT:"Pending" }}</option><option value="timed_out">{{ "members.timed_out" | snT:"Timed out" }}</option><option value="blocked">{{ "members.blocked_filter" | snT:"GuildConsole blocked" }}</option><option value="inactive">{{ "members.inactive_filter" | snT:"Inactive 30d" }}</option><option value="watchlist">{{ "members.watchlist_filter" | snT:"Watchlist" }}</option><option value="review_due">{{ "members.review_due_filter" | snT:"Review due" }}</option><option value="left">{{ "members.left_server" | snT:"Left server" }}</option></select>
       <select [(ngModel)]="sort" (change)="loadMembers()"><option value="activity">{{ "members.recent_activity" | snT:"Recent activity" }}</option><option value="name">{{ "members.name_az" | snT:"Name A–Z" }}</option><option value="joined">{{ "members.newest_joined" | snT:"Newest joined" }}</option><option value="oldest">{{ "members.oldest_joined" | snT:"Oldest joined" }}</option></select>
       <button class="btn" (click)="loadMembers()">{{ "members.search" | snT:"Search" }}</button>
     </section>
@@ -81,7 +81,7 @@ import { ToastService } from '../core/toast.service';
           <label class="field">{{ "members.review_due_label" | snT:"Review due" }}<input type="datetime-local" [(ngModel)]="reviewDueAt"></label>
           <label class="field">{{ "members.review_reason" | snT:"Review reason" }}<textarea [(ngModel)]="reviewReason" rows="3" [placeholder]="'members.review_reason_placeholder' | snT:'Reason for monitoring or follow-up'"></textarea></label>
           <label class="field">{{ "members.tags" | snT:"Tags" }}<input [(ngModel)]="tagsText" [placeholder]="'members.tags_placeholder' | snT:'trusted, vip, review'"></label>
-          <label class="field">{{ "members.private_note" | snT:"Private admin note" }}<textarea [(ngModel)]="adminNote" rows="5" [placeholder]="'members.private_note_placeholder' | snT:'Visible only to authorized ShieldNet staff'"></textarea></label>
+          <label class="field">{{ "members.private_note" | snT:"Private admin note" }}<textarea [(ngModel)]="adminNote" rows="5" [placeholder]="'members.private_note_placeholder' | snT:'Visible only to authorized GuildConsole staff'"></textarea></label>
           <button class="btn save" (click)="saveProfile()">{{ "members.save_profile" | snT:"Save profile" }}</button>
           <div class="section"><h4>{{ "members.member_cases" | snT:"Member cases" }}</h4>
             <div class="case-form">

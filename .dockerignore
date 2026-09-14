@@ -1,0 +1,15 @@
+**/venv
+**/.venv
+**/node_modules
+**/__pycache__
+**/.angular
+**/dist
+**/.npm-cache
+**/.patch-backups
+**/*.log
+**/*.bak
+**/.bash_history
+.git
+.env
+.env.*
+!.env.example

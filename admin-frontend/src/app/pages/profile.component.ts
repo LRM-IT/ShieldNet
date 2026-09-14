@@ -141,7 +141,7 @@ export class ProfileComponent {
   );
 
   readonly activeThemeName = computed(() =>
-    this.themes.themes.find((item) => item.id === this.themes.activeTheme())?.name || 'ShieldNet',
+    this.themes.themes.find((item) => item.id === this.themes.activeTheme())?.name || 'GuildConsole',
   );
 
   readonly timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';

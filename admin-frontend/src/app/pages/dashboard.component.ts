@@ -21,7 +21,7 @@ import { EventBusService } from '../core/event-bus.service';
     TranslatePipe,
   ],
   template: `
-    <sn-shell [title]="'dashboard.title' | snT:'ShieldNet Dashboard'">
+    <sn-shell [title]="'dashboard.title' | snT:'GuildConsole Dashboard'">
       <section class="hero card">
         <div>
           <div class="muted">{{ "dashboard.workspace" | snT:"Administration workspace" }}</div>
@@ -451,7 +451,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       this.overview.set(await this.dashboardService.overview());
     } catch {
       this.error.set(
-        this.i18n.t('dashboard.load_error_full', 'Unable to load the ShieldNet dashboard.'),
+        this.i18n.t('dashboard.load_error_full', 'Unable to load the GuildConsole dashboard.'),
       );
     } finally {
       if (!silent) this.loading.set(false);
