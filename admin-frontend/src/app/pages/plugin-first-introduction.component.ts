@@ -41,7 +41,7 @@ interface Settings {
             </label>
             <div class="role-builder">
               <h3>Створення мовних ролей</h3>
-              <p>Маска назви: {flag}, {name}, {code}. Наявні ролі з відповідними назвами будуть використані повторно.</p>
+              <p>Маска назви: &#123;flag&#125;, &#123;name&#125;, &#123;code&#125;. Наявні ролі з відповідними назвами будуть використані повторно.</p>
               <label>Маска ролі<input [(ngModel)]="settings.role_name_mask" maxlength="100" placeholder="{flag} {name}"></label>
               <div class="role-preview">
                 @for (language of settings.languages; track language.code) {
