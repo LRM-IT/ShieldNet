@@ -7,8 +7,10 @@ logger = logging.getLogger(__name__)
 _process_started = False
 class VerificationLevel1Plugin(BackendPlugin):
     def router(self) -> APIRouter | None:
-        from backend.router import router
-        return router
+        # Verification endpoints are registered by the core API. The legacy
+        # bundled router depends on a standalone package layout and lacks the
+        # core guild authorization checks, so it must not be mounted here.
+        return None
     async def startup(self) -> None:
         logger.info("Verification Level 1 backend started plugin_key=%s", self.key)
     async def shutdown(self) -> None:

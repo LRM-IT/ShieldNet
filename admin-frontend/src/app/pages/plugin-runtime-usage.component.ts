@@ -239,7 +239,10 @@ export class PluginRuntimeUsageComponent implements OnInit {
     try {
       const updated = plugin.enabled ? await this.guildPlugins.disable(this.guildId, plugin.plugin_key) : await this.guildPlugins.enable(this.guildId, plugin.plugin_key);
       this.installations.update(items => items.map(item => item.plugin_key === updated.plugin_key ? updated : item));
-    } catch { this.error.set(this.i18n.t('runtime_usage.toggle_error', 'Unable to change plugin state.')); }
+    } catch (error: any) {
+      await this.load();
+      this.error.set(error?.error?.detail || this.i18n.t('runtime_usage.toggle_error', 'Unable to change plugin state.'));
+    }
     finally { this.busyKey.set(''); }
   }
 
@@ -291,9 +294,12 @@ export class PluginRuntimeUsageComponent implements OnInit {
 
   openSettings(plugin: GuildPluginInstallation): void {
     const page = plugin.plugin_key === 'translator_groups' ? 'translator-groups'
-      : plugin.plugin_key === 'first_introduction' ? 'language-selection' : null;
+      : plugin.plugin_key === 'first_introduction' ? 'language-selection'
+      : plugin.plugin_key === 'verification_level1' ? 'verification' : null;
     if (page) {
-      void this.router.navigate(['/guild', this.guildId, 'plugins', page]);
+      void this.router.navigate(page === 'verification'
+        ? ['/guild', this.guildId, page]
+        : ['/guild', this.guildId, 'plugins', page]);
       return;
     }
     this.editingKey.set(plugin.plugin_key);
