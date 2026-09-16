@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.dependencies.auth import get_current_user
 from app.api.dependencies.guild_access import require_guild_management
 from app.api.dependencies.platform_access import require_superadmin
+from app.api.dependencies.internal import verify_internal_service_token
 from app.db.session import get_db_session
 from app.models.billing import BillingPluginPlan, BillingSubscription, BillingPayment
 from app.models.core import User
@@ -18,6 +19,7 @@ from app.models.plugins import PluginRegistry
 from app.services.billing_service import BillingService, FREE_PLUGIN_KEYS, normalize_plugin_key
 from app.services.billing_payments import BILLING_VAULT_KEY, BillingPaymentService, PaymentError
 from app.services.plugin_control_service import PluginControlService
+from app.services.guild_plugin_service import GuildPluginService
 
 router = APIRouter(tags=["Billing"])
 
@@ -166,3 +168,15 @@ async def liqpay_callback(request: Request, session: AsyncSession = Depends(get_
         return PlainTextResponse("OK")
     except (PaymentError, ValueError) as exc:
         return PlainTextResponse(str(exc), status_code=400)
+
+@router.post("/internal/billing/reconcile", dependencies=[Depends(verify_internal_service_token)])
+async def reconcile_billing(session: AsyncSession = Depends(get_db_session)):
+    expired = await BillingService(session).expired_enabled_plugins()
+    disabled = []
+    for guild_id, plugin_key in expired:
+        try:
+            await GuildPluginService(session).set_enabled(guild_id, plugin_key, False)
+            disabled.append({"guild_id":guild_id,"plugin_key":plugin_key})
+        except LookupError:
+            continue
+    return {"count":len(disabled),"disabled":disabled}

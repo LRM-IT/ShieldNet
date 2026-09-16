@@ -4,6 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.billing import BillingPluginPlan, BillingSubscription
+from app.models.plugins import GuildPluginInstallation
 
 
 FREE_PLUGIN_KEYS = frozenset({
@@ -50,3 +51,12 @@ class BillingService:
             query = query.where(BillingSubscription.guild_id == guild_id)
         return list((await self.session.execute(query)).scalars())
 
+    async def expired_enabled_plugins(self) -> list[tuple[int, str]]:
+        installations = list((await self.session.execute(select(GuildPluginInstallation).where(
+            GuildPluginInstallation.enabled.is_(True)
+        ))).scalars())
+        result = []
+        for item in installations:
+            if normalize_plugin_key(item.plugin_key) not in FREE_PLUGIN_KEYS and not await self.is_entitled(item.guild_id, item.plugin_key):
+                result.append((item.guild_id, item.plugin_key))
+        return result

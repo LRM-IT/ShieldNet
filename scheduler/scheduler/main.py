@@ -38,14 +38,24 @@ async def schedule_tick(client: httpx.AsyncClient, redis: Redis) -> None:
     if response.json().get("count"):
         logger.info("Queued scheduled automations: %s", response.json()["count"])
 
+async def billing_reconcile(client: httpx.AsyncClient) -> None:
+    response = await client.post(
+        f"{settings.backend_url.rstrip('/')}/api/v1/internal/billing/reconcile",
+        headers={"X-ShieldNet-Service-Token": settings.internal_service_token},
+    )
+    response.raise_for_status()
+    if response.json().get("count"):
+        logger.info("Disabled expired paid plugins: %s", response.json()["count"])
+
 async def run() -> None:
     redis = Redis.from_url(settings.redis_url, decode_responses=True)
     worker_name = f"scheduler:{socket.gethostname()}"
-    next_run = {"sync_guilds": 0.0, "sync_roles": 0.0, "security_scan": 0.0}
+    next_run = {"sync_guilds": 0.0, "sync_roles": 0.0, "security_scan": 0.0, "billing_reconcile": 0.0}
     intervals = {
         "sync_guilds": settings.guild_sync_minutes * 60,
         "sync_roles": settings.role_sync_minutes * 60,
         "security_scan": settings.security_scan_minutes * 60,
+        "billing_reconcile": 300,
     }
     async with httpx.AsyncClient(timeout=10) as client:
         while True:
@@ -54,7 +64,12 @@ async def run() -> None:
                 await redis.ping()
                 await heartbeat(client, worker_name)
                 await schedule_tick(client, redis)
+                if now >= next_run["billing_reconcile"]:
+                    await billing_reconcile(client)
+                    next_run["billing_reconcile"] = now + intervals["billing_reconcile"]
                 for job, interval in intervals.items():
+                    if job == "billing_reconcile":
+                        continue
                     if now >= next_run[job]:
                         await enqueue(redis, job)
                         next_run[job] = now + interval
