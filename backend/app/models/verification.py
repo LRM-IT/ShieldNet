@@ -199,6 +199,7 @@ class VerificationLevel(Base):
     channel_id: Mapped[int | None] = mapped_column(BigInteger)
     expected_text: Mapped[str] = mapped_column(String(500), nullable=False, server_default="")
     role_ids: Mapped[list] = mapped_column(JSONB, nullable=False, default=list, server_default="[]")
+    criteria: Mapped[list] = mapped_column(JSONB, nullable=False, default=list, server_default="[]")
     marker: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict, server_default='{"x":0,"y":0,"width":1,"height":1}')
     template_path: Mapped[str | None] = mapped_column(String(500))
     template_mime: Mapped[str | None] = mapped_column(String(100))

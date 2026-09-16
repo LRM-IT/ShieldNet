@@ -144,10 +144,17 @@ import { DiscordChannelPickerComponent } from '../shared/discord-channel-picker.
               <label>Назва рівня<input [(ngModel)]="level.name" maxlength="80"></label>
               <label class="check"><input type="checkbox" [(ngModel)]="level.enabled"> Рівень активний</label>
               <label>Гілка прийому зображень<sn-discord-channel-picker [guildId]="guildId" [value]="level.channel_id" (valueChange)="level.channel_id=$event" /></label>
-              <label>Який текст або ознаку шукати<input [(ngModel)]="level.expected_text" maxlength="500" placeholder="Наприклад: Power 120M або назва альянсу"></label>
-              <label>Ролі після успішної перевірки<select multiple [(ngModel)]="level.role_ids">
-                @for (role of roles(); track role.discord_role_id) { <option [value]="role.discord_role_id">{{role.name}}</option> }
-              </select></label>
+              <div class="criteria"><div class="heading"><div><h3>Ознаки та ролі</h3><p class="muted">AI перевіряє кожну ознаку окремо й об’єднує ролі всіх збігів.</p></div><button class="btn secondary" (click)="addCriterion(level)">Додати ознаку</button></div>
+                @for (criterion of level.criteria; track $index) {
+                  <article class="criterion"><label>Назва ознаки<input [(ngModel)]="criterion.label" maxlength="80" placeholder="Наприклад: Керівництво R4"></label>
+                    <label>Що потрібно знайти<input [(ngModel)]="criterion.expected_text" maxlength="500" placeholder="Наприклад: позначка R4"></label>
+                    <label>Ролі при цьому збігу<select multiple [(ngModel)]="criterion.role_ids">
+                      @for (role of roles(); track role.discord_role_id) { <option [value]="role.discord_role_id">{{role.name}}</option> }
+                    </select></label>
+                    <button class="btn danger" (click)="removeCriterion(level,$index)">Видалити ознаку</button>
+                  </article>
+                } @empty { <p class="muted">Додайте хоча б одну ознаку, наприклад R4 або R5.</p> }
+              </div>
               <label>Еталонне зображення<input type="file" accept="image/png,image/jpeg,image/webp" (change)="selectTemplate(level,$event)"></label>
               @if (level.preview || level.template_url) {
                 <div class="marker-image"><img [src]="level.preview || level.template_url"><div class="marker" [style.left.%]="level.marker.x*100" [style.top.%]="level.marker.y*100" [style.width.%]="level.marker.width*100" [style.height.%]="level.marker.height*100"></div></div>
@@ -466,7 +473,7 @@ import { DiscordChannelPickerComponent } from '../shared/discord-channel-picker.
     .command-input { display:flex; align-items:center; background:var(--panel-2); border:1px solid var(--line); border-radius:10px; }
     .command-input span { padding-left:.8rem; font-weight:800; color:var(--text); }
     .command-input input { flex:1; border:0; background:transparent; }
-    .levels{margin-top:1.2rem}.level-card{border:1px solid var(--line);border-radius:12px;overflow:hidden}.level-card summary{display:flex;justify-content:space-between;padding:1rem;cursor:pointer;list-style:none}.level-body{display:grid;gap:.8rem;padding:1rem;border-top:1px solid var(--line)}.marker-image{position:relative;width:min(100%,700px)}.marker-image img{display:block;width:100%;border-radius:10px}.marker{position:absolute;border:3px solid #45e0b3;background:rgba(69,224,179,.14);pointer-events:none}.marker-modal{position:fixed;inset:0;z-index:1200;display:grid;place-items:center;padding:1rem;background:rgba(0,0,0,.78);backdrop-filter:blur(8px)}.marker-dialog{width:min(1100px,96vw);max-height:95vh;overflow:auto;padding:1.2rem}.marker-editor{position:relative;width:fit-content;max-width:100%;margin:auto;cursor:crosshair;touch-action:none;user-select:none;background:#050708;border-radius:12px;overflow:hidden}.marker-editor img{display:block;max-width:100%;max-height:72vh;width:auto;height:auto;pointer-events:none}.marker.active{border-width:4px;box-shadow:0 0 0 9999px rgba(0,0,0,.42)}
+    .levels{margin-top:1.2rem}.level-card{border:1px solid var(--line);border-radius:12px;overflow:hidden}.level-card summary{display:flex;justify-content:space-between;padding:1rem;cursor:pointer;list-style:none}.level-body{display:grid;gap:.8rem;padding:1rem;border-top:1px solid var(--line)}.criteria{display:grid;gap:.8rem}.criterion{display:grid;grid-template-columns:1fr 1.5fr 1.5fr auto;gap:.7rem;align-items:end;padding:1rem;border:1px solid var(--line);border-radius:12px;background:var(--panel-2)}.marker-image{position:relative;width:min(100%,700px)}.marker-image img{display:block;width:100%;border-radius:10px}.marker{position:absolute;border:3px solid #45e0b3;background:rgba(69,224,179,.14);pointer-events:none}.marker-modal{position:fixed;inset:0;z-index:1200;display:grid;place-items:center;padding:1rem;background:rgba(0,0,0,.78);backdrop-filter:blur(8px)}.marker-dialog{width:min(1100px,96vw);max-height:95vh;overflow:auto;padding:1.2rem}.marker-editor{position:relative;width:fit-content;max-width:100%;margin:auto;cursor:crosshair;touch-action:none;user-select:none;background:#050708;border-radius:12px;overflow:hidden}.marker-editor img{display:block;max-width:100%;max-height:72vh;width:auto;height:auto;pointer-events:none}.marker.active{border-width:4px;box-shadow:0 0 0 9999px rgba(0,0,0,.42)}
 
     .check {
       display: flex;
@@ -619,6 +626,7 @@ import { DiscordChannelPickerComponent } from '../shared/discord-channel-picker.
       .grid {
         grid-template-columns: 1fr;
       }
+      .criterion{grid-template-columns:1fr}
 
       .request-side {
         justify-items: stretch;
@@ -696,13 +704,13 @@ export class VerificationComponent
     this.allianceMax =
       settings.alliance_max_length;
     this.roles.set(roles);
-    this.levels.set(levels);
+    this.levels.set(levels.map(level=>({...level,criteria:level.criteria||[]})));
 
     await Promise.all([this.reloadRequests(), this.loadSummary()]);
   }
 
   async addLevel(): Promise<void> {
-    const row=await this.verification.createLevel(this.guildId,{name:`Рівень ${this.levels().length+2}`,enabled:false,channel_id:null,expected_text:'',role_ids:[],marker:{x:0,y:0,width:1,height:1}});
+    const row=await this.verification.createLevel(this.guildId,{name:`Рівень ${this.levels().length+2}`,enabled:false,channel_id:null,expected_text:'',role_ids:[],criteria:[],marker:{x:0,y:0,width:1,height:1}});
     this.levels.update(items=>[...items,row]);
   }
   selectTemplate(level:any,event:Event):void { const file=(event.target as HTMLInputElement).files?.[0]; if(!file)return; level.file=file; if(level.preview)URL.revokeObjectURL(level.preview); level.preview=URL.createObjectURL(file); setTimeout(()=>this.openMarkerEditor(level)); }
@@ -714,8 +722,11 @@ export class VerificationComponent
   markerStart(event:PointerEvent):void { event.preventDefault(); (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId); const point=this.markerPoint(event); this.markerOrigin=point; this.markerDraft={x:point.x,y:point.y,width:.001,height:.001}; }
   markerMove(event:PointerEvent):void { if(!this.markerOrigin)return; const point=this.markerPoint(event),origin=this.markerOrigin; this.markerDraft={x:Math.min(origin.x,point.x),y:Math.min(origin.y,point.y),width:Math.max(.001,Math.abs(point.x-origin.x)),height:Math.max(.001,Math.abs(point.y-origin.y))}; }
   markerEnd(event:PointerEvent):void { if(!this.markerOrigin)return; this.markerMove(event); this.markerOrigin=null; try{(event.currentTarget as HTMLElement).releasePointerCapture(event.pointerId)}catch{} }
+  addCriterion(level:any):void { level.criteria=level.criteria||[]; level.criteria.push({label:`Ознака ${level.criteria.length+1}`,expected_text:'',role_ids:[]}); }
+  removeCriterion(level:any,index:number):void { level.criteria.splice(index,1); }
   async saveLevel(level:any):Promise<void> {
-    const payload={name:level.name,enabled:level.enabled,channel_id:level.channel_id?Number(level.channel_id):null,expected_text:level.expected_text,role_ids:(level.role_ids||[]).map(Number),marker:level.marker};
+    const criteria=(level.criteria||[]).map((item:any)=>({label:item.label,expected_text:item.expected_text,role_ids:(item.role_ids||[]).map(Number)}));
+    const payload={name:level.name,enabled:level.enabled,channel_id:level.channel_id?Number(level.channel_id):null,expected_text:criteria[0]?.expected_text||'',role_ids:criteria[0]?.role_ids||[],criteria,marker:level.marker};
     if(level.file)await this.verification.uploadLevelTemplate(this.guildId,level.id,level.file,level.marker);
     const saved=await this.verification.updateLevel(this.guildId,level.id,payload);
     Object.assign(level,saved,{file:null,preview:null}); this.message.set(`Рівень ${level.name} збережено.`);

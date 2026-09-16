@@ -26,12 +26,18 @@ internal_router = APIRouter(prefix="/internal/verification-levels", tags=["Inter
 ROOT = Path("/var/lib/shieldnet/templates/verification")
 ALLOWED_HOSTS = {"cdn.discordapp.com", "media.discordapp.net", "images-ext-1.discordapp.net", "images-ext-2.discordapp.net"}
 
+class CriterionInput(BaseModel):
+    label: str = Field(min_length=1,max_length=80)
+    expected_text: str = Field(min_length=1,max_length=500)
+    role_ids: list[int] = Field(default_factory=list,max_length=20)
+
 class LevelInput(BaseModel):
     name: str = Field(min_length=1, max_length=80)
     enabled: bool = False
     channel_id: int | None = None
     expected_text: str = Field(default="", max_length=500)
     role_ids: list[int] = Field(default_factory=list, max_length=20)
+    criteria: list[CriterionInput] = Field(default_factory=list,max_length=20)
     marker: dict = Field(default_factory=lambda: {"x":0,"y":0,"width":1,"height":1})
     @field_validator("marker")
     @classmethod
@@ -45,8 +51,10 @@ class SubmissionInput(BaseModel):
     guild_id: int; level_id: UUID; discord_user_id: int; discord_message_id: int; image_url: str
 
 def serialize(row: VerificationLevel) -> dict:
+    criteria=row.criteria or ([{"label":"Основна ознака","expected_text":row.expected_text,"role_ids":row.role_ids}] if row.expected_text else [])
     return {"id":str(row.id),"name":row.name,"enabled":row.enabled,"channel_id":str(row.channel_id) if row.channel_id else None,
             "expected_text":row.expected_text,"role_ids":[str(x) for x in row.role_ids],"marker":row.marker,
+            "criteria":[{**item,"role_ids":[str(x) for x in item.get("role_ids",[])]} for item in criteria],
             "has_template":bool(row.template_path),"template_url":f"/api/v1/discord/guilds/{row.guild_id}/verification/levels/{row.id}/template" if row.template_path else None}
 
 @router.get("/discord/guilds/{guild_id}/verification/levels")
@@ -66,8 +74,8 @@ async def create_level(guild_id:int,payload:LevelInput,user:User=Depends(get_cur
 async def update_level(guild_id:int,level_id:UUID,payload:LevelInput,user:User=Depends(get_current_user),session:AsyncSession=Depends(get_db_session)):
     await require_guild_management(session,user,guild_id); row=await session.get(VerificationLevel,level_id)
     if not row or row.guild_id!=guild_id: raise HTTPException(404,"Verification level not found")
-    if payload.enabled and (not payload.channel_id or not payload.expected_text.strip() or not row.template_path):
-        raise HTTPException(422,"Select a channel, upload a template and describe what AI must find")
+    if payload.enabled and (not payload.channel_id or not payload.criteria or not row.template_path):
+        raise HTTPException(422,"Select a channel, upload a template and add at least one recognition rule")
     if payload.channel_id:
         conflict=await session.scalar(select(VerificationLevel).where(VerificationLevel.guild_id==guild_id,VerificationLevel.channel_id==payload.channel_id,VerificationLevel.id!=level_id))
         if conflict: raise HTTPException(422,"Each verification level needs its own channel or thread")
@@ -121,14 +129,18 @@ async def analyze(payload:SubmissionInput,session:AsyncSession=Depends(get_db_se
     if len(submitted)>10*1024*1024: raise HTTPException(422,"Image is too large")
     item=VerificationLevelSubmission(level_id=row.id,guild_id=row.guild_id,discord_user_id=payload.discord_user_id,discord_message_id=payload.discord_message_id,image_url=payload.image_url)
     session.add(item); await session.flush()
-    prompt=("Compare image 1 (owner reference marker) with image 2 (member profile marker). "
-            f"Determine whether image 2 contains the required text or visual value: {row.expected_text!r}. "
-            "Return strict JSON: {\"matched\":true|false,\"detected_text\":\"...\",\"confidence\":0.0,\"reason\":\"...\"}.")
+    criteria=row.criteria or ([{"label":"Основна ознака","expected_text":row.expected_text,"role_ids":row.role_ids}] if row.expected_text else [])
+    checks="\n".join(f"{index}: {item['label']} — look for {item['expected_text']!r}" for index,item in enumerate(criteria))
+    prompt=("Compare image 1 (owner reference marker) with image 2 (member profile marker). Check every rule independently:\n"+checks+
+            "\nReturn strict JSON: {\"matched_indices\":[0],\"detected_text\":\"...\",\"confidence\":0.0,\"reason\":\"...\"}. "
+            "matched_indices must contain only rules visibly confirmed in image 2.")
     try:
         _,result=await AIRuntimeService(session).execute(guild_id=row.guild_id,module_key="verification",capability="recognition",input_text=prompt,
             image_data_urls=[data_url(Path(row.template_path).read_bytes(),row.template_mime or "image/png",row.marker),data_url(submitted,response.headers.get("content-type","image/jpeg"),row.marker)],max_output_tokens=500)
-        parsed=json.loads(re.sub(r"^```(?:json)?|```$","",result.text.strip(),flags=re.I).strip()); matched=bool(parsed.get("matched"))
+        parsed=json.loads(re.sub(r"^```(?:json)?|```$","",result.text.strip(),flags=re.I).strip())
+        indices=sorted({int(index) for index in parsed.get("matched_indices",[]) if str(index).isdigit() and 0<=int(index)<len(criteria)})
+        matched=bool(indices); roles=list(dict.fromkeys(role for index in indices for role in criteria[index].get("role_ids",[])))
         item.status="verified" if matched else "rejected"; item.matched=matched; item.detected_text=str(parsed.get("detected_text") or ""); item.ai_result=parsed; item.result_message=str(parsed.get("reason") or ""); item.completed_at=datetime.now(UTC)
-        await session.commit(); return {"submission_id":str(item.id),"matched":matched,"role_ids":[str(x) for x in row.role_ids],"detected_text":item.detected_text,"reason":item.result_message,"level_name":row.name}
+        await session.commit(); return {"submission_id":str(item.id),"matched":matched,"matched_criteria":[criteria[index]["label"] for index in indices],"role_ids":[str(x) for x in roles],"detected_text":item.detected_text,"reason":item.result_message,"level_name":row.name}
     except Exception as exc:
         item.status="failed"; item.result_message=str(exc)[:2000]; item.completed_at=datetime.now(UTC); await session.commit(); raise HTTPException(502,"AI image verification failed") from exc

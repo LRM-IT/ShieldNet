@@ -33,4 +33,5 @@ class VerificationLevelsClient:
         member=message.author if isinstance(message.author,discord.Member) else message.guild.get_member(message.author.id)
         roles=[role for role_id in result.get("role_ids",[]) if (role:=message.guild.get_role(int(role_id))) and role < message.guild.me.top_role]
         if member and roles: await member.add_roles(*roles,reason=f"GuildConsole verification: {result['level_name']}")
-        await message.reply(f"✅ Рівень **{result['level_name']}** підтверджено."+(f" Виявлено: `{result['detected_text']}`" if result.get("detected_text") else ""),mention_author=False)
+        matches=", ".join(result.get("matched_criteria") or [])
+        await message.reply(f"✅ Рівень **{result['level_name']}** підтверджено."+(f" Збіги: **{matches}**." if matches else "")+(f" Виявлено: `{result['detected_text']}`" if result.get("detected_text") else ""),mention_author=False)
