@@ -499,6 +499,7 @@ export class ShellComponent implements OnInit, OnDestroy {
     { keys: ['event_manager', 'event-manager'], label: 'Event Manager', icon: '◷', path: 'plugins/event-manager' },
     { keys: ['war_planner', 'war-planner'], label: 'War Planner', icon: '⚔', path: 'plugins/war-planner' },
     { keys: ['activity_ranking', 'activity-ranking'], label: 'Activity & Ranking', icon: '↗', path: 'plugins/activity-ranking' },
+    { keys: ['audit_security', 'audit-security'], label: 'Audit & Security', icon: '◉', path: 'plugins/audit-security' },
     { keys: ['tickets', 'ticketing'], label: 'Tickets', icon: '▣', path: 'tickets' },
     { keys: ['logging', 'logs'], label: 'Logging', icon: '≡', path: 'logging' },
     { keys: ['guild_dm_broadcast', 'guild-dm-broadcast'], label: 'Guild DM Broadcast', icon: '✉', path: 'plugins/guild-dm-broadcast' },

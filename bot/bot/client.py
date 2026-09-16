@@ -33,6 +33,7 @@ from bot.plugin_ai_automod import AIAutoMod
 from bot.plugin_event_manager import EventManager
 from bot.plugin_war_planner import WarPlanner
 from bot.plugin_activity_ranking import ActivityRanking
+from bot.plugin_audit_security import AuditSecurity
 from bot.verification_levels import VerificationLevelsClient
 
 logger = logging.getLogger(__name__)
@@ -73,6 +74,7 @@ class ShieldNetBot(discord.Client):
         self.event_manager = EventManager(self)
         self.war_planner = WarPlanner(self)
         self.activity_ranking = ActivityRanking(self)
+        self.audit_security = AuditSecurity(self)
         self.verification_levels = VerificationLevelsClient(self)
         self._verification_slash_commands: dict[int, str] = {}
         self._initial_sync_done = False
@@ -493,6 +495,7 @@ class ShieldNetBot(discord.Client):
             await self.member_sync.sync_member(member)
             await self.automation_runtime.emit(member.guild, "member.joined", f"{member.id}:{member.joined_at.isoformat() if member.joined_at else datetime.now(UTC).isoformat()}", self._member_context(member))
             await self.welcome.member_join(member)
+            await self.audit_security.record(member.guild,"member_join","Member joined",f"{member.mention} (`{member.id}`) joined the server.",member.id)
         except Exception:
             logger.exception("Member join sync/automation failed: %s", member.id)
 
@@ -501,6 +504,7 @@ class ShieldNetBot(discord.Client):
             await self.member_sync.mark_left(member.guild.id, member.id)
             await self.automation_runtime.emit(member.guild, "member.left", f"{member.id}:{datetime.now(UTC).isoformat()}", self._member_context(member))
             await self.welcome.member_left(member)
+            await self.audit_security.record(member.guild,"member_leave","Member left",f"**{member}** (`{member.id}`) left the server.",member.id,"low")
         except Exception:
             logger.exception("Member leave sync/automation failed: %s", member.id)
 
@@ -508,6 +512,11 @@ class ShieldNetBot(discord.Client):
         try:
             if {role.id for role in before.roles} != {role.id for role in after.roles}:
                 await self.language_selection.ensure_default_roles(after)
+                before_ids={role.id for role in before.roles};after_ids={role.id for role in after.roles};added=[role.name for role in after.roles if role.id not in before_ids];removed=[role.name for role in before.roles if role.id not in after_ids]
+                details=[]
+                if added:details.append("Added: "+", ".join(added))
+                if removed:details.append("Removed: "+", ".join(removed))
+                await self.audit_security.record(after.guild,"member_roles","Member roles changed",f"{after.mention}\n"+"\n".join(details),after.id,"medium")
             await self.member_sync.sync_member(after)
             before_ids = {r.id for r in before.roles}
             for role in after.roles:
@@ -607,6 +616,37 @@ class ShieldNetBot(discord.Client):
                                     view=VerificationStartView(self.verification), mention_author=False)
         except Exception:
             logger.exception("Verification text trigger failed guild=%s message=%s", message.guild.id, message.id)
+
+    async def on_message_delete(self, message: discord.Message) -> None:
+        if message.guild is None or message.author.bot:
+            return
+        description=f"Message by {message.author.mention} deleted in {message.channel.mention}."
+        if message.content:description+=f"\n```{message.content[:1500]}```"
+        try:await self.audit_security.record(message.guild,"message_delete","Message deleted",description,message.id,"medium")
+        except Exception:logger.exception("Audit message delete failed guild=%s",message.guild.id)
+
+    async def on_message_edit(self, before: discord.Message, after: discord.Message) -> None:
+        if before.guild is None or before.author.bot or before.content==after.content:
+            return
+        description=f"Message by {before.author.mention} edited in {before.channel.mention}.\n**Before:** {before.content[:700] or '—'}\n**After:** {after.content[:700] or '—'}"
+        try:await self.audit_security.record(before.guild,"message_edit","Message edited",description,before.id,"low")
+        except Exception:logger.exception("Audit message edit failed guild=%s",before.guild.id)
+
+    async def on_guild_role_create(self, role: discord.Role) -> None:
+        try:await self.audit_security.record(role.guild,"role_change","Role created",f"Role **{role.name}** was created.",role.id,"medium")
+        except Exception:logger.exception("Audit role create failed guild=%s",role.guild.id)
+
+    async def on_guild_role_delete(self, role: discord.Role) -> None:
+        try:await self.audit_security.record(role.guild,"role_change","Role deleted",f"Role **{role.name}** was deleted.",role.id,"high")
+        except Exception:logger.exception("Audit role delete failed guild=%s",role.guild.id)
+
+    async def on_guild_channel_create(self, channel) -> None:
+        try:await self.audit_security.record(channel.guild,"channel_change","Channel created",f"Channel **{channel.name}** was created.",channel.id,"medium")
+        except Exception:logger.exception("Audit channel create failed guild=%s",channel.guild.id)
+
+    async def on_guild_channel_delete(self, channel) -> None:
+        try:await self.audit_security.record(channel.guild,"channel_change","Channel deleted",f"Channel **{channel.name}** was deleted.",channel.id,"high")
+        except Exception:logger.exception("Audit channel delete failed guild=%s",channel.guild.id)
 
     @tasks.loop(seconds=5)
     async def welcome_loop(self) -> None:
