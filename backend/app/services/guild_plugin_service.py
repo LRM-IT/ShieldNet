@@ -17,6 +17,7 @@ from app.services.plugin_runtime_instance_service import (
     PluginRuntimeConflictError,
     PluginRuntimeInstanceService,
 )
+from app.services.billing_service import BillingService
 
 
 class GuildPluginConflictError(Exception):
@@ -208,6 +209,8 @@ class GuildPluginService:
             groups = (row.configuration or {}).get("groups", [])
             if not any(group.get("enabled") and len({item.get("language") for item in group.get("channels", [])}) >= 2 for group in groups):
                 raise ValueError("Configure an enabled translation group with channels in at least two languages")
+        if enabled:
+            await BillingService(self.session).require_entitlement(guild_id, plugin_key)
 
         previous_enabled = row.enabled
         previous_status = row.status

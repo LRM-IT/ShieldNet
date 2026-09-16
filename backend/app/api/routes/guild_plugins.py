@@ -6,6 +6,7 @@ from app.db.session import get_db_session
 from app.models.core import User
 from app.schemas.guild_plugins import GuildPluginInstallationResponse, GuildPluginMarketplaceItemResponse, GuildPluginSettingsUpdate
 from app.services.guild_plugin_service import GuildPluginConflictError, GuildPluginService
+from app.services.billing_service import BillingRequiredError
 
 router = APIRouter(tags=["Guild Plugin Marketplace"])
 
@@ -41,6 +42,8 @@ async def enable(guild_id: int, plugin_key: str, current_user: User = Depends(ge
         raise HTTPException(404, str(exc)) from exc
     except ValueError as exc:
         raise HTTPException(409, str(exc)) from exc
+    except BillingRequiredError as exc:
+        raise HTTPException(402, str(exc)) from exc
 
 @router.post("/discord/guilds/{guild_id}/plugins/{plugin_key}/disable", response_model=GuildPluginInstallationResponse)
 async def disable(guild_id: int, plugin_key: str, current_user: User = Depends(get_current_user), session: AsyncSession = Depends(get_db_session)):

@@ -37,6 +37,14 @@ export const platformGuard: CanActivateFn = async () => {
   return true;
 };
 
+export const superadminGuard: CanActivateFn = async () => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+  const profile = await ensureProfile(auth, router);
+  if (!('id' in profile) || !profile.is_superadmin) return router.parseUrl('/access-denied');
+  return true;
+};
+
 export const guildGuard: CanActivateFn = async (route: ActivatedRouteSnapshot) => {
   const auth = inject(AuthService);
   const router = inject(Router);

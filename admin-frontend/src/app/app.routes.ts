@@ -47,7 +47,7 @@ import { AuditComponent } from './pages/audit.component';
 import { Routes } from '@angular/router';
 
 import { authGuard } from './core/auth.guard';
-import { guildGuard, platformGuard } from './core/context.guards';
+import { guildGuard, platformGuard, superadminGuard } from './core/context.guards';
 import { LoginComponent } from './pages/login.component';
 import { PlatformLoginComponent } from './pages/platform-login.component';
 import { EnterpriseDashboardComponent } from './pages/enterprise-dashboard.component';
@@ -59,6 +59,7 @@ import { AccessDeniedComponent } from './pages/access-denied.component';
 import { GuildAccessComponent } from './pages/guild-access.component';
 
 import { GuildAccessOverviewComponent } from './pages/guild-access-overview.component';
+import { BillingComponent } from './pages/billing.component';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -73,6 +74,7 @@ export const routes: Routes = [
   { path: 'platform/template-designer', component: TemplateDesignerComponent, canActivate: [platformGuard] },
   { path: 'platform/access', component: PlatformAccessComponent, canActivate: [platformGuard] },
   { path: 'platform/plugins', component: PluginsComponent, canActivate: [platformGuard] },
+  { path: 'platform/billing', component: BillingComponent, canActivate: [superadminGuard] },
   { path: 'platform/jobs', component: JobsCenterComponent, canActivate: [platformGuard] },
   { path: 'platform/operations', component: OperationsComponent, canActivate: [platformGuard] },
   { path: 'platform/health', component: HealthMonitorComponent, canActivate: [platformGuard] },

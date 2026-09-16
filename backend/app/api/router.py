@@ -14,6 +14,7 @@ from app.api.routes.moderation import router as moderation_router
 from app.api.routes.events import router as events_router
 from fastapi import APIRouter
 from app.api.routes.platform_ai import router as platform_ai_router
+from app.api.routes.billing import router as billing_router
 from app.api.routes.audit import router as audit_router
 from app.api.routes.auth import router as auth_router
 from app.api.routes.backups import router as backups_router
@@ -89,6 +90,7 @@ from app.api.routes.verification_levels import router as verification_levels_rou
 api_router = APIRouter()
 
 api_router.include_router(health_router)
+api_router.include_router(billing_router)
 api_router.include_router(auth_router)
 api_router.include_router(backups_router)
 api_router.include_router(automations_router)
