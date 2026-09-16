@@ -14,10 +14,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.billing import BillingPayment, BillingPluginPlan, BillingSubscription, BillingWallet, BillingWalletTransaction
 from app.services.billing_service import FREE_PLUGIN_KEYS, normalize_plugin_key
 from app.services.plugin_control_service import PluginControlService
+from app.services.nbu_exchange import NBUExchangeService, ExchangeRateError, SUPPORTED_DISPLAY_CURRENCIES
 
 
 BILLING_VAULT_KEY = "core_billing"
 PERIOD_DAYS = {"monthly": 30, "quarterly": 90, "yearly": 365}
+PROVIDER_CURRENCIES = {"wayforpay":{"UAH","USD","EUR"}, "liqpay":{"UAH","USD","EUR"}}
 
 
 class PaymentError(ValueError):
@@ -101,7 +103,7 @@ class BillingPaymentService:
         await self._activate(payment, str(payment.id), {"source":"wallet","confirmed":True})
         return {"provider":"balance","order_reference":payment.order_reference,"status":"paid","balance":wallet.balance,"currency":wallet.currency}
 
-    async def create_checkout(self, guild_id: int, plugin_key: str, period: str, provider: str, base_url: str) -> dict:
+    async def create_checkout(self, guild_id: int, plugin_key: str, period: str, provider: str, base_url: str, display_currency: str = "UAH") -> dict:
         key = normalize_plugin_key(plugin_key)
         if key in FREE_PLUGIN_KEYS:
             raise PaymentError("This plugin is free")
@@ -110,32 +112,47 @@ class BillingPaymentService:
         plan = (await self.session.execute(select(BillingPluginPlan).where(BillingPluginPlan.plugin_key == key))).scalar_one_or_none()
         if plan is None or not plan.enabled or plan.is_free:
             raise PaymentError("Paid plan is unavailable")
-        amount = getattr(plan, f"{period}_price")
-        if amount is None or amount <= 0:
+        base_amount = getattr(plan, f"{period}_price")
+        if base_amount is None or base_amount <= 0:
             raise PaymentError("Price is not configured for this period")
+        requested_currency = display_currency.upper()
+        if requested_currency not in SUPPORTED_DISPLAY_CURRENCIES:
+            requested_currency = "UAH"
+        try:
+            display_amount = await NBUExchangeService(self.session).convert_from_uah(base_amount, requested_currency)
+        except ExchangeRateError as exc:
+            raise PaymentError(str(exc)) from exc
+        charge_currency = requested_currency if requested_currency in PROVIDER_CURRENCIES[provider] else "UAH"
+        if charge_currency == "UAH": amount, fx_rate = base_amount, Decimal("1")
+        else:
+            fx_rate, _ = await NBUExchangeService(self.session).rate(charge_currency)
+            amount = await NBUExchangeService(self.session).convert_from_uah(base_amount, charge_currency)
         order = f"gc-{guild_id}-{uuid4().hex}"
         payment = BillingPayment(id=uuid4(), order_reference=order, guild_id=guild_id, plugin_key=key,
-                                 billing_period=period, provider=provider, amount=amount, currency=plan.currency)
+                                 billing_period=period, provider=provider, amount=amount, currency=charge_currency,
+                                 base_amount_uah=base_amount, fx_rate=fx_rate, quote_expires_at=datetime.now(timezone.utc)+timedelta(minutes=30))
         self.session.add(payment)
         await self.session.commit()
         product = f"GuildConsole {key} {period}"
         callback = f"{base_url}/api/v1/billing/callback/{provider}"
-        result = f"{base_url}/guilds/{guild_id}/billing"
+        result = f"{base_url}/guild/{guild_id}/billing"
         if provider == "wayforpay":
             merchant = await self.secret("wfp_merchant_account"); secret = await self.secret("wfp_secret_key")
             domain = await self.secret("wfp_merchant_domain"); created = int(time.time())
-            values = [merchant, domain, order, created, _money(amount), plan.currency, product, "1", _money(amount)]
+            values = [merchant, domain, order, created, _money(amount), charge_currency, product, "1", _money(amount)]
             fields = {"merchantAccount":merchant,"merchantAuthType":"SimpleSignature","merchantDomainName":domain,
-                      "orderReference":order,"orderDate":created,"amount":_money(amount),"currency":plan.currency,
+                      "orderReference":order,"orderDate":created,"amount":_money(amount),"currency":charge_currency,
                       "productName":[product],"productPrice":[_money(amount)],"productCount":["1"],
                       "merchantSignature":_wfp_signature(secret, values),"serviceUrl":callback,"returnUrl":result}
-            return {"provider":provider,"order_reference":order,"action":"https://secure.wayforpay.com/pay","method":"POST","fields":fields}
+            return {"provider":provider,"order_reference":order,"action":"https://secure.wayforpay.com/pay","method":"POST","fields":fields,
+                    "charge_amount":amount,"charge_currency":charge_currency,"display_amount":display_amount,"display_currency":requested_currency,"quote_minutes":30}
         public = await self.secret("liqpay_public_key"); private = await self.secret("liqpay_private_key")
-        payload = {"version":"3","public_key":public,"action":"pay","amount":_money(amount),"currency":plan.currency,
+        payload = {"version":"3","public_key":public,"action":"pay","amount":_money(amount),"currency":charge_currency,
                    "description":product,"order_id":order,"server_url":callback,"result_url":result}
         data = base64.b64encode(json.dumps(payload, separators=(",", ":")).encode()).decode()
         return {"provider":provider,"order_reference":order,"action":"https://www.liqpay.ua/api/3/checkout","method":"POST",
-                "fields":{"data":data,"signature":_liqpay_signature(private, data)}}
+                "fields":{"data":data,"signature":_liqpay_signature(private, data)},"charge_amount":amount,"charge_currency":charge_currency,
+                "display_amount":display_amount,"display_currency":requested_currency,"quote_minutes":30}
 
     async def _activate(self, payment: BillingPayment, provider_id: str | None, raw: dict) -> None:
         if payment.status == "paid":

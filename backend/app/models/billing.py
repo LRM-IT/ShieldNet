@@ -57,6 +57,9 @@ class BillingPayment(Base, TimestampMixin):
     checkout_url: Mapped[str | None] = mapped_column(Text)
     raw_status: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict, server_default="{}")
     paid_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    base_amount_uah: Mapped[Decimal | None] = mapped_column(Numeric(12, 2))
+    fx_rate: Mapped[Decimal | None] = mapped_column(Numeric(18, 8))
+    quote_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
 class BillingWallet(Base, TimestampMixin):

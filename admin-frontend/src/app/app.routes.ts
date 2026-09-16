@@ -60,6 +60,7 @@ import { GuildAccessComponent } from './pages/guild-access.component';
 
 import { GuildAccessOverviewComponent } from './pages/guild-access-overview.component';
 import { BillingComponent } from './pages/billing.component';
+import { GuildBillingComponent } from './pages/guild-billing.component';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -89,6 +90,7 @@ export const routes: Routes = [
     canActivate: [guildGuard],
   },
   { path: 'guild/:guildId/access-overview', component: GuildAccessOverviewComponent, canActivate: [guildGuard] },
+  { path: 'guild/:guildId/billing', component: GuildBillingComponent, canActivate: [guildGuard], data: { guildModule: 'plugins' } },
 { path: 'guild/:guildId/access', component: GuildAccessComponent, canActivate: [guildGuard], data: { guildModule: 'access' } },
   { path: 'guild/:guildId/explorer', component: ExplorerComponent, canActivate: [guildGuard], data: { guildModule: 'members' } },
   { path: 'guild/:guildId/ai', component: GuildAIComponent, canActivate: [guildGuard], data: { guildModule: 'settings' } },

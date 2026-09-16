@@ -489,6 +489,7 @@ export class ShellComponent implements OnInit, OnDestroy {
     if (!id) return [];
     return [
       { label: 'shell.plugin_runtime', icon: '⬢', path: ['/guild', id, 'plugin-runtime'] },
+      { label: 'Billing & subscriptions', icon: '₴', path: ['/guild', id, 'billing'] },
       { label: 'shell.audit_trail', icon: '≡', path: ['/guild', id, 'audit'] },
       { label: 'shell.server_control', icon: '⌬', path: ['/guild', id, 'control'] },
       { label: 'Guild access', icon: '⌑', path: ['/guild', id, 'access'] },

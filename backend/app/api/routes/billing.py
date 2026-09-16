@@ -50,6 +50,7 @@ class CheckoutRequest(BaseModel):
     plugin_key: str
     billing_period: str = Field(pattern=r"^(monthly|quarterly|yearly)$")
     provider: str = Field(pattern=r"^(wayforpay|liqpay|balance)$")
+    display_currency: str = Field(default="UAH", pattern=r"^[A-Z]{3}$")
 
 class WalletCreditRequest(BaseModel):
     discord_user_id: int
@@ -215,7 +216,7 @@ async def checkout(guild_id: int, payload: CheckoutRequest, request: Request, us
             raise HTTPException(400, str(exc)) from exc
     base_url = str(request.base_url).rstrip("/")
     try:
-        return await BillingPaymentService(session).create_checkout(guild_id, payload.plugin_key, payload.billing_period, payload.provider, base_url)
+        return await BillingPaymentService(session).create_checkout(guild_id, payload.plugin_key, payload.billing_period, payload.provider, base_url, payload.display_currency)
     except PaymentError as exc:
         raise HTTPException(400, str(exc)) from exc
 
