@@ -91,4 +91,20 @@ export class TranslationService {
     const english = lookup(this.englishDictionary);
     return typeof english === 'string' ? english : fallback || key;
   }
+
+  hasPhrase(source: string): boolean {
+    const phrases = this.dictionary()['_phrases'];
+    const english = this.englishDictionary['_phrases'];
+    return !!(phrases && typeof phrases === 'object' && source in phrases) ||
+      !!(english && typeof english === 'object' && source in english);
+  }
+
+  phrase(source: string): string {
+    const phrases = this.dictionary()['_phrases'];
+    if (phrases && typeof phrases === 'object') {
+      const value = (phrases as Dictionary)[source];
+      if (typeof value === 'string') return value;
+    }
+    return source;
+  }
 }
