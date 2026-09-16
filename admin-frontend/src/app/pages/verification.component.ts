@@ -147,7 +147,7 @@ import { DiscordChannelPickerComponent } from '../shared/discord-channel-picker.
               <div class="criteria"><div class="heading"><div><h3>Ознаки та ролі</h3><p class="muted">AI перевіряє кожну ознаку окремо й об’єднує ролі всіх збігів.</p></div><button class="btn secondary" (click)="addCriterion(level)">Додати ознаку</button></div>
                 @for (criterion of level.criteria; track $index) {
                   <article class="criterion"><label>Назва ознаки<input [(ngModel)]="criterion.label" maxlength="80" placeholder="Наприклад: Leader"></label>
-                    <label>Допустимі значення<input [(ngModel)]="criterion.values_text" maxlength="1000" placeholder="Наприклад: R4, R5"><span class="muted">Вкажіть через кому або з нового рядка. Збіг будь-якого значення активує ролі нижче.</span></label>
+                    <label>Допустимі значення<input [(ngModel)]="criterion.values_text" maxlength="1000" placeholder="Наприклад: R4, R5"><span class="field-help">Вкажіть через кому або з нового рядка. Збіг будь-якого значення активує ролі нижче.</span></label>
                     <label>Ролі при цьому збігу<select multiple [(ngModel)]="criterion.role_ids">
                       @for (role of roles(); track role.discord_role_id) { <option [value]="role.discord_role_id">{{role.name}}</option> }
                     </select></label>
@@ -473,7 +473,7 @@ import { DiscordChannelPickerComponent } from '../shared/discord-channel-picker.
     .command-input { display:flex; align-items:center; background:var(--panel-2); border:1px solid var(--line); border-radius:10px; }
     .command-input span { padding-left:.8rem; font-weight:800; color:var(--text); }
     .command-input input { flex:1; border:0; background:transparent; }
-    .levels{margin-top:1.2rem}.level-card{border:1px solid var(--line);border-radius:12px;overflow:hidden}.level-card summary{display:flex;justify-content:space-between;padding:1rem;cursor:pointer;list-style:none}.level-body{display:grid;gap:.8rem;padding:1rem;border-top:1px solid var(--line)}.criteria{display:grid;gap:.8rem}.criterion{display:grid;grid-template-columns:1fr 1.5fr 1.5fr auto;gap:.7rem;align-items:end;padding:1rem;border:1px solid var(--line);border-radius:12px;background:var(--panel-2)}.marker-image{position:relative;width:min(100%,700px)}.marker-image img{display:block;width:100%;border-radius:10px}.marker{position:absolute;border:3px solid #45e0b3;background:rgba(69,224,179,.14);pointer-events:none}.marker-modal{position:fixed;inset:0;z-index:1200;display:grid;place-items:center;padding:1rem;background:rgba(0,0,0,.78);backdrop-filter:blur(8px)}.marker-dialog{width:min(1100px,96vw);max-height:95vh;overflow:auto;padding:1.2rem}.marker-editor{position:relative;width:fit-content;max-width:100%;margin:auto;cursor:crosshair;touch-action:none;user-select:none;background:#050708;border-radius:12px;overflow:hidden}.marker-editor img{display:block;max-width:100%;max-height:72vh;width:auto;height:auto;pointer-events:none}.marker.active{border-width:4px;box-shadow:0 0 0 9999px rgba(0,0,0,.42)}
+    .levels{margin-top:1.2rem}.level-card{border:1px solid var(--line);border-radius:12px;overflow:hidden}.level-card summary{display:flex;justify-content:space-between;padding:1rem;cursor:pointer;list-style:none}.level-body{display:grid;gap:.8rem;padding:1rem;border-top:1px solid var(--line)}.criteria{display:grid;gap:.8rem}.criterion{display:grid;grid-template-columns:minmax(180px,.8fr) minmax(260px,1.2fr) minmax(260px,1.2fr);gap:1rem;align-items:start;padding:1rem;border:1px solid var(--line);border-radius:12px;background:var(--panel-2)}.criterion>label{min-width:0;align-content:start}.criterion input{min-height:3.75rem}.criterion select{height:8.5rem;overflow-y:auto}.criterion .field-help{min-height:3rem;font-size:.9rem;line-height:1.35;color:var(--muted)}.criterion>.danger{grid-column:1/-1;justify-self:end}.marker-image{position:relative;width:min(100%,700px)}.marker-image img{display:block;width:100%;border-radius:10px}.marker{position:absolute;border:3px solid #45e0b3;background:rgba(69,224,179,.14);pointer-events:none}.marker-modal{position:fixed;inset:0;z-index:1200;display:grid;place-items:center;padding:1rem;background:rgba(0,0,0,.78);backdrop-filter:blur(8px)}.marker-dialog{width:min(1100px,96vw);max-height:95vh;overflow:auto;padding:1.2rem}.marker-editor{position:relative;width:fit-content;max-width:100%;margin:auto;cursor:crosshair;touch-action:none;user-select:none;background:#050708;border-radius:12px;overflow:hidden}.marker-editor img{display:block;max-width:100%;max-height:72vh;width:auto;height:auto;pointer-events:none}.marker.active{border-width:4px;box-shadow:0 0 0 9999px rgba(0,0,0,.42)}
 
     .check {
       display: flex;
@@ -615,6 +615,10 @@ import { DiscordChannelPickerComponent } from '../shared/discord-channel-picker.
       justify-content: flex-end;
     }
 
+    @media (max-width: 1050px) {
+      .criterion{grid-template-columns:1fr 1fr}.criterion>label:last-of-type{grid-column:1/-1}
+    }
+
     @media (max-width: 700px) {
       .heading,
       .queue-heading,
@@ -626,7 +630,7 @@ import { DiscordChannelPickerComponent } from '../shared/discord-channel-picker.
       .grid {
         grid-template-columns: 1fr;
       }
-      .criterion{grid-template-columns:1fr}
+      .criterion{grid-template-columns:1fr}.criterion>label:last-of-type{grid-column:auto}
 
       .request-side {
         justify-items: stretch;
