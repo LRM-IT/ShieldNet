@@ -1,13 +1,15 @@
 import uuid
 from datetime import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class VerificationSettingsInput(BaseModel):
     enabled: bool = False
     verified_role_id: int | None = None
     review_channel_id: int | None = None
+    invocation_channel_id: int | None = None
+    text_commands: str = Field(default="!verify", max_length=255)
     nickname_template: str = Field(
         default="[{alliance}] {nickname}",
         min_length=3,
@@ -25,6 +27,23 @@ class VerificationSettingsInput(BaseModel):
         le=32,
     )
 
+    @field_validator("text_commands")
+    @classmethod
+    def valid_commands(cls, value: str) -> str:
+        commands = [item.strip().lower() for item in value.replace("\n", ",").split(",") if item.strip()]
+        if len(commands) > 10 or any(not command.startswith(("!", ".", "?")) or " " in command or len(command) > 32 for command in commands):
+            raise ValueError("Use up to 10 comma-separated commands beginning with !, . or ?")
+        return ",".join(dict.fromkeys(commands))
+
+    @field_validator("nickname_template")
+    @classmethod
+    def valid_nickname_template(cls, value: str) -> str:
+        try:
+            value.format(alliance="A", nickname="Player", server="1")
+        except (KeyError, ValueError) as exc:
+            raise ValueError("Use only {alliance}, {nickname} and {server}") from exc
+        return value
+
 
 class VerificationRequestCreate(BaseModel):
     discord_user_id: int
@@ -36,6 +55,7 @@ class VerificationRequestCreate(BaseModel):
         min_length=1,
         max_length=64,
     )
+    server_number: str = Field(min_length=1, max_length=32)
 
 
 class VerificationDecisionInput(BaseModel):

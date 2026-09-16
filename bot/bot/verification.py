@@ -20,6 +20,7 @@ class VerificationClient:
         discord_user_id: int,
         alliance: str,
         nickname: str,
+        server_number: str,
     ) -> dict:
         async with httpx.AsyncClient(timeout=20) as client:
             response = await client.post(
@@ -30,9 +31,19 @@ class VerificationClient:
                     "discord_user_id": discord_user_id,
                     "alliance": alliance,
                     "nickname": nickname,
+                    "server_number": server_number,
                 },
             )
 
+        response.raise_for_status()
+        return response.json()
+
+    async def settings(self, guild_id: int) -> dict:
+        async with httpx.AsyncClient(timeout=20) as client:
+            response = await client.get(
+                f"{self.base_url}/api/v1/internal/verification/guilds/{guild_id}/settings",
+                headers=self.headers,
+            )
         response.raise_for_status()
         return response.json()
 
@@ -298,6 +309,7 @@ class VerificationClient:
         )
         embed.add_field(name="Alliance", value=str(item["alliance"]))
         embed.add_field(name="Nickname", value=str(item["nickname"]))
+        embed.add_field(name="Server", value=str(item.get("server_number") or "—"))
         embed.add_field(
             name="Discord user",
             value=f"<@{item['discord_user_id']}>",
@@ -447,6 +459,13 @@ class VerifyModal(
         max_length=64,
     )
 
+    server_number = discord.ui.TextInput(
+        label="Server number",
+        placeholder="2279",
+        min_length=1,
+        max_length=32,
+    )
+
     def __init__(
         self,
         verification_client: VerificationClient,
@@ -465,6 +484,15 @@ class VerifyModal(
             )
             return
 
+        config = await self.verification_client.settings(interaction.guild.id)
+        channel_id = config.get("invocation_channel_id")
+        if not config.get("enabled") or (channel_id and str(interaction.channel_id) != channel_id):
+            await interaction.response.send_message(
+                f"Use verification in <#{channel_id}>." if channel_id else "Verification is unavailable.",
+                ephemeral=True,
+            )
+            return
+
         await interaction.response.defer(
             ephemeral=True,
             thinking=True,
@@ -477,6 +505,7 @@ class VerifyModal(
                     discord_user_id=interaction.user.id,
                     alliance=str(self.alliance.value),
                     nickname=str(self.nickname.value),
+                    server_number=str(self.server_number.value),
                 )
             )
 
@@ -500,7 +529,6 @@ class VerifyModal(
                 + f"**{item['requested_nickname']}**.",
                 ephemeral=True,
             )
-
         except httpx.HTTPStatusError as exc:
             detail = (
                 "Unable to create verification request."
@@ -524,3 +552,13 @@ class VerifyModal(
                 "Unexpected verification error.",
                 ephemeral=True,
             )
+
+
+class VerificationStartView(discord.ui.View):
+    def __init__(self, verification_client: VerificationClient) -> None:
+        super().__init__(timeout=300)
+        self.verification_client = verification_client
+
+    @discord.ui.button(label="Почати верифікацію", style=discord.ButtonStyle.primary)
+    async def start(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
+        await interaction.response.send_modal(VerifyModal(self.verification_client))

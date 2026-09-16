@@ -1,4 +1,4 @@
-from bot.verification import VerificationClient, VerifyModal, VerificationReviewView
+from bot.verification import VerificationClient, VerifyModal, VerificationReviewView, VerificationStartView
 from bot.permissions import PermissionClient
 import asyncio
 import logging
@@ -131,6 +131,14 @@ class ShieldNetBot(discord.Client):
         async def verify(
             interaction: discord.Interaction,
         ) -> None:
+            if interaction.guild is None:
+                await interaction.response.send_message("Server only.", ephemeral=True)
+                return
+            config = await self.verification.settings(interaction.guild.id)
+            channel_id = config.get("invocation_channel_id")
+            if channel_id and str(interaction.channel_id) != channel_id:
+                await interaction.response.send_message(f"Use verification in <#{channel_id}>.", ephemeral=True)
+                return
             await interaction.response.send_modal(
                 VerifyModal(self.verification)
             )
@@ -508,6 +516,15 @@ class ShieldNetBot(discord.Client):
             await self.translator_groups.process(message)
         except Exception:
             logger.exception("Translator Groups processing failed: %s", message.id)
+        try:
+            config = await self.verification.settings(message.guild.id)
+            commands = {item.strip().casefold() for item in (config.get("text_commands") or "").split(",") if item.strip()}
+            if (config.get("enabled") and str(message.channel.id) == str(config.get("invocation_channel_id") or "")
+                    and message.content.strip().casefold() in commands):
+                await message.reply("Натисніть кнопку, щоб відкрити форму верифікації.",
+                                    view=VerificationStartView(self.verification), mention_author=False)
+        except Exception:
+            logger.exception("Verification text trigger failed guild=%s message=%s", message.guild.id, message.id)
 
     @tasks.loop(seconds=5)
     async def welcome_loop(self) -> None:

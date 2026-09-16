@@ -32,6 +32,15 @@ router = APIRouter(
 )
 
 
+@router.get("/guilds/{guild_id}/settings")
+async def internal_settings(guild_id: int, session: AsyncSession = Depends(get_db_session)):
+    item = await session.scalar(select(VerificationSettings).where(VerificationSettings.guild_id == guild_id))
+    if item is None:
+        return {"enabled": False, "invocation_channel_id": None, "text_commands": ""}
+    return {"enabled": item.enabled, "invocation_channel_id": str(item.invocation_channel_id) if item.invocation_channel_id else None,
+            "text_commands": item.text_commands}
+
+
 @router.post("/guilds/{guild_id}/requests")
 async def create_request(
     guild_id: int,
@@ -54,6 +63,7 @@ async def create_request(
 
     alliance = payload.alliance.strip().upper()
     nickname = payload.nickname.strip()
+    server_number = payload.server_number.strip()
 
     if not (
         settings.alliance_min_length
@@ -73,6 +83,7 @@ async def create_request(
         requested_nickname = settings.nickname_template.format(
             alliance=alliance,
             nickname=nickname,
+            server=server_number,
         )[:32]
     except (KeyError, ValueError) as exc:
         raise HTTPException(
@@ -91,6 +102,7 @@ async def create_request(
         discord_user_id=payload.discord_user_id,
         alliance=alliance,
         nickname=nickname,
+        server_number=server_number,
         requested_nickname=requested_nickname,
         status=initial_status,
         decided_at=(
@@ -121,6 +133,7 @@ async def create_request(
         "discord_user_id": item.discord_user_id,
         "alliance": item.alliance,
         "nickname": item.nickname,
+        "server_number": item.server_number,
         "requested_nickname": item.requested_nickname,
         "status": item.status,
     }
@@ -314,6 +327,7 @@ async def pending_review_notifications(
                 "discord_user_id": item.discord_user_id,
                 "alliance": item.alliance,
                 "nickname": item.nickname,
+                "server_number": item.server_number,
                 "requested_nickname": item.requested_nickname,
             }
             for item in items

@@ -10,6 +10,7 @@ import { GuildRoleService } from '../core/guild-role.service';
 import { VerificationService } from '../core/verification.service';
 import { ShellComponent } from '../shared/shell.component';
 import { TranslatePipe } from '../core/translate.pipe';
+import { DiscordChannelPickerComponent } from '../shared/discord-channel-picker.component';
 
 @Component({
   standalone: true,
@@ -17,6 +18,7 @@ import { TranslatePipe } from '../core/translate.pipe';
     FormsModule,
     ShellComponent,
     TranslatePipe,
+    DiscordChannelPickerComponent,
   ],
   template: `
     <sn-shell [title]="'verification.title' | snT:'Verification'">
@@ -54,12 +56,18 @@ import { TranslatePipe } from '../core/translate.pipe';
           {{ "verification.auto_approve" | snT:"Automatically approve new requests" }}
         </label>
 
-        <label>
-          {{ "verification.review_channel" | snT:"Review channel ID" }}
-          <input
-            [(ngModel)]="reviewChannelId"
-            [placeholder]="'verification.channel_placeholder' | snT:'Discord channel ID'"
-          >
+        <label>{{ "verification.review_channel" | snT:"Review channel" }}
+          <sn-discord-channel-picker [guildId]="guildId" [value]="reviewChannelId || null" (valueChange)="reviewChannelId=$event || ''" />
+        </label>
+
+        <label>Гілка або канал запуску верифікації
+          <sn-discord-channel-picker [guildId]="guildId" [value]="invocationChannelId || null" (valueChange)="invocationChannelId=$event || ''" />
+          <small class="muted">Текстові команди та /verify приймаються лише в цьому каналі або гілці.</small>
+        </label>
+
+        <label>Текстові команди виклику
+          <input [(ngModel)]="textCommands" maxlength="255" placeholder="!verify, !верифікація">
+          <small class="muted">До 10 команд через кому. Підтримуються префікси !, . та ?.</small>
         </label>
 
         <label>
@@ -89,6 +97,7 @@ import { TranslatePipe } from '../core/translate.pipe';
             {{ "verification.variables" | snT:"Variables" }}:
             &#123;alliance&#125;,
             &#123;nickname&#125;
+            &#123;server&#125;
           </small>
         </label>
 
@@ -593,6 +602,8 @@ export class VerificationComponent
   autoApprove = false;
   verifiedRoleId: number | null = null;
   reviewChannelId = '';
+  invocationChannelId = '';
+  textCommands = '!verify';
   nicknameTemplate = '[{alliance}] {nickname}';
   allianceMin = 2;
   allianceMax = 8;
@@ -621,6 +632,8 @@ export class VerificationComponent
     this.reviewChannelId = settings.review_channel_id
       ? String(settings.review_channel_id)
       : '';
+    this.invocationChannelId = settings.invocation_channel_id ? String(settings.invocation_channel_id) : '';
+    this.textCommands = settings.text_commands || '';
     this.nicknameTemplate =
       settings.nickname_template;
     this.allianceMin =
@@ -740,6 +753,8 @@ export class VerificationComponent
           review_channel_id: this.reviewChannelId
             ? Number(this.reviewChannelId)
             : null,
+          invocation_channel_id: this.invocationChannelId ? Number(this.invocationChannelId) : null,
+          text_commands: this.textCommands,
           nickname_template:
             this.nicknameTemplate,
           auto_approve:

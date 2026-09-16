@@ -39,6 +39,7 @@ def serialize_request(item: VerificationRequest) -> dict:
         "discord_user_id": item.discord_user_id,
         "alliance": item.alliance,
         "nickname": item.nickname,
+        "server_number": item.server_number,
         "requested_nickname": item.requested_nickname,
         "status": item.status,
         "result_message": item.result_message,
@@ -93,6 +94,8 @@ async def get_settings(
         "enabled": item.enabled,
         "verified_role_id": item.verified_role_id,
         "review_channel_id": item.review_channel_id,
+        "invocation_channel_id": item.invocation_channel_id,
+        "text_commands": item.text_commands,
         "nickname_template": item.nickname_template,
         "auto_approve": item.auto_approve,
         "alliance_min_length": item.alliance_min_length,
@@ -518,7 +521,11 @@ async def resubmit_verification_request(
         raise HTTPException(status_code=409, detail="Request is not awaiting changes.")
     item.alliance = payload.alliance.strip().upper()
     item.nickname = payload.nickname.strip()
-    item.requested_nickname = f"[{item.alliance}] {item.nickname}"
+    settings = await session.scalar(select(VerificationSettings).where(VerificationSettings.guild_id == guild_id))
+    template = settings.nickname_template if settings else "[{alliance}] {nickname}"
+    item.requested_nickname = template.format(
+        alliance=item.alliance, nickname=item.nickname, server=item.server_number,
+    )[:32]
     item.evidence_url = payload.evidence_url
     item.submitted_language = payload.submitted_language.lower() if payload.submitted_language else None
     item.applicant_comment = payload.applicant_comment
