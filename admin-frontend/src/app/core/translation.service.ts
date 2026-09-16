@@ -17,6 +17,8 @@ type Dictionary = Record<string, unknown>;
 @Injectable({ providedIn: 'root' })
 export class TranslationService {
   private readonly storageKey = 'shieldnet_locale';
+  private readonly supportedLocales = ['en', 'uk', 'ru', 'de', 'ar', 'fr', 'it', 'pl'];
+  private englishDictionary: Dictionary = {};
   readonly locale = signal('en');
   readonly dictionary = signal<Dictionary>({});
   readonly languages = signal<LanguageEntity[]>([]);
@@ -29,10 +31,11 @@ export class TranslationService {
 
   async initialize(preferred?: string | null): Promise<void> {
     const docs = await Promise.all(
-      ['en', 'uk', 'ru'].map((code) =>
+      this.supportedLocales.map((code) =>
         firstValueFrom(this.http.get<Dictionary>(`/locales/${code}.json?v=14.27`)),
       ),
     );
+    this.englishDictionary = docs[0];
     this.languages.set(
       docs.map((doc) => doc['_language'] as LanguageEntity),
     );
@@ -79,10 +82,13 @@ export class TranslationService {
   }
 
   t(key: string, fallback = ''): string {
-    const value = key.split('.').reduce<unknown>((current, part) => {
+    const lookup = (document: Dictionary): unknown => key.split('.').reduce<unknown>((current, part) => {
       if (!current || typeof current !== 'object') return undefined;
       return (current as Dictionary)[part];
-    }, this.dictionary());
-    return typeof value === 'string' ? value : fallback || key;
+    }, document);
+    const value = lookup(this.dictionary());
+    if (typeof value === 'string') return value;
+    const english = lookup(this.englishDictionary);
+    return typeof english === 'string' ? english : fallback || key;
   }
 }

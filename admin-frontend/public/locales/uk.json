@@ -8,7 +8,7 @@
       "uk"
     ],
     "rtl": false,
-    "version": 2
+    "version": 3
   },
   "shell": {
     "control_fabric": "ЦЕНТР КЕРУВАННЯ",
@@ -1325,5 +1325,28 @@
     "test_error": "Перевірка підключення завершилася помилкою.",
     "delete_error": "Не вдалося видалити провайдера.",
     "settings_error": "Не вдалося зберегти налаштування ШІ."
+  },
+  "plugin_names": {
+    "welcome": "Вітання",
+    "antiflood": "Антифлуд",
+    "voting": "Голосування",
+    "verification": "Верифікація",
+    "leadership": "Керівництво",
+    "moderation": "Модерація",
+    "translator": "Перекладач",
+    "automations": "Автоматизації",
+    "role_menu": "Меню ролей",
+    "ai_automod": "AI Автомодерація",
+    "event_manager": "Менеджер подій",
+    "war_planner": "Планувальник війни",
+    "activity_ranking": "Активність і рейтинг",
+    "audit_security": "Аудит і безпека",
+    "backup_restore": "Резервні копії",
+    "cross_guild_network": "Мережа серверів",
+    "tickets": "Звернення",
+    "logging": "Журналювання",
+    "guild_dm_broadcast": "Особисті повідомлення",
+    "language_selection": "Вибір мови",
+    "translator_groups": "Групи перекладу"
   }
 }

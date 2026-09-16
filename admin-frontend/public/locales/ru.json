@@ -8,7 +8,7 @@
       "ru"
     ],
     "rtl": false,
-    "version": 2
+    "version": 3
   },
   "shell": {
     "control_fabric": "ЦЕНТР УПРАВЛЕНИЯ",
@@ -1325,5 +1325,28 @@
     "test_error": "Проверка подключения завершилась ошибкой.",
     "delete_error": "Не удалось удалить провайдера.",
     "settings_error": "Не удалось сохранить настройки ИИ."
+  },
+  "plugin_names": {
+    "welcome": "Приветствие",
+    "antiflood": "Антифлуд",
+    "voting": "Голосования",
+    "verification": "Верификация",
+    "leadership": "Руководство",
+    "moderation": "Модерация",
+    "translator": "Переводчик",
+    "automations": "Автоматизации",
+    "role_menu": "Меню ролей",
+    "ai_automod": "AI Автомодерация",
+    "event_manager": "Менеджер событий",
+    "war_planner": "Планировщик войны",
+    "activity_ranking": "Активность и рейтинг",
+    "audit_security": "Аудит и безопасность",
+    "backup_restore": "Резервные копии",
+    "cross_guild_network": "Сеть серверов",
+    "tickets": "Обращения",
+    "logging": "Журналирование",
+    "guild_dm_broadcast": "Личные сообщения",
+    "language_selection": "Выбор языка",
+    "translator_groups": "Группы перевода"
   }
 }

@@ -22,6 +22,7 @@ backups/
 
 # Node
 npm-debug.log*
+.pnpm-store/
 .angular/cache/
 
 # Builds

@@ -3,6 +3,7 @@ import { ActivatedRoute, Router, RouterLink, RouterLinkActive } from '@angular/r
 import { TranslatePipe } from '../core/translate.pipe';
 import { EventBusService } from '../core/event-bus.service';
 import { ThemeService } from '../core/theme.service';
+import { TranslationService } from '../core/translation.service';
 
 import { AuthService } from '../core/auth.service';
 import {
@@ -199,6 +200,14 @@ interface PluginNavDefinition {
                     [attr.aria-label]="'Appearance: ' + themes.appearanceMode()">
               <span>{{ appearanceIcon() }}</span><b>{{ themes.appearanceMode().toUpperCase() }}</b>
             </button>
+            <label class="locale-switcher" [attr.aria-label]="'profile.interface_language' | snT:'Interface language'">
+              <span>{{ i18n.currentLanguage()?.icon }}</span>
+              <select [value]="i18n.locale()" (change)="changeLocale($any($event.target).value)">
+                @for (language of i18n.languages(); track language.code) {
+                  <option [value]="language.code">{{ language.name }}</option>
+                }
+              </select>
+            </label>
             <button type="button" class="command-button"
                     (click)="openPalette()"
                     [attr.aria-label]="'palette.open' | snT:'Open command palette'">
@@ -305,6 +314,7 @@ interface PluginNavDefinition {
     .title-block{display:flex;align-items:center;gap:.75rem}.breadcrumb{display:flex;gap:.4rem;color:#557083;font-size:.58rem;font-weight:850;letter-spacing:.16em}.breadcrumb b{color:var(--primary)}h1{margin:.28rem 0 0;font-size:1.28rem}
     .menu-button{display:none;width:40px;height:40px;color:var(--text);background:var(--panel);border:1px solid var(--line);border-radius:9px}
     .top-actions{display:flex;align-items:center;gap:.75rem}
+    .locale-switcher{height:35px;display:flex;align-items:center;gap:.35rem;padding:0 .45rem;background:rgba(255,255,255,.025);border:1px solid var(--line);border-radius:9px}.locale-switcher span{font-size:.9rem}.locale-switcher select{width:74px;padding:0;border:0;background:transparent;color:var(--text);font:700 .62rem/1 inherit;cursor:pointer}.locale-switcher option{color:#101820;background:#fff}
     .command-button{height:35px;display:flex;align-items:center;gap:.45rem;padding:0 .65rem;color:#9fb3c1;background:rgba(255,255,255,.025);border:1px solid var(--line);border-radius:9px;cursor:pointer}
     .command-button:hover{color:var(--primary);border-color:rgba(53,226,178,.28)}
     .command-button span{font-size:.78rem}.command-button b{font-size:.58rem;letter-spacing:.08em}.health-chip{min-height:35px;display:flex;align-items:center;gap:.5rem;padding:0 .75rem;color:#a7c8bd;border:1px solid rgba(53,226,178,.18);border-radius:999px;background:rgba(53,226,178,.045);font-size:.62rem;font-weight:850;letter-spacing:.1em}
@@ -485,28 +495,28 @@ export class ShellComponent implements OnInit, OnDestroy {
   });
 
   private readonly pluginNavDefinitions: PluginNavDefinition[] = [
-    { keys: ['welcome'], label: 'Welcome', icon: '👋', path: 'plugins/welcome' },
-    { keys: ['antiflood', 'anti_flood', 'anti-flood'], label: 'AntiFlood', icon: '⏱', path: 'plugins/antiflood' },
-    { keys: ['voting', 'polls', 'polling'], label: 'Voting', icon: '🗳', path: 'plugins/voting' },
+    { keys: ['welcome'], label: 'plugin_names.welcome', icon: '👋', path: 'plugins/welcome' },
+    { keys: ['antiflood', 'anti_flood', 'anti-flood'], label: 'plugin_names.antiflood', icon: '⏱', path: 'plugins/antiflood' },
+    { keys: ['voting', 'polls', 'polling'], label: 'plugin_names.voting', icon: '🗳', path: 'plugins/voting' },
 
-    { keys: ['verification_level1', 'verification'], label: 'Verification', icon: '✓', path: 'verification' },
-    { keys: ['leadership', 'r5_r4', 'r5-r4'], label: 'Leadership', icon: '★', path: 'leadership' },
-    { keys: ['moderation'], label: 'Moderation', icon: '⚖', path: 'moderation' },
-    { keys: ['translator', 'translation'], label: 'Translator', icon: '◎', path: 'translator' },
-    { keys: ['automations', 'automation'], label: 'Automations', icon: '⌘', path: 'automations' },
-    { keys: ['role_menu', 'reaction_roles', 'reaction-roles', 'reactionroles'], label: 'Role Menu', icon: '◈', path: 'plugins/role-menu' },
-    { keys: ['ai_automod', 'ai-automod'], label: 'AI AutoMod', icon: 'AI', path: 'plugins/ai-automod' },
-    { keys: ['event_manager', 'event-manager'], label: 'Event Manager', icon: '◷', path: 'plugins/event-manager' },
-    { keys: ['war_planner', 'war-planner'], label: 'War Planner', icon: '⚔', path: 'plugins/war-planner' },
-    { keys: ['activity_ranking', 'activity-ranking'], label: 'Activity & Ranking', icon: '↗', path: 'plugins/activity-ranking' },
-    { keys: ['audit_security', 'audit-security'], label: 'Audit & Security', icon: '◉', path: 'plugins/audit-security' },
-    { keys: ['backup_restore', 'backup-restore'], label: 'Backup & Restore', icon: '◫', path: 'backups' },
-    { keys: ['cross_guild_network', 'cross-guild-network'], label: 'Cross-Guild Network', icon: '⌘', path: 'plugins/cross-guild-network' },
-    { keys: ['tickets', 'ticketing'], label: 'Tickets', icon: '▣', path: 'tickets' },
-    { keys: ['logging', 'logs'], label: 'Logging', icon: '≡', path: 'logging' },
-    { keys: ['guild_dm_broadcast', 'guild-dm-broadcast'], label: 'Guild DM Broadcast', icon: '✉', path: 'plugins/guild-dm-broadcast' },
-    { keys: ['first_introduction'], label: 'Language Selection', icon: '🌐', path: 'plugins/language-selection' },
-    { keys: ['translator_groups'], label: 'Translator Groups', icon: '◎', path: 'plugins/translator-groups' },
+    { keys: ['verification_level1', 'verification'], label: 'plugin_names.verification', icon: '✓', path: 'verification' },
+    { keys: ['leadership', 'r5_r4', 'r5-r4'], label: 'plugin_names.leadership', icon: '★', path: 'leadership' },
+    { keys: ['moderation'], label: 'plugin_names.moderation', icon: '⚖', path: 'moderation' },
+    { keys: ['translator', 'translation'], label: 'plugin_names.translator', icon: '◎', path: 'translator' },
+    { keys: ['automations', 'automation'], label: 'plugin_names.automations', icon: '⌘', path: 'automations' },
+    { keys: ['role_menu', 'reaction_roles', 'reaction-roles', 'reactionroles'], label: 'plugin_names.role_menu', icon: '◈', path: 'plugins/role-menu' },
+    { keys: ['ai_automod', 'ai-automod'], label: 'plugin_names.ai_automod', icon: 'AI', path: 'plugins/ai-automod' },
+    { keys: ['event_manager', 'event-manager'], label: 'plugin_names.event_manager', icon: '◷', path: 'plugins/event-manager' },
+    { keys: ['war_planner', 'war-planner'], label: 'plugin_names.war_planner', icon: '⚔', path: 'plugins/war-planner' },
+    { keys: ['activity_ranking', 'activity-ranking'], label: 'plugin_names.activity_ranking', icon: '↗', path: 'plugins/activity-ranking' },
+    { keys: ['audit_security', 'audit-security'], label: 'plugin_names.audit_security', icon: '◉', path: 'plugins/audit-security' },
+    { keys: ['backup_restore', 'backup-restore'], label: 'plugin_names.backup_restore', icon: '◫', path: 'backups' },
+    { keys: ['cross_guild_network', 'cross-guild-network'], label: 'plugin_names.cross_guild_network', icon: '⌘', path: 'plugins/cross-guild-network' },
+    { keys: ['tickets', 'ticketing'], label: 'plugin_names.tickets', icon: '▣', path: 'tickets' },
+    { keys: ['logging', 'logs'], label: 'plugin_names.logging', icon: '≡', path: 'logging' },
+    { keys: ['guild_dm_broadcast', 'guild-dm-broadcast'], label: 'plugin_names.guild_dm_broadcast', icon: '✉', path: 'plugins/guild-dm-broadcast' },
+    { keys: ['first_introduction'], label: 'plugin_names.language_selection', icon: '🌐', path: 'plugins/language-selection' },
+    { keys: ['translator_groups'], label: 'plugin_names.translator_groups', icon: '◎', path: 'plugins/translator-groups' },
   ];
 
   readonly pluginNavigation = computed<NavItem[]>(() => {
@@ -540,7 +550,12 @@ export class ShellComponent implements OnInit, OnDestroy {
     private readonly router: Router,
     public readonly themes: ThemeService,
     public readonly eventBus: EventBusService,
+    public readonly i18n: TranslationService,
   ) {}
+
+  async changeLocale(code: string): Promise<void> {
+    await this.i18n.setLocale(code);
+  }
 
 
   @HostListener('document:keydown', ['$event'])

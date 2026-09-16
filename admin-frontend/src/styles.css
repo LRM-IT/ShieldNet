@@ -330,6 +330,11 @@ textarea::placeholder {
   background: #ffffff;
 }
 
+html[dir="rtl"] body{direction:rtl}
+html[dir="rtl"] .rail{border-right:0;border-left:1px solid var(--line)}
+html[dir="rtl"] .accordion-arrow,html[dir="rtl"] .profile-arrow{transform:scaleX(-1)}
+html[dir="rtl"] input,html[dir="rtl"] textarea,html[dir="rtl"] select{text-align:right}
+
 
 /* Stage 14 appearance mode refinements */
 :root[data-theme="arctic"] body {
