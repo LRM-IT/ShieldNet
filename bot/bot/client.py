@@ -29,6 +29,7 @@ from bot.plugin_voting import VotingWorker
 from bot.plugin_first_introduction import LanguageSelection
 from bot.plugin_translator_groups import TranslatorGroups
 from bot.plugin_role_menu import RoleMenu
+from bot.plugin_ai_automod import AIAutoMod
 from bot.verification_levels import VerificationLevelsClient
 
 logger = logging.getLogger(__name__)
@@ -65,6 +66,7 @@ class ShieldNetBot(discord.Client):
         self.language_selection = LanguageSelection(self)
         self.translator_groups = TranslatorGroups(self, self.backend)
         self.role_menu = RoleMenu(self)
+        self.ai_automod = AIAutoMod(self)
         self.verification_levels = VerificationLevelsClient(self)
         self._verification_slash_commands: dict[int, str] = {}
         self._initial_sync_done = False
@@ -547,6 +549,10 @@ class ShieldNetBot(discord.Client):
             logger.exception("AntiFlood processing failed: %s", message.id)
         if message.author.bot or message.webhook_id:
             return
+        try:
+            await self.ai_automod.process(message)
+        except Exception:
+            logger.exception("AI AutoMod processing failed guild=%s message=%s", message.guild.id, message.id)
         try:
             await self.member_sync.mark_activity(message.guild.id, message.author.id)
         except Exception:

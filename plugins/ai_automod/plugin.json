@@ -1,0 +1,15 @@
+{
+  "id": "ai_automod",
+  "name": "AI AutoMod",
+  "version": "1.0.0",
+  "description": "AI-powered message moderation through AI Center with warnings, deletion, timeouts and moderation cases.",
+  "author": "LRM-IT",
+  "min_core_version": "5.1.0",
+  "components": {"backend": true, "frontend": true, "bot": true},
+  "capabilities": ["discord.read.messages", "discord.manage.messages", "discord.manage.members", "discord.send.message", "ai.moderation", "audit.write"],
+  "permissions": ["view_channel", "read_message_history", "manage_messages", "moderate_members", "send_messages"],
+  "dependencies": {"moderation": ">=1.0.0"},
+  "ui": {"navigation": {"label": "AI AutoMod", "icon": "AI", "route": "plugins/ai-automod"}},
+  "entrypoints": {"backend": "runtime:AIAutoModPlugin", "frontend": "admin-frontend/src/app/pages/plugin-ai-automod.component.ts", "bot": "bot/bot/plugin_ai_automod.py"},
+  "entrypoint": "runtime.py"
+}
