@@ -1,0 +1,18 @@
+{
+  "id": "moderation",
+  "name": "Moderation",
+  "version": "1.0.0",
+  "description": "Cases, reports, evidence, warnings, sanctions, appeals and moderator workload in one operations center.",
+  "author": "LRM-IT",
+  "min_core_version": "5.1.0",
+  "components": {"backend": true, "frontend": true, "bot": false},
+  "capabilities": ["discord.read.guild", "discord.read.members", "discord.manage.members", "discord.manage.roles", "discord.send.message", "audit.write"],
+  "permissions": ["moderate_members", "kick_members", "ban_members", "manage_roles", "send_messages", "view_audit_log"],
+  "dependencies": {},
+  "ui": {"navigation": {"label": "Moderation", "icon": "⚖", "route": "moderation"}},
+  "entrypoints": {
+    "backend": "runtime:ModerationPlugin",
+    "frontend": "admin-frontend/src/app/pages/moderation-operations.component.ts"
+  },
+  "entrypoint": "runtime.py"
+}
