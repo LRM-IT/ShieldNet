@@ -497,6 +497,7 @@ export class ShellComponent implements OnInit, OnDestroy {
     { keys: ['role_menu', 'reaction_roles', 'reaction-roles', 'reactionroles'], label: 'Role Menu', icon: '◈', path: 'plugins/role-menu' },
     { keys: ['ai_automod', 'ai-automod'], label: 'AI AutoMod', icon: 'AI', path: 'plugins/ai-automod' },
     { keys: ['event_manager', 'event-manager'], label: 'Event Manager', icon: '◷', path: 'plugins/event-manager' },
+    { keys: ['war_planner', 'war-planner'], label: 'War Planner', icon: '⚔', path: 'plugins/war-planner' },
     { keys: ['tickets', 'ticketing'], label: 'Tickets', icon: '▣', path: 'tickets' },
     { keys: ['logging', 'logs'], label: 'Logging', icon: '≡', path: 'logging' },
     { keys: ['guild_dm_broadcast', 'guild-dm-broadcast'], label: 'Guild DM Broadcast', icon: '✉', path: 'plugins/guild-dm-broadcast' },

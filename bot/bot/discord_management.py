@@ -39,6 +39,9 @@ class DiscordManagementWorker:
             elif kind == "event_panel" and op == "publish":
                 message = await self.bot.event_manager.publish(guild, data["event_id"])
                 result = {"message_id": str(message.id), "channel_id": str(message.channel.id)}
+            elif kind == "war_plan_panel" and op == "publish":
+                message = await self.bot.war_planner.publish(guild, data["war_id"])
+                result = {"message_id": str(message.id), "channel_id": str(message.channel.id)}
             elif kind == "role":
                 role = guild.get_role(int(target_id)) if target_id else None
                 if op == "create":

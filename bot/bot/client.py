@@ -31,6 +31,7 @@ from bot.plugin_translator_groups import TranslatorGroups
 from bot.plugin_role_menu import RoleMenu
 from bot.plugin_ai_automod import AIAutoMod
 from bot.plugin_event_manager import EventManager
+from bot.plugin_war_planner import WarPlanner
 from bot.verification_levels import VerificationLevelsClient
 
 logger = logging.getLogger(__name__)
@@ -69,6 +70,7 @@ class ShieldNetBot(discord.Client):
         self.role_menu = RoleMenu(self)
         self.ai_automod = AIAutoMod(self)
         self.event_manager = EventManager(self)
+        self.war_planner = WarPlanner(self)
         self.verification_levels = VerificationLevelsClient(self)
         self._verification_slash_commands: dict[int, str] = {}
         self._initial_sync_done = False
@@ -517,7 +519,8 @@ class ShieldNetBot(discord.Client):
     async def on_interaction(self, interaction: discord.Interaction) -> None:
         try:
             if await self.role_menu.handle(interaction): return
-            await self.event_manager.handle(interaction)
+            if await self.event_manager.handle(interaction): return
+            await self.war_planner.handle(interaction)
         except Exception:
             logger.exception("Role Menu interaction failed guild=%s", interaction.guild_id)
             if not interaction.response.is_done():
