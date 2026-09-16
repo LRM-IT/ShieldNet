@@ -151,14 +151,27 @@ import { DiscordChannelPickerComponent } from '../shared/discord-channel-picker.
               <label>Еталонне зображення<input type="file" accept="image/png,image/jpeg,image/webp" (change)="selectTemplate(level,$event)"></label>
               @if (level.preview || level.template_url) {
                 <div class="marker-image"><img [src]="level.preview || level.template_url"><div class="marker" [style.left.%]="level.marker.x*100" [style.top.%]="level.marker.y*100" [style.width.%]="level.marker.width*100" [style.height.%]="level.marker.height*100"></div></div>
+                <button class="btn secondary" (click)="openMarkerEditor(level)">Графічно вибрати область перевірки</button>
               }
-              <p class="muted">Маркер задається у відсотках від зображення. Він визначає область, яку AI порівнює на еталоні та фото користувача.</p>
-              <div class="marker-grid"><label>X %<input type="number" min="0" max="99" [ngModel]="level.marker.x*100" (ngModelChange)="level.marker.x=+$event/100"></label><label>Y %<input type="number" min="0" max="99" [ngModel]="level.marker.y*100" (ngModelChange)="level.marker.y=+$event/100"></label><label>Ширина %<input type="number" min="1" max="100" [ngModel]="level.marker.width*100" (ngModelChange)="level.marker.width=+$event/100"></label><label>Висота %<input type="number" min="1" max="100" [ngModel]="level.marker.height*100" (ngModelChange)="level.marker.height=+$event/100"></label></div>
+              <p class="muted">Виділіть на зображенні область, у якій AI має шукати ознаку підтвердження.</p>
               <div class="buttons"><button class="btn" (click)="saveLevel(level)">Зберегти рівень</button><button class="btn danger" (click)="removeLevel(level)">Видалити</button></div>
             </div>
           </details>
         } @empty { <p class="muted">Додаткових рівнів ще немає.</p> }
       </section>
+
+      @if (markerLevel) {
+        <div class="marker-modal" role="dialog" aria-modal="true">
+          <section class="card marker-dialog">
+            <div class="heading"><div><h2>Область перевірки</h2><p class="muted">Проведіть мишею або пальцем по потрібній області зображення.</p></div><button class="btn secondary" (click)="closeMarkerEditor()">Закрити</button></div>
+            <div class="marker-editor" (pointerdown)="markerStart($event)" (pointermove)="markerMove($event)" (pointerup)="markerEnd($event)" (pointercancel)="markerEnd($event)">
+              <img [src]="markerLevel.preview || markerLevel.template_url" draggable="false">
+              <div class="marker active" [style.left.%]="markerDraft.x*100" [style.top.%]="markerDraft.y*100" [style.width.%]="markerDraft.width*100" [style.height.%]="markerDraft.height*100"></div>
+            </div>
+            <div class="buttons"><button class="btn secondary" (click)="resetMarker()">Виділити все зображення</button><button class="btn" (click)="applyMarker()">Застосувати область</button></div>
+          </section>
+        </div>
+      }
 
       <section class="card stats">
         <h2>{{ "verification.statistics" | snT:"Verification statistics" }}</h2>
@@ -453,7 +466,7 @@ import { DiscordChannelPickerComponent } from '../shared/discord-channel-picker.
     .command-input { display:flex; align-items:center; background:var(--panel-2); border:1px solid var(--line); border-radius:10px; }
     .command-input span { padding-left:.8rem; font-weight:800; color:var(--text); }
     .command-input input { flex:1; border:0; background:transparent; }
-    .levels{margin-top:1.2rem}.level-card{border:1px solid var(--line);border-radius:12px;overflow:hidden}.level-card summary{display:flex;justify-content:space-between;padding:1rem;cursor:pointer;list-style:none}.level-body{display:grid;gap:.8rem;padding:1rem;border-top:1px solid var(--line)}.marker-image{position:relative;width:min(100%,700px)}.marker-image img{display:block;width:100%;border-radius:10px}.marker{position:absolute;border:3px solid #45e0b3;background:rgba(69,224,179,.14);pointer-events:none}.marker-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.6rem}
+    .levels{margin-top:1.2rem}.level-card{border:1px solid var(--line);border-radius:12px;overflow:hidden}.level-card summary{display:flex;justify-content:space-between;padding:1rem;cursor:pointer;list-style:none}.level-body{display:grid;gap:.8rem;padding:1rem;border-top:1px solid var(--line)}.marker-image{position:relative;width:min(100%,700px)}.marker-image img{display:block;width:100%;border-radius:10px}.marker{position:absolute;border:3px solid #45e0b3;background:rgba(69,224,179,.14);pointer-events:none}.marker-modal{position:fixed;inset:0;z-index:1200;display:grid;place-items:center;padding:1rem;background:rgba(0,0,0,.78);backdrop-filter:blur(8px)}.marker-dialog{width:min(1100px,96vw);max-height:95vh;overflow:auto;padding:1.2rem}.marker-editor{position:relative;width:fit-content;max-width:100%;margin:auto;cursor:crosshair;touch-action:none;user-select:none;background:#050708;border-radius:12px;overflow:hidden}.marker-editor img{display:block;max-width:100%;max-height:72vh;width:auto;height:auto;pointer-events:none}.marker.active{border-width:4px;box-shadow:0 0 0 9999px rgba(0,0,0,.42)}
 
     .check {
       display: flex;
@@ -620,6 +633,9 @@ export class VerificationComponent
 
   readonly roles = signal<any[]>([]);
   readonly levels = signal<any[]>([]);
+  markerLevel:any=null;
+  markerDraft:any={x:0,y:0,width:1,height:1};
+  private markerOrigin:{x:number;y:number}|null=null;
   readonly requests = signal<any[]>([]);
   readonly summaryData = signal<any>({});
   readonly saving = signal(false);
@@ -689,7 +705,15 @@ export class VerificationComponent
     const row=await this.verification.createLevel(this.guildId,{name:`Рівень ${this.levels().length+2}`,enabled:false,channel_id:null,expected_text:'',role_ids:[],marker:{x:0,y:0,width:1,height:1}});
     this.levels.update(items=>[...items,row]);
   }
-  selectTemplate(level:any,event:Event):void { const file=(event.target as HTMLInputElement).files?.[0]; if(!file)return; level.file=file; if(level.preview)URL.revokeObjectURL(level.preview); level.preview=URL.createObjectURL(file); }
+  selectTemplate(level:any,event:Event):void { const file=(event.target as HTMLInputElement).files?.[0]; if(!file)return; level.file=file; if(level.preview)URL.revokeObjectURL(level.preview); level.preview=URL.createObjectURL(file); setTimeout(()=>this.openMarkerEditor(level)); }
+  openMarkerEditor(level:any):void { this.markerLevel=level; this.markerDraft={...(level.marker||{x:0,y:0,width:1,height:1})}; }
+  closeMarkerEditor():void { this.markerLevel=null; this.markerOrigin=null; }
+  resetMarker():void { this.markerDraft={x:0,y:0,width:1,height:1}; }
+  applyMarker():void { if(this.markerLevel){this.markerLevel.marker={...this.markerDraft};} this.closeMarkerEditor(); }
+  private markerPoint(event:PointerEvent):{x:number;y:number}{const rect=(event.currentTarget as HTMLElement).getBoundingClientRect();return{x:Math.max(0,Math.min(1,(event.clientX-rect.left)/rect.width)),y:Math.max(0,Math.min(1,(event.clientY-rect.top)/rect.height))};}
+  markerStart(event:PointerEvent):void { event.preventDefault(); (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId); const point=this.markerPoint(event); this.markerOrigin=point; this.markerDraft={x:point.x,y:point.y,width:.001,height:.001}; }
+  markerMove(event:PointerEvent):void { if(!this.markerOrigin)return; const point=this.markerPoint(event),origin=this.markerOrigin; this.markerDraft={x:Math.min(origin.x,point.x),y:Math.min(origin.y,point.y),width:Math.max(.001,Math.abs(point.x-origin.x)),height:Math.max(.001,Math.abs(point.y-origin.y))}; }
+  markerEnd(event:PointerEvent):void { if(!this.markerOrigin)return; this.markerMove(event); this.markerOrigin=null; try{(event.currentTarget as HTMLElement).releasePointerCapture(event.pointerId)}catch{} }
   async saveLevel(level:any):Promise<void> {
     const payload={name:level.name,enabled:level.enabled,channel_id:level.channel_id?Number(level.channel_id):null,expected_text:level.expected_text,role_ids:(level.role_ids||[]).map(Number),marker:level.marker};
     if(level.file)await this.verification.uploadLevelTemplate(this.guildId,level.id,level.file,level.marker);
