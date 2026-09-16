@@ -77,6 +77,21 @@ class PluginControlService:
     async def list_secrets(self, plugin_key: str):
         return (await self.session.execute(select(PluginSecret).where(PluginSecret.plugin_key == plugin_key).order_by(PluginSecret.secret_name))).scalars().all()
 
+    async def get_secret(self, plugin_key: str, name: str, scope: str = "platform", scope_key: str = "global") -> str | None:
+        row = (await self.session.execute(select(PluginSecret).where(
+            PluginSecret.plugin_key == plugin_key,
+            PluginSecret.scope == scope,
+            PluginSecret.scope_key == scope_key,
+            PluginSecret.secret_name == name,
+        ))).scalar_one_or_none()
+        if row is None:
+            return None
+        return AESGCM(_vault_key()).decrypt(
+            row.nonce,
+            row.ciphertext,
+            f"{plugin_key}:{scope}:{scope_key}:{name}".encode(),
+        ).decode()
+
     async def put_secret(self, plugin_key: str, name: str, value: str, scope: str, scope_key: str, actor_id: uuid.UUID | None):
         nonce = os.urandom(12)
         ciphertext = AESGCM(_vault_key()).encrypt(nonce, value.encode(), f"{plugin_key}:{scope}:{scope_key}:{name}".encode())

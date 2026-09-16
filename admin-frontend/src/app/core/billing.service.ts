@@ -3,6 +3,8 @@ import {Injectable} from '@angular/core';
 import {firstValueFrom} from 'rxjs';
 export interface BillingPlan{plugin_key:string;name?:string;is_free:boolean;enabled:boolean;currency:string;monthly_price:number|null;quarterly_price:number|null;yearly_price:number|null}
 export interface BillingSubscription{id:string;guild_id:number;plugin_key:string;status:string;billing_period:string;starts_at:string;expires_at:string;provider?:string|null}
+export interface BillingProviders{wayforpay:{configured:boolean;merchant_account:string;merchant_domain:string;secret_saved:boolean};liqpay:{configured:boolean;public_key:string;secret_saved:boolean}}
+export interface BillingPayment{id:string;order_reference:string;guild_id:number;plugin_key:string;billing_period:string;provider:string;amount:number;currency:string;status:string;signature_verified:boolean;created_at:string;paid_at?:string|null}
 @Injectable({providedIn:'root'}) export class BillingService{
  constructor(private http:HttpClient){}
  plans(){return firstValueFrom(this.http.get<BillingPlan[]>('/api/v1/platform/billing/plans'))}
@@ -10,4 +12,7 @@ export interface BillingSubscription{id:string;guild_id:number;plugin_key:string
  subscriptions(guildId?:number){return firstValueFrom(this.http.get<BillingSubscription[]>('/api/v1/platform/billing/subscriptions',{params:guildId?{guild_id:guildId}: {}}))}
  grant(x:{guild_id:number;plugin_key:string;billing_period:string;days:number}){return firstValueFrom(this.http.post<BillingSubscription>('/api/v1/platform/billing/subscriptions/grant',x))}
  revoke(id:string){return firstValueFrom(this.http.delete<BillingSubscription>(`/api/v1/platform/billing/subscriptions/${id}`))}
+ providers(){return firstValueFrom(this.http.get<BillingProviders>('/api/v1/platform/billing/providers'))}
+ saveProviders(x:any){return firstValueFrom(this.http.put<BillingProviders>('/api/v1/platform/billing/providers',x))}
+ payments(){return firstValueFrom(this.http.get<BillingPayment[]>('/api/v1/platform/billing/payments'))}
 }
