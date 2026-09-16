@@ -13,7 +13,7 @@ from app.plugins.manifest import PluginManifest
 from app.services.plugin_service import PLUGIN_ROOT
 
 
-async def register(plugin_key: str) -> None:
+async def register(plugin_key: str, *, enable: bool = False) -> None:
     path = (PLUGIN_ROOT / plugin_key / "plugin.json").resolve()
     if path.parent.parent != PLUGIN_ROOT.resolve() or not path.is_file():
         raise SystemExit(f"Local plugin manifest not found: {plugin_key}")
@@ -44,15 +44,23 @@ async def register(plugin_key: str) -> None:
         item.checksum = hashlib.sha256(raw).hexdigest()
         item.healthy = True
         item.last_error = None
+        if enable:
+            item.enabled = True
         await session.commit()
-    print(f"{'registered' if created else 'updated'} {plugin_key} {parsed.version}")
+    state = " enabled" if enable else ""
+    print(f"{'registered' if created else 'updated'} {plugin_key} {parsed.version}{state}")
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Register one local plugin without scanning or deleting others.")
     parser.add_argument("plugin_key")
+    parser.add_argument(
+        "--enable",
+        action="store_true",
+        help="Enable the registered plugin after its manifest has been validated.",
+    )
     args = parser.parse_args()
-    asyncio.run(register(args.plugin_key.strip().lower()))
+    asyncio.run(register(args.plugin_key.strip().lower(), enable=args.enable))
 
 
 if __name__ == "__main__":
