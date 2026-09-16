@@ -9,7 +9,7 @@ import { GuildPluginService } from '../core/guild-plugin.service';
 interface Language { code: string; name: string; }
 interface Channel { id: string; name: string; type: string; }
 interface Binding { channel_id: string; language: string; }
-interface Group { name: string; enabled: boolean; channels: Binding[]; }
+interface Group { name: string; enabled: boolean; channels: Binding[]; expanded?: boolean; }
 interface Settings { installed: boolean; enabled: boolean; groups: Group[]; include_source_link: boolean; languages: Language[]; }
 
 @Component({
@@ -34,20 +34,28 @@ interface Settings { installed: boolean; enabled: boolean; groups: Group[]; incl
           <button (click)="addGroup()" [disabled]="busy()">Add group</button></div>
           @for (group of settings.groups; track $index; let gi = $index) {
             <article class="group">
-              <div class="heading"><label>Group name<input [(ngModel)]="group.name" maxlength="60"></label>
-                <div class="actions"><label class="check"><input type="checkbox" [(ngModel)]="group.enabled"> Enabled</label>
-                  <button class="secondary" (click)="settings.groups.splice(gi, 1)">Delete group</button></div></div>
-              @for (binding of group.channels; track $index; let bi = $index) {
-                <div class="binding"><label>Channel<select [(ngModel)]="binding.channel_id">
-                    <option value="">Select channel</option>
-                    @for (channel of channels(); track channel.id) { <option [value]="channel.id">#{{ channel.name }}</option> }
-                  </select></label>
-                  <label>Language<select [(ngModel)]="binding.language"><option value="">Select language</option>
-                    @for (language of settings.languages; track language.code) { <option [value]="language.code">{{ language.name }} ({{ language.code }})</option> }
-                  </select></label>
-                  <button class="secondary remove" (click)="group.channels.splice(bi, 1)">Remove</button></div>
+              <button class="group-summary" type="button" (click)="group.expanded=!group.expanded" [attr.aria-expanded]="group.expanded">
+                <span><strong>{{ group.name || 'New group' }}</strong><small>{{ group.channels.length }} channels · {{ group.enabled ? 'Enabled' : 'Disabled' }}</small></span>
+                <span class="chevron" [class.open]="group.expanded">⌄</span>
+              </button>
+              @if (group.expanded) {
+                <div class="group-body">
+                  <div class="heading"><label>Group name<input [(ngModel)]="group.name" maxlength="60"></label>
+                    <div class="actions"><label class="check"><input type="checkbox" [(ngModel)]="group.enabled"> Enabled</label>
+                      <button class="secondary" (click)="settings.groups.splice(gi, 1)">Delete group</button></div></div>
+                  @for (binding of group.channels; track $index; let bi = $index) {
+                    <div class="binding"><label>Channel<select [(ngModel)]="binding.channel_id">
+                        <option value="">Select channel</option>
+                        @for (channel of channels(); track channel.id) { <option [value]="channel.id">#{{ channel.name }}</option> }
+                      </select></label>
+                      <label>Language<select [(ngModel)]="binding.language"><option value="">Select language</option>
+                        @for (language of settings.languages; track language.code) { <option [value]="language.code">{{ language.name }} ({{ language.code }})</option> }
+                      </select></label>
+                      <button class="secondary remove" (click)="group.channels.splice(bi, 1)">Remove</button></div>
+                  }
+                  <button class="secondary" (click)="group.channels.push({channel_id: '', language: ''})">Add channel</button>
+                </div>
               }
-              <button class="secondary" (click)="group.channels.push({channel_id: '', language: ''})">Add channel</button>
             </article>
           } @empty { <p>No translation groups yet.</p> }
         </section>
@@ -62,7 +70,7 @@ interface Settings { installed: boolean; enabled: boolean; groups: Group[]; incl
     header span{color:var(--primary);font-size:.7rem;font-weight:800;letter-spacing:.12em}
     h2{margin:.3rem 0;font-size:1.8rem}h3{margin:0 0 .6rem}p{color:var(--muted);margin:.3rem 0 1rem}
     .panel,.group{padding:1.25rem;border:1px solid var(--line);border-radius:16px;background:var(--panel)}
-    .group{margin-top:1rem;background:var(--surface-1)}.heading,.actions{display:flex;justify-content:space-between;align-items:start;gap:1rem}
+    .group{margin-top:1rem;padding:0;overflow:hidden;background:var(--surface-1)}.group-summary{width:100%;padding:1.1rem 1.25rem;display:flex;align-items:center;justify-content:space-between;text-align:left;border:0;border-radius:0;background:transparent;color:var(--text)}.group-summary span:first-child{display:grid;gap:.25rem}.group-summary strong{font-size:1.05rem}.group-summary small{color:var(--muted);font-weight:500}.chevron{font-size:1.5rem;line-height:1;transition:transform .18s ease}.chevron.open{transform:rotate(180deg)}.group-body{padding:0 1.25rem 1.25rem;border-top:1px solid var(--line)}.heading,.actions{display:flex;justify-content:space-between;align-items:start;gap:1rem}
     .binding{display:grid;grid-template-columns:1fr 1fr auto;gap:.7rem;align-items:end;margin:.7rem 0}
     label{display:grid;gap:.4rem;margin:.5rem 0;color:var(--text);font-weight:650;min-width:0}
     label.check{display:flex;align-items:center;gap:.5rem}
@@ -91,12 +99,12 @@ export class PluginTranslatorGroupsComponent implements OnInit {
         firstValueFrom(this.http.get<Settings>(this.url)),
         firstValueFrom(this.http.get<{channels: Channel[]}>(`/api/v1/discord/guilds/${this.guildId}/structure`)),
       ]);
-      this.settings = settings;
+      this.settings = {...settings, groups:(settings.groups || []).map(group => ({...group, expanded:false}))};
       this.channels.set((structure.channels || []).filter(item => ['text', '0', 'guild_text'].includes(String(item.type).toLowerCase())));
     } catch { this.error.set('Could not load translation settings.'); }
   }
 
-  addGroup(): void { this.settings.groups.push({name:'',enabled:true,channels:[]}); }
+  addGroup(): void { this.settings.groups.push({name:'',enabled:true,channels:[],expanded:true}); }
 
   async install(): Promise<void> {
     this.busy.set(true); this.error.set('');
@@ -117,8 +125,8 @@ export class PluginTranslatorGroupsComponent implements OnInit {
 
   async save(): Promise<void> {
     this.busy.set(true); this.error.set(''); this.success.set('');
-    const payload = {groups:this.settings.groups,include_source_link:this.settings.include_source_link};
-    try { this.settings = await firstValueFrom(this.http.put<Settings>(this.url, payload)); this.success.set('Translation settings saved.'); }
+    const payload = {groups:this.settings.groups.map(({name,enabled,channels})=>({name,enabled,channels})),include_source_link:this.settings.include_source_link};
+    try { const saved=await firstValueFrom(this.http.put<Settings>(this.url, payload)); this.settings={...saved,groups:(saved.groups||[]).map(group=>({...group,expanded:false}))}; this.success.set('Translation settings saved.'); }
     catch (error: any) { this.error.set(error?.error?.detail || 'Could not save translation settings.'); }
     finally { this.busy.set(false); }
   }
