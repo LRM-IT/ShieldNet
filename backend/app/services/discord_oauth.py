@@ -86,19 +86,16 @@ class DiscordOAuthService:
         discord_user_id = int(profile["id"])
         email = (profile.get("email") or "").strip().lower()
 
-        if not email:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Discord did not provide an email address",
-            )
+        identity_conditions = [User.discord_user_id == discord_user_id]
+        if email:
+            identity_conditions.append(User.email == email)
 
         result = await self.session.execute(
             select(User)
             .options(selectinload(User.roles))
             .where(
                 or_(
-                    User.discord_user_id == discord_user_id,
-                    User.email == email,
+                    *identity_conditions,
                 )
             )
         )
@@ -114,7 +111,7 @@ class DiscordOAuthService:
 
         if user is None:
             user = User(
-                email=email,
+                email=email or f"discord-{discord_user_id}@users.guildconsole.invalid",
                 login=f"discord_{discord_user_id}",
                 display_name=(
                     profile.get("global_name")
@@ -123,21 +120,22 @@ class DiscordOAuthService:
                 avatar_url=avatar_url,
                 discord_user_id=discord_user_id,
                 status=UserStatus.ACTIVE,
-                email_verified=bool(profile.get("verified")),
+                email_verified=bool(email and profile.get("verified")),
                 last_login_at=datetime.now(UTC),
             )
             self.session.add(user)
             await self.session.flush()
         else:
             user.discord_user_id = discord_user_id
-            user.email = email
+            if email:
+                user.email = email
+                user.email_verified = bool(profile.get("verified"))
             user.display_name = (
                 profile.get("global_name")
                 or profile.get("username")
             )
             user.avatar_url = avatar_url
             user.status = UserStatus.ACTIVE
-            user.email_verified = bool(profile.get("verified"))
             user.last_login_at = datetime.now(UTC)
 
         await self._synchronize_guild_access(
