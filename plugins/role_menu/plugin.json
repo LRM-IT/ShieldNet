@@ -1,0 +1,19 @@
+{
+  "id": "role_menu",
+  "name": "Role Menu",
+  "version": "1.0.0",
+  "description": "Self-service Discord role panels with buttons or select menus.",
+  "author": "LRM-IT",
+  "min_core_version": "5.1.0",
+  "components": {"backend": true, "frontend": true, "bot": true},
+  "capabilities": ["discord.read.guild", "discord.manage.roles", "discord.send.message"],
+  "permissions": ["manage_roles", "send_messages", "read_message_history", "use_application_commands"],
+  "dependencies": {},
+  "ui": {"navigation": {"label": "Role Menu", "icon": "◈", "route": "plugins/role-menu"}},
+  "entrypoints": {
+    "backend": "runtime:RoleMenuPlugin",
+    "frontend": "admin-frontend/src/app/pages/plugin-role-menu.component.ts",
+    "bot": "bot/bot/plugin_role_menu.py"
+  },
+  "entrypoint": "runtime.py"
+}

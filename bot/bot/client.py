@@ -28,6 +28,7 @@ from bot.plugin_antiflood import AntiFloodWorker
 from bot.plugin_voting import VotingWorker
 from bot.plugin_first_introduction import LanguageSelection
 from bot.plugin_translator_groups import TranslatorGroups
+from bot.plugin_role_menu import RoleMenu
 from bot.verification_levels import VerificationLevelsClient
 
 logger = logging.getLogger(__name__)
@@ -63,6 +64,7 @@ class ShieldNetBot(discord.Client):
         self.voting = VotingWorker(self)
         self.language_selection = LanguageSelection(self)
         self.translator_groups = TranslatorGroups(self, self.backend)
+        self.role_menu = RoleMenu(self)
         self.verification_levels = VerificationLevelsClient(self)
         self._verification_slash_commands: dict[int, str] = {}
         self._initial_sync_done = False
@@ -506,6 +508,14 @@ class ShieldNetBot(discord.Client):
         except Exception:
             logger.exception("Language flag removal failed guild=%s message=%s user=%s",
                              payload.guild_id, payload.message_id, payload.user_id)
+
+    async def on_interaction(self, interaction: discord.Interaction) -> None:
+        try:
+            await self.role_menu.handle(interaction)
+        except Exception:
+            logger.exception("Role Menu interaction failed guild=%s", interaction.guild_id)
+            if not interaction.response.is_done():
+                await interaction.response.send_message("Could not update your roles.", ephemeral=True)
 
     @staticmethod
     def _member_context(member: discord.Member) -> dict:

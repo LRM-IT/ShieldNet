@@ -77,6 +77,7 @@ from app.api.routes.plugin_welcome import router as plugin_welcome_router, inter
 from app.api.routes.plugin_antiflood import router as plugin_antiflood_router, internal_router as internal_plugin_antiflood_router
 from app.api.routes.plugin_first_introduction import router as plugin_first_introduction_router, internal_router as internal_plugin_first_introduction_router
 from app.api.routes.plugin_translator_groups import router as plugin_translator_groups_router, internal_router as internal_plugin_translator_groups_router
+from app.api.routes.plugin_role_menu import router as plugin_role_menu_router, internal_router as internal_plugin_role_menu_router
 from app.api.routes.verification_levels import router as verification_levels_router, internal_router as internal_verification_levels_router
 
 api_router = APIRouter()
@@ -151,6 +152,8 @@ api_router.include_router(plugin_first_introduction_router)
 api_router.include_router(internal_plugin_first_introduction_router)
 api_router.include_router(plugin_translator_groups_router)
 api_router.include_router(internal_plugin_translator_groups_router)
+api_router.include_router(plugin_role_menu_router)
+api_router.include_router(internal_plugin_role_menu_router)
 api_router.include_router(settings_router)
 api_router.include_router(moderation_router)
 api_router.include_router(events_router)
