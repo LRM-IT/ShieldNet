@@ -20,6 +20,7 @@ import { PluginEventManagerComponent } from './pages/plugin-event-manager.compon
 import { PluginWarPlannerComponent } from './pages/plugin-war-planner.component';
 import { PluginActivityRankingComponent } from './pages/plugin-activity-ranking.component';
 import { PluginAuditSecurityComponent } from './pages/plugin-audit-security.component';
+import { PluginCrossGuildNetworkComponent } from './pages/plugin-cross-guild-network.component';
 import { PluginsComponent } from './pages/plugins.component';
 import { AIIntegrationsComponent } from './pages/ai-integrations.component';
 import { LeadershipComponent } from './pages/leadership.component';
@@ -106,6 +107,7 @@ export const routes: Routes = [
   { path: 'guild/:guildId/plugins/war-planner', component: PluginWarPlannerComponent, canActivate: [guildGuard], data: { guildModule: 'plugins' } },
   { path: 'guild/:guildId/plugins/activity-ranking', component: PluginActivityRankingComponent, canActivate: [guildGuard], data: { guildModule: 'plugins' } },
   { path: 'guild/:guildId/plugins/audit-security', component: PluginAuditSecurityComponent, canActivate: [guildGuard], data: { guildModule: 'plugins' } },
+  { path: 'guild/:guildId/plugins/cross-guild-network', component: PluginCrossGuildNetworkComponent, canActivate: [guildGuard], data: { guildModule: 'plugins' } },
   { path: 'guild/:guildId/reaction-roles', redirectTo: 'guild/:guildId/plugins/role-menu', pathMatch: 'full' },
   { path: 'guild/:guildId/plugins/voting', component: PluginVotingComponent, canActivate: [guildGuard], data: { guildModule: 'plugins' } },
   { path: 'guild/:guildId/automation-monitor', component: AutomationMonitorComponent, canActivate: [guildGuard], data: { guildModule: 'automations' } },

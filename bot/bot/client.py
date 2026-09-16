@@ -34,6 +34,7 @@ from bot.plugin_event_manager import EventManager
 from bot.plugin_war_planner import WarPlanner
 from bot.plugin_activity_ranking import ActivityRanking
 from bot.plugin_audit_security import AuditSecurity
+from bot.plugin_cross_guild_network import CrossGuildNetwork
 from bot.verification_levels import VerificationLevelsClient
 
 logger = logging.getLogger(__name__)
@@ -75,6 +76,7 @@ class ShieldNetBot(discord.Client):
         self.war_planner = WarPlanner(self)
         self.activity_ranking = ActivityRanking(self)
         self.audit_security = AuditSecurity(self)
+        self.cross_guild_network = CrossGuildNetwork(self)
         self.verification_levels = VerificationLevelsClient(self)
         self._verification_slash_commands: dict[int, str] = {}
         self._initial_sync_done = False
