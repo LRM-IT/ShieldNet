@@ -19,6 +19,7 @@ export class TranslationService {
   private readonly storageKey = 'shieldnet_locale';
   private readonly supportedLocales = ['en', 'uk', 'ru', 'de', 'ar', 'fr', 'it', 'pl'];
   private englishDictionary: Dictionary = {};
+  private readonly phraseDictionary = signal<Record<string, string>>({});
   readonly locale = signal('en');
   readonly dictionary = signal<Dictionary>({});
   readonly languages = signal<LanguageEntity[]>([]);
@@ -32,7 +33,7 @@ export class TranslationService {
   async initialize(preferred?: string | null): Promise<void> {
     const docs = await Promise.all(
       this.supportedLocales.map((code) =>
-        firstValueFrom(this.http.get<Dictionary>(`/locales/${code}.json?v=15.1`)),
+        firstValueFrom(this.http.get<Dictionary>(`/locales/${code}.json?v=15.2`)),
       ),
     );
     this.englishDictionary = docs[0];
@@ -56,9 +57,10 @@ export class TranslationService {
   async setLocale(code: string, persist = true): Promise<void> {
     const selected = this.languages().some((item) => item.code === code) ? code : 'en';
     const dictionary = await firstValueFrom(
-      this.http.get<Dictionary>(`/locales/${selected}.json?v=15.1`),
+      this.http.get<Dictionary>(`/locales/${selected}.json?v=15.2`),
     );
     this.dictionary.set(dictionary);
+    this.phraseDictionary.set(this.buildPhraseDictionary(this.englishDictionary, dictionary));
     this.locale.set(selected);
     localStorage.setItem(this.storageKey, selected);
     document.documentElement.lang = selected;
@@ -93,18 +95,33 @@ export class TranslationService {
   }
 
   hasPhrase(source: string): boolean {
-    const phrases = this.dictionary()['_phrases'];
-    const english = this.englishDictionary['_phrases'];
-    return !!(phrases && typeof phrases === 'object' && source in phrases) ||
-      !!(english && typeof english === 'object' && source in english);
+    return source in this.phraseDictionary();
   }
 
   phrase(source: string): string {
-    const phrases = this.dictionary()['_phrases'];
-    if (phrases && typeof phrases === 'object') {
-      const value = (phrases as Dictionary)[source];
-      if (typeof value === 'string') return value;
+    return this.phraseDictionary()[source] ?? source;
+  }
+
+  private buildPhraseDictionary(english: Dictionary, localized: Dictionary): Record<string, string> {
+    const result: Record<string, string> = {};
+    const visit = (left: unknown, right: unknown): void => {
+      if (typeof left === 'string' && typeof right === 'string') {
+        result[left] = right;
+        return;
+      }
+      if (!left || !right || typeof left !== 'object' || typeof right !== 'object' || Array.isArray(left) || Array.isArray(right)) return;
+      for (const key of Object.keys(left as Dictionary)) {
+        if (key === '_language' || key === '_phrases') continue;
+        visit((left as Dictionary)[key], (right as Dictionary)[key]);
+      }
+    };
+    visit(english, localized);
+    const phrases = localized['_phrases'];
+    if (phrases && typeof phrases === 'object' && !Array.isArray(phrases)) {
+      for (const [source, value] of Object.entries(phrases as Dictionary)) {
+        if (typeof value === 'string') result[source] = value;
+      }
     }
-    return source;
+    return result;
   }
 }

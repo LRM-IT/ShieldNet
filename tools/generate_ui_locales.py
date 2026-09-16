@@ -38,6 +38,17 @@ TRANSLATIONS = {
     },
 }
 
+EXTRA_TRANSLATIONS = {
+    "de": ["Beschreibung","Name","Speichern","Mitglieder","Eingeschränkt","Letzte Ereignisse","KI-Zentrum","Sprachen","Ankündigungskanal","Discord-Titel","Speichern und veröffentlichen","Abstimmung","Verwaltete Server","Administration","Plugins","Widerrufen","Moderator","Administrator","Sitzungen widerrufen","Anbieter","Anbieter","Wiederholungen","Server-Sprachen","Nach oben","Nach unten","Live-Protokolle","Leeren","Alle","Schlüssel","Meine Sprachen","Rolle","Rolle auswählen","Sprache auswählen","Titel","Interner Name","Startzeit","Ränge","Links","Mitte","Rechts","Abstimmungsvorlagen"],
+    "ar": ["الوصف","الاسم","حفظ","الأعضاء","مقيّد","الأحداث الأخيرة","مركز الذكاء الاصطناعي","اللغات","قناة الإعلانات","عنوان Discord","حفظ ونشر","التصويت","الخوادم المُدارة","الإدارة","الإضافات","ملغى","مشرف","مسؤول","إلغاء الجلسات","المزودون","المزود","إعادة المحاولة","لغات الخادم","نقل لأعلى","نقل لأسفل","السجلات المباشرة","مسح","الكل","المفتاح","لغاتي","الدور","اختر دورًا","اختر لغة","العنوان","الاسم الداخلي","يبدأ في","الرتب","يسار","وسط","يمين","قوالب التصويت"],
+    "fr": ["Description","Nom","Enregistrer","Membres","Restreint","Événements récents","Centre IA","Langues","Canal d’annonce","Titre Discord","Enregistrer et publier","Vote","Serveurs gérés","Administration","Plugins","Révoqué","Modérateur","Administrateur","Révoquer les sessions","Fournisseurs","Fournisseur","Tentatives","Langues du serveur","Monter","Descendre","Journaux en direct","Effacer","Tous","Clé","Mes langues","Rôle","Sélectionner un rôle","Sélectionner une langue","Titre","Nom interne","Commence à","Classements","Gauche","Centre","Droite","Modèles de vote"],
+    "it": ["Descrizione","Nome","Salva","Membri","Limitato","Eventi recenti","Centro IA","Lingue","Canale annunci","Titolo Discord","Salva e pubblica","Votazione","Server gestiti","Amministrazione","Plugin","Revocato","Moderatore","Amministratore","Revoca sessioni","Provider","Provider","Tentativi","Lingue del server","Sposta su","Sposta giù","Registri live","Cancella","Tutti","Chiave","Le mie lingue","Ruolo","Seleziona ruolo","Seleziona lingua","Titolo","Nome interno","Inizia alle","Classifiche","Sinistra","Centro","Destra","Modelli di votazione"],
+    "pl": ["Opis","Nazwa","Zapisz","Członkowie","Ograniczone","Ostatnie zdarzenia","Centrum AI","Języki","Kanał ogłoszeń","Tytuł Discord","Zapisz i opublikuj","Głosowanie","Zarządzane serwery","Administracja","Wtyczki","Cofnięto","Moderator","Administrator","Unieważnij sesje","Dostawcy","Dostawca","Ponowienia","Języki serwera","Przenieś w górę","Przenieś w dół","Dzienniki na żywo","Wyczyść","Wszystkie","Klucz","Moje języki","Rola","Wybierz rolę","Wybierz język","Tytuł","Nazwa wewnętrzna","Rozpoczyna się","Rangi","Lewo","Środek","Prawo","Szablony głosowań"],
+}
+EXTRA_SOURCES = ["Description","Name","Save","Members","Restricted","Recent events","AI Center","Languages","Announcement channel","Discord title","Save and publish","Voting","Managed servers","Administration","Plugins","Revoked","Moderator","Administrator","Revoke sessions","Providers","Provider","Retries","Server languages","Move up","Move down","Live Logs","Clear","All","Key","My languages","Role","Select role","Select language","Title","Internal name","Starts at","Ranks","Left","Center","Right","Voting templates"]
+for _code, _values in EXTRA_TRANSLATIONS.items():
+    TRANSLATIONS[_code].update(dict(zip(EXTRA_SOURCES, _values)))
+
 PLUGIN_NAMES = {
     "uk": ["Вітання","Антифлуд","Голосування","Верифікація","Керівництво","Модерація","Перекладач","Автоматизації","Меню ролей","AI Автомодерація","Менеджер подій","Планувальник війни","Активність і рейтинг","Аудит і безпека","Резервні копії","Мережа серверів","Звернення","Журналювання","Особисті повідомлення","Вибір мови","Групи перекладу"],
     "ru": ["Приветствие","Антифлуд","Голосования","Верификация","Руководство","Модерация","Переводчик","Автоматизации","Меню ролей","AI Автомодерация","Менеджер событий","Планировщик войны","Активность и рейтинг","Аудит и безопасность","Резервные копии","Сеть серверов","Обращения","Журналирование","Личные сообщения","Выбор языка","Группы перевода"],
@@ -70,6 +81,8 @@ UKRAINIAN_ALIASES = {
 
 def phrase_catalog(code):
     result = dict(zip(PHRASES["en"], PHRASES[code]))
+    if code in TRANSLATIONS:
+        result.update(TRANSLATIONS[code])
     for source, index in UKRAINIAN_ALIASES.items():
         result[source] = PHRASES[code][index]
     return result
@@ -87,6 +100,7 @@ def main():
     english = json.loads((LOCALES / "en.json").read_text(encoding="utf-8"))
     english["plugin_names"] = dict(zip(PLUGIN_KEYS, ["Welcome","AntiFlood","Voting","Verification","Leadership","Moderation","Translator","Automations","Role Menu","AI AutoMod","Event Manager","War Planner","Activity & Ranking","Audit & Security","Backup & Restore","Cross-Guild Network","Tickets","Logging","Guild DM Broadcast","Language Selection","Translator Groups"]))
     english["_phrases"] = dict(zip(PHRASES["en"], PHRASES["en"]))
+    english["_phrases"].update({source: source for source in EXTRA_SOURCES})
     (LOCALES / "en.json").write_text(json.dumps(english, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     for code in ("uk", "ru"):
         path = LOCALES / f"{code}.json"
