@@ -81,6 +81,7 @@ from app.api.routes.plugin_role_menu import router as plugin_role_menu_router, i
 from app.api.routes.plugin_ai_automod import router as plugin_ai_automod_router, internal_router as internal_plugin_ai_automod_router
 from app.api.routes.plugin_event_manager import router as plugin_event_manager_router, internal_router as internal_plugin_event_manager_router
 from app.api.routes.plugin_war_planner import router as plugin_war_planner_router, internal_router as internal_plugin_war_planner_router
+from app.api.routes.plugin_activity_ranking import router as plugin_activity_ranking_router, internal_router as internal_plugin_activity_ranking_router
 from app.api.routes.verification_levels import router as verification_levels_router, internal_router as internal_verification_levels_router
 
 api_router = APIRouter()
@@ -163,6 +164,8 @@ api_router.include_router(plugin_event_manager_router)
 api_router.include_router(internal_plugin_event_manager_router)
 api_router.include_router(plugin_war_planner_router)
 api_router.include_router(internal_plugin_war_planner_router)
+api_router.include_router(plugin_activity_ranking_router)
+api_router.include_router(internal_plugin_activity_ranking_router)
 api_router.include_router(settings_router)
 api_router.include_router(moderation_router)
 api_router.include_router(events_router)

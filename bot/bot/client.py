@@ -32,6 +32,7 @@ from bot.plugin_role_menu import RoleMenu
 from bot.plugin_ai_automod import AIAutoMod
 from bot.plugin_event_manager import EventManager
 from bot.plugin_war_planner import WarPlanner
+from bot.plugin_activity_ranking import ActivityRanking
 from bot.verification_levels import VerificationLevelsClient
 
 logger = logging.getLogger(__name__)
@@ -71,6 +72,7 @@ class ShieldNetBot(discord.Client):
         self.ai_automod = AIAutoMod(self)
         self.event_manager = EventManager(self)
         self.war_planner = WarPlanner(self)
+        self.activity_ranking = ActivityRanking(self)
         self.verification_levels = VerificationLevelsClient(self)
         self._verification_slash_commands: dict[int, str] = {}
         self._initial_sync_done = False
@@ -126,6 +128,21 @@ class ShieldNetBot(discord.Client):
                 f"ShieldNet online. Revision: {revision}",
                 ephemeral=True,
             )
+
+        @self.tree.command(name="leaderboard", description="Show the server activity ranking.")
+        async def leaderboard(interaction: discord.Interaction) -> None:
+            if interaction.guild is None:
+                await interaction.response.send_message("Server only.", ephemeral=True)
+                return
+            await interaction.response.defer()
+            data = await self.activity_ranking.leaderboard(interaction.guild.id)
+            if not data.get("enabled"):
+                await interaction.followup.send("Activity & Ranking is disabled.", ephemeral=True)
+                return
+            rows = data.get("leaderboard") or []
+            text = "\n".join(f"**{row['rank']}.** <@{row['discord_user_id']}> — **{row['points']:g}** points" for row in rows) or "No activity recorded yet."
+            embed = discord.Embed(title="🏆 Activity leaderboard", description=text, colour=discord.Colour.gold())
+            await interaction.followup.send(embed=embed)
 
         @self.tree.command(name="shieldnet_modules", description="Show enabled modules.")
         async def modules(interaction: discord.Interaction) -> None:
@@ -546,6 +563,11 @@ class ShieldNetBot(discord.Client):
             await self.member_sync.sync_member(member)
         except Exception:
             logger.exception("Member voice sync failed: %s", member.id)
+        if not member.bot:
+            try:
+                await self.activity_ranking.voice_state(member, before, after)
+            except Exception:
+                logger.exception("Activity voice tracking failed: %s", member.id)
 
     async def on_message(self, message: discord.Message) -> None:
         if message.guild is None:
@@ -564,6 +586,10 @@ class ShieldNetBot(discord.Client):
             await self.member_sync.mark_activity(message.guild.id, message.author.id)
         except Exception:
             logger.exception("Member activity sync failed: %s", message.author.id)
+        try:
+            await self.activity_ranking.message(message)
+        except Exception:
+            logger.exception("Activity ranking tracking failed: %s", message.author.id)
         try:
             await self.translator_groups.process(message)
         except Exception:
