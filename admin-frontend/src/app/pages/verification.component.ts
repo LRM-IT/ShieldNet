@@ -135,6 +135,31 @@ import { DiscordChannelPickerComponent } from '../shared/discord-channel-picker.
         }
       </section>
 
+      <section class="card panel levels">
+        <div class="heading"><div><h2>Рівні верифікації</h2><p class="muted">Перший рівень використовує форму вище. Додаткові рівні перевіряють зображення профілю через AI Center.</p></div>
+          <button class="btn" (click)="addLevel()">Додати рівень</button></div>
+        @for (level of levels(); track level.id) {
+          <details class="level-card"><summary><strong>{{level.name}}</strong><span>{{level.enabled ? 'ACTIVE' : 'DISABLED'}}⌄</span></summary>
+            <div class="level-body">
+              <label>Назва рівня<input [(ngModel)]="level.name" maxlength="80"></label>
+              <label class="check"><input type="checkbox" [(ngModel)]="level.enabled"> Рівень активний</label>
+              <label>Гілка прийому зображень<sn-discord-channel-picker [guildId]="guildId" [value]="level.channel_id" (valueChange)="level.channel_id=$event" /></label>
+              <label>Який текст або ознаку шукати<input [(ngModel)]="level.expected_text" maxlength="500" placeholder="Наприклад: Power 120M або назва альянсу"></label>
+              <label>Ролі після успішної перевірки<select multiple [(ngModel)]="level.role_ids">
+                @for (role of roles(); track role.discord_role_id) { <option [value]="role.discord_role_id">{{role.name}}</option> }
+              </select></label>
+              <label>Еталонне зображення<input type="file" accept="image/png,image/jpeg,image/webp" (change)="selectTemplate(level,$event)"></label>
+              @if (level.preview || level.template_url) {
+                <div class="marker-image"><img [src]="level.preview || level.template_url"><div class="marker" [style.left.%]="level.marker.x*100" [style.top.%]="level.marker.y*100" [style.width.%]="level.marker.width*100" [style.height.%]="level.marker.height*100"></div></div>
+              }
+              <p class="muted">Маркер задається у відсотках від зображення. Він визначає область, яку AI порівнює на еталоні та фото користувача.</p>
+              <div class="marker-grid"><label>X %<input type="number" min="0" max="99" [ngModel]="level.marker.x*100" (ngModelChange)="level.marker.x=+$event/100"></label><label>Y %<input type="number" min="0" max="99" [ngModel]="level.marker.y*100" (ngModelChange)="level.marker.y=+$event/100"></label><label>Ширина %<input type="number" min="1" max="100" [ngModel]="level.marker.width*100" (ngModelChange)="level.marker.width=+$event/100"></label><label>Висота %<input type="number" min="1" max="100" [ngModel]="level.marker.height*100" (ngModelChange)="level.marker.height=+$event/100"></label></div>
+              <div class="buttons"><button class="btn" (click)="saveLevel(level)">Зберегти рівень</button><button class="btn danger" (click)="removeLevel(level)">Видалити</button></div>
+            </div>
+          </details>
+        } @empty { <p class="muted">Додаткових рівнів ще немає.</p> }
+      </section>
+
       <section class="card stats">
         <h2>{{ "verification.statistics" | snT:"Verification statistics" }}</h2>
         <div class="stats-grid">
@@ -428,6 +453,7 @@ import { DiscordChannelPickerComponent } from '../shared/discord-channel-picker.
     .command-input { display:flex; align-items:center; background:var(--panel-2); border:1px solid var(--line); border-radius:10px; }
     .command-input span { padding-left:.8rem; font-weight:800; color:var(--text); }
     .command-input input { flex:1; border:0; background:transparent; }
+    .levels{margin-top:1.2rem}.level-card{border:1px solid var(--line);border-radius:12px;overflow:hidden}.level-card summary{display:flex;justify-content:space-between;padding:1rem;cursor:pointer;list-style:none}.level-body{display:grid;gap:.8rem;padding:1rem;border-top:1px solid var(--line)}.marker-image{position:relative;width:min(100%,700px)}.marker-image img{display:block;width:100%;border-radius:10px}.marker{position:absolute;border:3px solid #45e0b3;background:rgba(69,224,179,.14);pointer-events:none}.marker-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.6rem}
 
     .check {
       display: flex;
@@ -593,6 +619,7 @@ export class VerificationComponent
   readonly guildId = this.route.snapshot.paramMap.get('guildId') ?? '';
 
   readonly roles = signal<any[]>([]);
+  readonly levels = signal<any[]>([]);
   readonly requests = signal<any[]>([]);
   readonly summaryData = signal<any>({});
   readonly saving = signal(false);
@@ -630,9 +657,10 @@ export class VerificationComponent
   ) {}
 
   async ngOnInit(): Promise<void> {
-    const [settings, roles] = await Promise.all([
+    const [settings, roles, levels] = await Promise.all([
       this.verification.getSettings(this.guildId),
       this.guildRoles.list(this.guildId),
+      this.verification.levels(this.guildId),
     ]);
 
     this.enabled = settings.enabled;
@@ -652,9 +680,23 @@ export class VerificationComponent
     this.allianceMax =
       settings.alliance_max_length;
     this.roles.set(roles);
+    this.levels.set(levels);
 
     await Promise.all([this.reloadRequests(), this.loadSummary()]);
   }
+
+  async addLevel(): Promise<void> {
+    const row=await this.verification.createLevel(this.guildId,{name:`Рівень ${this.levels().length+2}`,enabled:false,channel_id:null,expected_text:'',role_ids:[],marker:{x:0,y:0,width:1,height:1}});
+    this.levels.update(items=>[...items,row]);
+  }
+  selectTemplate(level:any,event:Event):void { const file=(event.target as HTMLInputElement).files?.[0]; if(!file)return; level.file=file; if(level.preview)URL.revokeObjectURL(level.preview); level.preview=URL.createObjectURL(file); }
+  async saveLevel(level:any):Promise<void> {
+    const payload={name:level.name,enabled:level.enabled,channel_id:level.channel_id?Number(level.channel_id):null,expected_text:level.expected_text,role_ids:(level.role_ids||[]).map(Number),marker:level.marker};
+    if(level.file)await this.verification.uploadLevelTemplate(this.guildId,level.id,level.file,level.marker);
+    const saved=await this.verification.updateLevel(this.guildId,level.id,payload);
+    Object.assign(level,saved,{file:null,preview:null}); this.message.set(`Рівень ${level.name} збережено.`);
+  }
+  async removeLevel(level:any):Promise<void> { await this.verification.deleteLevel(this.guildId,level.id); this.levels.update(items=>items.filter(item=>item.id!==level.id)); }
 
   pendingCount(): number {
     return this.requests().filter(

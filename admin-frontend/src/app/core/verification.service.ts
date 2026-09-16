@@ -26,6 +26,12 @@ export class VerificationService {
     );
   }
 
+  levels(guildId:string):Promise<any[]> { return firstValueFrom(this.http.get<any[]>(`/api/v1/discord/guilds/${guildId}/verification/levels`)); }
+  createLevel(guildId:string,payload:any):Promise<any> { return firstValueFrom(this.http.post(`/api/v1/discord/guilds/${guildId}/verification/levels`,payload)); }
+  updateLevel(guildId:string,id:string,payload:any):Promise<any> { return firstValueFrom(this.http.put(`/api/v1/discord/guilds/${guildId}/verification/levels/${id}`,payload)); }
+  deleteLevel(guildId:string,id:string):Promise<any> { return firstValueFrom(this.http.delete(`/api/v1/discord/guilds/${guildId}/verification/levels/${id}`)); }
+  uploadLevelTemplate(guildId:string,id:string,file:File,marker:any):Promise<any> { const form=new FormData(); form.append('file',file); form.append('marker_json',JSON.stringify(marker)); return firstValueFrom(this.http.post(`/api/v1/discord/guilds/${guildId}/verification/levels/${id}/template`,form)); }
+
   listRequests(
     guildId: string,
     status?: string,

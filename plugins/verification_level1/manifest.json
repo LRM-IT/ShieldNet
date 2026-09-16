@@ -1,8 +1,8 @@
 {
   "id": "verification_level1",
-  "name": "Verification Level 1",
-  "version": "1.0.2",
-  "description": "Self verification, nickname mask, role assignment, rename/alliance update and temporary welcome messages.",
+  "name": "Verification",
+  "version": "2.0.0",
+  "description": "Multi-level verification with forms, AI profile-image checks and configurable role assignment.",
   "entrypoint": "runtime.py",
   "backend_router": "backend.router:router",
   "frontend_path": "frontend",

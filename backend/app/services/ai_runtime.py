@@ -36,7 +36,8 @@ class AIRuntimeService:
                       system_prompt: str | None = None, source_language: str | None = None,
                       target_language: str | None = None, model: str | None = None,
                       temperature: float | None = None, max_output_tokens: int | None = None,
-                      metadata: dict[str, Any] | None = None) -> tuple[GuildAIProvider, AIResult]:
+                      metadata: dict[str, Any] | None = None,
+                      image_data_urls: list[str] | None = None) -> tuple[GuildAIProvider, AIResult]:
         route = await self._route(guild_id, capability)
         if route is None or not route.enabled:
             raise LookupError(f"No enabled server AI route configured for capability '{capability}'")
@@ -67,6 +68,7 @@ class AIRuntimeService:
                         target_language=target_language, model=selected_model,
                         temperature=temperature, max_output_tokens=max_output_tokens,
                         timeout_seconds=target.timeout_seconds,
+                        image_data_urls=image_data_urls or [],
                     )
                     provider.consecutive_failures = 0
                     provider.circuit_open_until = None
@@ -135,7 +137,7 @@ class AIRuntimeService:
                              system_prompt: str | None, source_language: str | None,
                              target_language: str | None, model: str | None,
                              temperature: float | None, max_output_tokens: int | None,
-                             timeout_seconds: int | None) -> AIResult:
+                             timeout_seconds: int | None, image_data_urls: list[str]) -> AIResult:
         started = time.perf_counter()
         key = AISecretService.decrypt(provider.encrypted_api_key)
         base = (provider.api_base_url or DEFAULT_BASE_URLS.get(provider.provider_type) or "").rstrip("/")
@@ -145,11 +147,11 @@ class AIRuntimeService:
         timeout = timeout_seconds or provider.timeout_seconds
         async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as client:
             if provider.provider_type in {"openai", "xai", "groq", "openai_compatible"}:
-                data = await self._openai(client, base, key, model, prompt, temperature, max_output_tokens, provider)
+                data = await self._openai(client, base, key, model, prompt, temperature, max_output_tokens, provider, image_data_urls)
             elif provider.provider_type == "anthropic":
-                data = await self._anthropic(client, base, key, model, prompt, temperature, max_output_tokens)
+                data = await self._anthropic(client, base, key, model, prompt, temperature, max_output_tokens, image_data_urls)
             elif provider.provider_type == "gemini":
-                data = await self._gemini(client, base, key, model, prompt, temperature, max_output_tokens)
+                data = await self._gemini(client, base, key, model, prompt, temperature, max_output_tokens, image_data_urls)
             elif provider.provider_type in {"deepl", "google_translate", "libretranslate"}:
                 data = await self._translation(client, provider.provider_type, base, key, input_text, source_language, target_language)
             else:
@@ -168,17 +170,19 @@ class AIRuntimeService:
             instruction += "\nAdditional rules: " + system_prompt
         return instruction + "\n\nINPUT:\n" + text
 
-    async def _openai(self, client, base, key, model, prompt, temperature, max_tokens, provider) -> AIResult:
+    async def _openai(self, client, base, key, model, prompt, temperature, max_tokens, provider, images) -> AIResult:
         if not model: raise ValueError("Model is required")
         headers = {"Authorization": f"Bearer {key}", "Content-Type": "application/json"}
         if provider.organization_id: headers["OpenAI-Organization"] = provider.organization_id
         if provider.project_id: headers["OpenAI-Project"] = provider.project_id
-        payload: dict[str, Any] = {"model": model, "input": prompt, "store": False}
+        content = [{"type": "input_text", "text": prompt}, *({"type": "input_image", "image_url": url} for url in images)]
+        payload: dict[str, Any] = {"model": model, "input": [{"role": "user", "content": content}], "store": False}
         if temperature is not None: payload["temperature"] = temperature
         if max_tokens is not None: payload["max_output_tokens"] = max_tokens
         response = await client.post(f"{base}/responses", headers=headers, json=payload)
         if response.status_code == 404:
-            chat_payload: dict[str, Any] = {"model": model, "messages": [{"role": "user", "content": prompt}]}
+            chat_content = [{"type": "text", "text": prompt}, *({"type": "image_url", "image_url": {"url": url}} for url in images)]
+            chat_payload: dict[str, Any] = {"model": model, "messages": [{"role": "user", "content": chat_content}]}
             if temperature is not None: chat_payload["temperature"] = temperature
             if max_tokens is not None: chat_payload["max_tokens"] = max_tokens
             response = await client.post(f"{base}/chat/completions", headers=headers, json=chat_payload)
@@ -193,9 +197,13 @@ class AIRuntimeService:
         usage = body.get("usage") or {}
         return AIResult(text.strip(), model, int(usage.get("input_tokens", 0) or 0), int(usage.get("output_tokens", 0) or 0), 0)
 
-    async def _anthropic(self, client, base, key, model, prompt, temperature, max_tokens) -> AIResult:
+    async def _anthropic(self, client, base, key, model, prompt, temperature, max_tokens, images) -> AIResult:
         if not model: raise ValueError("Model is required")
-        payload: dict[str, Any] = {"model": model, "max_tokens": max_tokens or 2048, "messages": [{"role": "user", "content": prompt}]}
+        content: list[dict] = []
+        for url in images:
+            header, data = url.split(",", 1); content.append({"type":"image","source":{"type":"base64","media_type":header.split(":",1)[1].split(";",1)[0],"data":data}})
+        content.append({"type":"text","text":prompt})
+        payload: dict[str, Any] = {"model": model, "max_tokens": max_tokens or 2048, "messages": [{"role": "user", "content": content}]}
         if temperature is not None: payload["temperature"] = temperature
         response = await client.post(f"{base}/messages", headers={"x-api-key": key, "anthropic-version": "2023-06-01", "Content-Type": "application/json"}, json=payload)
         self._raise(response); body = response.json()
@@ -203,12 +211,15 @@ class AIRuntimeService:
         usage = body.get("usage") or {}
         return AIResult(text.strip(), model, int(usage.get("input_tokens", 0) or 0), int(usage.get("output_tokens", 0) or 0), 0)
 
-    async def _gemini(self, client, base, key, model, prompt, temperature, max_tokens) -> AIResult:
+    async def _gemini(self, client, base, key, model, prompt, temperature, max_tokens, images) -> AIResult:
         if not model: raise ValueError("Model is required")
         generation: dict[str, Any] = {}
         if temperature is not None: generation["temperature"] = temperature
         if max_tokens is not None: generation["maxOutputTokens"] = max_tokens
-        response = await client.post(f"{base}/models/{model}:generateContent?key={key}", json={"contents": [{"parts": [{"text": prompt}]}], "generationConfig": generation})
+        parts: list[dict] = [{"text": prompt}]
+        for url in images:
+            header, data = url.split(",", 1); parts.append({"inline_data":{"mime_type":header.split(":",1)[1].split(";",1)[0],"data":data}})
+        response = await client.post(f"{base}/models/{model}:generateContent?key={key}", json={"contents": [{"parts": parts}], "generationConfig": generation})
         self._raise(response); body = response.json()
         candidates = body.get("candidates") or []; parts = ((candidates[0].get("content") or {}).get("parts") or []) if candidates else []
         text = "".join(p.get("text", "") for p in parts)

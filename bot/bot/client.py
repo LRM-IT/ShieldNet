@@ -28,6 +28,7 @@ from bot.plugin_antiflood import AntiFloodWorker
 from bot.plugin_voting import VotingWorker
 from bot.plugin_first_introduction import LanguageSelection
 from bot.plugin_translator_groups import TranslatorGroups
+from bot.verification_levels import VerificationLevelsClient
 
 logger = logging.getLogger(__name__)
 
@@ -62,6 +63,7 @@ class ShieldNetBot(discord.Client):
         self.voting = VotingWorker(self)
         self.language_selection = LanguageSelection(self)
         self.translator_groups = TranslatorGroups(self, self.backend)
+        self.verification_levels = VerificationLevelsClient(self)
         self._verification_slash_commands: dict[int, str] = {}
         self._initial_sync_done = False
         self.redis = Redis.from_url(settings.redis_url, decode_responses=True)
@@ -543,6 +545,10 @@ class ShieldNetBot(discord.Client):
             await self.translator_groups.process(message)
         except Exception:
             logger.exception("Translator Groups processing failed: %s", message.id)
+        try:
+            await self.verification_levels.process(message)
+        except Exception:
+            logger.exception("Image verification processing failed: %s", message.id)
         try:
             config = await self.verification.settings(message.guild.id)
             commands = {item.strip().casefold() for item in (config.get("text_commands") or "").split(",") if item.strip()}

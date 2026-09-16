@@ -12,7 +12,7 @@ from sqlalchemy import (
     UniqueConstraint,
     func,
 )
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.models.core import Base
@@ -187,6 +187,42 @@ class VerificationRequest(Base):
         nullable=False,
         server_default=func.now(),
     )
+
+
+class VerificationLevel(Base):
+    __tablename__ = "levels"
+    __table_args__ = (UniqueConstraint("guild_id", "name", name="uq_verification_level_name"), {"schema": "verification"})
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, server_default=func.gen_random_uuid())
+    guild_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("discord.guilds.guild_id", ondelete="CASCADE"), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(80), nullable=False)
+    enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="false")
+    channel_id: Mapped[int | None] = mapped_column(BigInteger)
+    expected_text: Mapped[str] = mapped_column(String(500), nullable=False, server_default="")
+    role_ids: Mapped[list] = mapped_column(JSONB, nullable=False, default=list, server_default="[]")
+    marker: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict, server_default='{"x":0,"y":0,"width":1,"height":1}')
+    template_path: Mapped[str | None] = mapped_column(String(500))
+    template_mime: Mapped[str | None] = mapped_column(String(100))
+    position: Mapped[int] = mapped_column(Integer, nullable=False, server_default="1")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now())
+
+
+class VerificationLevelSubmission(Base):
+    __tablename__ = "level_submissions"
+    __table_args__ = {"schema": "verification"}
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, server_default=func.gen_random_uuid())
+    level_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("verification.levels.id", ondelete="CASCADE"), nullable=False, index=True)
+    guild_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("discord.guilds.guild_id", ondelete="CASCADE"), nullable=False, index=True)
+    discord_user_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
+    discord_message_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
+    image_url: Mapped[str] = mapped_column(String(2000), nullable=False)
+    status: Mapped[str] = mapped_column(String(32), nullable=False, server_default="processing")
+    matched: Mapped[bool | None] = mapped_column(Boolean)
+    detected_text: Mapped[str | None] = mapped_column(Text)
+    ai_result: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict, server_default="{}")
+    result_message: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
 class VerificationDecision(Base):

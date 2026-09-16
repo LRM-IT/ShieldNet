@@ -13,6 +13,7 @@ class AIRuntimeRequest(BaseModel):
     temperature: float | None = Field(default=None, ge=0, le=2)
     max_output_tokens: int | None = Field(default=None, ge=1, le=32768)
     metadata: dict[str, Any] = Field(default_factory=dict)
+    image_data_urls: list[str] = Field(default_factory=list, max_length=4)
 
 class AIRuntimeResponse(BaseModel):
     text: str

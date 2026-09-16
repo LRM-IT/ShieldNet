@@ -34,7 +34,7 @@ from app.models.member_actions import MemberAction
 from app.models.guild_roles import DiscordGuildRole
 from app.models.audit import AuditEvent
 from app.models.permissions import GuildPermissionRule
-from app.models.verification import VerificationDecision, VerificationRequest, VerificationSettings
+from app.models.verification import VerificationDecision, VerificationRequest, VerificationSettings, VerificationLevel, VerificationLevelSubmission
 from app.models.member_cases import MemberCase
 
 from app.models.member_evidence import MemberCaseAppeal, MemberCaseEvidence
