@@ -1,4 +1,4 @@
-import { Component, computed } from '@angular/core';
+import { Component, computed, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslatePipe } from '../core/translate.pipe';
 import { TranslationService } from '../core/translation.service';
@@ -85,19 +85,16 @@ import { ShellComponent } from '../shared/shell.component';
               <span class="active-label">{{ i18n.currentLanguage()?.icon }} {{ i18n.currentLanguage()?.name }}</span>
             </div>
 
-            <div class="language-grid">
-              @for (language of i18n.languages(); track language.code) {
-                <button
-                  type="button"
-                  class="language-option"
-                  [class.active]="i18n.locale() === language.code"
-                  (click)="changeLanguage(language.code)"
-                >
-                  <span class="flag">{{ language.icon }}</span>
-                  <span><strong>{{ language.name }}</strong><small>{{ language.code.toUpperCase() }}</small></span>
-                  <b>{{ i18n.locale() === language.code ? '✓' : '' }}</b>
-                </button>
-              }
+            <div class="select-preference">
+              <label for="profile-language">{{ 'profile.interface_language' | snT:'Interface language' }}</label>
+              <div class="select-control">
+                <span>{{ i18n.currentLanguage()?.icon }}</span>
+                <select id="profile-language" [value]="i18n.locale()" (change)="changeLanguage($any($event.target).value)">
+                  @for (language of i18n.languages(); track language.code) {
+                    <option [value]="language.code">{{ language.name }} — {{ language.code.toUpperCase() }}</option>
+                  }
+                </select>
+              </div>
             </div>
 
             <div class="preference-row">
@@ -105,7 +102,11 @@ import { ShellComponent } from '../shared/shell.component';
                 <strong>{{ 'profile.timezone' | snT:'Timezone' }}</strong>
                 <small>{{ 'profile.timezone_help' | snT:'Used for logs, jobs and events.' }}</small>
               </div>
-              <button type="button" disabled>{{ timezone }}</button>
+              <select [value]="timezone()" (change)="changeTimezone($any($event.target).value)" aria-label="Timezone">
+                @for (zone of timezones; track zone) {
+                  <option [value]="zone">{{ zone }}</option>
+                }
+              </select>
             </div>
           </article>
         </div>
@@ -123,14 +124,11 @@ import { ShellComponent } from '../shared/shell.component';
     .settings-stack{display:grid;gap:1rem}.settings-panel{padding:1.2rem}.section-heading{display:flex;justify-content:space-between;gap:1rem;align-items:flex-start;padding-bottom:1rem;border-bottom:1px solid var(--line)}.active-label,.soon{padding:.42rem .58rem;border-radius:999px;font-size:.54rem;font-weight:900;letter-spacing:.09em}.active-label{color:var(--primary);background:var(--primary-soft);border:1px solid var(--line-strong)}.soon{color:var(--muted);background:var(--surface-2);border:1px solid var(--line)}
     .theme-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.65rem;margin-top:1rem}.theme-option{display:grid;grid-template-columns:64px 1fr 22px;align-items:center;gap:.75rem;padding:.75rem;text-align:left;color:var(--text);background:var(--surface-2);border:1px solid var(--line);border-radius:12px;transition:.18s}.theme-option:hover{transform:translateY(-1px);border-color:var(--line-strong)}.theme-option.active{background:var(--primary-soft);border-color:var(--primary)}
     .theme-preview{height:44px;display:grid;grid-template-columns:1.5fr 1fr .55fr;overflow:hidden;border-radius:8px;border:1px solid rgba(255,255,255,.12)}.theme-preview i{display:block}.theme-copy{display:grid;gap:.25rem;min-width:0}.theme-copy strong{display:flex;align-items:center;gap:.45rem;font-size:.75rem}.theme-copy small{color:var(--muted);font-size:.59rem;line-height:1.35}.check{color:var(--primary);font-weight:900;text-align:center}
-    .language-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.65rem;margin-top:1rem}
-    .language-option{display:grid;grid-template-columns:40px 1fr 20px;align-items:center;gap:.65rem;padding:.75rem;text-align:left;color:var(--text);background:var(--surface-2);border:1px solid var(--line);border-radius:11px}
-    .language-option:hover,.language-option.active{border-color:var(--primary);background:var(--primary-soft)}
-    .language-option .flag{font-size:1.35rem}.language-option span:nth-child(2){display:grid;gap:.15rem}.language-option small{color:var(--muted);font-size:.58rem}.language-option>b{color:var(--primary)}
-    .preference-row{display:grid;grid-template-columns:1fr auto;align-items:center;gap:1rem;padding:.9rem 0;border-bottom:1px solid var(--line)}.preference-row div{display:grid;gap:.25rem}.preference-row strong{font-size:.74rem}.preference-row small{color:var(--muted);font-size:.62rem}.preference-row button{min-width:150px;padding:.6rem .7rem;color:var(--muted);background:var(--surface-2);border:1px solid var(--line);border-radius:9px}
+    .select-preference{display:grid;gap:.45rem;margin-top:1rem}.select-preference>label{color:var(--muted);font-size:.65rem;font-weight:750}.select-control{display:grid;grid-template-columns:34px 1fr;align-items:center;gap:.5rem;padding:0 .75rem;background:var(--surface-2);border:1px solid var(--line);border-radius:11px}.select-control:focus-within{border-color:var(--primary)}.select-control>span{font-size:1.2rem}.select-control select{width:100%;min-height:48px;color:var(--text);background:transparent;border:0;outline:0;font-weight:750}.select-control option,.preference-row option{color:#101820;background:#fff}
+    .preference-row{display:grid;grid-template-columns:1fr auto;align-items:center;gap:1rem;padding:.9rem 0;border-bottom:1px solid var(--line)}.preference-row div{display:grid;gap:.25rem}.preference-row strong{font-size:.74rem}.preference-row small{color:var(--muted);font-size:.62rem}.preference-row select{min-width:220px;padding:.65rem .75rem;color:var(--text);background:var(--surface-2);border:1px solid var(--line);border-radius:9px}
     @media(max-width:950px){.profile-layout{grid-template-columns:1fr}.identity-card{position:static}.theme-grid{grid-template-columns:1fr}}
-    @media(max-width:700px){.language-grid{grid-template-columns:1fr}}
-    @media(max-width:600px){.theme-option{grid-template-columns:54px 1fr 18px}.section-heading,.preference-row{grid-template-columns:1fr;display:grid}.preference-row button{width:100%}}
+    @media(max-width:700px){.select-control{grid-template-columns:30px 1fr}}
+    @media(max-width:600px){.theme-option{grid-template-columns:54px 1fr 18px}.section-heading,.preference-row{grid-template-columns:1fr;display:grid}.preference-row select{width:100%}}
   `],
 })
 export class ProfileComponent {
@@ -144,7 +142,14 @@ export class ProfileComponent {
     this.themes.themes.find((item) => item.id === this.themes.activeTheme())?.name || 'GuildConsole',
   );
 
-  readonly timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+  private readonly timezoneStorageKey = 'guildconsole_timezone';
+  readonly timezone = signal(localStorage.getItem(this.timezoneStorageKey) || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC');
+  readonly timezones: string[] = (() => {
+    const available = typeof (Intl as any).supportedValuesOf === 'function'
+      ? (Intl as any).supportedValuesOf('timeZone') as string[]
+      : ['UTC', 'Europe/Kyiv', 'Europe/Warsaw', 'Europe/Berlin', 'Europe/Paris', 'Europe/Rome', 'Asia/Dubai'];
+    return available.includes(this.timezone()) ? available : [this.timezone(), ...available];
+  })();
 
   constructor(
     public readonly auth: AuthService,
@@ -154,5 +159,13 @@ export class ProfileComponent {
 
   async changeLanguage(code: string): Promise<void> {
     await this.i18n.setLocale(code);
+  }
+
+  changeTimezone(zone: string): void {
+    if (!this.timezones.includes(zone)) return;
+    this.timezone.set(zone);
+    localStorage.setItem(this.timezoneStorageKey, zone);
+    document.documentElement.dataset['timezone'] = zone;
+    window.dispatchEvent(new CustomEvent('guildconsole-timezone-change', { detail: zone }));
   }
 }

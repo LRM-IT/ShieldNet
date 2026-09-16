@@ -571,6 +571,11 @@ export class ShellComponent implements OnInit, OnDestroy {
     }
   }
 
+  @HostListener('window:guildconsole-timezone-change')
+  handleTimezoneChange(): void {
+    this.updateTime();
+  }
+
   toggleMenuCollapsed(): void {
     const next = !this.menuCollapsed();
     this.menuCollapsed.set(next);
@@ -625,6 +630,7 @@ export class ShellComponent implements OnInit, OnDestroy {
         hour: '2-digit',
         minute: '2-digit',
         second: '2-digit',
+        timeZone: localStorage.getItem('guildconsole_timezone') || undefined,
       }).format(new Date()),
     );
   }
