@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from decimal import Decimal, ROUND_HALF_UP
 from uuid import uuid4
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.billing import BillingDiscountCard, BillingDiscountRedemption, BillingTenureDiscount
 from app.models.discord import Guild
@@ -28,8 +28,8 @@ class BillingDiscountService:
         months=max(0,(now.year-guild.joined_at.year)*12+now.month-guild.joined_at.month-(1 if now.day<guild.joined_at.day else 0)) if guild else 0
         rules=list((await self.session.execute(select(BillingTenureDiscount).where(BillingTenureDiscount.active.is_(True),BillingTenureDiscount.minimum_months<=months).order_by(BillingTenureDiscount.minimum_months.desc()))).scalars())
         tenure=rules[0].percent if rules else Decimal("0")
-        redemption=await self.session.execute(select(BillingDiscountCard,BillingDiscountRedemption).join(BillingDiscountRedemption,BillingDiscountRedemption.card_id==BillingDiscountCard.id).where(BillingDiscountRedemption.guild_id==guild_id,BillingDiscountCard.active.is_(True)).order_by(BillingDiscountCard.percent.desc()).limit(1))
-        pair=redemption.first();card=pair[0] if pair and (not pair[0].valid_from or pair[0].valid_from<=now) and (not pair[0].valid_until or pair[0].valid_until>now) else None
+        redemption=await self.session.execute(select(BillingDiscountCard,BillingDiscountRedemption).join(BillingDiscountRedemption,BillingDiscountRedemption.card_id==BillingDiscountCard.id).where(BillingDiscountRedemption.guild_id==guild_id,BillingDiscountCard.active.is_(True),or_(BillingDiscountCard.valid_from.is_(None),BillingDiscountCard.valid_from<=now),or_(BillingDiscountCard.valid_until.is_(None),BillingDiscountCard.valid_until>now)).order_by(BillingDiscountCard.percent.desc()).limit(1))
+        pair=redemption.first();card=pair[0] if pair else None
         card_percent=card.percent if card else Decimal("0");total=min(MAX_DISCOUNT,tenure+card_percent)
         final=(amount*(Decimal("100")-total)/Decimal("100")).quantize(Decimal("0.01"),rounding=ROUND_HALF_UP)
         return {"original":amount,"final":final,"total_percent":total,"tenure_percent":tenure,"card_percent":card_percent,"card_code":card.code if card else None,"tenure_months":months}
