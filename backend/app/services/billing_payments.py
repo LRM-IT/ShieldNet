@@ -12,7 +12,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.billing import BillingPayment, BillingPluginPlan, BillingSubscription, BillingWallet, BillingWalletTransaction
-from app.services.billing_service import FREE_PLUGIN_KEYS, normalize_plugin_key
+from app.services.billing_service import FREE_PLUGIN_KEYS, PAID_PACKAGE_KEY, normalize_plugin_key
 from app.services.plugin_control_service import PluginControlService
 from app.services.nbu_exchange import NBUExchangeService, ExchangeRateError, SUPPORTED_DISPLAY_CURRENCIES
 
@@ -80,8 +80,8 @@ class BillingPaymentService:
         return wallet
 
     async def pay_from_wallet(self, guild_id: int, discord_user_id: int, plugin_key: str, period: str) -> dict:
-        key = normalize_plugin_key(plugin_key)
-        if key in FREE_PLUGIN_KEYS or period not in PERIOD_DAYS:
+        key = PAID_PACKAGE_KEY
+        if period not in PERIOD_DAYS:
             raise PaymentError("Unsupported plan")
         plan = (await self.session.execute(select(BillingPluginPlan).where(BillingPluginPlan.plugin_key == key))).scalar_one_or_none()
         amount = getattr(plan, f"{period}_price", None) if plan and plan.enabled and not plan.is_free else None
@@ -104,9 +104,7 @@ class BillingPaymentService:
         return {"provider":"balance","order_reference":payment.order_reference,"status":"paid","balance":wallet.balance,"currency":wallet.currency}
 
     async def create_checkout(self, guild_id: int, plugin_key: str, period: str, provider: str, base_url: str, display_currency: str = "UAH") -> dict:
-        key = normalize_plugin_key(plugin_key)
-        if key in FREE_PLUGIN_KEYS:
-            raise PaymentError("This plugin is free")
+        key = PAID_PACKAGE_KEY
         if period not in PERIOD_DAYS or provider not in {"wayforpay", "liqpay"}:
             raise PaymentError("Unsupported billing period or provider")
         plan = (await self.session.execute(select(BillingPluginPlan).where(BillingPluginPlan.plugin_key == key))).scalar_one_or_none()
@@ -133,7 +131,7 @@ class BillingPaymentService:
                                  base_amount_uah=base_amount, fx_rate=fx_rate, quote_expires_at=datetime.now(timezone.utc)+timedelta(minutes=30))
         self.session.add(payment)
         await self.session.commit()
-        product = f"GuildConsole {key} {period}"
+        product = f"GuildConsole Paid Modules {period}"
         callback = f"{base_url}/api/v1/billing/callback/{provider}"
         result = f"{base_url}/guild/{guild_id}/billing"
         if provider == "wayforpay":

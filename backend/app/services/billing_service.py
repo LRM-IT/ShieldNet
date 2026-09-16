@@ -11,6 +11,7 @@ FREE_PLUGIN_KEYS = frozenset({
     "welcome", "audit_security", "backup_restore", "guild_dm_broadcast",
     "antiflood", "ai_automod",
 })
+PAID_PACKAGE_KEY = "__paid_modules__"
 
 def normalize_plugin_key(value: str) -> str:
     return value.strip().lower().replace("-", "_")
@@ -26,11 +27,14 @@ class BillingService:
         key = normalize_plugin_key(plugin_key)
         if key in FREE_PLUGIN_KEYS:
             return True
+        plan = (await self.session.execute(select(BillingPluginPlan).where(BillingPluginPlan.plugin_key == key))).scalar_one_or_none()
+        if plan is not None and plan.is_free:
+            return True
         now = datetime.now(timezone.utc)
         subscription = (await self.session.execute(
             select(BillingSubscription).where(
                 BillingSubscription.guild_id == guild_id,
-                BillingSubscription.plugin_key == key,
+                BillingSubscription.plugin_key == PAID_PACKAGE_KEY,
                 BillingSubscription.status == "active",
                 BillingSubscription.starts_at <= now,
                 BillingSubscription.expires_at > now,

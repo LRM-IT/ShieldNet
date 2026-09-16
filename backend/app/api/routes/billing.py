@@ -17,7 +17,7 @@ from app.models.billing import BillingPluginPlan, BillingSubscription, BillingPa
 from app.models.core import User
 from app.models.discord import Guild
 from app.models.plugins import PluginRegistry
-from app.services.billing_service import BillingService, FREE_PLUGIN_KEYS, normalize_plugin_key
+from app.services.billing_service import BillingService, FREE_PLUGIN_KEYS, PAID_PACKAGE_KEY, normalize_plugin_key
 from app.services.billing_payments import BILLING_VAULT_KEY, BillingPaymentService, PaymentError
 from app.services.plugin_control_service import PluginControlService
 from app.services.guild_plugin_service import GuildPluginService
@@ -80,6 +80,20 @@ async def plans(_: User = Depends(require_superadmin), session: AsyncSession = D
         })
     return result
 
+@router.get("/platform/billing/package")
+async def paid_package(_: User = Depends(require_superadmin), session: AsyncSession = Depends(get_db_session)):
+    row = await session.scalar(select(BillingPluginPlan).where(BillingPluginPlan.plugin_key == PAID_PACKAGE_KEY))
+    return plan_dict(row)
+
+@router.put("/platform/billing/package")
+async def save_paid_package(payload: PlanUpdate, _: User = Depends(require_superadmin), session: AsyncSession = Depends(get_db_session)):
+    row = await session.scalar(select(BillingPluginPlan).where(BillingPluginPlan.plugin_key == PAID_PACKAGE_KEY))
+    if row is None:
+        row = BillingPluginPlan(id=uuid4(), plugin_key=PAID_PACKAGE_KEY, is_free=False); session.add(row)
+    row.is_free=False; row.enabled=payload.enabled; row.currency="UAH"
+    row.monthly_price=payload.monthly_price; row.quarterly_price=payload.quarterly_price; row.yearly_price=payload.yearly_price
+    await session.commit(); await session.refresh(row); return plan_dict(row)
+
 @router.put("/platform/billing/plans/{plugin_key}")
 async def save_plan(plugin_key: str, payload: PlanUpdate, _: User = Depends(require_superadmin), session: AsyncSession = Depends(get_db_session)):
     key = normalize_plugin_key(plugin_key)
@@ -101,7 +115,7 @@ async def subscriptions(guild_id: int | None = None, _: User = Depends(require_s
 
 @router.post("/platform/billing/subscriptions/grant")
 async def grant(payload: GrantRequest, user: User = Depends(require_superadmin), session: AsyncSession = Depends(get_db_session)):
-    key = normalize_plugin_key(payload.plugin_key); now = datetime.now(timezone.utc)
+    key = PAID_PACKAGE_KEY; now = datetime.now(timezone.utc)
     row = (await session.execute(select(BillingSubscription).where(BillingSubscription.guild_id == payload.guild_id, BillingSubscription.plugin_key == key))).scalar_one_or_none()
     if row is None:
         row = BillingSubscription(id=uuid4(), guild_id=payload.guild_id, plugin_key=key, billing_period=payload.billing_period,
@@ -128,14 +142,13 @@ async def guild_billing(guild_id: int, display_currency: str = "UAH", user: User
         rate, effective = await NBUExchangeService(session).rate(display_currency)
     except ExchangeRateError as exc:
         raise HTTPException(503, str(exc)) from exc
+    package = next((x for x in plans if x.plugin_key == PAID_PACKAGE_KEY), None)
     visible_plans = []
-    for item in plans:
-        if not item.enabled: continue
-        data = plan_dict(item)
-        values, _ = await NBUExchangeService(session).quote([item.monthly_price,item.quarterly_price,item.yearly_price], display_currency)
-        data.update({"display_currency":display_currency.upper(),"display_monthly_price":values[0],"display_quarterly_price":values[1],"display_yearly_price":values[2]})
-        visible_plans.append(data)
-    return {"free_plugin_keys":sorted(FREE_PLUGIN_KEYS),"plans":visible_plans,"subscriptions":[subscription_dict(x) for x in subscriptions],
+    if package and package.enabled:
+        data=plan_dict(package); values,_=await NBUExchangeService(session).quote([package.monthly_price,package.quarterly_price,package.yearly_price],display_currency)
+        data.update({"display_currency":display_currency.upper(),"display_monthly_price":values[0],"display_quarterly_price":values[1],"display_yearly_price":values[2]}); visible_plans=[data]
+    tiers={x.plugin_key:("free" if x.is_free else "paid") for x in plans if x.plugin_key != PAID_PACKAGE_KEY}
+    return {"free_plugin_keys":sorted(FREE_PLUGIN_KEYS),"plans":visible_plans,"module_tiers":tiers,"subscriptions":[subscription_dict(x) for x in subscriptions if x.plugin_key == PAID_PACKAGE_KEY],
             "exchange_rate":{"base":"UAH","currency":display_currency.upper(),"uah_per_unit":rate,"effective_at":effective,"source":"NBU"},
             "wallet":{"balance":wallet.balance,"currency":wallet.currency} if wallet else {"balance":Decimal("0.00"),"currency":"UAH"}}
 
