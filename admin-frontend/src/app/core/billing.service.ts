@@ -18,4 +18,6 @@ export interface BillingWallet{discord_user_id:string;display_name?:string|null;
  payments(){return firstValueFrom(this.http.get<BillingPayment[]>('/api/v1/platform/billing/payments'))}
  wallets(){return firstValueFrom(this.http.get<BillingWallet[]>('/api/v1/platform/billing/wallets'))}
  creditWallet(x:{discord_user_id:string;amount:number;comment:string}){return firstValueFrom(this.http.post('/api/v1/platform/billing/wallets/credit',x))}
+ guildBilling(guildId:string){const display_currency=localStorage.getItem('guildconsole_currency')||'UAH';return firstValueFrom(this.http.get<any>(`/api/v1/discord/guilds/${guildId}/billing`,{params:{display_currency}}))}
+ exchangeRates(){return firstValueFrom(this.http.get<any[]>('/api/v1/billing/exchange-rates'))}
 }

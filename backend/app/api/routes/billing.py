@@ -21,6 +21,7 @@ from app.services.billing_service import BillingService, FREE_PLUGIN_KEYS, norma
 from app.services.billing_payments import BILLING_VAULT_KEY, BillingPaymentService, PaymentError
 from app.services.plugin_control_service import PluginControlService
 from app.services.guild_plugin_service import GuildPluginService
+from app.services.nbu_exchange import NBUExchangeService, ExchangeRateError, SUPPORTED_DISPLAY_CURRENCIES
 
 router = APIRouter(tags=["Billing"])
 
@@ -86,6 +87,7 @@ async def save_plan(plugin_key: str, payload: PlanUpdate, _: User = Depends(requ
         row = BillingPluginPlan(id=uuid4(), plugin_key=key)
         session.add(row)
     values = payload.model_dump()
+    values["currency"] = "UAH"
     if key in FREE_PLUGIN_KEYS:
         values["is_free"] = True
     for field, value in values.items(): setattr(row, field, value)
@@ -117,12 +119,37 @@ async def revoke(subscription_id: UUID, _: User = Depends(require_superadmin), s
     return subscription_dict(row)
 
 @router.get("/discord/guilds/{guild_id}/billing")
-async def guild_billing(guild_id: int, user: User = Depends(get_current_user), session: AsyncSession = Depends(get_db_session)):
+async def guild_billing(guild_id: int, display_currency: str = "UAH", user: User = Depends(get_current_user), session: AsyncSession = Depends(get_db_session)):
     await require_guild_management(session, user, guild_id)
     plans = await BillingService(session).list_plans(); subscriptions = await BillingService(session).list_subscriptions(guild_id)
     wallet = await session.scalar(select(BillingWallet).where(BillingWallet.discord_user_id == user.discord_user_id)) if user.discord_user_id else None
-    return {"free_plugin_keys":sorted(FREE_PLUGIN_KEYS),"plans":[plan_dict(x) for x in plans if x.enabled],"subscriptions":[subscription_dict(x) for x in subscriptions],
+    try:
+        rate, effective = await NBUExchangeService(session).rate(display_currency)
+    except ExchangeRateError as exc:
+        raise HTTPException(503, str(exc)) from exc
+    visible_plans = []
+    for item in plans:
+        if not item.enabled: continue
+        data = plan_dict(item)
+        values, _ = await NBUExchangeService(session).quote([item.monthly_price,item.quarterly_price,item.yearly_price], display_currency)
+        data.update({"display_currency":display_currency.upper(),"display_monthly_price":values[0],"display_quarterly_price":values[1],"display_yearly_price":values[2]})
+        visible_plans.append(data)
+    return {"free_plugin_keys":sorted(FREE_PLUGIN_KEYS),"plans":visible_plans,"subscriptions":[subscription_dict(x) for x in subscriptions],
+            "exchange_rate":{"base":"UAH","currency":display_currency.upper(),"uah_per_unit":rate,"effective_at":effective,"source":"NBU"},
             "wallet":{"balance":wallet.balance,"currency":wallet.currency} if wallet else {"balance":Decimal("0.00"),"currency":"UAH"}}
+
+@router.get("/billing/exchange-rates")
+async def exchange_rates(_: User = Depends(get_current_user), session: AsyncSession = Depends(get_db_session)):
+    service = NBUExchangeService(session)
+    try: await service.refresh_if_stale()
+    except ExchangeRateError as exc: raise HTTPException(503, str(exc)) from exc
+    result = []
+    for currency in SUPPORTED_DISPLAY_CURRENCIES:
+        try:
+            rate, effective = await service.rate(currency)
+            result.append({"currency":currency,"uah_per_unit":rate,"effective_at":effective,"source":"NBU"})
+        except ExchangeRateError: continue
+    return result
 
 @router.get("/platform/billing/providers")
 async def providers(_: User = Depends(require_superadmin), session: AsyncSession = Depends(get_db_session)):

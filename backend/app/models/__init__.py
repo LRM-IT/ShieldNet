@@ -73,4 +73,4 @@ from app.models.settings import ModuleSetting
 
 from app.models.plugin_control import PluginPermission, PluginPermissionGrant, PluginPermissionAudit, PluginSecret, PluginSecretAudit, PluginActivationState, PluginActivationHistory, PluginPackageHistory
 from app.models.platform_ai import PlatformAIProvider, PlatformAISettings
-from app.models.billing import BillingPluginPlan, BillingSubscription, BillingPayment, BillingWallet, BillingWalletTransaction
+from app.models.billing import BillingPluginPlan, BillingSubscription, BillingPayment, BillingWallet, BillingWalletTransaction, BillingExchangeRate

@@ -108,6 +108,17 @@ import { ShellComponent } from '../shared/shell.component';
                 }
               </select>
             </div>
+            <div class="preference-row">
+              <div>
+                <strong>{{ 'profile.currency' | snT:'Display currency' }}</strong>
+                <small>{{ 'profile.currency_help' | snT:'Prices are stored in UAH and converted using the official NBU rate.' }}</small>
+              </div>
+              <select [value]="currency()" (change)="changeCurrency($any($event.target).value)" aria-label="Display currency">
+                @for (item of currencies; track item.code) {
+                  <option [value]="item.code">{{ item.code }} — {{ item.name }}</option>
+                }
+              </select>
+            </div>
           </article>
         </div>
       </section>
@@ -150,6 +161,14 @@ export class ProfileComponent {
       : ['UTC', 'Europe/Kyiv', 'Europe/Warsaw', 'Europe/Berlin', 'Europe/Paris', 'Europe/Rome', 'Asia/Dubai'];
     return available.includes(this.timezone()) ? available : [this.timezone(), ...available];
   })();
+  private readonly currencyStorageKey = 'guildconsole_currency';
+  readonly currencies = [
+    {code:'UAH',name:'Українська гривня'},{code:'USD',name:'US Dollar'},{code:'EUR',name:'Euro'},
+    {code:'PLN',name:'Polski złoty'},{code:'GBP',name:'Pound sterling'},{code:'CAD',name:'Canadian dollar'},
+    {code:'CHF',name:'Swiss franc'},{code:'CZK',name:'Česká koruna'},{code:'RON',name:'Romanian leu'},
+    {code:'TRY',name:'Türk lirası'},{code:'SAR',name:'Saudi riyal'},{code:'AED',name:'UAE dirham'},
+  ];
+  readonly currency = signal(localStorage.getItem(this.currencyStorageKey) || this.currencyForLocale(navigator.language));
 
   constructor(
     public readonly auth: AuthService,
@@ -167,5 +186,29 @@ export class ProfileComponent {
     localStorage.setItem(this.timezoneStorageKey, zone);
     document.documentElement.dataset['timezone'] = zone;
     window.dispatchEvent(new CustomEvent('guildconsole-timezone-change', { detail: zone }));
+  }
+
+  changeCurrency(code: string): void {
+    if (!this.currencies.some((item) => item.code === code)) return;
+    this.currency.set(code);
+    localStorage.setItem(this.currencyStorageKey, code);
+    document.documentElement.dataset['currency'] = code;
+    window.dispatchEvent(new CustomEvent('guildconsole-currency-change', {detail:code}));
+  }
+
+  private currencyForLocale(locale: string): string {
+    const region = locale.split('-')[1]?.toUpperCase();
+    if (region === 'UA') return 'UAH';
+    if (region === 'PL') return 'PLN';
+    if (region === 'GB') return 'GBP';
+    if (region === 'CA') return 'CAD';
+    if (region === 'CH') return 'CHF';
+    if (region === 'CZ') return 'CZK';
+    if (region === 'RO') return 'RON';
+    if (region === 'TR') return 'TRY';
+    if (region === 'SA') return 'SAR';
+    if (region === 'AE') return 'AED';
+    if (region === 'US') return 'USD';
+    return ['de','fr','it','es'].includes(locale.slice(0,2).toLowerCase()) ? 'EUR' : 'USD';
   }
 }
