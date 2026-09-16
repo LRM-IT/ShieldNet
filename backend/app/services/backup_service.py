@@ -14,6 +14,7 @@ from app.models.explorer import ChannelPermissionOverwrite, GuildChannel, GuildE
 from app.models.guild_roles import DiscordGuildRole
 from app.models.modules import GuildModule, ModuleCatalog
 from app.models.permissions import GuildPermissionRule
+from app.models.plugins import GuildPluginInstallation
 from app.models.verification import VerificationSettings
 
 
@@ -40,6 +41,7 @@ class BackupService:
             select(GuildModule, ModuleCatalog).join(ModuleCatalog, ModuleCatalog.id == GuildModule.module_id).where(GuildModule.guild_id == guild_id)
         )).all())
         verification = (await self.session.execute(select(VerificationSettings).where(VerificationSettings.guild_id == guild_id))).scalar_one_or_none()
+        plugins = await self._all(GuildPluginInstallation, guild_id)
 
         return {
             "format_version": 1,
@@ -53,12 +55,13 @@ class BackupService:
             "verification": None if verification is None else {"enabled": verification.enabled, "verified_role_id": verification.verified_role_id, "review_channel_id": verification.review_channel_id, "nickname_template": verification.nickname_template, "auto_approve": verification.auto_approve, "alliance_min_length": verification.alliance_min_length, "alliance_max_length": verification.alliance_max_length},
             "modules": [{"module_key": catalog.module_key, "enabled": item.enabled, "configuration": item.configuration, "revision": item.revision} for item, catalog in modules],
             "permission_rules": [{"module_key": x.module_key, "permission": _enum(x.permission), "effect": _enum(x.effect), "subject_type": x.subject_type, "subject_value": x.subject_value, "enabled": x.enabled, "priority": x.priority} for x in permissions],
+            "plugins": [{"plugin_key": x.plugin_key, "enabled": x.enabled, "configuration": x.configuration} for x in plugins],
         }
 
     async def create(self, guild_id: int, name: str, description: str | None, user_id: UUID | None) -> GuildBackup:
         snapshot = await self.build_snapshot(guild_id)
         raw = json.dumps(snapshot, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
-        count = sum(len(snapshot.get(key, [])) for key in ("roles", "channels", "permission_overwrites", "webhooks", "emojis", "modules", "permission_rules"))
+        count = sum(len(snapshot.get(key, [])) for key in ("roles", "channels", "permission_overwrites", "webhooks", "emojis", "modules", "permission_rules", "plugins"))
         item = GuildBackup(guild_id=guild_id, name=name.strip(), description=description, object_count=count, size_bytes=len(raw), snapshot=snapshot, created_by=user_id)
         self.session.add(item)
         await self.session.flush()
@@ -78,13 +81,13 @@ class BackupService:
         current = await self.build_snapshot(backup.guild_id)
         stored = backup.snapshot
         sections = []
-        for key in ("roles", "channels", "permission_overwrites", "emojis", "modules", "permission_rules"):
+        for key in ("roles", "channels", "permission_overwrites", "emojis", "modules", "permission_rules", "plugins"):
             before, after = len(current.get(key, [])), len(stored.get(key, []))
             sections.append({"section": key, "current": before, "backup": after, "delta": after-before})
         return {
             "mode": "dry_run",
-            "safe_to_apply": False,
-            "message": "Dry-run only. Discord object restoration requires explicit Worker execution and ID remapping.",
+            "safe_to_apply": True,
+            "message": "GuildConsole settings can be restored now. Discord roles and channels remain unchanged because their IDs require explicit remapping.",
             "backup_id": str(backup.id),
             "guild_id": backup.guild_id,
             "sections": sections,
@@ -94,3 +97,36 @@ class BackupService:
                 "Permission overwrites require role and channel ID remapping.",
             ],
         }
+
+    async def restore_configuration(self, backup: GuildBackup) -> dict[str, Any]:
+        snapshot = backup.snapshot or {}
+        restored = {"modules": 0, "plugins": 0, "verification": 0}
+        module_rows = list((await self.session.execute(
+            select(GuildModule, ModuleCatalog).join(ModuleCatalog, ModuleCatalog.id == GuildModule.module_id).where(GuildModule.guild_id == backup.guild_id)
+        )).all())
+        modules = {catalog.module_key: item for item, catalog in module_rows}
+        for stored in snapshot.get("modules", []):
+            item = modules.get(stored.get("module_key"))
+            if item:
+                item.enabled = bool(stored.get("enabled"))
+                item.configuration = stored.get("configuration") or {}
+                item.revision = int(item.revision or 0) + 1
+                restored["modules"] += 1
+        plugin_rows = await self._all(GuildPluginInstallation, backup.guild_id)
+        plugins = {item.plugin_key: item for item in plugin_rows}
+        for stored in snapshot.get("plugins", []):
+            item = plugins.get(stored.get("plugin_key"))
+            if item:
+                item.enabled = bool(stored.get("enabled"))
+                item.configuration = stored.get("configuration") or {}
+                restored["plugins"] += 1
+        stored_verification = snapshot.get("verification")
+        if stored_verification:
+            verification = (await self.session.execute(select(VerificationSettings).where(VerificationSettings.guild_id == backup.guild_id))).scalar_one_or_none()
+            if verification:
+                for key, value in stored_verification.items():
+                    if hasattr(verification, key):
+                        setattr(verification, key, value)
+                restored["verification"] = 1
+        await self.session.flush()
+        return restored

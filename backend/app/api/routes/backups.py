@@ -19,6 +19,9 @@ class BackupCreate(BaseModel):
     name: str = Field(min_length=2, max_length=160)
     description: str | None = Field(default=None, max_length=1000)
 
+class BackupRestore(BaseModel):
+    confirmation: str
+
 def brief(x):
     return {"id": str(x.id), "guild_id": x.guild_id, "name": x.name, "description": x.description, "status": x.status, "format_version": x.format_version, "object_count": x.object_count, "size_bytes": x.size_bytes, "created_at": x.created_at}
 
@@ -57,6 +60,17 @@ async def restore_plan(guild_id:int,backup_id:UUID,current_user:User=Depends(get
     item=await BackupService(session).get(backup_id,guild_id)
     if not item: raise HTTPException(status_code=404,detail="Backup not found")
     return await BackupService(session).restore_plan(item)
+
+@router.post("/discord/guilds/{guild_id}/backups/{backup_id}/restore")
+async def restore_backup(guild_id:int,backup_id:UUID,payload:BackupRestore,current_user:User=Depends(get_current_user),session:AsyncSession=Depends(get_db_session)):
+    await require_guild_management(session,current_user,guild_id)
+    if payload.confirmation != "RESTORE": raise HTTPException(status_code=422,detail="Restore confirmation is invalid")
+    item=await BackupService(session).get(backup_id,guild_id)
+    if not item: raise HTTPException(status_code=404,detail="Backup not found")
+    restored=await BackupService(session).restore_configuration(item)
+    await AuditService(session).record(event_type="backup.restored",guild_id=guild_id,actor_user_id=current_user.id,target_type="guild_backup",target_id=str(item.id),payload=restored)
+    await session.commit()
+    return {"status":"restored","backup_id":str(item.id),"restored":restored,"discord_structure_changed":False}
 
 @router.delete("/discord/guilds/{guild_id}/backups/{backup_id}", status_code=204)
 async def delete_backup(guild_id:int,backup_id:UUID,current_user:User=Depends(get_current_user),session:AsyncSession=Depends(get_db_session)):
