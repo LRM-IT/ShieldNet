@@ -13,7 +13,7 @@ from app.api.dependencies.guild_access import require_guild_management
 from app.api.dependencies.platform_access import require_superadmin
 from app.api.dependencies.internal import verify_internal_service_token
 from app.db.session import get_db_session
-from app.models.billing import BillingPluginPlan, BillingSubscription, BillingPayment, BillingWallet, BillingWalletTransaction
+from app.models.billing import BillingPluginPlan, BillingSubscription, BillingPayment, BillingWallet, BillingWalletTransaction, BillingDiscountCard, BillingTenureDiscount
 from app.models.core import User
 from app.models.discord import Guild
 from app.models.plugins import PluginRegistry
@@ -22,6 +22,7 @@ from app.services.billing_payments import BILLING_VAULT_KEY, BillingPaymentServi
 from app.services.plugin_control_service import PluginControlService
 from app.services.guild_plugin_service import GuildPluginService
 from app.services.nbu_exchange import NBUExchangeService, ExchangeRateError, SUPPORTED_DISPLAY_CURRENCIES
+from app.services.billing_discounts import BillingDiscountService, DiscountError
 
 router = APIRouter(tags=["Billing"])
 
@@ -56,6 +57,12 @@ class WalletCreditRequest(BaseModel):
     discord_user_id: int
     amount: Decimal = Field(gt=0, le=1_000_000)
     comment: str = Field(default="", max_length=500)
+class DiscountCardIn(BaseModel):
+    code:str=Field(min_length=3,max_length=64);percent:Decimal=Field(gt=0,le=50);active:bool=True
+    valid_from:datetime|None=None;valid_until:datetime|None=None;max_redemptions:int|None=Field(default=None,ge=1)
+class TenureDiscountIn(BaseModel):
+    minimum_months:int=Field(ge=1,le=240);percent:Decimal=Field(gt=0,le=50);active:bool=True
+class RedeemDiscountIn(BaseModel): code:str=Field(min_length=3,max_length=64)
 
 def plan_dict(row):
     return {"plugin_key":row.plugin_key,"is_free":row.is_free,"enabled":row.enabled,"currency":row.currency,
@@ -145,12 +152,43 @@ async def guild_billing(guild_id: int, display_currency: str = "UAH", user: User
     package = next((x for x in plans if x.plugin_key == PAID_PACKAGE_KEY), None)
     visible_plans = []
     if package and package.enabled:
-        data=plan_dict(package); values,_=await NBUExchangeService(session).quote([package.monthly_price,package.quarterly_price,package.yearly_price],display_currency)
-        data.update({"display_currency":display_currency.upper(),"display_monthly_price":values[0],"display_quarterly_price":values[1],"display_yearly_price":values[2]}); visible_plans=[data]
+        data=plan_dict(package); originals=[package.monthly_price,package.quarterly_price,package.yearly_price]; discounted=[]; discount_meta=None
+        for amount in originals:
+            if amount is None: discounted.append(None)
+            else:
+                q=await BillingDiscountService(session).quote(guild_id,amount);discounted.append(q["final"]);discount_meta=q
+        values,_=await NBUExchangeService(session).quote(discounted,display_currency)
+        data.update({"display_currency":display_currency.upper(),"display_monthly_price":values[0],"display_quarterly_price":values[1],"display_yearly_price":values[2],"discounted_monthly_price":discounted[0],"discounted_quarterly_price":discounted[1],"discounted_yearly_price":discounted[2],"discount":discount_meta}); visible_plans=[data]
     tiers={x.plugin_key:("free" if x.is_free else "paid") for x in plans if x.plugin_key != PAID_PACKAGE_KEY}
     return {"free_plugin_keys":sorted(FREE_PLUGIN_KEYS),"plans":visible_plans,"module_tiers":tiers,"subscriptions":[subscription_dict(x) for x in subscriptions if x.plugin_key == PAID_PACKAGE_KEY],
             "exchange_rate":{"base":"UAH","currency":display_currency.upper(),"uah_per_unit":rate,"effective_at":effective,"source":"NBU"},
             "wallet":{"balance":wallet.balance,"currency":wallet.currency} if wallet else {"balance":Decimal("0.00"),"currency":"UAH"}}
+
+@router.post("/discord/guilds/{guild_id}/billing/discount-card")
+async def redeem_discount(guild_id:int,payload:RedeemDiscountIn,user:User=Depends(get_current_user),session:AsyncSession=Depends(get_db_session)):
+    await require_guild_management(session,user,guild_id)
+    try: card=await BillingDiscountService(session).redeem(guild_id,payload.code,user.id)
+    except DiscountError as exc: raise HTTPException(400,str(exc)) from exc
+    return {"code":card.code,"percent":card.percent,"active":card.active}
+
+@router.get("/platform/billing/discounts")
+async def discounts(_:User=Depends(require_superadmin),session:AsyncSession=Depends(get_db_session)):
+    cards=list((await session.execute(select(BillingDiscountCard).order_by(BillingDiscountCard.created_at.desc()))).scalars())
+    tenure=list((await session.execute(select(BillingTenureDiscount).order_by(BillingTenureDiscount.minimum_months))).scalars())
+    return {"cards":[{"id":x.id,"code":x.code,"percent":x.percent,"active":x.active,"valid_from":x.valid_from,"valid_until":x.valid_until,"max_redemptions":x.max_redemptions,"redemptions":x.redemptions} for x in cards],"tenure":[{"id":x.id,"minimum_months":x.minimum_months,"percent":x.percent,"active":x.active} for x in tenure],"maximum_combined_percent":50}
+
+@router.post("/platform/billing/discounts/cards")
+async def save_discount_card(payload:DiscountCardIn,_:User=Depends(require_superadmin),session:AsyncSession=Depends(get_db_session)):
+    code=payload.code.strip().upper();row=await session.scalar(select(BillingDiscountCard).where(BillingDiscountCard.code==code))
+    if row is None: row=BillingDiscountCard(id=uuid4(),code=code,redemptions=0);session.add(row)
+    for k,v in payload.model_dump(exclude={"code"}).items():setattr(row,k,v)
+    await session.commit();return {"id":row.id,"code":row.code,"percent":row.percent,"active":row.active}
+
+@router.post("/platform/billing/discounts/tenure")
+async def save_tenure_discount(payload:TenureDiscountIn,_:User=Depends(require_superadmin),session:AsyncSession=Depends(get_db_session)):
+    row=await session.scalar(select(BillingTenureDiscount).where(BillingTenureDiscount.minimum_months==payload.minimum_months))
+    if row is None:row=BillingTenureDiscount(id=uuid4(),minimum_months=payload.minimum_months);session.add(row)
+    row.percent=payload.percent;row.active=payload.active;await session.commit();return {"id":row.id,"minimum_months":row.minimum_months,"percent":row.percent,"active":row.active}
 
 @router.get("/billing/exchange-rates")
 async def exchange_rates(_: User = Depends(get_current_user), session: AsyncSession = Depends(get_db_session)):
@@ -189,7 +227,8 @@ async def payments(_: User = Depends(require_superadmin), session: AsyncSession 
     rows = list((await session.execute(select(BillingPayment).order_by(BillingPayment.created_at.desc()).limit(250))).scalars())
     return [{"id":x.id,"order_reference":x.order_reference,"guild_id":x.guild_id,"plugin_key":x.plugin_key,
              "billing_period":x.billing_period,"provider":x.provider,"amount":x.amount,"currency":x.currency,
-             "status":x.status,"signature_verified":x.signature_verified,"paid_at":x.paid_at,"created_at":x.created_at} for x in rows]
+             "status":x.status,"signature_verified":x.signature_verified,"original_amount_uah":x.original_amount_uah,
+             "discount_percent":x.discount_percent,"discount_code":x.discount_code,"paid_at":x.paid_at,"created_at":x.created_at} for x in rows]
 
 @router.get("/platform/billing/wallets")
 async def wallets(_: User = Depends(require_superadmin), session: AsyncSession = Depends(get_db_session)):

@@ -23,4 +23,8 @@ export interface BillingWallet{discord_user_id:string;display_name?:string|null;
  guildBilling(guildId:string){const display_currency=localStorage.getItem('guildconsole_currency')||'UAH';return firstValueFrom(this.http.get<any>(`/api/v1/discord/guilds/${guildId}/billing`,{params:{display_currency}}))}
  exchangeRates(){return firstValueFrom(this.http.get<any[]>('/api/v1/billing/exchange-rates'))}
  checkout(guildId:string,x:{plugin_key:string;billing_period:string;provider:string;display_currency:string}){return firstValueFrom(this.http.post<any>(`/api/v1/discord/guilds/${guildId}/billing/checkout`,x))}
+ redeemDiscount(guildId:string,code:string){return firstValueFrom(this.http.post<any>(`/api/v1/discord/guilds/${guildId}/billing/discount-card`,{code}))}
+ discounts(){return firstValueFrom(this.http.get<any>('/api/v1/platform/billing/discounts'))}
+ saveDiscountCard(x:any){return firstValueFrom(this.http.post('/api/v1/platform/billing/discounts/cards',x))}
+ saveTenureDiscount(x:any){return firstValueFrom(this.http.post('/api/v1/platform/billing/discounts/tenure',x))}
 }

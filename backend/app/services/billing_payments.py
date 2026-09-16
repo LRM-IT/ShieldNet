@@ -15,6 +15,7 @@ from app.models.billing import BillingPayment, BillingPluginPlan, BillingSubscri
 from app.services.billing_service import FREE_PLUGIN_KEYS, PAID_PACKAGE_KEY, normalize_plugin_key
 from app.services.plugin_control_service import PluginControlService
 from app.services.nbu_exchange import NBUExchangeService, ExchangeRateError, SUPPORTED_DISPLAY_CURRENCIES
+from app.services.billing_discounts import BillingDiscountService
 
 
 BILLING_VAULT_KEY = "core_billing"
@@ -84,9 +85,10 @@ class BillingPaymentService:
         if period not in PERIOD_DAYS:
             raise PaymentError("Unsupported plan")
         plan = (await self.session.execute(select(BillingPluginPlan).where(BillingPluginPlan.plugin_key == key))).scalar_one_or_none()
-        amount = getattr(plan, f"{period}_price", None) if plan and plan.enabled and not plan.is_free else None
-        if amount is None or amount <= 0:
+        original = getattr(plan, f"{period}_price", None) if plan and plan.enabled and not plan.is_free else None
+        if original is None or original <= 0:
             raise PaymentError("Price is not configured for this period")
+        discount=await BillingDiscountService(self.session).quote(guild_id,original);amount=discount["final"]
         wallet = (await self.session.execute(select(BillingWallet).where(
             BillingWallet.discord_user_id == discord_user_id, BillingWallet.currency == plan.currency
         ).with_for_update())).scalar_one_or_none()
@@ -94,7 +96,7 @@ class BillingPaymentService:
             raise PaymentError("Insufficient account balance")
         payment = BillingPayment(id=uuid4(), order_reference=f"balance-{guild_id}-{uuid4().hex}", guild_id=guild_id,
             plugin_key=key, billing_period=period, provider="balance", amount=amount, currency=plan.currency,
-            status="created", signature_verified=True)
+            status="created", signature_verified=True,original_amount_uah=original,base_amount_uah=amount,discount_percent=discount["total_percent"],discount_code=discount["card_code"])
         self.session.add(payment); await self.session.flush()
         wallet.balance -= amount
         self.session.add(BillingWalletTransaction(id=uuid4(), wallet_id=wallet.id, amount=-amount,
@@ -110,9 +112,10 @@ class BillingPaymentService:
         plan = (await self.session.execute(select(BillingPluginPlan).where(BillingPluginPlan.plugin_key == key))).scalar_one_or_none()
         if plan is None or not plan.enabled or plan.is_free:
             raise PaymentError("Paid plan is unavailable")
-        base_amount = getattr(plan, f"{period}_price")
-        if base_amount is None or base_amount <= 0:
+        original_amount = getattr(plan, f"{period}_price")
+        if original_amount is None or original_amount <= 0:
             raise PaymentError("Price is not configured for this period")
+        discount=await BillingDiscountService(self.session).quote(guild_id,original_amount);base_amount=discount["final"]
         requested_currency = display_currency.upper()
         if requested_currency not in SUPPORTED_DISPLAY_CURRENCIES:
             requested_currency = "UAH"
@@ -128,7 +131,7 @@ class BillingPaymentService:
         order = f"gc-{guild_id}-{uuid4().hex}"
         payment = BillingPayment(id=uuid4(), order_reference=order, guild_id=guild_id, plugin_key=key,
                                  billing_period=period, provider=provider, amount=amount, currency=charge_currency,
-                                 base_amount_uah=base_amount, fx_rate=fx_rate, quote_expires_at=datetime.now(timezone.utc)+timedelta(minutes=30))
+                                 original_amount_uah=original_amount,base_amount_uah=base_amount,discount_percent=discount["total_percent"],discount_code=discount["card_code"],fx_rate=fx_rate, quote_expires_at=datetime.now(timezone.utc)+timedelta(minutes=30))
         self.session.add(payment)
         await self.session.commit()
         product = f"GuildConsole Paid Modules {period}"
@@ -143,14 +146,14 @@ class BillingPaymentService:
                       "productName":[product],"productPrice":[_money(amount)],"productCount":["1"],
                       "merchantSignature":_wfp_signature(secret, values),"serviceUrl":callback,"returnUrl":result}
             return {"provider":provider,"order_reference":order,"action":"https://secure.wayforpay.com/pay","method":"POST","fields":fields,
-                    "charge_amount":amount,"charge_currency":charge_currency,"display_amount":display_amount,"display_currency":requested_currency,"quote_minutes":30}
+                    "charge_amount":amount,"charge_currency":charge_currency,"display_amount":display_amount,"display_currency":requested_currency,"quote_minutes":30,"discount":discount}
         public = await self.secret("liqpay_public_key"); private = await self.secret("liqpay_private_key")
         payload = {"version":"3","public_key":public,"action":"pay","amount":_money(amount),"currency":charge_currency,
                    "description":product,"order_id":order,"server_url":callback,"result_url":result}
         data = base64.b64encode(json.dumps(payload, separators=(",", ":")).encode()).decode()
         return {"provider":provider,"order_reference":order,"action":"https://www.liqpay.ua/api/3/checkout","method":"POST",
                 "fields":{"data":data,"signature":_liqpay_signature(private, data)},"charge_amount":amount,"charge_currency":charge_currency,
-                "display_amount":display_amount,"display_currency":requested_currency,"quote_minutes":30}
+                "display_amount":display_amount,"display_currency":requested_currency,"quote_minutes":30,"discount":discount}
 
     async def _activate(self, payment: BillingPayment, provider_id: str | None, raw: dict) -> None:
         if payment.status == "paid":

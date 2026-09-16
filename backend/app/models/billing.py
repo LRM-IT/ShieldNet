@@ -60,6 +60,9 @@ class BillingPayment(Base, TimestampMixin):
     base_amount_uah: Mapped[Decimal | None] = mapped_column(Numeric(12, 2))
     fx_rate: Mapped[Decimal | None] = mapped_column(Numeric(18, 8))
     quote_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    original_amount_uah: Mapped[Decimal | None] = mapped_column(Numeric(12, 2))
+    discount_percent: Mapped[Decimal] = mapped_column(Numeric(5, 2), nullable=False, default=0, server_default="0")
+    discount_code: Mapped[str | None] = mapped_column(String(64))
 
 
 class BillingWallet(Base, TimestampMixin):
@@ -96,3 +99,32 @@ class BillingExchangeRate(Base, TimestampMixin):
     uah_per_unit: Mapped[Decimal] = mapped_column(Numeric(18, 8), nullable=False)
     effective_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     source: Mapped[str] = mapped_column(String(32), nullable=False, default="NBU", server_default="NBU")
+
+class BillingDiscountCard(Base, TimestampMixin):
+    __tablename__ = "discount_cards"
+    __table_args__ = (UniqueConstraint("code", name="uq_billing_discount_card_code"), {"schema": "billing"})
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    code: Mapped[str] = mapped_column(String(64), nullable=False)
+    percent: Mapped[Decimal] = mapped_column(Numeric(5, 2), nullable=False)
+    active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True, server_default="true")
+    valid_from: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    valid_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    max_redemptions: Mapped[int | None] = mapped_column()
+    redemptions: Mapped[int] = mapped_column(nullable=False, default=0, server_default="0")
+
+class BillingDiscountRedemption(Base):
+    __tablename__ = "discount_redemptions"
+    __table_args__ = (UniqueConstraint("card_id", "guild_id", name="uq_billing_discount_redemption_card_guild"), {"schema": "billing"})
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    card_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("billing.discount_cards.id", ondelete="CASCADE"), nullable=False)
+    guild_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("discord.guilds.guild_id", ondelete="CASCADE"), nullable=False)
+    redeemed_by_user_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("core.users.id", ondelete="SET NULL"))
+    redeemed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
+
+class BillingTenureDiscount(Base, TimestampMixin):
+    __tablename__ = "tenure_discounts"
+    __table_args__ = (UniqueConstraint("minimum_months", name="uq_billing_tenure_discount_months"), {"schema": "billing"})
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    minimum_months: Mapped[int] = mapped_column(nullable=False)
+    percent: Mapped[Decimal] = mapped_column(Numeric(5, 2), nullable=False)
+    active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True, server_default="true")
