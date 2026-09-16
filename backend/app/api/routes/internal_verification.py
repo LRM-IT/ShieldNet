@@ -36,9 +36,9 @@ router = APIRouter(
 async def internal_settings(guild_id: int, session: AsyncSession = Depends(get_db_session)):
     item = await session.scalar(select(VerificationSettings).where(VerificationSettings.guild_id == guild_id))
     if item is None:
-        return {"enabled": False, "invocation_channel_id": None, "text_commands": ""}
+        return {"enabled": False, "invocation_channel_id": None, "text_commands": "", "slash_command_name": "verify"}
     return {"enabled": item.enabled, "invocation_channel_id": str(item.invocation_channel_id) if item.invocation_channel_id else None,
-            "text_commands": item.text_commands}
+            "text_commands": item.text_commands, "slash_command_name": item.slash_command_name}
 
 
 @router.post("/guilds/{guild_id}/requests")

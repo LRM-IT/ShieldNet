@@ -2,6 +2,7 @@ import uuid
 from datetime import datetime
 
 from pydantic import BaseModel, Field, field_validator
+import re
 
 
 class VerificationSettingsInput(BaseModel):
@@ -10,6 +11,7 @@ class VerificationSettingsInput(BaseModel):
     review_channel_id: int | None = None
     invocation_channel_id: int | None = None
     text_commands: str = Field(default="!verify", max_length=255)
+    slash_command_name: str = Field(default="verify", min_length=1, max_length=32)
     nickname_template: str = Field(
         default="[{alliance}] {nickname}",
         min_length=3,
@@ -34,6 +36,14 @@ class VerificationSettingsInput(BaseModel):
         if len(commands) > 10 or any(not command.startswith(("!", ".", "?")) or " " in command or len(command) > 32 for command in commands):
             raise ValueError("Use up to 10 comma-separated commands beginning with !, . or ?")
         return ",".join(dict.fromkeys(commands))
+
+    @field_validator("slash_command_name")
+    @classmethod
+    def valid_slash_command(cls, value: str) -> str:
+        value = value.strip().lower().lstrip("/")
+        if not re.fullmatch(r"[a-z0-9_-]{1,32}", value):
+            raise ValueError("Slash command may contain lowercase Latin letters, digits, _ and -")
+        return value
 
     @field_validator("nickname_template")
     @classmethod

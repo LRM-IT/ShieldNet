@@ -27,7 +27,7 @@ import { DiscordChannelPickerComponent } from '../shared/discord-channel-picker.
           <div>
             <h2>{{ "verification.settings" | snT:"Verification settings" }}</h2>
             <p class="muted">
-              {{ "verification.description" | snT:"Configure /verify, approval mode and Verified role." }}
+              {{ "verification.description" | snT:"Configure the verification command, approval mode and Verified role." }}
             </p>
           </div>
 
@@ -68,6 +68,11 @@ import { DiscordChannelPickerComponent } from '../shared/discord-channel-picker.
         <label>Текстові команди виклику
           <input [(ngModel)]="textCommands" maxlength="255" placeholder="!verify, !верифікація">
           <small class="muted">До 10 команд через кому. Підтримуються префікси !, . та ?.</small>
+        </label>
+
+        <label>Назва slash-команди
+          <div class="command-input"><span>/</span><input [(ngModel)]="slashCommandName" maxlength="32" placeholder="verify"></div>
+          <small class="muted">Латинські малі літери, цифри, _ або -. Після збереження команда оновиться в Discord автоматично.</small>
         </label>
 
         <label>
@@ -420,6 +425,10 @@ import { DiscordChannelPickerComponent } from '../shared/discord-channel-picker.
       resize: vertical;
     }
 
+    .command-input { display:flex; align-items:center; background:var(--panel-2); border:1px solid var(--line); border-radius:10px; }
+    .command-input span { padding-left:.8rem; font-weight:800; color:var(--text); }
+    .command-input input { flex:1; border:0; background:transparent; }
+
     .check {
       display: flex;
       align-items: center;
@@ -604,6 +613,7 @@ export class VerificationComponent
   reviewChannelId = '';
   invocationChannelId = '';
   textCommands = '!verify';
+  slashCommandName = 'verify';
   nicknameTemplate = '[{alliance}] {nickname}';
   allianceMin = 2;
   allianceMax = 8;
@@ -634,6 +644,7 @@ export class VerificationComponent
       : '';
     this.invocationChannelId = settings.invocation_channel_id ? String(settings.invocation_channel_id) : '';
     this.textCommands = settings.text_commands || '';
+    this.slashCommandName = settings.slash_command_name || 'verify';
     this.nicknameTemplate =
       settings.nickname_template;
     this.allianceMin =
@@ -755,6 +766,7 @@ export class VerificationComponent
             : null,
           invocation_channel_id: this.invocationChannelId ? Number(this.invocationChannelId) : null,
           text_commands: this.textCommands,
+          slash_command_name: this.slashCommandName,
           nickname_template:
             this.nicknameTemplate,
           auto_approve:

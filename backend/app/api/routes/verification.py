@@ -96,6 +96,7 @@ async def get_settings(
         "review_channel_id": item.review_channel_id,
         "invocation_channel_id": item.invocation_channel_id,
         "text_commands": item.text_commands,
+        "slash_command_name": item.slash_command_name,
         "nickname_template": item.nickname_template,
         "auto_approve": item.auto_approve,
         "alliance_min_length": item.alliance_min_length,

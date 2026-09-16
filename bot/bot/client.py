@@ -62,10 +62,47 @@ class ShieldNetBot(discord.Client):
         self.voting = VotingWorker(self)
         self.language_selection = LanguageSelection(self)
         self.translator_groups = TranslatorGroups(self, self.backend)
+        self._verification_slash_commands: dict[int, str] = {}
         self._initial_sync_done = False
         self.redis = Redis.from_url(settings.redis_url, decode_responses=True)
         self.worker_name = f"discord-worker:{socket.gethostname()}"
         self._register_commands()
+
+    async def _open_verification(self, interaction: discord.Interaction, *, command_name: str) -> None:
+        if interaction.guild is None:
+            await interaction.response.send_message("Server only.", ephemeral=True)
+            return
+        config = await self.verification.settings(interaction.guild.id)
+        configured_name = config.get("slash_command_name") or "verify"
+        if command_name != configured_name:
+            await interaction.response.send_message(f"Use /{configured_name} for verification.", ephemeral=True)
+            return
+        channel_id = config.get("invocation_channel_id")
+        if channel_id and str(interaction.channel_id) != channel_id:
+            await interaction.response.send_message(f"Use verification in <#{channel_id}>.", ephemeral=True)
+            return
+        await interaction.response.send_modal(VerifyModal(self.verification))
+
+    async def _sync_verification_command(self, guild: discord.Guild) -> None:
+        config = await self.verification.settings(guild.id)
+        desired = config.get("slash_command_name") or "verify"
+        if self._verification_slash_commands.get(guild.id) == desired:
+            return
+        guild_ref = discord.Object(id=guild.id)
+        previous = self._verification_slash_commands.get(guild.id)
+        if previous and previous != "verify":
+            self.tree.remove_command(previous, guild=guild_ref)
+        if desired != "verify":
+            async def custom_verify(interaction: discord.Interaction) -> None:
+                await self._open_verification(interaction, command_name=desired)
+            self.tree.add_command(app_commands.Command(
+                name=desired,
+                description="Open the server verification form.",
+                callback=custom_verify,
+            ), guild=guild_ref, override=True)
+        await self.tree.sync(guild=guild_ref)
+        self._verification_slash_commands[guild.id] = desired
+        logger.info("Verification slash command synchronized guild=%s command=/%s", guild.id, desired)
 
     def _register_commands(self) -> None:
         @self.tree.command(name="shieldnet_status", description="Show ShieldNet status.")
@@ -131,17 +168,7 @@ class ShieldNetBot(discord.Client):
         async def verify(
             interaction: discord.Interaction,
         ) -> None:
-            if interaction.guild is None:
-                await interaction.response.send_message("Server only.", ephemeral=True)
-                return
-            config = await self.verification.settings(interaction.guild.id)
-            channel_id = config.get("invocation_channel_id")
-            if channel_id and str(interaction.channel_id) != channel_id:
-                await interaction.response.send_message(f"Use verification in <#{channel_id}>.", ephemeral=True)
-                return
-            await interaction.response.send_modal(
-                VerifyModal(self.verification)
-            )
+            await self._open_verification(interaction, command_name="verify")
 
         @self.tree.command(name="language_panel", description="Publish the flag reaction panel in the configured thread.")
         async def language_panel(interaction: discord.Interaction, group: str | None = None) -> None:
@@ -710,6 +737,7 @@ class ShieldNetBot(discord.Client):
     async def verification_loop(self) -> None:
         for guild in self.guilds:
             try:
+                await self._sync_verification_command(guild)
                 items = await self.verification.fetch_pending(guild.id)
                 for item in items:
                     await self.verification.process(guild, item)

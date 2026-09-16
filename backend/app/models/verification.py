@@ -55,6 +55,7 @@ class VerificationSettings(Base):
     )
     invocation_channel_id: Mapped[int | None] = mapped_column(BigInteger)
     text_commands: Mapped[str] = mapped_column(String(255), nullable=False, server_default="!verify")
+    slash_command_name: Mapped[str] = mapped_column(String(32), nullable=False, server_default="verify")
     nickname_template: Mapped[str] = mapped_column(
         String(128),
         nullable=False,
