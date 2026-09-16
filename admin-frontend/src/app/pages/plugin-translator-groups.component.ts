@@ -27,7 +27,7 @@ interface Settings { installed: boolean; enabled: boolean; groups: Group[]; incl
       } @else {
         <section class="panel"><div class="heading"><div><h3>Translation setup</h3>
           <p>Configure the <strong>translation</strong> route and provider in AI Center. Server Languages controls the available language codes.</p></div>
-          <button (click)="toggle()" [disabled]="busy()">{{ settings.enabled ? 'Disable' : 'Enable' }} plugin</button></div>
+          </div>
           <label class="check"><input type="checkbox" [(ngModel)]="settings.include_source_link"> Include link to source message</label>
         </section>
         <section class="panel"><div class="heading"><div><h3>Groups</h3><p>Each group links two or more text channels.</p></div>

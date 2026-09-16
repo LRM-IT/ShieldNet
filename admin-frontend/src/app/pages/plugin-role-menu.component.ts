@@ -18,7 +18,7 @@ interface Settings{installed:boolean;enabled:boolean;panels:Panel[]}
   @if(error()){<div class="notice error">{{error()}}</div>} @if(success()){<div class="notice success">{{success()}}</div>}
   @if(!settings.installed){<section class="card"><p>Install the plugin to create role panels.</p><button (click)="install()" [disabled]="busy()">Install plugin</button></section>}
   @else {
-    <section class="card heading"><div><h3>Role panels</h3><p>Create independent panels for game, notification, region or access roles.</p></div><div class="actions"><button class="secondary" (click)="toggle()">{{settings.enabled?'Disable':'Enable'}} plugin</button><button (click)="addPanel()">Add panel</button></div></section>
+    <section class="card heading"><div><h3>Role panels</h3><p>Create independent panels for game, notification, region or access roles.</p></div><div class="actions"><button (click)="addPanel()">Add panel</button></div></section>
     @for(panel of settings.panels;track panel.id;let pi=$index){
       <article class="card panel">
         <button class="summary" (click)="panel.expanded=!panel.expanded"><span><strong>{{panel.name||'New panel'}}</strong><small>{{panel.options.length}} roles · {{panel.mode}} · {{panel.enabled?'Enabled':'Disabled'}}</small></span><b [class.open]="panel.expanded">⌄</b></button>

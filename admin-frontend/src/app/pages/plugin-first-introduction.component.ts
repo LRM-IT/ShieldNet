@@ -21,8 +21,7 @@ interface Settings { installed: boolean; enabled: boolean; languages: Language[]
     @if (success()) { <div class="panel success">{{success()}}</div> }
     @if (!settings.installed) { <section class="panel"><button (click)="install()" [disabled]="busy()">Установити плагін</button></section> }
     @else {
-      <section class="panel row"><div><h3>Групи мов</h3><p>Назвіть групи відповідно до структури вашого сервера. Кожна має власну гілку й панель реакцій.</p></div>
-        <button (click)="toggle()" [disabled]="busy()">{{settings.enabled ? 'Вимкнути плагін' : 'Увімкнути плагін'}}</button></section>
+      <section class="panel row"><div><h3>Групи мов</h3><p>Назвіть групи відповідно до структури вашого сервера. Кожна має власну гілку й панель реакцій.</p></div></section>
       @for (group of settings.groups; track group.id) {
         <section class="panel group-panel"><details><summary><strong>{{group.name}}</strong><span class="chevron">⌄</span></summary>
           <div class="group-body"><div class="row"><p>/language_panel group:{{group.id}}</p>
