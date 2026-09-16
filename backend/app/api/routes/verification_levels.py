@@ -29,7 +29,14 @@ ALLOWED_HOSTS = {"cdn.discordapp.com", "media.discordapp.net", "images-ext-1.dis
 class CriterionInput(BaseModel):
     label: str = Field(min_length=1,max_length=80)
     expected_text: str = Field(min_length=1,max_length=500)
+    values: list[str] = Field(default_factory=list,max_length=20)
     role_ids: list[int] = Field(default_factory=list,max_length=20)
+    @field_validator("values")
+    @classmethod
+    def clean_values(cls,value):
+        cleaned=list(dict.fromkeys(str(item).strip() for item in value if str(item).strip()))
+        if any(len(item)>100 for item in cleaned): raise ValueError("Recognition values must be at most 100 characters")
+        return cleaned
 
 class LevelInput(BaseModel):
     name: str = Field(min_length=1, max_length=80)
@@ -51,7 +58,8 @@ class SubmissionInput(BaseModel):
     guild_id: int; level_id: UUID; discord_user_id: int; discord_message_id: int; image_url: str
 
 def serialize(row: VerificationLevel) -> dict:
-    criteria=row.criteria or ([{"label":"Основна ознака","expected_text":row.expected_text,"role_ids":row.role_ids}] if row.expected_text else [])
+    criteria=row.criteria or ([{"label":"Основна ознака","expected_text":row.expected_text,"values":[row.expected_text],"role_ids":row.role_ids}] if row.expected_text else [])
+    criteria=[{**item,"values":item.get("values") or [item.get("expected_text","")]} for item in criteria]
     return {"id":str(row.id),"name":row.name,"enabled":row.enabled,"channel_id":str(row.channel_id) if row.channel_id else None,
             "expected_text":row.expected_text,"role_ids":[str(x) for x in row.role_ids],"marker":row.marker,
             "criteria":[{**item,"role_ids":[str(x) for x in item.get("role_ids",[])]} for item in criteria],
@@ -129,8 +137,9 @@ async def analyze(payload:SubmissionInput,session:AsyncSession=Depends(get_db_se
     if len(submitted)>10*1024*1024: raise HTTPException(422,"Image is too large")
     item=VerificationLevelSubmission(level_id=row.id,guild_id=row.guild_id,discord_user_id=payload.discord_user_id,discord_message_id=payload.discord_message_id,image_url=payload.image_url)
     session.add(item); await session.flush()
-    criteria=row.criteria or ([{"label":"Основна ознака","expected_text":row.expected_text,"role_ids":row.role_ids}] if row.expected_text else [])
-    checks="\n".join(f"{index}: {item['label']} — look for {item['expected_text']!r}" for index,item in enumerate(criteria))
+    criteria=row.criteria or ([{"label":"Основна ознака","expected_text":row.expected_text,"values":[row.expected_text],"role_ids":row.role_ids}] if row.expected_text else [])
+    criteria=[{**item,"values":item.get("values") or [item.get("expected_text","")]} for item in criteria]
+    checks="\n".join(f"{index}: {item['label']} — confirm if ANY of these values is visible: {item['values']!r}" for index,item in enumerate(criteria))
     prompt=("Compare image 1 (owner reference marker) with image 2 (member profile marker). Check every rule independently:\n"+checks+
             "\nReturn strict JSON: {\"matched_indices\":[0],\"detected_text\":\"...\",\"confidence\":0.0,\"reason\":\"...\"}. "
             "matched_indices must contain only rules visibly confirmed in image 2.")
