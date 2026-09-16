@@ -58,3 +58,27 @@ class BillingPayment(Base, TimestampMixin):
     raw_status: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict, server_default="{}")
     paid_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
+
+class BillingWallet(Base, TimestampMixin):
+    __tablename__ = "wallets"
+    __table_args__ = (UniqueConstraint("discord_user_id", "currency", name="uq_billing_wallet_owner_currency"), {"schema": "billing"})
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    discord_user_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
+    balance: Mapped[Decimal] = mapped_column(Numeric(14, 2), nullable=False, default=0, server_default="0")
+    currency: Mapped[str] = mapped_column(String(3), nullable=False, default="UAH", server_default="UAH")
+
+
+class BillingWalletTransaction(Base):
+    __tablename__ = "wallet_transactions"
+    __table_args__ = ({"schema": "billing"},)
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    wallet_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("billing.wallets.id", ondelete="CASCADE"), nullable=False)
+    amount: Mapped[Decimal] = mapped_column(Numeric(14, 2), nullable=False)
+    balance_after: Mapped[Decimal] = mapped_column(Numeric(14, 2), nullable=False)
+    operation: Mapped[str] = mapped_column(String(32), nullable=False)
+    comment: Mapped[str | None] = mapped_column(Text)
+    payment_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("billing.payments.id", ondelete="SET NULL"))
+    actor_user_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("core.users.id", ondelete="SET NULL"))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())

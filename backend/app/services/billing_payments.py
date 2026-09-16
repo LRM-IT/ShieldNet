@@ -11,7 +11,7 @@ import httpx
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.billing import BillingPayment, BillingPluginPlan, BillingSubscription
+from app.models.billing import BillingPayment, BillingPluginPlan, BillingSubscription, BillingWallet, BillingWalletTransaction
 from app.services.billing_service import FREE_PLUGIN_KEYS, normalize_plugin_key
 from app.services.plugin_control_service import PluginControlService
 
@@ -63,6 +63,43 @@ class BillingPaymentService:
         if not value:
             raise PaymentError("Payment provider is not configured")
         return value
+
+    async def credit_wallet(self, discord_user_id: int, amount: Decimal, actor_id, comment: str | None = None) -> BillingWallet:
+        wallet = (await self.session.execute(select(BillingWallet).where(
+            BillingWallet.discord_user_id == discord_user_id, BillingWallet.currency == "UAH"
+        ).with_for_update())).scalar_one_or_none()
+        if wallet is None:
+            wallet = BillingWallet(id=uuid4(), discord_user_id=discord_user_id, balance=Decimal("0.00"), currency="UAH")
+            self.session.add(wallet); await self.session.flush()
+        wallet.balance += amount
+        self.session.add(BillingWalletTransaction(id=uuid4(), wallet_id=wallet.id, amount=amount,
+            balance_after=wallet.balance, operation="admin_credit", comment=comment, actor_user_id=actor_id))
+        await self.session.commit(); await self.session.refresh(wallet)
+        return wallet
+
+    async def pay_from_wallet(self, guild_id: int, discord_user_id: int, plugin_key: str, period: str) -> dict:
+        key = normalize_plugin_key(plugin_key)
+        if key in FREE_PLUGIN_KEYS or period not in PERIOD_DAYS:
+            raise PaymentError("Unsupported plan")
+        plan = (await self.session.execute(select(BillingPluginPlan).where(BillingPluginPlan.plugin_key == key))).scalar_one_or_none()
+        amount = getattr(plan, f"{period}_price", None) if plan and plan.enabled and not plan.is_free else None
+        if amount is None or amount <= 0:
+            raise PaymentError("Price is not configured for this period")
+        wallet = (await self.session.execute(select(BillingWallet).where(
+            BillingWallet.discord_user_id == discord_user_id, BillingWallet.currency == plan.currency
+        ).with_for_update())).scalar_one_or_none()
+        if wallet is None or wallet.balance < amount:
+            raise PaymentError("Insufficient account balance")
+        payment = BillingPayment(id=uuid4(), order_reference=f"balance-{guild_id}-{uuid4().hex}", guild_id=guild_id,
+            plugin_key=key, billing_period=period, provider="balance", amount=amount, currency=plan.currency,
+            status="created", signature_verified=True)
+        self.session.add(payment); await self.session.flush()
+        wallet.balance -= amount
+        self.session.add(BillingWalletTransaction(id=uuid4(), wallet_id=wallet.id, amount=-amount,
+            balance_after=wallet.balance, operation="subscription_purchase", payment_id=payment.id,
+            comment=f"{key} · {period}"))
+        await self._activate(payment, str(payment.id), {"source":"wallet","confirmed":True})
+        return {"provider":"balance","order_reference":payment.order_reference,"status":"paid","balance":wallet.balance,"currency":wallet.currency}
 
     async def create_checkout(self, guild_id: int, plugin_key: str, period: str, provider: str, base_url: str) -> dict:
         key = normalize_plugin_key(plugin_key)

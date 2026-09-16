@@ -13,8 +13,9 @@ from app.api.dependencies.guild_access import require_guild_management
 from app.api.dependencies.platform_access import require_superadmin
 from app.api.dependencies.internal import verify_internal_service_token
 from app.db.session import get_db_session
-from app.models.billing import BillingPluginPlan, BillingSubscription, BillingPayment
+from app.models.billing import BillingPluginPlan, BillingSubscription, BillingPayment, BillingWallet, BillingWalletTransaction
 from app.models.core import User
+from app.models.discord import Guild
 from app.models.plugins import PluginRegistry
 from app.services.billing_service import BillingService, FREE_PLUGIN_KEYS, normalize_plugin_key
 from app.services.billing_payments import BILLING_VAULT_KEY, BillingPaymentService, PaymentError
@@ -47,7 +48,12 @@ class ProviderUpdate(BaseModel):
 class CheckoutRequest(BaseModel):
     plugin_key: str
     billing_period: str = Field(pattern=r"^(monthly|quarterly|yearly)$")
-    provider: str = Field(pattern=r"^(wayforpay|liqpay)$")
+    provider: str = Field(pattern=r"^(wayforpay|liqpay|balance)$")
+
+class WalletCreditRequest(BaseModel):
+    discord_user_id: int
+    amount: Decimal = Field(gt=0, le=1_000_000)
+    comment: str = Field(default="", max_length=500)
 
 def plan_dict(row):
     return {"plugin_key":row.plugin_key,"is_free":row.is_free,"enabled":row.enabled,"currency":row.currency,
@@ -114,7 +120,9 @@ async def revoke(subscription_id: UUID, _: User = Depends(require_superadmin), s
 async def guild_billing(guild_id: int, user: User = Depends(get_current_user), session: AsyncSession = Depends(get_db_session)):
     await require_guild_management(session, user, guild_id)
     plans = await BillingService(session).list_plans(); subscriptions = await BillingService(session).list_subscriptions(guild_id)
-    return {"free_plugin_keys":sorted(FREE_PLUGIN_KEYS),"plans":[plan_dict(x) for x in plans if x.enabled],"subscriptions":[subscription_dict(x) for x in subscriptions]}
+    wallet = await session.scalar(select(BillingWallet).where(BillingWallet.discord_user_id == user.discord_user_id)) if user.discord_user_id else None
+    return {"free_plugin_keys":sorted(FREE_PLUGIN_KEYS),"plans":[plan_dict(x) for x in plans if x.enabled],"subscriptions":[subscription_dict(x) for x in subscriptions],
+            "wallet":{"balance":wallet.balance,"currency":wallet.currency} if wallet else {"balance":Decimal("0.00"),"currency":"UAH"}}
 
 @router.get("/platform/billing/providers")
 async def providers(_: User = Depends(require_superadmin), session: AsyncSession = Depends(get_db_session)):
@@ -142,9 +150,42 @@ async def payments(_: User = Depends(require_superadmin), session: AsyncSession 
              "billing_period":x.billing_period,"provider":x.provider,"amount":x.amount,"currency":x.currency,
              "status":x.status,"signature_verified":x.signature_verified,"paid_at":x.paid_at,"created_at":x.created_at} for x in rows]
 
+@router.get("/platform/billing/wallets")
+async def wallets(_: User = Depends(require_superadmin), session: AsyncSession = Depends(get_db_session)):
+    owners = list((await session.execute(select(Guild.owner_discord_id).distinct().order_by(Guild.owner_discord_id))).scalars())
+    users = {x.discord_user_id:x for x in (await session.execute(select(User).where(User.discord_user_id.in_(owners)))).scalars()}
+    balances = {x.discord_user_id:x for x in (await session.execute(select(BillingWallet).where(BillingWallet.discord_user_id.in_(owners)))).scalars()}
+    return [{"discord_user_id":str(owner),"display_name":users.get(owner).display_name if users.get(owner) else None,
+             "email":users.get(owner).email if users.get(owner) else None,"balance":balances.get(owner).balance if balances.get(owner) else Decimal("0.00"),
+             "currency":balances.get(owner).currency if balances.get(owner) else "UAH"} for owner in owners]
+
+@router.post("/platform/billing/wallets/credit")
+async def credit_wallet(payload: WalletCreditRequest, user: User = Depends(require_superadmin), session: AsyncSession = Depends(get_db_session)):
+    owns_guild = await session.scalar(select(Guild.guild_id).where(Guild.owner_discord_id == payload.discord_user_id).limit(1))
+    if owns_guild is None:
+        raise HTTPException(404, "Discord user is not an owner of a registered server")
+    wallet = await BillingPaymentService(session).credit_wallet(payload.discord_user_id, payload.amount, user.id, payload.comment.strip() or None)
+    return {"discord_user_id":str(wallet.discord_user_id),"balance":wallet.balance,"currency":wallet.currency}
+
+@router.get("/platform/billing/wallets/{discord_user_id}/transactions")
+async def wallet_transactions(discord_user_id: int, _: User = Depends(require_superadmin), session: AsyncSession = Depends(get_db_session)):
+    wallet = await session.scalar(select(BillingWallet).where(BillingWallet.discord_user_id == discord_user_id))
+    if wallet is None: return []
+    rows = list((await session.execute(select(BillingWalletTransaction).where(BillingWalletTransaction.wallet_id == wallet.id).order_by(BillingWalletTransaction.created_at.desc()).limit(250))).scalars())
+    return [{"id":x.id,"amount":x.amount,"balance_after":x.balance_after,"operation":x.operation,"comment":x.comment,
+             "actor_user_id":x.actor_user_id,"created_at":x.created_at} for x in rows]
+
 @router.post("/discord/guilds/{guild_id}/billing/checkout")
 async def checkout(guild_id: int, payload: CheckoutRequest, request: Request, user: User = Depends(get_current_user), session: AsyncSession = Depends(get_db_session)):
     await require_guild_management(session, user, guild_id)
+    if payload.provider == "balance":
+        guild = await session.get(Guild, guild_id)
+        if user.discord_user_id is None or guild is None or guild.owner_discord_id != user.discord_user_id:
+            raise HTTPException(403, "Only the Discord server owner can spend the owner balance")
+        try:
+            return await BillingPaymentService(session).pay_from_wallet(guild_id, user.discord_user_id, payload.plugin_key, payload.billing_period)
+        except PaymentError as exc:
+            raise HTTPException(400, str(exc)) from exc
     base_url = str(request.base_url).rstrip("/")
     try:
         return await BillingPaymentService(session).create_checkout(guild_id, payload.plugin_key, payload.billing_period, payload.provider, base_url)
