@@ -96,17 +96,6 @@ interface PluginNavDefinition {
                 }
               </section>
 
-              <section class="accordion-section" [class.open]="accordionOpen('intelligence')">
-                <button type="button" class="accordion-trigger" (click)="toggleAccordion('intelligence')" [attr.aria-expanded]="accordionOpen('intelligence')">
-                  <span class="accordion-icon">AI</span>
-                  <span class="accordion-title"><strong>Intelligence</strong><small>AI and analysis</small></span>
-                  <span class="accordion-arrow">›</span>
-                </button>
-                @if (accordionOpen('intelligence')) {
-                  <div class="accordion-items">
-                  </div>
-                }
-              </section>
             }
 
             <section class="accordion-section open">
