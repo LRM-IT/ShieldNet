@@ -16,6 +16,7 @@ import { PluginFirstIntroductionComponent } from './pages/plugin-first-introduct
 import { PluginTranslatorGroupsComponent } from './pages/plugin-translator-groups.component';
 import { PluginRoleMenuComponent } from './pages/plugin-role-menu.component';
 import { PluginAIAutoModComponent } from './pages/plugin-ai-automod.component';
+import { PluginEventManagerComponent } from './pages/plugin-event-manager.component';
 import { PluginsComponent } from './pages/plugins.component';
 import { AIIntegrationsComponent } from './pages/ai-integrations.component';
 import { LeadershipComponent } from './pages/leadership.component';
@@ -98,6 +99,7 @@ export const routes: Routes = [
   { path: 'guild/:guildId/plugins/translator-groups', component: PluginTranslatorGroupsComponent, canActivate: [guildGuard], data: { guildModule: 'plugins' } },
   { path: 'guild/:guildId/plugins/role-menu', component: PluginRoleMenuComponent, canActivate: [guildGuard], data: { guildModule: 'plugins' } },
   { path: 'guild/:guildId/plugins/ai-automod', component: PluginAIAutoModComponent, canActivate: [guildGuard], data: { guildModule: 'plugins' } },
+  { path: 'guild/:guildId/plugins/event-manager', component: PluginEventManagerComponent, canActivate: [guildGuard], data: { guildModule: 'plugins' } },
   { path: 'guild/:guildId/reaction-roles', redirectTo: 'guild/:guildId/plugins/role-menu', pathMatch: 'full' },
   { path: 'guild/:guildId/plugins/voting', component: PluginVotingComponent, canActivate: [guildGuard], data: { guildModule: 'plugins' } },
   { path: 'guild/:guildId/automation-monitor', component: AutomationMonitorComponent, canActivate: [guildGuard], data: { guildModule: 'automations' } },

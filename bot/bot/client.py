@@ -30,6 +30,7 @@ from bot.plugin_first_introduction import LanguageSelection
 from bot.plugin_translator_groups import TranslatorGroups
 from bot.plugin_role_menu import RoleMenu
 from bot.plugin_ai_automod import AIAutoMod
+from bot.plugin_event_manager import EventManager
 from bot.verification_levels import VerificationLevelsClient
 
 logger = logging.getLogger(__name__)
@@ -67,6 +68,7 @@ class ShieldNetBot(discord.Client):
         self.translator_groups = TranslatorGroups(self, self.backend)
         self.role_menu = RoleMenu(self)
         self.ai_automod = AIAutoMod(self)
+        self.event_manager = EventManager(self)
         self.verification_levels = VerificationLevelsClient(self)
         self._verification_slash_commands: dict[int, str] = {}
         self._initial_sync_done = False
@@ -376,6 +378,7 @@ class ShieldNetBot(discord.Client):
         self.discord_management_loop.start()
         self.guild_dm_broadcast_loop.start()
         self.welcome_loop.start()
+        self.event_reminder_loop.start()
         self.member_action_loop.start()
         self.security_snapshot_loop.start()
         self.explorer_snapshot_loop.start()
@@ -513,7 +516,8 @@ class ShieldNetBot(discord.Client):
 
     async def on_interaction(self, interaction: discord.Interaction) -> None:
         try:
-            await self.role_menu.handle(interaction)
+            if await self.role_menu.handle(interaction): return
+            await self.event_manager.handle(interaction)
         except Exception:
             logger.exception("Role Menu interaction failed guild=%s", interaction.guild_id)
             if not interaction.response.is_done():
@@ -585,6 +589,14 @@ class ShieldNetBot(discord.Client):
     @welcome_loop.before_loop
     async def before_welcome_loop(self) -> None:
         await self.wait_until_ready()
+
+    @tasks.loop(minutes=1)
+    async def event_reminder_loop(self) -> None:
+        try: await self.event_manager.reminders()
+        except Exception: logger.exception("Event reminder loop failed")
+
+    @event_reminder_loop.before_loop
+    async def before_event_reminder_loop(self) -> None: await self.wait_until_ready()
 
 
     @tasks.loop(seconds=10)
