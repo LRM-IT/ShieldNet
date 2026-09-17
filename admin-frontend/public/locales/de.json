@@ -755,7 +755,8 @@
     "temporary": "temporary",
     "permanent": "permanent",
     "no_invites": "No invites visible to the bot.",
-    "load_error": "Unable to load Discord Explorer."
+    "load_error": "Unable to load Discord Explorer.",
+    "retry": "Erneut versuchen"
   },
   "permission": {
     "title": "Permission Simulator",
