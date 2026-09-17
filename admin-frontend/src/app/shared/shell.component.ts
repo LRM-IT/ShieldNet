@@ -497,7 +497,9 @@ export class ShellComponent implements OnInit, OnDestroy {
     if (!id) return [];
 
     const installedKeys = new Set(
-      this.installedPlugins().map((plugin) => this.normalize(plugin.plugin_key)),
+      this.installedPlugins()
+        .filter((plugin) => plugin.enabled && plugin.status === 'enabled')
+        .map((plugin) => this.normalize(plugin.plugin_key)),
     );
 
     return this.pluginNavDefinitions
