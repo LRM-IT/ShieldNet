@@ -59,7 +59,24 @@ export class BillingComponent implements OnInit{
  cardForm:any={code:'',discount_type:'percent',percent:10,amount_usd:null,active:true,valid_from:null,valid_until:null,max_redemptions:null};tenureForm:any={minimum_months:6,percent:5,active:true};
  providerForm={wayforpay_enabled:true,wayforpay_merchant_account:'',wayforpay_merchant_domain:'',wayforpay_secret_key:'',liqpay_enabled:true,liqpay_public_key:'',liqpay_private_key:''};
  constructor(private api:BillingService,private i18n:TranslationService){}ngOnInit(){this.load()}
- async load(){this.error.set('');try{const[p,s,c,j,w,r,pkg,d]=await Promise.all([this.api.plans(),this.api.subscriptions(),this.api.providers(),this.api.payments(),this.api.wallets(),this.api.exchangeRates(),this.api.paidPackage(),this.api.discounts()]);this.plans.set(p);this.subscriptions.set(s);this.providers.set(c);this.payments.set(j);this.wallets.set(w);this.rates.set(r);this.package=pkg;this.discounts.set(d);this.providerForm.wayforpay_enabled=c.wayforpay.enabled;this.providerForm.wayforpay_merchant_account=c.wayforpay.merchant_account;this.providerForm.wayforpay_merchant_domain=c.wayforpay.merchant_domain;this.providerForm.liqpay_enabled=c.liqpay.enabled;this.providerForm.liqpay_public_key=c.liqpay.public_key}catch(e:any){this.error.set(e?.error?.detail||this.t('load_error','Unable to load billing.'))}}
+ async load(){
+  this.error.set('');
+  const requests=[this.api.plans(),this.api.subscriptions(),this.api.providers(),this.api.payments(),this.api.wallets(),this.api.exchangeRates(),this.api.paidPackage(),this.api.discounts()];
+  const [p,s,c,j,w,r,pkg,d]=await Promise.allSettled(requests);
+  if(p.status==='fulfilled')this.plans.set(p.value as BillingPlan[]);
+  if(s.status==='fulfilled')this.subscriptions.set(s.value as BillingSubscription[]);
+  if(j.status==='fulfilled')this.payments.set(j.value as BillingPayment[]);
+  if(w.status==='fulfilled')this.wallets.set(w.value as BillingWallet[]);
+  if(r.status==='fulfilled')this.rates.set(r.value as any[]);
+  if(pkg.status==='fulfilled')this.package=pkg.value as BillingPlan;
+  if(d.status==='fulfilled')this.discounts.set(d.value);
+  if(c.status==='fulfilled'){
+   const providers=c.value as BillingProviders;this.providers.set(providers);
+   this.providerForm.wayforpay_enabled=providers.wayforpay.enabled;this.providerForm.wayforpay_merchant_account=providers.wayforpay.merchant_account;this.providerForm.wayforpay_merchant_domain=providers.wayforpay.merchant_domain;this.providerForm.liqpay_enabled=providers.liqpay.enabled;this.providerForm.liqpay_public_key=providers.liqpay.public_key;
+  }
+  const failed=[p,s,c,j,w,r,pkg,d].find(x=>x.status==='rejected') as PromiseRejectedResult|undefined;
+  if(failed){const e:any=failed.reason;this.error.set(e?.error?.detail||this.t('load_error','Some billing data could not be loaded.'))}
+ }
  async saveCard(){try{const{id,...values}=this.cardForm;const payload={...values,valid_until:values.valid_until?new Date(values.valid_until).toISOString():null};if(id)await this.api.updateDiscountCard(id,payload);else await this.api.saveDiscountCard(payload);this.resetCard();this.done(this.t('card_saved','Discount card saved.'));await this.load()}catch(e:any){this.fail(e,this.t('card_save_error','Unable to save discount card.'))}}
  editCard(x:any){this.cardForm={...x,valid_until:x.valid_until?String(x.valid_until).slice(0,16):null};this.tab.set('discounts')}
  resetCard(){this.cardForm={code:'',discount_type:'percent',percent:10,amount_usd:null,active:true,valid_from:null,valid_until:null,max_redemptions:null}}
