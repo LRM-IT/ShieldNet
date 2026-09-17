@@ -286,7 +286,7 @@ async def payments(_: User = Depends(require_superadmin), session: AsyncSession 
 
 @router.get("/platform/billing/wallets")
 async def wallets(_: User = Depends(require_superadmin), session: AsyncSession = Depends(get_db_session)):
-    owners = list((await session.execute(select(Guild.owner_discord_id).distinct().order_by(Guild.owner_discord_id))).scalars())
+    owners = list((await session.execute(select(Guild.owner_discord_id).where(Guild.owner_discord_id > 0).distinct().order_by(Guild.owner_discord_id))).scalars())
     users = {x.discord_user_id:x for x in (await session.execute(select(User).where(User.discord_user_id.in_(owners)))).scalars()}
     balances = {x.discord_user_id:x for x in (await session.execute(select(BillingWallet).where(BillingWallet.discord_user_id.in_(owners)))).scalars()}
     return [{"discord_user_id":str(owner),"display_name":users.get(owner).display_name if users.get(owner) else None,
@@ -295,6 +295,8 @@ async def wallets(_: User = Depends(require_superadmin), session: AsyncSession =
 
 @router.post("/platform/billing/wallets/credit")
 async def credit_wallet(payload: WalletCreditRequest, user: User = Depends(require_superadmin), session: AsyncSession = Depends(get_db_session)):
+    if payload.discord_user_id <= 0:
+        raise HTTPException(400, "A real Discord owner is required")
     owns_guild = await session.scalar(select(Guild.guild_id).where(Guild.owner_discord_id == payload.discord_user_id).limit(1))
     if owns_guild is None:
         raise HTTPException(404, "Discord user is not an owner of a registered server")
