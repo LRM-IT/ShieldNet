@@ -1104,6 +1104,7 @@
     "history_error": "Unable to load Runtime Usage history.",
     "subscription_required": "Per attivare questo plugin è necessario un abbonamento attivo per il server Discord selezionato.",
     "language_selection_setup_required": "Configura i ruoli linguistici e una discussione prima dell’attivazione.",
+    "configure_now": "Configura ora",
     "language_group_setup_required": "Configura un canale, un ruolo di accesso e i ruoli linguistici prima dell’attivazione.",
     "translation_group_setup_required": "Configura un gruppo di traduzione attivo con canali in almeno due lingue prima dell’attivazione.",
     "capability_error": "Il plugin ha richiesto funzionalità non registrate nel sistema principale.",

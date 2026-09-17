@@ -1104,6 +1104,7 @@
     "history_error": "Unable to load Runtime Usage history.",
     "subscription_required": "Włączenie tej wtyczki wymaga aktywnej subskrypcji dla wybranego serwera Discord.",
     "language_selection_setup_required": "Przed włączeniem skonfiguruj role językowe i wątek.",
+    "configure_now": "Skonfiguruj teraz",
     "language_group_setup_required": "Przed włączeniem skonfiguruj kanał, rolę dostępu i role językowe.",
     "translation_group_setup_required": "Przed włączeniem skonfiguruj aktywną grupę tłumaczeń z kanałami w co najmniej dwóch językach.",
     "capability_error": "Wtyczka zażądała możliwości, które nie są zarejestrowane w rdzeniu.",

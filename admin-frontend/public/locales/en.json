@@ -1104,6 +1104,7 @@
     "history_error": "Unable to load Runtime Usage history.",
     "subscription_required": "An active subscription is required to enable this plugin.",
     "language_selection_setup_required": "Configure language roles and a thread before enabling.",
+    "configure_now": "Configure now",
     "language_group_setup_required": "Configure a channel, access role and language roles before enabling.",
     "translation_group_setup_required": "Configure an enabled translation group with channels in at least two languages before enabling.",
     "capability_error": "The plugin requested capabilities that are not registered in the core.",

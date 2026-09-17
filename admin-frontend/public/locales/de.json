@@ -1106,6 +1106,7 @@
     "history_error": "Unable to load Runtime Usage history.",
     "subscription_required": "Zum Aktivieren dieses Plugins ist ein aktives Abonnement für den ausgewählten Discord-Server erforderlich.",
     "language_selection_setup_required": "Konfiguriere vor der Aktivierung Sprachrollen und einen Thread.",
+    "configure_now": "Jetzt konfigurieren",
     "language_group_setup_required": "Konfiguriere vor der Aktivierung einen Kanal, eine Zugriffsrolle und Sprachrollen.",
     "translation_group_setup_required": "Konfiguriere vor der Aktivierung eine aktive Übersetzungsgruppe mit Kanälen in mindestens zwei Sprachen.",
     "capability_error": "Das Plugin hat Funktionen angefordert, die nicht im Kern registriert sind.",

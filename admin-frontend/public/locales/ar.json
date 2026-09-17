@@ -1106,6 +1106,7 @@
     "history_error": "Unable to load Runtime Usage history.",
     "subscription_required": "يلزم اشتراك نشط لخادم Discord المحدد لتفعيل هذه الإضافة.",
     "language_selection_setup_required": "اضبط أدوار اللغات وسلسلة محادثة قبل التفعيل.",
+    "configure_now": "الإعداد الآن",
     "language_group_setup_required": "اضبط قناة ودور وصول وأدوار اللغات قبل التفعيل.",
     "translation_group_setup_required": "اضبط مجموعة ترجمة مفعّلة تتضمن قنوات بلغتين على الأقل قبل التفعيل.",
     "capability_error": "طلبت الإضافة إمكانات غير مسجلة في النظام الأساسي.",
