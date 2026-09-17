@@ -1,7 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Component, OnInit, computed, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import {
@@ -22,7 +21,7 @@ interface PluginDocumentation {
 @Component({
   selector: 'sn-plugin-runtime-usage',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, ShellComponent, TranslatePipe],
+  imports: [CommonModule, RouterLink, ShellComponent, TranslatePipe],
   template: `
     <sn-shell [title]="'runtime_usage.title' | snT:'Plugin Runtime'">
       <section class="head">
@@ -77,7 +76,9 @@ interface PluginDocumentation {
                 <button type="button" class="install" [disabled]="busy(plugin.plugin_key)" (click)="install(plugin)">{{ busy(plugin.plugin_key) ? ('runtime_usage.installing' | snT:'Installing…') : ('runtime_usage.install' | snT:'Install') }}</button>
               } @else {
                 @if (installation(plugin.plugin_key); as installed) {
-                  <button type="button" class="settings" [disabled]="busy(plugin.plugin_key)" (click)="openSettings(installed)">{{ 'common.settings' | snT:'Settings' }}</button>
+                  @if (hasSettingsPage(plugin.plugin_key)) {
+                    <button type="button" class="settings" [disabled]="busy(plugin.plugin_key)" (click)="openSettings(installed)">{{ 'common.settings' | snT:'Settings' }}</button>
+                  }
                   @if (isEnabled(plugin)) {
                     <button type="button" class="disable" [disabled]="busy(plugin.plugin_key)" (click)="toggleEnabled(installed)">{{ 'plugins.disable' | snT:'Disable' }}</button>
                   } @else {
@@ -87,14 +88,6 @@ interface PluginDocumentation {
                 }
               }
             </div>
-
-            @if (editingKey() === plugin.plugin_key) {
-              <div class="settings-editor">
-                <label>{{ 'plugins.configuration_json' | snT:'Configuration JSON' }}</label>
-                <textarea [(ngModel)]="settingsText" rows="8" spellcheck="false"></textarea>
-                <div class="editor-actions"><button type="button" (click)="cancelSettings()">{{ 'common.cancel' | snT:'Cancel' }}</button><button type="button" class="save" [disabled]="busy(plugin.plugin_key)" (click)="saveSettings(installation(plugin.plugin_key)!)">{{ 'common.save' | snT:'Save' }}</button></div>
-              </div>
-            }
           </article>
         } @empty {
           @if (!loading()) { <div class="notice">{{ 'runtime_usage.no_available_plugins' | snT:'No available plugins were found.' }}</div> }
@@ -115,9 +108,7 @@ export class PluginRuntimeUsageComponent implements OnInit {
   readonly error = signal('');
   readonly setupPluginKey = signal('');
   readonly busyKey = signal('');
-  readonly editingKey = signal('');
   readonly documentation = signal<PluginDocumentation>({});
-  settingsText = '{}';
 
   readonly enabledCount = computed(() => this.installations().filter(item => item.enabled).length);
   readonly runningCount = computed(() => this.runtimes().filter(item => item.state === 'running').length);
@@ -246,7 +237,6 @@ export class PluginRuntimeUsageComponent implements OnInit {
         this.guildId,
         plugin.plugin_key,
       );
-      this.editingKey.set('');
       await this.load();
     } catch {
       this.error.set(
@@ -275,36 +265,34 @@ export class PluginRuntimeUsageComponent implements OnInit {
   }
 
   openSettings(plugin: GuildPluginInstallation): void {
-    const pluginKey = plugin.plugin_key.replace(/-/g, '_');
-    const page = pluginKey === 'translator_groups' ? 'translator-groups'
-      : pluginKey === 'first_introduction' ? 'language-selection'
-      : pluginKey === 'verification_level1' ? 'verification' : null;
-    if (page) {
-      void this.router.navigate(page === 'verification'
-        ? ['/guild', this.guildId, page]
-        : ['/guild', this.guildId, 'plugins', page]);
-      return;
-    }
-    this.editingKey.set(plugin.plugin_key);
-    this.settingsText = JSON.stringify(plugin.configuration || {}, null, 2);
+    const route = this.settingsRoute(plugin.plugin_key);
+    if (route) void this.router.navigate(['/guild', this.guildId, ...route]);
   }
+  hasSettingsPage(pluginKey: string): boolean { return this.settingsRoute(pluginKey) !== null; }
   openSetup(pluginKey: string): void {
     const plugin = this.installation(pluginKey);
     if (plugin) this.openSettings(plugin);
   }
-  cancelSettings(): void { this.editingKey.set(''); this.settingsText = '{}'; }
-
-  async saveSettings(plugin: GuildPluginInstallation): Promise<void> {
-    let configuration: Record<string, unknown>;
-    try { configuration = JSON.parse(this.settingsText) as Record<string, unknown>; }
-    catch { this.error.set(this.i18n.t('runtime_usage.invalid_json', 'Configuration must be valid JSON.')); return; }
-    this.busyKey.set(plugin.plugin_key); this.error.set('');
-    try {
-      const updated = await this.guildPlugins.updateSettings(this.guildId, plugin.plugin_key, configuration);
-      this.installations.update(items => items.map(item => item.plugin_key === updated.plugin_key ? updated : item));
-      this.cancelSettings();
-    } catch { this.error.set(this.i18n.t('runtime_usage.settings_error', 'Unable to save plugin settings.')); }
-    finally { this.busyKey.set(''); }
+  private settingsRoute(pluginKey: string): string[] | null {
+    const routes: Record<string, string[]> = {
+      activity_ranking: ['plugins', 'activity-ranking'],
+      ai_automod: ['plugins', 'ai-automod'],
+      antiflood: ['plugins', 'antiflood'],
+      audit_security: ['plugins', 'audit-security'],
+      backup_restore: ['backups'],
+      cross_guild_network: ['plugins', 'cross-guild-network'],
+      event_manager: ['plugins', 'event-manager'],
+      first_introduction: ['plugins', 'language-selection'],
+      guild_dm_broadcast: ['plugins', 'guild-dm-broadcast'],
+      moderation: ['moderation'],
+      role_menu: ['plugins', 'role-menu'],
+      translator_groups: ['plugins', 'translator-groups'],
+      verification_level1: ['verification'],
+      voting: ['plugins', 'voting'],
+      war_planner: ['plugins', 'war-planner'],
+      welcome: ['plugins', 'welcome'],
+    };
+    return routes[pluginKey.replace(/-/g, '_')] || null;
   }
 
   private upsertRuntime(updated: PluginRuntimeInstance): void {
