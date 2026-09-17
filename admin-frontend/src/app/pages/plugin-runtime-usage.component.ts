@@ -22,13 +22,10 @@ import { TranslatePipe } from '../core/translate.pipe';
       <section class="head">
         <div>
           <div class="eyebrow">GUILDCONSOLE ADMIN V4 · STAGE 14.11</div>
-          <h2>{{ 'runtime_usage.heading' | snT:'Server plugin runtime' }}</h2>
-          <p>{{ 'runtime_usage.description' | snT:'Manage installed plugins, runtime processes and server-specific settings.' }}</p>
+          <h2>{{ 'runtime_usage.heading' | snT:'Plugin store' }}</h2>
+          <p>{{ 'runtime_usage.description' | snT:'Install and manage plugins available for this Discord server.' }}</p>
         </div>
         <div class="head-actions">
-          <button type="button" class="install-open" (click)="toggleCatalog()">
-            {{ showCatalog() ? ('common.close' | snT:'Close') : ('runtime_usage.add_plugin' | snT:'Add plugin') }}
-          </button>
           <a [routerLink]="['/guild', guildId]">{{ 'common.back' | snT:'Back to server' }}</a>
           <button type="button" (click)="load()" [disabled]="loading()">
             {{ loading() ? ('runtime_usage.refreshing' | snT:'Refreshing…') : ('runtime_usage.refresh' | snT:'Refresh') }}
@@ -39,121 +36,55 @@ import { TranslatePipe } from '../core/translate.pipe';
       @if (error()) { <div class="notice error">{{ error() }}</div> }
 
 
-      @if (showCatalog()) {
-        <section class="catalog">
-          <div class="catalog-head">
-            <div>
-              <h3>{{ 'runtime_usage.available_plugins' | snT:'Available plugins' }}</h3>
-              <p>{{ 'runtime_usage.available_description' | snT:'Install a discovered plugin on this server.' }}</p>
-            </div>
-          </div>
-
-          <div class="catalog-grid">
-            @for (plugin of availablePlugins(); track plugin.plugin_key) {
-              <article class="catalog-card">
-                <div>
-                  <h4>{{ plugin.name }}</h4>
-                  <small>{{ plugin.plugin_key }}</small>
-                  <p>{{ plugin.summary || ('plugins.no_description' | snT:'No description supplied.') }}</p>
-                </div>
-                <button
-                  type="button"
-                  class="install"
-                  [disabled]="plugin.installed || busy(plugin.plugin_key)"
-                  (click)="install(plugin)"
-                >
-                  {{
-                    plugin.installed
-                      ? ('runtime_usage.already_installed' | snT:'Installed')
-                      : busy(plugin.plugin_key)
-                        ? ('runtime_usage.installing' | snT:'Installing…')
-                        : ('runtime_usage.install' | snT:'Install')
-                  }}
-                </button>
-              </article>
-            } @empty {
-              <div class="notice">{{ 'runtime_usage.no_available_plugins' | snT:'No available plugins were found.' }}</div>
-            }
-          </div>
-        </section>
-      }
-
       <section class="metrics">
+        <article><span>{{ 'runtime_usage.available_plugins' | snT:'Available' }}</span><strong>{{ availablePlugins().length }}</strong></article>
         <article><span>{{ 'plugins.installed' | snT:'Installed' }}</span><strong>{{ installations().length }}</strong></article>
         <article><span>{{ 'plugins.enabled' | snT:'Enabled' }}</span><strong>{{ enabledCount() }}</strong></article>
-        <article><span>{{ 'plugins.running' | snT:'Running' }}</span><strong>{{ runningCount() }}</strong></article>
         <article><span>{{ 'plugins.errors' | snT:'Errors' }}</span><strong [class.danger]="errorCount() > 0">{{ errorCount() }}</strong></article>
       </section>
 
-      @if (loading() && installations().length === 0) {
-        <div class="notice">{{ 'runtime_usage.loading' | snT:'Loading server plugins…' }}</div>
+      @if (loading() && availablePlugins().length === 0) {
+        <div class="notice">{{ 'runtime_usage.loading' | snT:'Loading plugin store…' }}</div>
       }
 
-      <section class="plugin-grid">
-        @for (plugin of installations(); track plugin.plugin_key) {
-          <article class="plugin-card">
-            <div class="plugin-head">
+      <section class="store-grid">
+        @for (plugin of availablePlugins(); track plugin.plugin_key) {
+          <article class="store-card" [class.installed]="plugin.installed" [class.enabled]="plugin.enabled">
+            <div class="store-top">
               <div class="plugin-icon">{{ plugin.plugin_key.slice(0, 1).toUpperCase() }}</div>
-              <div class="plugin-title">
-                <h3>{{ displayName(plugin) }}</h3>
-                <small>{{ plugin.plugin_key }}</small>
-              </div>
-              <div class="badges">
-                <span [class.good]="plugin.enabled" [class.muted-badge]="!plugin.enabled">{{ plugin.enabled ? 'ENABLED' : 'DISABLED' }}</span>
-                <span [class.good]="runtime(plugin.plugin_key)?.state === 'running'" [class.warn]="runtime(plugin.plugin_key)?.state !== 'running'">
-                  {{ (runtime(plugin.plugin_key)?.state || 'not started') | uppercase }}
-                </span>
-              </div>
+              <div class="plugin-title"><h3>{{ plugin.name }}</h3><small>{{ plugin.plugin_key }}</small></div>
+              <span class="state" [class.good]="plugin.enabled">{{ plugin.enabled ? ('plugins.enabled' | snT:'Enabled') : plugin.installed ? ('plugins.disabled' | snT:'Disabled') : ('runtime_usage.not_installed' | snT:'Not installed') }}</span>
             </div>
-
-            <div class="details">
-              <div><span>{{ 'plugins.version' | snT:'Version' }}</span><strong>{{ runtime(plugin.plugin_key)?.package_version || catalogVersion(plugin.plugin_key) || '—' }}</strong></div>
-              <div><span>{{ 'runtime_usage.generation' | snT:'Generation' }}</span><strong>{{ runtime(plugin.plugin_key)?.generation ?? 0 }}</strong></div>
-              <div><span>{{ 'runtime_usage.last_heartbeat' | snT:'Last heartbeat' }}</span><strong>{{ formatDate(runtime(plugin.plugin_key)?.last_heartbeat_at) }}</strong></div>
-              <div><span>{{ 'runtime_usage.updated' | snT:'Updated' }}</span><strong>{{ formatDate(plugin.updated_at) }}</strong></div>
-            </div>
-
-            @if (plugin.last_error || runtime(plugin.plugin_key)?.last_error) {
-              <div class="plugin-error">{{ runtime(plugin.plugin_key)?.last_error || plugin.last_error }}</div>
-            }
-
-            <div class="actions">
-              <button type="button" class="toggle" [class.on]="plugin.enabled" [disabled]="busy(plugin.plugin_key)" (click)="toggleEnabled(plugin)">
-                {{ plugin.enabled ? ('plugins.disable' | snT:'Disable') : ('plugins.enable' | snT:'Enable') }}
-              </button>
-              <button type="button" class="start" [disabled]="busy(plugin.plugin_key) || !plugin.enabled || runtime(plugin.plugin_key)?.state === 'running'" (click)="start(plugin)">
-                {{ 'plugins.start' | snT:'Start' }}
-              </button>
-              <button type="button" class="stop" [disabled]="busy(plugin.plugin_key) || runtime(plugin.plugin_key)?.state !== 'running'" (click)="stop(plugin)">
-                {{ 'plugins.stop' | snT:'Stop' }}
-              </button>
-              <button type="button" class="settings" [disabled]="busy(plugin.plugin_key)" (click)="openSettings(plugin)">
-                {{ 'plugins.settings' | snT:'Settings' }}
-              </button>
-              <button type="button" class="uninstall" [disabled]="busy(plugin.plugin_key)" (click)="uninstall(plugin)">
-                {{ busy(plugin.plugin_key) ? ('runtime_usage.removing' | snT:'Removing…') : ('runtime_usage.uninstall' | snT:'Uninstall') }}
-              </button>
+            <p class="summary">{{ plugin.summary || ('plugins.no_description' | snT:'No description supplied.') }}</p>
+            <div class="store-meta"><span>v{{ plugin.version || '—' }}</span><span>{{ plugin.category }}</span>@if(plugin.verified){<span>✓ {{ 'runtime_usage.verified' | snT:'Verified' }}</span>}</div>
+            @if (installation(plugin.plugin_key)?.last_error) { <div class="plugin-error">{{ installation(plugin.plugin_key)?.last_error }}</div> }
+            <div class="store-actions">
+              @if (!plugin.installed) {
+                <button type="button" class="install" [disabled]="busy(plugin.plugin_key)" (click)="install(plugin)">{{ busy(plugin.plugin_key) ? ('runtime_usage.installing' | snT:'Installing…') : ('runtime_usage.install' | snT:'Install') }}</button>
+              } @else if (plugin.enabled) {
+                <button type="button" class="disable" [disabled]="busy(plugin.plugin_key)" (click)="toggleEnabled(installation(plugin.plugin_key)!)">{{ 'plugins.disable' | snT:'Disable' }}</button>
+              } @else {
+                <button type="button" class="enable" [disabled]="busy(plugin.plugin_key)" (click)="toggleEnabled(installation(plugin.plugin_key)!)">{{ 'plugins.enable' | snT:'Enable' }}</button>
+                <button type="button" class="uninstall" [disabled]="busy(plugin.plugin_key)" (click)="uninstall(installation(plugin.plugin_key)!)">{{ busy(plugin.plugin_key) ? ('runtime_usage.removing' | snT:'Removing…') : ('runtime_usage.uninstall' | snT:'Uninstall') }}</button>
+              }
             </div>
 
             @if (editingKey() === plugin.plugin_key) {
               <div class="settings-editor">
                 <label>{{ 'plugins.configuration_json' | snT:'Configuration JSON' }}</label>
                 <textarea [(ngModel)]="settingsText" rows="8" spellcheck="false"></textarea>
-                <div class="editor-actions">
-                  <button type="button" (click)="cancelSettings()">{{ 'common.cancel' | snT:'Cancel' }}</button>
-                  <button type="button" class="save" [disabled]="busy(plugin.plugin_key)" (click)="saveSettings(plugin)">{{ 'common.save' | snT:'Save' }}</button>
-                </div>
+                <div class="editor-actions"><button type="button" (click)="cancelSettings()">{{ 'common.cancel' | snT:'Cancel' }}</button><button type="button" class="save" [disabled]="busy(plugin.plugin_key)" (click)="saveSettings(installation(plugin.plugin_key)!)">{{ 'common.save' | snT:'Save' }}</button></div>
               </div>
             }
           </article>
         } @empty {
-          @if (!loading()) { <div class="notice">{{ 'runtime_usage.no_plugins' | snT:'No plugins are installed for this server.' }}</div> }
+          @if (!loading()) { <div class="notice">{{ 'runtime_usage.no_available_plugins' | snT:'No available plugins were found.' }}</div> }
         }
       </section>
     </sn-shell>
   `,
   styles: [`
-    :host{display:block}.head{display:flex;justify-content:space-between;align-items:flex-end;gap:1rem;margin-bottom:1rem}.eyebrow{font-size:.68rem;font-weight:900;letter-spacing:.14em;color:var(--accent)}.head h2{margin:.3rem 0}.head p{margin:0;color:var(--muted)}.head-actions{display:flex;gap:.55rem}.head-actions a,.head-actions button,.actions button,.editor-actions button{border:1px solid var(--line);background:var(--panel-2);color:var(--text);border-radius:9px;padding:.62rem .78rem;text-decoration:none;cursor:pointer}.head-actions button{background:var(--accent);color:#07110e;font-weight:800}.head-actions .install-open{background:rgba(53,226,178,.14);color:#35e2b2}.catalog{margin-bottom:1rem;padding:1rem;border:1px solid var(--line);border-radius:14px;background:var(--panel)}.catalog-head h3{margin:0}.catalog-head p{margin:.3rem 0 0;color:var(--muted)}.catalog-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.7rem;margin-top:.9rem}.catalog-card{display:flex;justify-content:space-between;align-items:center;gap:1rem;padding:.9rem;border:1px solid var(--line);border-radius:12px;background:var(--panel-2)}.catalog-card h4{margin:0 0 .15rem}.catalog-card small,.catalog-card p{color:var(--muted)}.catalog-card p{margin:.45rem 0 0}.catalog-card .install{border:1px solid rgba(53,226,178,.45);background:rgba(53,226,178,.14);color:#35e2b2;border-radius:9px;padding:.65rem .9rem;font-weight:800;cursor:pointer}.catalog-card .install:disabled{opacity:.45;cursor:not-allowed}.notice{padding:1rem;border:1px solid var(--line);background:var(--panel);border-radius:12px}.error,.plugin-error{color:#ff8e98;border-color:rgba(255,80,95,.4)}.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:.8rem;margin-bottom:1rem}.metrics article{padding:1rem;border:1px solid var(--line);border-radius:13px;background:var(--panel);display:grid;gap:.35rem}.metrics span,.details span{font-size:.7rem;text-transform:uppercase;color:var(--muted)}.metrics strong{font-size:1.5rem}.danger{color:#ff6874}.plugin-grid{display:grid;gap:1rem}.plugin-card{border:1px solid var(--line);background:var(--panel);border-radius:16px;padding:1.1rem}.plugin-head{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:.75rem}.plugin-icon{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:rgba(53,226,178,.12);color:var(--accent);font-weight:900}.plugin-title h3{margin:0 0 .2rem}.plugin-title small{color:var(--muted)}.badges{display:flex;gap:.4rem;flex-wrap:wrap}.badges span{font-size:.65rem;padding:.3rem .5rem;border:1px solid var(--line);border-radius:999px}.badges .good{color:#35e2b2}.badges .warn{color:#f2b15a}.muted-badge{color:var(--muted)}.details{display:grid;grid-template-columns:repeat(4,1fr);gap:.6rem;margin:1rem 0}.details div{padding:.75rem;border:1px solid var(--line);border-radius:10px;display:grid;gap:.25rem}.details strong{font-size:.86rem;overflow:hidden;text-overflow:ellipsis}.plugin-error{padding:.7rem;border:1px solid rgba(255,80,95,.25);border-radius:9px;margin-bottom:.8rem}.actions{display:flex;gap:.5rem;flex-wrap:wrap}.actions button:disabled,.head-actions button:disabled{opacity:.45;cursor:not-allowed}.actions .start{color:#35e2b2}.actions .stop{color:#ff7c85}.actions .uninstall{color:#ff7c85;border-color:rgba(255,80,95,.35)}.actions .toggle.on{border-color:rgba(53,226,178,.45)}.settings-editor{margin-top:1rem;padding-top:1rem;border-top:1px solid var(--line);display:grid;gap:.55rem}.settings-editor label{font-size:.75rem;color:var(--muted)}.settings-editor textarea{width:100%;box-sizing:border-box;background:#090d14;color:#dce7e4;border:1px solid var(--line);border-radius:10px;padding:.8rem;font-family:monospace;resize:vertical}.editor-actions{display:flex;justify-content:flex-end;gap:.5rem}.editor-actions .save{background:var(--accent);color:#07110e;font-weight:800}@media(max-width:900px){.metrics,.details,.catalog-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:620px){.head{align-items:stretch;flex-direction:column}.metrics,.details,.catalog-grid{grid-template-columns:1fr}.catalog-card{align-items:stretch;flex-direction:column}.plugin-head{grid-template-columns:auto 1fr}.badges{grid-column:1/-1}.head-actions{flex-wrap:wrap}}
+    :host{display:block}.head{display:flex;justify-content:space-between;align-items:flex-end;gap:1rem;margin-bottom:1rem}.eyebrow{font-size:.68rem;font-weight:900;letter-spacing:.14em;color:var(--accent)}.head h2{margin:.3rem 0}.head p{margin:0;color:var(--muted)}.head-actions{display:flex;gap:.55rem}.head-actions a,.head-actions button,.editor-actions button{border:1px solid var(--line);background:var(--panel-2);color:var(--text);border-radius:9px;padding:.62rem .78rem;text-decoration:none;cursor:pointer}.head-actions button{background:var(--accent);color:#07110e;font-weight:800}.notice{padding:1rem;border:1px solid var(--line);background:var(--panel);border-radius:12px}.error,.plugin-error{color:#ff8e98;border-color:rgba(255,80,95,.4)}.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:.8rem;margin-bottom:1rem}.metrics article{padding:1rem;border:1px solid var(--line);border-radius:13px;background:var(--panel);display:grid;gap:.35rem}.metrics span{font-size:.7rem;text-transform:uppercase;color:var(--muted)}.metrics strong{font-size:1.5rem}.danger{color:#ff6874}.store-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1rem}.store-card{display:flex;flex-direction:column;gap:1rem;min-height:245px;padding:1.1rem;border:1px solid var(--line);border-radius:16px;background:var(--panel)}.store-card.installed{border-color:rgba(53,226,178,.3)}.store-top{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:.75rem}.plugin-icon{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:rgba(53,226,178,.12);color:var(--accent);font-weight:900}.plugin-title h3{margin:0 0 .2rem}.plugin-title small,.summary{color:var(--muted)}.state{font-size:.68rem;padding:.32rem .55rem;border:1px solid var(--line);border-radius:999px;color:var(--muted)}.state.good{color:#35e2b2;border-color:rgba(53,226,178,.4)}.summary{margin:0;flex:1}.store-meta{display:flex;gap:.45rem;flex-wrap:wrap}.store-meta span{font-size:.7rem;padding:.25rem .45rem;border-radius:7px;background:var(--panel-2);color:var(--muted)}.plugin-error{padding:.7rem;border:1px solid rgba(255,80,95,.25);border-radius:9px}.store-actions{display:flex;gap:.5rem;flex-wrap:wrap}.store-actions button{padding:.68rem .9rem;border-radius:9px;border:1px solid var(--line);background:var(--panel-2);color:var(--text);font-weight:800;cursor:pointer}.store-actions .install,.store-actions .enable{background:var(--accent);color:#07110e;border-color:var(--accent)}.store-actions .disable{border-color:rgba(53,226,178,.45)}.store-actions .uninstall{color:#ff7c85;border-color:rgba(255,80,95,.35)}.store-actions button:disabled,.head-actions button:disabled{opacity:.45;cursor:not-allowed}.settings-editor{margin-top:.2rem;padding-top:1rem;border-top:1px solid var(--line);display:grid;gap:.55rem}.settings-editor label{font-size:.75rem;color:var(--muted)}.settings-editor textarea{width:100%;box-sizing:border-box;background:#090d14;color:#dce7e4;border:1px solid var(--line);border-radius:10px;padding:.8rem;font-family:monospace;resize:vertical}.editor-actions{display:flex;justify-content:flex-end;gap:.5rem}.editor-actions .save{background:var(--accent);color:#07110e;font-weight:800}@media(max-width:1000px){.store-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:620px){.head{align-items:stretch;flex-direction:column}.metrics,.store-grid{grid-template-columns:1fr}.store-top{grid-template-columns:auto 1fr}.state{grid-column:1/-1}.head-actions{flex-wrap:wrap}}
   `],
 })
 export class PluginRuntimeUsageComponent implements OnInit {
@@ -161,7 +92,6 @@ export class PluginRuntimeUsageComponent implements OnInit {
   readonly installations = signal<GuildPluginInstallation[]>([]);
   readonly availablePlugins = signal<GuildPluginMarketplaceItem[]>([]);
   readonly runtimes = signal<PluginRuntimeInstance[]>([]);
-  readonly showCatalog = signal(false);
   readonly loading = signal(false);
   readonly error = signal('');
   readonly busyKey = signal('');
@@ -197,10 +127,6 @@ export class PluginRuntimeUsageComponent implements OnInit {
     this.loading.set(false);
   }
 
-  toggleCatalog(): void {
-    this.showCatalog.update(value => !value);
-  }
-
   async install(plugin: GuildPluginMarketplaceItem): Promise<void> {
     if (plugin.installed || this.busy(plugin.plugin_key)) return;
     this.busyKey.set(plugin.plugin_key);
@@ -208,7 +134,6 @@ export class PluginRuntimeUsageComponent implements OnInit {
     try {
       await this.guildPlugins.install(this.guildId, plugin.plugin_key);
       await this.load();
-      this.showCatalog.set(false);
     } catch {
       this.error.set(
         this.i18n.t(
@@ -221,6 +146,7 @@ export class PluginRuntimeUsageComponent implements OnInit {
     }
   }
 
+  installation(pluginKey: string): GuildPluginInstallation | null { return this.installations().find(item => item.plugin_key === pluginKey) || null; }
   runtime(pluginKey: string): PluginRuntimeInstance | null { return this.runtimes().find(item => item.plugin_key === pluginKey) || null; }
   busy(pluginKey: string): boolean { return this.busyKey() === pluginKey; }
   displayName(plugin: GuildPluginInstallation): string {
@@ -239,6 +165,7 @@ export class PluginRuntimeUsageComponent implements OnInit {
     try {
       const updated = plugin.enabled ? await this.guildPlugins.disable(this.guildId, plugin.plugin_key) : await this.guildPlugins.enable(this.guildId, plugin.plugin_key);
       this.installations.update(items => items.map(item => item.plugin_key === updated.plugin_key ? updated : item));
+      this.availablePlugins.update(items => items.map(item => item.plugin_key === updated.plugin_key ? {...item, installed: true, enabled: updated.enabled, installation_status: updated.status} : item));
     } catch (error: any) {
       await this.load();
       this.error.set(error?.error?.detail || this.i18n.t('runtime_usage.toggle_error', 'Unable to change plugin state.'));
