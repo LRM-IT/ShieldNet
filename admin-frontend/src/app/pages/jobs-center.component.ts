@@ -132,10 +132,12 @@ export class JobsCenterComponent implements OnInit {
         this.toast.success(this.i18n.t('ui.success','Completed'), this.i18n.t('jobs.started_success','Job started successfully.'));
         this.reload();
       },
-      error: () => {
+      error: (response) => {
         this.runningKey = '';
-        this.error = this.i18n.t('jobs.start_error', 'Job {name} failed to start.').replace('{name}', job.name);
-        this.toast.error(this.i18n.t('ui.error','Operation failed'), this.i18n.t('jobs.start_failed','Unable to start job.'));
+        const detail = response?.error?.detail;
+        const reason = typeof detail === 'string' ? detail : this.i18n.t('jobs.start_failed','Unable to start job.');
+        this.error = `${this.i18n.t('jobs.start_error', 'Job {name} failed to start.').replace('{name}', job.name)} ${reason}`;
+        this.toast.error(this.i18n.t('ui.error','Operation failed'), reason);
       },
     });
   }

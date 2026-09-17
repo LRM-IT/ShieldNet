@@ -47,7 +47,10 @@ class JobService:
             "SELECT current_database() AS database_name, current_user AS database_user, "
             "current_setting('TimeZone') AS timezone, now() AS server_time"
         ))).mappings().one()
-        return dict(row)
+        result = dict(row)
+        if isinstance(result.get("server_time"), datetime):
+            result["server_time"] = result["server_time"].isoformat()
+        return result
 
     async def _guild_registry_snapshot(self) -> dict[str, Any]:
         total = int(await self.session.scalar(select(func.count()).select_from(Guild)) or 0)
