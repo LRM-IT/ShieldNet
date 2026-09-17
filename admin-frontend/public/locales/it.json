@@ -1649,6 +1649,10 @@
     "subscription_revoke_error": "Unable to revoke subscription.",
     "subscriptions_load_error": "Impossibile caricare gli abbonamenti.",
     "discount_apply_error": "Impossibile applicare la carta sconto.",
-    "checkout_error": "Impossibile creare il pagamento."
+    "checkout_error": "Impossibile creare il pagamento.",
+    "card_deleted": "Carta sconto eliminata.",
+    "card_delete_error": "Impossibile eliminare la carta sconto.",
+    "loyalty_deleted": "Regola fedeltà eliminata.",
+    "loyalty_delete_error": "Impossibile eliminare la regola fedeltà."
   }
 }

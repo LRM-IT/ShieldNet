@@ -1651,6 +1651,10 @@
     "subscription_revoke_error": "Unable to revoke subscription.",
     "subscriptions_load_error": "تعذر تحميل الاشتراكات.",
     "discount_apply_error": "تعذر تطبيق بطاقة الخصم.",
-    "checkout_error": "تعذر إنشاء عملية الدفع."
+    "checkout_error": "تعذر إنشاء عملية الدفع.",
+    "card_deleted": "تم حذف بطاقة الخصم.",
+    "card_delete_error": "تعذر حذف بطاقة الخصم.",
+    "loyalty_deleted": "تم حذف قاعدة الولاء.",
+    "loyalty_delete_error": "تعذر حذف قاعدة الولاء."
   }
 }

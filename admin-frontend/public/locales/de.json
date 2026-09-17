@@ -1651,6 +1651,10 @@
     "subscription_revoke_error": "Unable to revoke subscription.",
     "subscriptions_load_error": "Abonnements konnten nicht geladen werden.",
     "discount_apply_error": "Rabattkarte konnte nicht angewendet werden.",
-    "checkout_error": "Zahlung konnte nicht erstellt werden."
+    "checkout_error": "Zahlung konnte nicht erstellt werden.",
+    "card_deleted": "Rabattkarte gelöscht.",
+    "card_delete_error": "Rabattkarte konnte nicht gelöscht werden.",
+    "loyalty_deleted": "Treueprogramm gelöscht.",
+    "loyalty_delete_error": "Treueprogramm konnte nicht gelöscht werden."
   }
 }

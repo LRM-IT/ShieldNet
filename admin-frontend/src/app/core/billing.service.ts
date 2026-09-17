@@ -26,5 +26,9 @@ export interface BillingWallet{discord_user_id:string;display_name?:string|null;
  redeemDiscount(guildId:string,code:string){return firstValueFrom(this.http.post<any>(`/api/v1/discord/guilds/${guildId}/billing/discount-card`,{code}))}
  discounts(){return firstValueFrom(this.http.get<any>('/api/v1/platform/billing/discounts'))}
  saveDiscountCard(x:any){return firstValueFrom(this.http.post('/api/v1/platform/billing/discounts/cards',x))}
+ updateDiscountCard(id:string,x:any){return firstValueFrom(this.http.put(`/api/v1/platform/billing/discounts/cards/${id}`,x))}
+ deleteDiscountCard(id:string){return firstValueFrom(this.http.delete(`/api/v1/platform/billing/discounts/cards/${id}`))}
  saveTenureDiscount(x:any){return firstValueFrom(this.http.post('/api/v1/platform/billing/discounts/tenure',x))}
+ updateTenureDiscount(id:string,x:any){return firstValueFrom(this.http.put(`/api/v1/platform/billing/discounts/tenure/${id}`,x))}
+ deleteTenureDiscount(id:string){return firstValueFrom(this.http.delete(`/api/v1/platform/billing/discounts/tenure/${id}`))}
 }

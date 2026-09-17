@@ -187,11 +187,43 @@ async def save_discount_card(payload:DiscountCardIn,_:User=Depends(require_super
     for k,v in payload.model_dump(exclude={"code"}).items():setattr(row,k,v)
     await session.commit();return {"id":row.id,"code":row.code,"percent":row.percent,"active":row.active}
 
+@router.put("/platform/billing/discounts/cards/{card_id}")
+async def update_discount_card(card_id:UUID,payload:DiscountCardIn,_:User=Depends(require_superadmin),session:AsyncSession=Depends(get_db_session)):
+    row=await session.get(BillingDiscountCard,card_id)
+    if row is None:raise HTTPException(404,"Discount card not found")
+    code=payload.code.strip().upper()
+    duplicate=await session.scalar(select(BillingDiscountCard.id).where(BillingDiscountCard.code==code,BillingDiscountCard.id!=card_id))
+    if duplicate:raise HTTPException(409,"Discount card code already exists")
+    row.code=code
+    for k,v in payload.model_dump(exclude={"code"}).items():setattr(row,k,v)
+    await session.commit();return {"id":row.id,"code":row.code,"percent":row.percent,"active":row.active}
+
+@router.delete("/platform/billing/discounts/cards/{card_id}")
+async def delete_discount_card(card_id:UUID,_:User=Depends(require_superadmin),session:AsyncSession=Depends(get_db_session)):
+    row=await session.get(BillingDiscountCard,card_id)
+    if row is None:raise HTTPException(404,"Discount card not found")
+    await session.delete(row);await session.commit();return {"deleted":True,"id":card_id}
+
 @router.post("/platform/billing/discounts/tenure")
 async def save_tenure_discount(payload:TenureDiscountIn,_:User=Depends(require_superadmin),session:AsyncSession=Depends(get_db_session)):
     row=await session.scalar(select(BillingTenureDiscount).where(BillingTenureDiscount.minimum_months==payload.minimum_months))
     if row is None:row=BillingTenureDiscount(id=uuid4(),minimum_months=payload.minimum_months);session.add(row)
     row.percent=payload.percent;row.active=payload.active;await session.commit();return {"id":row.id,"minimum_months":row.minimum_months,"percent":row.percent,"active":row.active}
+
+@router.put("/platform/billing/discounts/tenure/{rule_id}")
+async def update_tenure_discount(rule_id:UUID,payload:TenureDiscountIn,_:User=Depends(require_superadmin),session:AsyncSession=Depends(get_db_session)):
+    row=await session.get(BillingTenureDiscount,rule_id)
+    if row is None:raise HTTPException(404,"Loyalty rule not found")
+    duplicate=await session.scalar(select(BillingTenureDiscount.id).where(BillingTenureDiscount.minimum_months==payload.minimum_months,BillingTenureDiscount.id!=rule_id))
+    if duplicate:raise HTTPException(409,"A loyalty rule for this number of months already exists")
+    row.minimum_months=payload.minimum_months;row.percent=payload.percent;row.active=payload.active
+    await session.commit();return {"id":row.id,"minimum_months":row.minimum_months,"percent":row.percent,"active":row.active}
+
+@router.delete("/platform/billing/discounts/tenure/{rule_id}")
+async def delete_tenure_discount(rule_id:UUID,_:User=Depends(require_superadmin),session:AsyncSession=Depends(get_db_session)):
+    row=await session.get(BillingTenureDiscount,rule_id)
+    if row is None:raise HTTPException(404,"Loyalty rule not found")
+    await session.delete(row);await session.commit();return {"deleted":True,"id":rule_id}
 
 @router.get("/billing/exchange-rates")
 async def exchange_rates(_: User = Depends(get_current_user), session: AsyncSession = Depends(get_db_session)):

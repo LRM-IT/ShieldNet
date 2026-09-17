@@ -1649,6 +1649,10 @@
     "subscription_revoke_error": "Unable to revoke subscription.",
     "subscriptions_load_error": "Nie udało się załadować subskrypcji.",
     "discount_apply_error": "Nie udało się zastosować karty rabatowej.",
-    "checkout_error": "Nie udało się utworzyć płatności."
+    "checkout_error": "Nie udało się utworzyć płatności.",
+    "card_deleted": "Karta rabatowa została usunięta.",
+    "card_delete_error": "Nie udało się usunąć karty rabatowej.",
+    "loyalty_deleted": "Zasada lojalności została usunięta.",
+    "loyalty_delete_error": "Nie udało się usunąć zasady lojalności."
   }
 }
