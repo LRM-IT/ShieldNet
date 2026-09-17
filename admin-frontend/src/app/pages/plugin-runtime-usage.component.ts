@@ -68,11 +68,16 @@ interface PluginDocumentation {
               <a class="docs" [routerLink]="['/guild',guildId,'plugins',plugin.plugin_key,'documentation']">{{ 'documentation.read_more' | snT:'Documentation' }}</a>
               @if (!isInstalled(plugin)) {
                 <button type="button" class="install" [disabled]="busy(plugin.plugin_key)" (click)="install(plugin)">{{ busy(plugin.plugin_key) ? ('runtime_usage.installing' | snT:'Installing…') : ('runtime_usage.install' | snT:'Install') }}</button>
-              } @else if (isEnabled(plugin)) {
-                <button type="button" class="disable" [disabled]="busy(plugin.plugin_key)" (click)="toggleEnabled(installation(plugin.plugin_key)!)">{{ 'plugins.disable' | snT:'Disable' }}</button>
               } @else {
-                <button type="button" class="enable" [disabled]="busy(plugin.plugin_key)" (click)="toggleEnabled(installation(plugin.plugin_key)!)">{{ 'plugins.enable' | snT:'Enable' }}</button>
-                <button type="button" class="uninstall" [disabled]="busy(plugin.plugin_key)" (click)="uninstall(installation(plugin.plugin_key)!)">{{ busy(plugin.plugin_key) ? ('runtime_usage.removing' | snT:'Removing…') : ('runtime_usage.uninstall' | snT:'Uninstall') }}</button>
+                @if (installation(plugin.plugin_key); as installed) {
+                  <button type="button" class="settings" [disabled]="busy(plugin.plugin_key)" (click)="openSettings(installed)">{{ 'common.settings' | snT:'Settings' }}</button>
+                  @if (isEnabled(plugin)) {
+                    <button type="button" class="disable" [disabled]="busy(plugin.plugin_key)" (click)="toggleEnabled(installed)">{{ 'plugins.disable' | snT:'Disable' }}</button>
+                  } @else {
+                    <button type="button" class="enable" [disabled]="busy(plugin.plugin_key)" (click)="toggleEnabled(installed)">{{ 'plugins.enable' | snT:'Enable' }}</button>
+                    <button type="button" class="uninstall" [disabled]="busy(plugin.plugin_key)" (click)="uninstall(installed)">{{ busy(plugin.plugin_key) ? ('runtime_usage.removing' | snT:'Removing…') : ('runtime_usage.uninstall' | snT:'Uninstall') }}</button>
+                  }
+                }
               }
             </div>
 
@@ -199,8 +204,15 @@ export class PluginRuntimeUsageComponent implements OnInit {
     } catch (error: any) {
       await this.load();
       const detail = String(error?.error?.detail || '');
-      this.error.set(detail.includes('active subscription')
-        ? this.i18n.t('runtime_usage.subscription_required', 'An active subscription is required to enable this plugin.')
+      const localizedErrors: Array<[string, string, string]> = [
+        ['active subscription', 'runtime_usage.subscription_required', 'An active subscription is required to enable this plugin.'],
+        ['Configure language roles and a thread', 'runtime_usage.language_selection_setup_required', 'Configure language roles and a thread before enabling.'],
+        ['Configure a channel, access role and language roles', 'runtime_usage.language_group_setup_required', 'Configure a channel, access role and language roles before enabling.'],
+        ['Configure an enabled translation group', 'runtime_usage.translation_group_setup_required', 'Configure an enabled translation group with channels in at least two languages before enabling.'],
+      ];
+      const knownError = localizedErrors.find(([message]) => detail.includes(message));
+      this.error.set(knownError
+        ? this.i18n.t(knownError[1], knownError[2])
         : detail || this.i18n.t('runtime_usage.toggle_error', 'Unable to change plugin state.'));
     }
     finally { this.busyKey.set(''); }
