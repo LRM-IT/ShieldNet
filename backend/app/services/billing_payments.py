@@ -47,15 +47,23 @@ class BillingPaymentService:
 
     async def provider_config(self) -> dict:
         names = {x.secret_name for x in await self.vault.list_secrets(BILLING_VAULT_KEY)}
+        wfp_enabled = (await self.vault.get_secret(BILLING_VAULT_KEY, "wfp_enabled") or "true").lower() == "true"
+        liqpay_enabled = (await self.vault.get_secret(BILLING_VAULT_KEY, "liqpay_enabled") or "true").lower() == "true"
+        wfp_configured = {"wfp_merchant_account", "wfp_secret_key", "wfp_merchant_domain"} <= names
+        liqpay_configured = {"liqpay_public_key", "liqpay_private_key"} <= names
         return {
             "wayforpay": {
-                "configured": {"wfp_merchant_account", "wfp_secret_key", "wfp_merchant_domain"} <= names,
+                "enabled": wfp_enabled,
+                "configured": wfp_configured,
+                "active": wfp_enabled and wfp_configured,
                 "merchant_account": await self.vault.get_secret(BILLING_VAULT_KEY, "wfp_merchant_account") or "",
                 "merchant_domain": await self.vault.get_secret(BILLING_VAULT_KEY, "wfp_merchant_domain") or "",
                 "secret_saved": "wfp_secret_key" in names,
             },
             "liqpay": {
-                "configured": {"liqpay_public_key", "liqpay_private_key"} <= names,
+                "enabled": liqpay_enabled,
+                "configured": liqpay_configured,
+                "active": liqpay_enabled and liqpay_configured,
                 "public_key": await self.vault.get_secret(BILLING_VAULT_KEY, "liqpay_public_key") or "",
                 "secret_saved": "liqpay_private_key" in names,
             },
@@ -109,6 +117,9 @@ class BillingPaymentService:
         key = PAID_PACKAGE_KEY
         if period not in PERIOD_DAYS or provider not in {"wayforpay", "liqpay"}:
             raise PaymentError("Unsupported billing period or provider")
+        config = await self.provider_config()
+        if not config[provider]["active"]:
+            raise PaymentError("Payment provider is disabled or not configured")
         plan = (await self.session.execute(select(BillingPluginPlan).where(BillingPluginPlan.plugin_key == key))).scalar_one_or_none()
         if plan is None or not plan.enabled or plan.is_free:
             raise PaymentError("Paid plan is unavailable")

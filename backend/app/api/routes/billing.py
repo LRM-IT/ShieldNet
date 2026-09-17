@@ -41,9 +41,11 @@ class GrantRequest(BaseModel):
     days: int = Field(ge=1, le=3660)
 
 class ProviderUpdate(BaseModel):
+    wayforpay_enabled: bool = True
     wayforpay_merchant_account: str = ""
     wayforpay_merchant_domain: str = ""
     wayforpay_secret_key: str = ""
+    liqpay_enabled: bool = True
     liqpay_public_key: str = ""
     liqpay_private_key: str = ""
 
@@ -163,7 +165,9 @@ async def guild_billing(guild_id: int, display_currency: str = "UAH", user: User
         values,_=await NBUExchangeService(session).quote(discounted,display_currency)
         data.update({"display_currency":display_currency.upper(),"display_monthly_price":values[0],"display_quarterly_price":values[1],"display_yearly_price":values[2],"discounted_monthly_price":discounted[0],"discounted_quarterly_price":discounted[1],"discounted_yearly_price":discounted[2],"discount":discount_meta}); visible_plans=[data]
     tiers={x.plugin_key:("free" if x.is_free else "paid") for x in plans if x.plugin_key != PAID_PACKAGE_KEY}
+    provider_config=await BillingPaymentService(session).provider_config()
     return {"free_plugin_keys":sorted(x.plugin_key for x in plans if x.plugin_key != PAID_PACKAGE_KEY and x.is_free),"plans":visible_plans,"module_tiers":tiers,"subscriptions":[subscription_dict(x) for x in subscriptions if x.plugin_key == PAID_PACKAGE_KEY],
+            "providers":{key:{"active":value["active"]} for key,value in provider_config.items()},
             "exchange_rate":{"base":"UAH","currency":display_currency.upper(),"uah_per_unit":rate,"effective_at":effective,"source":"NBU"},
             "wallet":{"balance":wallet.balance,"currency":wallet.currency} if wallet else {"balance":Decimal("0.00"),"currency":"UAH"}}
 
@@ -245,9 +249,11 @@ async def providers(_: User = Depends(require_superadmin), session: AsyncSession
 @router.put("/platform/billing/providers")
 async def save_providers(payload: ProviderUpdate, user: User = Depends(require_superadmin), session: AsyncSession = Depends(get_db_session)):
     values = {
+        "wfp_enabled": "true" if payload.wayforpay_enabled else "false",
         "wfp_merchant_account": payload.wayforpay_merchant_account,
         "wfp_merchant_domain": payload.wayforpay_merchant_domain,
         "wfp_secret_key": payload.wayforpay_secret_key,
+        "liqpay_enabled": "true" if payload.liqpay_enabled else "false",
         "liqpay_public_key": payload.liqpay_public_key,
         "liqpay_private_key": payload.liqpay_private_key,
     }
