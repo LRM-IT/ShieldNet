@@ -3,10 +3,12 @@ import {FormsModule} from '@angular/forms';
 import {DatePipe} from '@angular/common';
 import {BillingPayment,BillingPlan,BillingProviders,BillingService,BillingSubscription,BillingWallet} from '../core/billing.service';
 import {ShellComponent} from '../shared/shell.component';
+import {TranslatePipe} from '../core/translate.pipe';
+import {TranslationService} from '../core/translation.service';
 
 type BillingTab='merchant'|'modules'|'pricing'|'discounts'|'balances'|'payments';
 
-@Component({standalone:true,imports:[FormsModule,DatePipe,ShellComponent],template:`
+@Component({standalone:true,imports:[FormsModule,DatePipe,ShellComponent,TranslatePipe],template:`
 <sn-shell title="Billing"><main class="page">
 <header><span>SUPERADMIN</span><h2>Billing</h2><p>Paid Modules subscription, merchant providers, balances and payment operations.</p></header>
 <nav class="tabs" aria-label="Billing sections">
@@ -57,16 +59,17 @@ export class BillingComponent implements OnInit{
  cardForm:any={code:'',percent:10,active:true,valid_from:null,valid_until:null,max_redemptions:null};tenureForm:any={minimum_months:6,percent:5,active:true};
  providerForm={wayforpay_merchant_account:'',wayforpay_merchant_domain:'',wayforpay_secret_key:'',liqpay_public_key:'',liqpay_private_key:''};
  fixed=new Set(['welcome','audit_security','backup_restore','guild_dm_broadcast','antiflood','ai_automod']);
- constructor(private api:BillingService){}ngOnInit(){this.load()}fixedFree(k:string){return this.fixed.has(k)}
- async load(){this.error.set('');try{const[p,s,c,j,w,r,pkg,d]=await Promise.all([this.api.plans(),this.api.subscriptions(),this.api.providers(),this.api.payments(),this.api.wallets(),this.api.exchangeRates(),this.api.paidPackage(),this.api.discounts()]);this.plans.set(p);this.subscriptions.set(s);this.providers.set(c);this.payments.set(j);this.wallets.set(w);this.rates.set(r);this.package=pkg;this.discounts.set(d);this.providerForm.wayforpay_merchant_account=c.wayforpay.merchant_account;this.providerForm.wayforpay_merchant_domain=c.wayforpay.merchant_domain;this.providerForm.liqpay_public_key=c.liqpay.public_key}catch(e:any){this.error.set(e?.error?.detail||'Unable to load billing.')}}
- async saveCard(){try{const payload={...this.cardForm,valid_until:this.cardForm.valid_until?new Date(this.cardForm.valid_until).toISOString():null};await this.api.saveDiscountCard(payload);this.cardForm={code:'',percent:10,active:true,valid_from:null,valid_until:null,max_redemptions:null};this.done('Discount card saved.');await this.load()}catch(e:any){this.fail(e,'Unable to save discount card.')}}
+ constructor(private api:BillingService,private i18n:TranslationService){}ngOnInit(){this.load()}fixedFree(k:string){return this.fixed.has(k)}
+ async load(){this.error.set('');try{const[p,s,c,j,w,r,pkg,d]=await Promise.all([this.api.plans(),this.api.subscriptions(),this.api.providers(),this.api.payments(),this.api.wallets(),this.api.exchangeRates(),this.api.paidPackage(),this.api.discounts()]);this.plans.set(p);this.subscriptions.set(s);this.providers.set(c);this.payments.set(j);this.wallets.set(w);this.rates.set(r);this.package=pkg;this.discounts.set(d);this.providerForm.wayforpay_merchant_account=c.wayforpay.merchant_account;this.providerForm.wayforpay_merchant_domain=c.wayforpay.merchant_domain;this.providerForm.liqpay_public_key=c.liqpay.public_key}catch(e:any){this.error.set(e?.error?.detail||this.t('load_error','Unable to load billing.'))}}
+ async saveCard(){try{const payload={...this.cardForm,valid_until:this.cardForm.valid_until?new Date(this.cardForm.valid_until).toISOString():null};await this.api.saveDiscountCard(payload);this.cardForm={code:'',percent:10,active:true,valid_from:null,valid_until:null,max_redemptions:null};this.done(this.t('card_saved','Discount card saved.'));await this.load()}catch(e:any){this.fail(e,this.t('card_save_error','Unable to save discount card.'))}}
  editCard(x:any){this.cardForm={...x,valid_until:x.valid_until?String(x.valid_until).slice(0,16):null};this.tab.set('discounts')}
- async saveTenure(){try{await this.api.saveTenureDiscount(this.tenureForm);this.done('Loyalty rule saved.');await this.load()}catch(e:any){this.fail(e,'Unable to save loyalty rule.')}}
- async savePackage(){try{this.package=await this.api.savePackage(this.package);this.done('Paid Modules pricing saved.')}catch(e:any){this.fail(e,'Unable to save pricing.')}}
- async topUp(){try{await this.api.creditWallet(this.credit);this.credit.amount=0;this.credit.comment='';this.done('Owner balance updated.');await this.load()}catch(e:any){this.fail(e,'Unable to add funds.')}}
- async saveProviderSettings(){try{await this.api.saveProviders(this.providerForm);this.providerForm.wayforpay_secret_key='';this.providerForm.liqpay_private_key='';this.done('Merchant settings saved.');await this.load()}catch(e:any){this.fail(e,'Unable to save merchant settings.')}}
- async save(x:BillingPlan){try{await this.api.savePlan(x);this.done(`${x.plugin_key} group saved.`)}catch(e:any){this.fail(e,'Unable to save module group.')}}
- async grantAccess(){try{await this.api.grant(this.grant);this.done('Paid Modules subscription granted.');await this.load()}catch(e:any){this.fail(e,'Unable to grant subscription.')}}
- async revoke(x:BillingSubscription){try{await this.api.revoke(x.id);this.done('Subscription revoked.');await this.load()}catch(e:any){this.fail(e,'Unable to revoke subscription.')}}
+ async saveTenure(){try{await this.api.saveTenureDiscount(this.tenureForm);this.done(this.t('loyalty_saved','Loyalty rule saved.'));await this.load()}catch(e:any){this.fail(e,this.t('loyalty_save_error','Unable to save loyalty rule.'))}}
+ async savePackage(){try{this.package=await this.api.savePackage(this.package);this.done(this.t('pricing_saved','Paid Modules pricing saved.'))}catch(e:any){this.fail(e,this.t('pricing_save_error','Unable to save pricing.'))}}
+ async topUp(){try{await this.api.creditWallet(this.credit);this.credit.amount=0;this.credit.comment='';this.done(this.t('balance_updated','Owner balance updated.'));await this.load()}catch(e:any){this.fail(e,this.t('funds_error','Unable to add funds.'))}}
+ async saveProviderSettings(){try{await this.api.saveProviders(this.providerForm);this.providerForm.wayforpay_secret_key='';this.providerForm.liqpay_private_key='';this.done(this.t('merchant_saved','Merchant settings saved.'));await this.load()}catch(e:any){this.fail(e,this.t('merchant_save_error','Unable to save merchant settings.'))}}
+ async save(x:BillingPlan){try{await this.api.savePlan(x);this.done(this.t('group_saved','Module group saved.'))}catch(e:any){this.fail(e,this.t('group_save_error','Unable to save module group.'))}}
+ async grantAccess(){try{await this.api.grant(this.grant);this.done(this.t('subscription_granted','Paid Modules subscription granted.'));await this.load()}catch(e:any){this.fail(e,this.t('subscription_grant_error','Unable to grant subscription.'))}}
+ async revoke(x:BillingSubscription){try{await this.api.revoke(x.id);this.done(this.t('subscription_revoked','Subscription revoked.'));await this.load()}catch(e:any){this.fail(e,this.t('subscription_revoke_error','Unable to revoke subscription.'))}}
+ t(key:string,fallback:string){return this.i18n.t(`billing.${key}`,fallback)}
  done(message:string){this.error.set('');this.success.set(message)}fail(e:any,fallback:string){this.success.set('');this.error.set(e?.error?.detail||fallback)}
 }
