@@ -100,6 +100,7 @@ interface PluginNavDefinition {
             <section class="accordion-section open">
               <div class="accordion-items standalone">
                 <a routerLink="/servers" routerLinkActive="active"><span class="nav-icon">⌂</span><span>{{ 'shell.servers' | snT:'Servers' }}</span></a>
+                <a routerLink="/billing" routerLinkActive="active"><span class="nav-icon">₴</span><span>Balance and subscriptions</span></a>
               </div>
             </section>
 
@@ -468,7 +469,6 @@ export class ShellComponent implements OnInit, OnDestroy {
     if (!id) return [];
     return [
       { label: 'shell.plugin_runtime', icon: '⬢', path: ['/guild', id, 'plugin-runtime'] },
-      { label: 'Billing & subscriptions', icon: '₴', path: ['/guild', id, 'billing'] },
       { label: 'shell.audit_trail', icon: '≡', path: ['/guild', id, 'audit'] },
       { label: 'shell.server_control', icon: '⌬', path: ['/guild', id, 'control'] },
       { label: 'Guild access', icon: '⌑', path: ['/guild', id, 'access'] },

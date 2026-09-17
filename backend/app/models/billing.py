@@ -21,6 +21,8 @@ class BillingPluginPlan(Base, TimestampMixin):
     monthly_price: Mapped[Decimal | None] = mapped_column(Numeric(12, 2))
     quarterly_price: Mapped[Decimal | None] = mapped_column(Numeric(12, 2))
     yearly_price: Mapped[Decimal | None] = mapped_column(Numeric(12, 2))
+    quarterly_discount_percent: Mapped[Decimal] = mapped_column(Numeric(5, 2), nullable=False, default=0, server_default="0")
+    yearly_discount_percent: Mapped[Decimal] = mapped_column(Numeric(5, 2), nullable=False, default=0, server_default="0")
 
 
 class BillingSubscription(Base, TimestampMixin):
@@ -77,6 +79,8 @@ class BillingWallet(Base, TimestampMixin):
     discord_user_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
     balance: Mapped[Decimal] = mapped_column(Numeric(14, 2), nullable=False, default=0, server_default="0")
     currency: Mapped[str] = mapped_column(String(3), nullable=False, default="UAH", server_default="UAH")
+    low_balance_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default="false")
+    low_balance_threshold: Mapped[Decimal] = mapped_column(Numeric(14, 2), nullable=False, default=0, server_default="0")
 
 
 class BillingWalletTransaction(Base):

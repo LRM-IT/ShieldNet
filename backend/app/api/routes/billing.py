@@ -33,6 +33,8 @@ class PlanUpdate(BaseModel):
     monthly_price: Decimal | None = Field(default=None, ge=0)
     quarterly_price: Decimal | None = Field(default=None, ge=0)
     yearly_price: Decimal | None = Field(default=None, ge=0)
+    quarterly_discount_percent: Decimal = Field(default=0, ge=0, le=90)
+    yearly_discount_percent: Decimal = Field(default=0, ge=0, le=90)
 
 class GrantRequest(BaseModel):
     guild_id: int
@@ -62,6 +64,9 @@ class SubscriptionPurchaseRequest(BaseModel):
     guild_id: int
     billing_period: str = Field(pattern=r"^(monthly|quarterly|yearly)$")
     auto_renew: bool = False
+class WalletSettingsRequest(BaseModel):
+    low_balance_enabled: bool = False
+    low_balance_threshold: Decimal = Field(default=0, ge=0, le=1_000_000)
 
 class WalletCreditRequest(BaseModel):
     discord_user_id: int
@@ -87,7 +92,8 @@ class RedeemDiscountIn(BaseModel): code:str=Field(min_length=3,max_length=64)
 
 def plan_dict(row):
     return {"plugin_key":row.plugin_key,"is_free":row.is_free,"enabled":row.enabled,"currency":row.currency,
-            "monthly_price":row.monthly_price,"quarterly_price":row.quarterly_price,"yearly_price":row.yearly_price}
+            "monthly_price":row.monthly_price,"quarterly_price":row.quarterly_price,"yearly_price":row.yearly_price,
+            "quarterly_discount_percent":row.quarterly_discount_percent,"yearly_discount_percent":row.yearly_discount_percent}
 
 def subscription_dict(row):
     return {"id":row.id,"guild_id":str(row.guild_id),"plugin_key":row.plugin_key,"status":row.status,"billing_period":row.billing_period,
@@ -124,7 +130,11 @@ async def save_paid_package(payload: PlanUpdate, _: User = Depends(require_super
     if row is None:
         row = BillingPluginPlan(id=uuid4(), plugin_key=PAID_PACKAGE_KEY, is_free=False); session.add(row)
     row.is_free=False; row.enabled=payload.enabled; row.currency="UAH"
-    row.monthly_price=payload.monthly_price; row.quarterly_price=payload.quarterly_price; row.yearly_price=payload.yearly_price
+    row.monthly_price=payload.monthly_price
+    row.quarterly_discount_percent=payload.quarterly_discount_percent
+    row.yearly_discount_percent=payload.yearly_discount_percent
+    row.quarterly_price=(payload.monthly_price*Decimal("3")*(Decimal("100")-payload.quarterly_discount_percent)/Decimal("100")).quantize(Decimal("0.01")) if payload.monthly_price is not None else None
+    row.yearly_price=(payload.monthly_price*Decimal("12")*(Decimal("100")-payload.yearly_discount_percent)/Decimal("100")).quantize(Decimal("0.01")) if payload.monthly_price is not None else None
     await session.commit(); await session.refresh(row); return plan_dict(row)
 
 @router.put("/platform/billing/plans/{plugin_key}")
@@ -188,7 +198,7 @@ async def guild_billing(guild_id: int, display_currency: str = "UAH", user: User
     return {"free_plugin_keys":sorted(x.plugin_key for x in plans if x.plugin_key != PAID_PACKAGE_KEY and x.is_free),"plans":visible_plans,"module_tiers":tiers,"subscriptions":[subscription_dict(x) for x in subscriptions if x.plugin_key == PAID_PACKAGE_KEY],
             "providers":{key:{"active":value["active"]} for key,value in provider_config.items()},
             "exchange_rate":{"base":"UAH","currency":display_currency.upper(),"uah_per_unit":rate,"effective_at":effective,"source":"NBU"},
-            "wallet":{"balance":wallet.balance,"currency":wallet.currency} if wallet else {"balance":Decimal("0.00"),"currency":"UAH"}}
+            "wallet":{"balance":wallet.balance,"currency":wallet.currency,"low_balance_enabled":wallet.low_balance_enabled,"low_balance_threshold":wallet.low_balance_threshold} if wallet else {"balance":Decimal("0.00"),"currency":"UAH","low_balance_enabled":False,"low_balance_threshold":Decimal("0.00")}}
 
 @router.post("/discord/guilds/{guild_id}/billing/discount-card")
 async def redeem_discount(guild_id:int,payload:RedeemDiscountIn,user:User=Depends(get_current_user),session:AsyncSession=Depends(get_db_session)):
@@ -209,6 +219,14 @@ async def purchase_subscription(payload:SubscriptionPurchaseRequest,user:User=De
     if not user.discord_user_id or guild is None or guild.owner_discord_id!=user.discord_user_id:raise HTTPException(403,"Only the Discord server owner can purchase a subscription")
     try:return await BillingPaymentService(session).pay_from_wallet(payload.guild_id,user.discord_user_id,PAID_PACKAGE_KEY,payload.billing_period,payload.auto_renew)
     except PaymentError as exc:raise HTTPException(400,str(exc)) from exc
+
+@router.put("/billing/wallet/settings")
+async def wallet_settings(payload:WalletSettingsRequest,user:User=Depends(get_current_user),session:AsyncSession=Depends(get_db_session)):
+    if not user.discord_user_id:raise HTTPException(400,"Discord account is required")
+    wallet=await session.scalar(select(BillingWallet).where(BillingWallet.discord_user_id==user.discord_user_id,BillingWallet.currency=="UAH"))
+    if wallet is None:wallet=BillingWallet(id=uuid4(),discord_user_id=user.discord_user_id,balance=Decimal("0.00"),currency="UAH");session.add(wallet)
+    wallet.low_balance_enabled=payload.low_balance_enabled;wallet.low_balance_threshold=payload.low_balance_threshold
+    await session.commit();return {"low_balance_enabled":wallet.low_balance_enabled,"low_balance_threshold":wallet.low_balance_threshold}
 
 @router.get("/platform/billing/discounts")
 async def discounts(_:User=Depends(require_superadmin),session:AsyncSession=Depends(get_db_session)):

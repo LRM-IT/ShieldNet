@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { timeout } from 'rxjs/operators';
 
 export interface ExplorerData {
   guild: any;
@@ -26,7 +27,7 @@ export class ExplorerService {
   load(id: string): Observable<ExplorerData> {
     return this.http.get<ExplorerData>(
       `/api/v1/discord/guilds/${id}/explorer`,
-    );
+    ).pipe(timeout(15000));
   }
 
   refreshStructure(id: string): Observable<DiscordStructureRefreshResult> {
