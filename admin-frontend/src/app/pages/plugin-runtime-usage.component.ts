@@ -55,20 +55,20 @@ interface PluginDocumentation {
 
       <section class="store-grid">
         @for (plugin of availablePlugins(); track plugin.plugin_key) {
-          <article class="store-card" [class.installed]="plugin.installed" [class.enabled]="plugin.enabled">
+          <article class="store-card" [class.installed]="isInstalled(plugin)" [class.enabled]="isEnabled(plugin)">
             <div class="store-top">
               <div class="plugin-icon">{{ plugin.plugin_key.slice(0, 1).toUpperCase() }}</div>
               <div class="plugin-title"><h3>{{ localizedName(plugin) }}</h3><small>{{ plugin.plugin_key }}</small></div>
-              <span class="state" [class.good]="plugin.enabled">{{ plugin.enabled ? ('plugins.enabled' | snT:'Enabled') : plugin.installed ? ('plugins.disabled' | snT:'Disabled') : ('runtime_usage.not_installed' | snT:'Not installed') }}</span>
+              <span class="state" [class.good]="isEnabled(plugin)">{{ isEnabled(plugin) ? ('plugins.enabled' | snT:'Enabled') : isInstalled(plugin) ? ('plugins.disabled' | snT:'Disabled') : ('runtime_usage.not_installed' | snT:'Not installed') }}</span>
             </div>
             <p class="summary">{{ localizedSummary(plugin) }}</p>
             <div class="store-meta"><span>v{{ plugin.version || '—' }}</span><span>{{ plugin.category }}</span>@if(plugin.verified){<span>✓ {{ 'runtime_usage.verified' | snT:'Verified' }}</span>}</div>
             @if (installation(plugin.plugin_key)?.last_error) { <div class="plugin-error">{{ displayPluginError(installation(plugin.plugin_key)?.last_error) }}</div> }
             <div class="store-actions">
               <a class="docs" [routerLink]="['/guild',guildId,'plugins',plugin.plugin_key,'documentation']">{{ 'documentation.read_more' | snT:'Documentation' }}</a>
-              @if (!plugin.installed) {
+              @if (!isInstalled(plugin)) {
                 <button type="button" class="install" [disabled]="busy(plugin.plugin_key)" (click)="install(plugin)">{{ busy(plugin.plugin_key) ? ('runtime_usage.installing' | snT:'Installing…') : ('runtime_usage.install' | snT:'Install') }}</button>
-              } @else if (plugin.enabled) {
+              } @else if (isEnabled(plugin)) {
                 <button type="button" class="disable" [disabled]="busy(plugin.plugin_key)" (click)="toggleEnabled(installation(plugin.plugin_key)!)">{{ 'plugins.disable' | snT:'Disable' }}</button>
               } @else {
                 <button type="button" class="enable" [disabled]="busy(plugin.plugin_key)" (click)="toggleEnabled(installation(plugin.plugin_key)!)">{{ 'plugins.enable' | snT:'Enable' }}</button>
@@ -139,7 +139,7 @@ export class PluginRuntimeUsageComponent implements OnInit {
   }
 
   async install(plugin: GuildPluginMarketplaceItem): Promise<void> {
-    if (plugin.installed || this.busy(plugin.plugin_key)) return;
+    if (this.isInstalled(plugin) || this.busy(plugin.plugin_key)) return;
     this.busyKey.set(plugin.plugin_key);
     this.error.set('');
     try {
@@ -157,7 +157,10 @@ export class PluginRuntimeUsageComponent implements OnInit {
     }
   }
 
-  installation(pluginKey: string): GuildPluginInstallation | null { return this.installations().find(item => item.plugin_key === pluginKey) || null; }
+  private samePlugin(left:string,right:string):boolean{return left.replace(/-/g,'_')===right.replace(/-/g,'_')}
+  installation(pluginKey: string): GuildPluginInstallation | null { return this.installations().find(item => this.samePlugin(item.plugin_key,pluginKey)) || null; }
+  isInstalled(plugin:GuildPluginMarketplaceItem):boolean{return this.installation(plugin.plugin_key)!==null||plugin.installed}
+  isEnabled(plugin:GuildPluginMarketplaceItem):boolean{return this.installation(plugin.plugin_key)?.enabled??plugin.enabled}
   runtime(pluginKey: string): PluginRuntimeInstance | null { return this.runtimes().find(item => item.plugin_key === pluginKey) || null; }
   busy(pluginKey: string): boolean { return this.busyKey() === pluginKey; }
   localizedName(plugin: GuildPluginMarketplaceItem): string {
@@ -190,8 +193,9 @@ export class PluginRuntimeUsageComponent implements OnInit {
     this.busyKey.set(plugin.plugin_key); this.error.set('');
     try {
       const updated = plugin.enabled ? await this.guildPlugins.disable(this.guildId, plugin.plugin_key) : await this.guildPlugins.enable(this.guildId, plugin.plugin_key);
-      this.installations.update(items => items.map(item => item.plugin_key === updated.plugin_key ? updated : item));
-      this.availablePlugins.update(items => items.map(item => item.plugin_key === updated.plugin_key ? {...item, installed: true, enabled: updated.enabled, installation_status: updated.status} : item));
+      this.installations.update(items => items.map(item => this.samePlugin(item.plugin_key,updated.plugin_key) ? updated : item));
+      this.availablePlugins.update(items => items.map(item => this.samePlugin(item.plugin_key,updated.plugin_key) ? {...item, installed: true, enabled: updated.enabled, installation_status: updated.status} : item));
+      await this.load();
     } catch (error: any) {
       await this.load();
       const detail = String(error?.error?.detail || '');

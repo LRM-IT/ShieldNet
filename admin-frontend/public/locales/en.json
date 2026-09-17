@@ -353,7 +353,10 @@
     "enabled_success": "Plugin state updated.",
     "action_success": "Plugin action completed.",
     "maintenance_success": "Maintenance mode updated.",
-    "scan_success": "Plugin scan completed."
+    "scan_success": "Plugin scan completed.",
+    "disabled": "Disabled",
+    "enable": "Enable",
+    "disable": "Disable"
   },
   "backups": {
     "title": "Backup Center",
