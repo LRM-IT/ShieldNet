@@ -54,6 +54,14 @@ class CheckoutRequest(BaseModel):
     billing_period: str = Field(pattern=r"^(monthly|quarterly|yearly)$")
     provider: str = Field(pattern=r"^(wayforpay|liqpay|balance)$")
     display_currency: str = Field(default="UAH", pattern=r"^[A-Z]{3}$")
+class WalletTopupRequest(BaseModel):
+    amount_uah: Decimal = Field(gt=0, le=1_000_000)
+    provider: str = Field(pattern=r"^(wayforpay|liqpay)$")
+    display_currency: str = Field(default="UAH", pattern=r"^[A-Z]{3}$")
+class SubscriptionPurchaseRequest(BaseModel):
+    guild_id: int
+    billing_period: str = Field(pattern=r"^(monthly|quarterly|yearly)$")
+    auto_renew: bool = False
 
 class WalletCreditRequest(BaseModel):
     discord_user_id: int
@@ -83,7 +91,7 @@ def plan_dict(row):
 
 def subscription_dict(row):
     return {"id":row.id,"guild_id":str(row.guild_id),"plugin_key":row.plugin_key,"status":row.status,"billing_period":row.billing_period,
-            "starts_at":row.starts_at,"expires_at":row.expires_at,"provider":row.provider,"external_order_id":row.external_order_id}
+            "starts_at":row.starts_at,"expires_at":row.expires_at,"provider":row.provider,"external_order_id":row.external_order_id,"auto_renew":row.auto_renew}
 
 @router.get("/platform/billing/plans")
 async def plans(_: User = Depends(require_superadmin), session: AsyncSession = Depends(get_db_session)):
@@ -188,6 +196,19 @@ async def redeem_discount(guild_id:int,payload:RedeemDiscountIn,user:User=Depend
     try: card=await BillingDiscountService(session).redeem(guild_id,payload.code,user.id)
     except DiscountError as exc: raise HTTPException(400,str(exc)) from exc
     return {"code":card.code,"discount_type":card.discount_type,"percent":card.percent,"amount_uah":card.amount_uah,"active":card.active}
+
+@router.post("/billing/wallet/checkout")
+async def wallet_checkout(payload:WalletTopupRequest,request:Request,user:User=Depends(get_current_user),session:AsyncSession=Depends(get_db_session)):
+    if not user.discord_user_id: raise HTTPException(400,"Discord account is required")
+    try:return await BillingPaymentService(session).create_wallet_topup(user.discord_user_id,payload.amount_uah,payload.provider,str(request.base_url).rstrip("/"),payload.display_currency)
+    except PaymentError as exc:raise HTTPException(400,str(exc)) from exc
+
+@router.post("/billing/subscriptions/purchase")
+async def purchase_subscription(payload:SubscriptionPurchaseRequest,user:User=Depends(get_current_user),session:AsyncSession=Depends(get_db_session)):
+    guild=await session.get(Guild,payload.guild_id)
+    if not user.discord_user_id or guild is None or guild.owner_discord_id!=user.discord_user_id:raise HTTPException(403,"Only the Discord server owner can purchase a subscription")
+    try:return await BillingPaymentService(session).pay_from_wallet(payload.guild_id,user.discord_user_id,PAID_PACKAGE_KEY,payload.billing_period,payload.auto_renew)
+    except PaymentError as exc:raise HTTPException(400,str(exc)) from exc
 
 @router.get("/platform/billing/discounts")
 async def discounts(_:User=Depends(require_superadmin),session:AsyncSession=Depends(get_db_session)):
@@ -314,6 +335,8 @@ async def wallet_transactions(discord_user_id: int, _: User = Depends(require_su
 @router.post("/discord/guilds/{guild_id}/billing/checkout")
 async def checkout(guild_id: int, payload: CheckoutRequest, request: Request, user: User = Depends(get_current_user), session: AsyncSession = Depends(get_db_session)):
     await require_guild_management(session, user, guild_id)
+    if payload.provider != "balance":
+        raise HTTPException(410, "Direct subscription checkout is disabled; top up the personal balance first")
     if payload.provider == "balance":
         guild = await session.get(Guild, guild_id)
         if user.discord_user_id is None or guild is None or guild.owner_discord_id != user.discord_user_id:
@@ -348,6 +371,15 @@ async def liqpay_callback(request: Request, session: AsyncSession = Depends(get_
 
 @router.post("/internal/billing/reconcile", dependencies=[Depends(verify_internal_service_token)])
 async def reconcile_billing(session: AsyncSession = Depends(get_db_session)):
+    now=datetime.now(timezone.utc)
+    renewals=list((await session.execute(select(BillingSubscription).where(BillingSubscription.auto_renew.is_(True),BillingSubscription.expires_at<=now,BillingSubscription.status=="active"))).scalars())
+    renewed=[]
+    for item in renewals:
+        if not item.owner_discord_id: continue
+        try:
+            await BillingPaymentService(session).pay_from_wallet(item.guild_id,item.owner_discord_id,item.plugin_key,item.billing_period,True);renewed.append(str(item.guild_id))
+        except PaymentError:
+            await session.rollback()
     expired = await BillingService(session).expired_enabled_plugins()
     disabled = []
     for guild_id, plugin_key in expired:
@@ -356,4 +388,4 @@ async def reconcile_billing(session: AsyncSession = Depends(get_db_session)):
             disabled.append({"guild_id":guild_id,"plugin_key":plugin_key})
         except LookupError:
             continue
-    return {"count":len(disabled),"disabled":disabled}
+    return {"count":len(disabled),"disabled":disabled,"renewed":renewed}

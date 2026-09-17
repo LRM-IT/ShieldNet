@@ -88,7 +88,43 @@ class BillingPaymentService:
         await self.session.commit(); await self.session.refresh(wallet)
         return wallet
 
-    async def pay_from_wallet(self, guild_id: int, discord_user_id: int, plugin_key: str, period: str) -> dict:
+    async def create_wallet_topup(self, discord_user_id:int, amount_uah:Decimal, provider:str, base_url:str, display_currency:str="UAH") -> dict:
+        config=await self.provider_config()
+        if provider not in config or not config[provider]["active"]: raise PaymentError("Payment provider is disabled or not configured")
+        currency=display_currency.upper()
+        if currency not in SUPPORTED_DISPLAY_CURRENCIES: currency="UAH"
+        charge_currency=currency if currency in PROVIDER_CURRENCIES[provider] else "UAH"
+        if charge_currency=="UAH": amount,rate=amount_uah,Decimal("1")
+        else:
+            rate,_=await NBUExchangeService(self.session).rate(charge_currency)
+            amount=await NBUExchangeService(self.session).convert_from_uah(amount_uah,charge_currency)
+        order=f"wallet-{discord_user_id}-{uuid4().hex}"
+        payment=BillingPayment(id=uuid4(),order_reference=order,guild_id=None,plugin_key=None,billing_period=None,purpose="wallet_topup",owner_discord_id=discord_user_id,provider=provider,amount=amount,currency=charge_currency,base_amount_uah=amount_uah,original_amount_uah=amount_uah,fx_rate=rate,quote_expires_at=datetime.now(timezone.utc)+timedelta(minutes=30))
+        self.session.add(payment);await self.session.commit()
+        product="GuildConsole balance top-up";callback=f"{base_url}/api/v1/billing/callback/{provider}";result=f"{base_url}/servers"
+        if provider=="wayforpay":
+            merchant=await self.secret("wfp_merchant_account");secret=await self.secret("wfp_secret_key");domain=await self.secret("wfp_merchant_domain");created=int(time.time())
+            values=[merchant,domain,order,created,_money(amount),charge_currency,product,"1",_money(amount)]
+            fields={"merchantAccount":merchant,"merchantAuthType":"SimpleSignature","merchantDomainName":domain,"orderReference":order,"orderDate":created,"amount":_money(amount),"currency":charge_currency,"productName":[product],"productPrice":[_money(amount)],"productCount":["1"],"merchantSignature":_wfp_signature(secret,values),"serviceUrl":callback,"returnUrl":result}
+            return {"provider":provider,"action":"https://secure.wayforpay.com/pay","fields":fields,"charge_amount":amount,"charge_currency":charge_currency}
+        public=await self.secret("liqpay_public_key");private=await self.secret("liqpay_private_key")
+        payload={"version":"3","public_key":public,"action":"pay","amount":_money(amount),"currency":charge_currency,"description":product,"order_id":order,"server_url":callback,"result_url":result}
+        data=base64.b64encode(json.dumps(payload,separators=(",", ":")).encode()).decode()
+        return {"provider":provider,"action":"https://www.liqpay.ua/api/3/checkout","fields":{"data":data,"signature":_liqpay_signature(private,data)},"charge_amount":amount,"charge_currency":charge_currency}
+
+    async def _complete(self,payment:BillingPayment,provider_id:str|None,raw:dict)->None:
+        if payment.purpose!="wallet_topup":
+            await self._activate(payment,provider_id,raw);return
+        if payment.status=="paid": return
+        wallet=(await self.session.execute(select(BillingWallet).where(BillingWallet.discord_user_id==payment.owner_discord_id,BillingWallet.currency=="UAH").with_for_update())).scalar_one_or_none()
+        if wallet is None:
+            wallet=BillingWallet(id=uuid4(),discord_user_id=payment.owner_discord_id,balance=Decimal("0.00"),currency="UAH");self.session.add(wallet);await self.session.flush()
+        credit=payment.base_amount_uah or Decimal("0");wallet.balance+=credit
+        self.session.add(BillingWalletTransaction(id=uuid4(),wallet_id=wallet.id,amount=credit,balance_after=wallet.balance,operation="gateway_topup",payment_id=payment.id,comment=payment.provider))
+        payment.status="paid";payment.signature_verified=True;payment.provider_payment_id=provider_id;payment.raw_status=raw;payment.paid_at=datetime.now(timezone.utc)
+        await self.session.commit()
+
+    async def pay_from_wallet(self, guild_id: int, discord_user_id: int, plugin_key: str, period: str, auto_renew:bool=False) -> dict:
         key = PAID_PACKAGE_KEY
         if period not in PERIOD_DAYS:
             raise PaymentError("Unsupported plan")
@@ -100,10 +136,10 @@ class BillingPaymentService:
         if amount <= 0:
             payment = BillingPayment(id=uuid4(), order_reference=f"voucher-{guild_id}-{uuid4().hex}", guild_id=guild_id,
                 plugin_key=key, billing_period=period, provider="voucher", amount=Decimal("0.00"), currency=plan.currency,
-                status="created", signature_verified=True, original_amount_uah=original, base_amount_uah=Decimal("0.00"),
+                status="created", signature_verified=True,purpose="subscription",owner_discord_id=discord_user_id, original_amount_uah=original, base_amount_uah=Decimal("0.00"),
                 discount_percent=discount["total_percent"], discount_code=discount["card_code"])
             self.session.add(payment); await self.session.flush()
-            await self._activate(payment, str(payment.id), {"source":"voucher","confirmed":True})
+            await self._activate(payment, str(payment.id), {"source":"voucher","confirmed":True,"auto_renew":auto_renew})
             return {"provider":"voucher","order_reference":payment.order_reference,"status":"paid","balance":None,"currency":plan.currency}
         wallet = (await self.session.execute(select(BillingWallet).where(
             BillingWallet.discord_user_id == discord_user_id, BillingWallet.currency == plan.currency
@@ -112,13 +148,13 @@ class BillingPaymentService:
             raise PaymentError("Insufficient account balance")
         payment = BillingPayment(id=uuid4(), order_reference=f"balance-{guild_id}-{uuid4().hex}", guild_id=guild_id,
             plugin_key=key, billing_period=period, provider="balance", amount=amount, currency=plan.currency,
-            status="created", signature_verified=True,original_amount_uah=original,base_amount_uah=amount,discount_percent=discount["total_percent"],discount_code=discount["card_code"])
+            status="created", signature_verified=True,purpose="subscription",owner_discord_id=discord_user_id,original_amount_uah=original,base_amount_uah=amount,discount_percent=discount["total_percent"],discount_code=discount["card_code"])
         self.session.add(payment); await self.session.flush()
         wallet.balance -= amount
         self.session.add(BillingWalletTransaction(id=uuid4(), wallet_id=wallet.id, amount=-amount,
             balance_after=wallet.balance, operation="subscription_purchase", payment_id=payment.id,
             comment=f"{key} · {period}"))
-        await self._activate(payment, str(payment.id), {"source":"wallet","confirmed":True})
+        await self._activate(payment, str(payment.id), {"source":"wallet","confirmed":True,"auto_renew":auto_renew})
         return {"provider":"balance","order_reference":payment.order_reference,"status":"paid","balance":wallet.balance,"currency":wallet.currency}
 
     async def create_checkout(self, guild_id: int, plugin_key: str, period: str, provider: str, base_url: str, display_currency: str = "UAH") -> dict:
@@ -194,12 +230,14 @@ class BillingPaymentService:
         if subscription is None:
             subscription = BillingSubscription(id=uuid4(), guild_id=payment.guild_id, plugin_key=payment.plugin_key,
                 status="active", billing_period=payment.billing_period, starts_at=now, expires_at=now + timedelta(days=days),
-                provider=payment.provider, external_order_id=payment.order_reference)
+                provider=payment.provider, external_order_id=payment.order_reference,owner_discord_id=payment.owner_discord_id,auto_renew=bool(raw.get("auto_renew",False)))
             self.session.add(subscription)
         else:
             subscription.status = "active"; subscription.billing_period = payment.billing_period
             subscription.expires_at = max(subscription.expires_at, now) + timedelta(days=days)
             subscription.provider = payment.provider; subscription.external_order_id = payment.order_reference
+            if payment.owner_discord_id: subscription.owner_discord_id=payment.owner_discord_id
+            if "auto_renew" in raw: subscription.auto_renew=bool(raw["auto_renew"])
         payment.status = "paid"; payment.signature_verified = True; payment.provider_payment_id = provider_id
         payment.raw_status = raw; payment.paid_at = now
         await self.session.commit()
@@ -220,7 +258,7 @@ class BillingPaymentService:
         if verified.get("transactionStatus") != "Approved" or Decimal(str(verified.get("amount", 0))) != payment.amount or verified.get("currency") != payment.currency:
             payment.status = "rejected"; payment.raw_status = verified; await self.session.commit()
             raise PaymentError("WayForPay did not confirm the payment")
-        await self._activate(payment, str(verified.get("authCode") or ""), verified)
+        await self._complete(payment, str(verified.get("authCode") or ""), verified)
         stamp = int(time.time())
         return {"orderReference":order,"status":"accept","time":stamp,"signature":_wfp_signature(secret,[order,"accept",stamp])}
 
@@ -240,4 +278,4 @@ class BillingPaymentService:
         if verified.get("status") not in {"success", "sandbox"} or Decimal(str(verified.get("amount", 0))) != payment.amount or verified.get("currency") != payment.currency:
             payment.status = str(verified.get("status") or "rejected")[:32]; payment.raw_status = verified; await self.session.commit()
             raise PaymentError("LiqPay did not confirm the payment")
-        await self._activate(payment, str(verified.get("payment_id") or ""), verified)
+        await self._complete(payment, str(verified.get("payment_id") or ""), verified)

@@ -37,6 +37,8 @@ class BillingSubscription(Base, TimestampMixin):
     provider: Mapped[str | None] = mapped_column(String(24))
     external_order_id: Mapped[str | None] = mapped_column(String(160))
     granted_by_user_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("core.users.id", ondelete="SET NULL"))
+    owner_discord_id: Mapped[int | None] = mapped_column(BigInteger)
+    auto_renew: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default="false")
 
 
 class BillingPayment(Base, TimestampMixin):
@@ -45,9 +47,11 @@ class BillingPayment(Base, TimestampMixin):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     order_reference: Mapped[str] = mapped_column(String(160), nullable=False)
-    guild_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("discord.guilds.guild_id", ondelete="CASCADE"), nullable=False)
-    plugin_key: Mapped[str] = mapped_column(String(96), nullable=False)
-    billing_period: Mapped[str] = mapped_column(String(16), nullable=False)
+    guild_id: Mapped[int | None] = mapped_column(BigInteger, ForeignKey("discord.guilds.guild_id", ondelete="CASCADE"))
+    plugin_key: Mapped[str | None] = mapped_column(String(96))
+    billing_period: Mapped[str | None] = mapped_column(String(16))
+    purpose: Mapped[str] = mapped_column(String(24), nullable=False, default="subscription", server_default="subscription")
+    owner_discord_id: Mapped[int | None] = mapped_column(BigInteger)
     provider: Mapped[str] = mapped_column(String(24), nullable=False)
     amount: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)
     currency: Mapped[str] = mapped_column(String(3), nullable=False)
