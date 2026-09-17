@@ -1096,6 +1096,8 @@
     "load_plugins_error": "Unable to load the plugin list.",
     "summary_error": "Runtime usage is unavailable. Confirm that the plugin is installed for this server and the Usage API is enabled.",
     "history_error": "Unable to load Runtime Usage history.",
+    "subscription_required": "يلزم اشتراك نشط لخادم Discord المحدد لتفعيل هذه الإضافة.",
+    "capability_error": "طلبت الإضافة إمكانات غير مسجلة في النظام الأساسي.",
     "no_requests_yet": "No requests yet",
     "loading_history": "Loading history…",
     "request_count": "requests",

@@ -11,7 +11,10 @@ from typing import Any, Awaitable, Callable, ParamSpec, TypeVar
 class Capability(StrEnum):
     DISCORD_READ_GUILD = "discord.read.guild"
     DISCORD_READ_MEMBERS = "discord.read.members"
+    DISCORD_READ_MESSAGES = "discord.read.messages"
     DISCORD_SEND_MESSAGE = "discord.send.message"
+    DISCORD_MANAGE_MEMBERS = "discord.manage.members"
+    DISCORD_MANAGE_MESSAGES = "discord.manage.messages"
     DISCORD_MANAGE_ROLES = "discord.manage.roles"
     DISCORD_MANAGE_CHANNELS = "discord.manage.channels"
     DISCORD_MANAGE_WEBHOOKS = "discord.manage.webhooks"
@@ -31,6 +34,16 @@ class Capability(StrEnum):
 
     AI_CHAT = "ai.chat"
     AI_EMBEDDING = "ai.embedding"
+    AI_MODERATION = "ai.moderation"
+
+    AUDIT_WRITE = "audit.write"
+    ACTIVITY_TRACK = "activity.track"
+    SECURITY_AUDIT = "security.audit"
+    BACKUPS_MANAGE = "backups.manage"
+    CONFIGURATION_RESTORE = "configuration.restore"
+    NETWORK_MANAGE = "network.manage"
+    EVENTS_MANAGE = "events.manage"
+    WARS_MANAGE = "wars.manage"
 
     EVENTS_SUBSCRIBE = "events.subscribe"
     EVENTS_PUBLISH = "events.publish"

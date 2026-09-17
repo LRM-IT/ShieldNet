@@ -1,4 +1,5 @@
 import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import { Component, OnInit, computed, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -12,6 +13,11 @@ import { PluginRuntimeInstance, PluginRuntimeService } from '../core/plugin-runt
 import { TranslationService } from '../core/translation.service';
 import { ShellComponent } from '../shared/shell.component';
 import { TranslatePipe } from '../core/translate.pipe';
+import { firstValueFrom } from 'rxjs';
+
+interface PluginDocumentation {
+  plugins?: Record<string, { purpose?: string }>;
+}
 
 @Component({
   selector: 'sn-plugin-runtime-usage',
@@ -52,12 +58,12 @@ import { TranslatePipe } from '../core/translate.pipe';
           <article class="store-card" [class.installed]="plugin.installed" [class.enabled]="plugin.enabled">
             <div class="store-top">
               <div class="plugin-icon">{{ plugin.plugin_key.slice(0, 1).toUpperCase() }}</div>
-              <div class="plugin-title"><h3>{{ plugin.name }}</h3><small>{{ plugin.plugin_key }}</small></div>
+              <div class="plugin-title"><h3>{{ localizedName(plugin) }}</h3><small>{{ plugin.plugin_key }}</small></div>
               <span class="state" [class.good]="plugin.enabled">{{ plugin.enabled ? ('plugins.enabled' | snT:'Enabled') : plugin.installed ? ('plugins.disabled' | snT:'Disabled') : ('runtime_usage.not_installed' | snT:'Not installed') }}</span>
             </div>
-            <p class="summary">{{ plugin.summary || ('plugins.no_description' | snT:'No description supplied.') }}</p>
+            <p class="summary">{{ localizedSummary(plugin) }}</p>
             <div class="store-meta"><span>v{{ plugin.version || '—' }}</span><span>{{ plugin.category }}</span>@if(plugin.verified){<span>✓ {{ 'runtime_usage.verified' | snT:'Verified' }}</span>}</div>
-            @if (installation(plugin.plugin_key)?.last_error) { <div class="plugin-error">{{ installation(plugin.plugin_key)?.last_error }}</div> }
+            @if (installation(plugin.plugin_key)?.last_error) { <div class="plugin-error">{{ displayPluginError(installation(plugin.plugin_key)?.last_error) }}</div> }
             <div class="store-actions">
               <a class="docs" [routerLink]="['/guild',guildId,'plugins',plugin.plugin_key,'documentation']">{{ 'documentation.read_more' | snT:'Documentation' }}</a>
               @if (!plugin.installed) {
@@ -97,6 +103,7 @@ export class PluginRuntimeUsageComponent implements OnInit {
   readonly error = signal('');
   readonly busyKey = signal('');
   readonly editingKey = signal('');
+  readonly documentation = signal<PluginDocumentation>({});
   settingsText = '{}';
 
   readonly enabledCount = computed(() => this.installations().filter(item => item.enabled).length);
@@ -109,6 +116,7 @@ export class PluginRuntimeUsageComponent implements OnInit {
     private readonly guildPlugins: GuildPluginService,
     private readonly runtimeService: PluginRuntimeService,
     private readonly i18n: TranslationService,
+    private readonly http: HttpClient,
   ) {}
 
   ngOnInit(): void { void this.load(); }
@@ -116,15 +124,17 @@ export class PluginRuntimeUsageComponent implements OnInit {
   async load(): Promise<void> {
     if (this.loading()) return;
     this.loading.set(true); this.error.set('');
-    const [plugins, marketplace, runtimes] = await Promise.allSettled([
+    const [plugins, marketplace, runtimes, documentation] = await Promise.allSettled([
       this.guildPlugins.listInstalled(this.guildId),
       this.guildPlugins.marketplace(this.guildId),
       this.runtimeService.list(this.guildId),
+      firstValueFrom(this.http.get<PluginDocumentation>(`/plugin-docs/${this.i18n.locale()}.json?v=16.1`)),
     ]);
     if (plugins.status === 'fulfilled') this.installations.set(plugins.value);
     else this.error.set(this.i18n.t('runtime_usage.load_plugins_error', 'Unable to load installed plugins.'));
     this.availablePlugins.set(marketplace.status === 'fulfilled' ? marketplace.value : []);
     this.runtimes.set(runtimes.status === 'fulfilled' ? runtimes.value : []);
+    this.documentation.set(documentation.status === 'fulfilled' ? documentation.value : {});
     this.loading.set(false);
   }
 
@@ -150,6 +160,21 @@ export class PluginRuntimeUsageComponent implements OnInit {
   installation(pluginKey: string): GuildPluginInstallation | null { return this.installations().find(item => item.plugin_key === pluginKey) || null; }
   runtime(pluginKey: string): PluginRuntimeInstance | null { return this.runtimes().find(item => item.plugin_key === pluginKey) || null; }
   busy(pluginKey: string): boolean { return this.busyKey() === pluginKey; }
+  localizedName(plugin: GuildPluginMarketplaceItem): string {
+    return this.i18n.t(`plugin_names.${plugin.plugin_key}`, plugin.name);
+  }
+  localizedSummary(plugin: GuildPluginMarketplaceItem): string {
+    return this.documentation().plugins?.[plugin.plugin_key]?.purpose
+      || plugin.summary
+      || this.i18n.t('plugins.no_description', 'No description supplied.');
+  }
+  displayPluginError(value: string | null | undefined): string {
+    if (!value) return '';
+    if (value.includes('Unknown capabilities')) {
+      return this.i18n.t('runtime_usage.capability_error', 'The plugin requested capabilities that are not registered in the core.');
+    }
+    return value;
+  }
   displayName(plugin: GuildPluginInstallation): string {
     const manifest = this.runtime(plugin.plugin_key)?.manifest_json || {};
     return String(this.availablePlugins().find(item => item.plugin_key === plugin.plugin_key)?.name || manifest['name'] || plugin.plugin_key);
@@ -169,7 +194,10 @@ export class PluginRuntimeUsageComponent implements OnInit {
       this.availablePlugins.update(items => items.map(item => item.plugin_key === updated.plugin_key ? {...item, installed: true, enabled: updated.enabled, installation_status: updated.status} : item));
     } catch (error: any) {
       await this.load();
-      this.error.set(error?.error?.detail || this.i18n.t('runtime_usage.toggle_error', 'Unable to change plugin state.'));
+      const detail = String(error?.error?.detail || '');
+      this.error.set(detail.includes('active subscription')
+        ? this.i18n.t('runtime_usage.subscription_required', 'An active subscription is required to enable this plugin.')
+        : detail || this.i18n.t('runtime_usage.toggle_error', 'Unable to change plugin state.'));
     }
     finally { this.busyKey.set(''); }
   }
