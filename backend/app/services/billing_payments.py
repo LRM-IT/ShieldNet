@@ -92,15 +92,14 @@ class BillingPaymentService:
         config=await self.provider_config()
         if provider not in config or not config[provider]["active"]: raise PaymentError("Payment provider is disabled or not configured")
         currency=display_currency.upper()
-        if currency not in SUPPORTED_DISPLAY_CURRENCIES: currency="UAH"
-        charge_currency=currency if currency in PROVIDER_CURRENCIES[provider] else "UAH"
-        if charge_currency==currency:
-            amount=display_amount
-            if currency=="UAH": rate=Decimal("1");amount_uah=display_amount
-            else: rate,_=await NBUExchangeService(self.session).rate(currency);amount_uah=(display_amount*rate).quantize(Decimal("0.01"))
-        else:
-            rate,_=await NBUExchangeService(self.session).rate(currency)
-            amount_uah=(display_amount*rate).quantize(Decimal("0.01"));amount=amount_uah
+        if currency not in SUPPORTED_DISPLAY_CURRENCIES:
+            raise PaymentError("Unsupported display currency")
+        if currency not in PROVIDER_CURRENCIES[provider]:
+            raise PaymentError(f"{provider} does not support payments in {currency}; select UAH, USD or EUR in your profile")
+        charge_currency=currency
+        amount=display_amount
+        if currency=="UAH": rate=Decimal("1");amount_uah=display_amount
+        else: rate,_=await NBUExchangeService(self.session).rate(currency);amount_uah=(display_amount*rate).quantize(Decimal("0.01"))
         order=f"wallet-{discord_user_id}-{uuid4().hex}"
         payment=BillingPayment(id=uuid4(),order_reference=order,guild_id=None,plugin_key=None,billing_period=None,purpose="wallet_topup",owner_discord_id=discord_user_id,provider=provider,amount=amount,currency=charge_currency,base_amount_uah=amount_uah,original_amount_uah=amount_uah,fx_rate=rate,quote_expires_at=datetime.now(timezone.utc)+timedelta(minutes=30))
         self.session.add(payment);await self.session.commit()
