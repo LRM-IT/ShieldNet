@@ -1664,7 +1664,13 @@
     "yearly": "Yearly",
     "threshold_usd": "Threshold, USD",
     "amount_usd": "Amount, USD",
-    "voucher_amount_usd": "Voucher amount, USD"
+    "voucher_amount_usd": "Voucher amount, USD",
+    "insufficient_balance": "Insufficient account balance.",
+    "unsupported_plan": "Unsupported subscription period.",
+    "price_not_configured": "The price for this period is not configured.",
+    "provider_unavailable": "The payment provider is unavailable.",
+    "paid_plan_unavailable": "The paid plan is currently unavailable.",
+    "owner_required": "Only the Discord server owner can purchase a subscription."
   },
   "documentation": {
     "open_store": "Open plugin store",

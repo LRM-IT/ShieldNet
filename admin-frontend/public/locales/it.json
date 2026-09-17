@@ -1704,7 +1704,13 @@
     "yearly": "Annuale",
     "threshold_usd": "Soglia, USD",
     "amount_usd": "Importo, USD",
-    "voucher_amount_usd": "Importo del buono, USD"
+    "voucher_amount_usd": "Importo del buono, USD",
+    "insufficient_balance": "Saldo insufficiente.",
+    "unsupported_plan": "Periodo di abbonamento non supportato.",
+    "price_not_configured": "Il prezzo per questo periodo non è configurato.",
+    "provider_unavailable": "Il gestore dei pagamenti non è disponibile.",
+    "paid_plan_unavailable": "Il piano a pagamento non è attualmente disponibile.",
+    "owner_required": "Solo il proprietario del server Discord può acquistare un abbonamento."
   },
   "documentation": {
     "open_store": "Apri il negozio plugin",

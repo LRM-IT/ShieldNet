@@ -1706,7 +1706,13 @@
     "yearly": "Jährlich",
     "threshold_usd": "Schwellenwert, USD",
     "amount_usd": "Betrag, USD",
-    "voucher_amount_usd": "Gutscheinbetrag, USD"
+    "voucher_amount_usd": "Gutscheinbetrag, USD",
+    "insufficient_balance": "Unzureichendes Guthaben.",
+    "unsupported_plan": "Nicht unterstützter Abonnementzeitraum.",
+    "price_not_configured": "Der Preis für diesen Zeitraum ist nicht konfiguriert.",
+    "provider_unavailable": "Der Zahlungsanbieter ist nicht verfügbar.",
+    "paid_plan_unavailable": "Der kostenpflichtige Tarif ist derzeit nicht verfügbar.",
+    "owner_required": "Nur der Besitzer des Discord-Servers kann ein Abonnement kaufen."
   },
   "documentation": {
     "open_store": "Plugin-Shop öffnen",

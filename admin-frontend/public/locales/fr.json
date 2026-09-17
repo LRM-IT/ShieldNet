@@ -1705,7 +1705,13 @@
     "yearly": "Annuel",
     "threshold_usd": "Seuil, USD",
     "amount_usd": "Montant, USD",
-    "voucher_amount_usd": "Montant du bon, USD"
+    "voucher_amount_usd": "Montant du bon, USD",
+    "insufficient_balance": "Solde insuffisant.",
+    "unsupported_plan": "Période d’abonnement non prise en charge.",
+    "price_not_configured": "Le prix de cette période n’est pas configuré.",
+    "provider_unavailable": "Le prestataire de paiement est indisponible.",
+    "paid_plan_unavailable": "L’offre payante est actuellement indisponible.",
+    "owner_required": "Seul le propriétaire du serveur Discord peut acheter un abonnement."
   },
   "documentation": {
     "open_store": "Ouvrir la boutique",

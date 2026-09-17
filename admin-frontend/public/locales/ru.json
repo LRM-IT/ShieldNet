@@ -1596,7 +1596,13 @@
     "yearly": "Год",
     "threshold_usd": "Порог, USD",
     "amount_usd": "Сумма, USD",
-    "voucher_amount_usd": "Сумма ваучера, USD"
+    "voucher_amount_usd": "Сумма ваучера, USD",
+    "insufficient_balance": "Недостаточно средств на балансе.",
+    "unsupported_plan": "Неподдерживаемый период подписки.",
+    "price_not_configured": "Цена для этого периода не настроена.",
+    "provider_unavailable": "Платёжный шлюз недоступен.",
+    "paid_plan_unavailable": "Платный тариф сейчас недоступен.",
+    "owner_required": "Приобрести подписку может только владелец Discord-сервера."
   },
   "documentation": {
     "open_store": "Открыть магазин плагинов",

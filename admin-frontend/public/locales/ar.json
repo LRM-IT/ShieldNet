@@ -1706,7 +1706,13 @@
     "yearly": "سنوي",
     "threshold_usd": "الحد، USD",
     "amount_usd": "المبلغ، USD",
-    "voucher_amount_usd": "قيمة القسيمة، USD"
+    "voucher_amount_usd": "قيمة القسيمة، USD",
+    "insufficient_balance": "الرصيد غير كافٍ.",
+    "unsupported_plan": "مدة الاشتراك غير مدعومة.",
+    "price_not_configured": "سعر هذه المدة غير مُعدّ.",
+    "provider_unavailable": "مزود الدفع غير متاح.",
+    "paid_plan_unavailable": "الخطة المدفوعة غير متاحة حاليًا.",
+    "owner_required": "يمكن لمالك خادم Discord فقط شراء الاشتراك."
   },
   "documentation": {
     "open_store": "فتح متجر الإضافات",

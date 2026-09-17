@@ -1596,7 +1596,13 @@
     "yearly": "Рік",
     "threshold_usd": "Поріг, USD",
     "amount_usd": "Сума, USD",
-    "voucher_amount_usd": "Сума ваучера, USD"
+    "voucher_amount_usd": "Сума ваучера, USD",
+    "insufficient_balance": "Недостатньо коштів на балансі.",
+    "unsupported_plan": "Непідтримуваний період підписки.",
+    "price_not_configured": "Ціну для цього періоду не налаштовано.",
+    "provider_unavailable": "Платіжний шлюз недоступний.",
+    "paid_plan_unavailable": "Платний тариф зараз недоступний.",
+    "owner_required": "Придбати підписку може лише власник Discord-сервера."
   },
   "documentation": {
     "open_store": "Відкрити магазин плагінів",

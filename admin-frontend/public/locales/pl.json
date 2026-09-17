@@ -1704,7 +1704,13 @@
     "yearly": "Rocznie",
     "threshold_usd": "Próg, USD",
     "amount_usd": "Kwota, USD",
-    "voucher_amount_usd": "Kwota kuponu, USD"
+    "voucher_amount_usd": "Kwota kuponu, USD",
+    "insufficient_balance": "Niewystarczające saldo.",
+    "unsupported_plan": "Nieobsługiwany okres subskrypcji.",
+    "price_not_configured": "Cena dla tego okresu nie została skonfigurowana.",
+    "provider_unavailable": "Operator płatności jest niedostępny.",
+    "paid_plan_unavailable": "Płatny plan jest obecnie niedostępny.",
+    "owner_required": "Subskrypcję może kupić tylko właściciel serwera Discord."
   },
   "documentation": {
     "open_store": "Otwórz sklep z wtyczkami",
