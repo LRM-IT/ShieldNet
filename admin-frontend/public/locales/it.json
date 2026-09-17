@@ -1729,5 +1729,15 @@
     "store": "Negozio plugin",
     "features": "Funzioni principali",
     "purpose": "Scopo"
+  },
+  "server_cards": {
+    "not_paid": "Accesso a pagamento non attivo",
+    "expired": "Accesso a pagamento scaduto",
+    "paid_for": "Pagato ancora per",
+    "auto_renew": "rinnovo automatico",
+    "day_short": "g",
+    "hour_short": "h",
+    "minute_short": "min",
+    "second_short": "s"
   }
 }

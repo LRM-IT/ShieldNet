@@ -8,10 +8,22 @@ from app.api.dependencies.auth import get_current_user
 from app.db.session import get_db_session
 from app.models.core import User
 from app.models.discord import Guild, GuildMembership, MembershipStatus
+from app.models.billing import BillingSubscription
 from app.schemas.discord import GuildAccessResponse
 from app.services.global_access import GlobalAccessService
 
 router = APIRouter(prefix="/discord", tags=["Discord"])
+
+PAID_PACKAGE_KEY = "__paid_modules__"
+
+async def _billing_by_guild(session: AsyncSession, guild_ids: list[int]) -> dict[int, BillingSubscription]:
+    if not guild_ids:
+        return {}
+    rows = (await session.execute(select(BillingSubscription).where(
+        BillingSubscription.guild_id.in_(guild_ids),
+        BillingSubscription.plugin_key == PAID_PACKAGE_KEY,
+    ))).scalars().all()
+    return {row.guild_id: row for row in rows}
 
 
 @router.get("/guilds", response_model=list[GuildAccessResponse])
@@ -28,6 +40,7 @@ async def list_my_guilds(
                 or_(Guild.last_sync_at.is_not(None), membership_exists)
             ).order_by(Guild.name)
         )).scalars().all()
+        billing = await _billing_by_guild(session, [g.guild_id for g in guilds])
         return [
             GuildAccessResponse(
                 guild_id=str(g.guild_id),
@@ -41,6 +54,9 @@ async def list_my_guilds(
                 permissions=["*"],
                 expires_at=None,
                 is_owner=(g.owner_discord_id == current_user.discord_user_id),
+                billing_status=billing[g.guild_id].status if g.guild_id in billing else "inactive",
+                billing_expires_at=billing[g.guild_id].expires_at.isoformat() if g.guild_id in billing else None,
+                billing_auto_renew=billing[g.guild_id].auto_renew if g.guild_id in billing else False,
             )
             for g in guilds
         ]
@@ -58,6 +74,8 @@ async def list_my_guilds(
         )
         .order_by(Guild.name)
     )
+    rows = result.all()
+    billing = await _billing_by_guild(session, [g.guild_id for g, _ in rows])
     return [
         GuildAccessResponse(
             guild_id=str(g.guild_id),
@@ -71,6 +89,9 @@ async def list_my_guilds(
             permissions=(m.permissions or []),
             expires_at=m.expires_at.isoformat() if m.expires_at else None,
             is_owner=(g.owner_discord_id == current_user.discord_user_id),
+            billing_status=billing[g.guild_id].status if g.guild_id in billing else "inactive",
+            billing_expires_at=billing[g.guild_id].expires_at.isoformat() if g.guild_id in billing else None,
+            billing_auto_renew=billing[g.guild_id].auto_renew if g.guild_id in billing else False,
         )
-        for g, m in result.all()
+        for g, m in rows
     ]

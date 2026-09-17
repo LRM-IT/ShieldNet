@@ -1621,5 +1621,15 @@
     "store": "Магазин плагинов",
     "features": "Основные возможности",
     "purpose": "Назначение"
+  },
+  "server_cards": {
+    "not_paid": "Платный доступ не активен",
+    "expired": "Срок оплаты истёк",
+    "paid_for": "Оплачено ещё на",
+    "auto_renew": "автопродление",
+    "day_short": "д",
+    "hour_short": "ч",
+    "minute_short": "м",
+    "second_short": "с"
   }
 }

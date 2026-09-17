@@ -1729,5 +1729,15 @@
     "store": "Sklep z wtyczkami",
     "features": "Główne funkcje",
     "purpose": "Przeznaczenie"
+  },
+  "server_cards": {
+    "not_paid": "Płatny dostęp nie jest aktywny",
+    "expired": "Płatny dostęp wygasł",
+    "paid_for": "Opłacono jeszcze na",
+    "auto_renew": "automatyczne odnowienie",
+    "day_short": "d",
+    "hour_short": "g",
+    "minute_short": "min",
+    "second_short": "s"
   }
 }

@@ -1731,5 +1731,15 @@
     "store": "Plugin-Shop",
     "features": "Hauptfunktionen",
     "purpose": "Zweck"
+  },
+  "server_cards": {
+    "not_paid": "Bezahlter Zugang ist nicht aktiv",
+    "expired": "Bezahlter Zugang ist abgelaufen",
+    "paid_for": "Bezahlt für weitere",
+    "auto_renew": "automatische Verlängerung",
+    "day_short": "T",
+    "hour_short": "Std",
+    "minute_short": "Min",
+    "second_short": "Sek"
   }
 }

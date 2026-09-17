@@ -1731,5 +1731,15 @@
     "store": "متجر الإضافات",
     "features": "الميزات الرئيسية",
     "purpose": "الغرض"
+  },
+  "server_cards": {
+    "not_paid": "الوصول المدفوع غير نشط",
+    "expired": "انتهت مدة الوصول المدفوع",
+    "paid_for": "مدفوع لمدة",
+    "auto_renew": "تجديد تلقائي",
+    "day_short": "ي",
+    "hour_short": "س",
+    "minute_short": "د",
+    "second_short": "ث"
   }
 }

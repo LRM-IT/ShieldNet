@@ -1689,5 +1689,15 @@
     "store": "Plugin store",
     "features": "Main features",
     "purpose": "Purpose"
+  },
+  "server_cards": {
+    "not_paid": "Paid access is not active",
+    "expired": "Paid access expired",
+    "paid_for": "Paid for",
+    "auto_renew": "auto-renewal",
+    "day_short": "d",
+    "hour_short": "h",
+    "minute_short": "m",
+    "second_short": "s"
   }
 }

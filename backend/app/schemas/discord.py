@@ -15,3 +15,6 @@ class GuildAccessResponse(BaseModel):
     permissions: list[str] = []
     expires_at: str | None = None
     is_owner: bool = False
+    billing_status: str = "inactive"
+    billing_expires_at: str | None = None
+    billing_auto_renew: bool = False

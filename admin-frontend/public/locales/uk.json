@@ -1621,5 +1621,15 @@
     "store": "Магазин плагінів",
     "features": "Основні можливості",
     "purpose": "Призначення"
+  },
+  "server_cards": {
+    "not_paid": "Платний доступ не активний",
+    "expired": "Термін оплати минув",
+    "paid_for": "Оплачено ще на",
+    "auto_renew": "автопродовження",
+    "day_short": "д",
+    "hour_short": "г",
+    "minute_short": "хв",
+    "second_short": "с"
   }
 }

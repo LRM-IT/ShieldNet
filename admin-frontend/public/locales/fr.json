@@ -1730,5 +1730,15 @@
     "store": "Boutique de plugins",
     "features": "Fonctions principales",
     "purpose": "Objectif"
+  },
+  "server_cards": {
+    "not_paid": "Accès payant non actif",
+    "expired": "Accès payant expiré",
+    "paid_for": "Payé encore pour",
+    "auto_renew": "renouvellement automatique",
+    "day_short": "j",
+    "hour_short": "h",
+    "minute_short": "min",
+    "second_short": "s"
   }
 }

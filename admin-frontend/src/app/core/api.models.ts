@@ -38,5 +38,8 @@ export interface GuildAccess {
   permissions?: string[];
   expires_at?: string | null;
   is_owner?: boolean;
+  billing_status?: string;
+  billing_expires_at?: string | null;
+  billing_auto_renew?: boolean;
 
 }
