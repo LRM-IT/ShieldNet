@@ -18,12 +18,10 @@ from app.services.discord_oauth import DiscordOAuthService
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 SUPPORTED_LOCALES = {"en", "uk", "ru", "de", "ar", "fr", "it", "pl"}
-SUPPORTED_CURRENCIES = {"UAH", "USD", "EUR", "PLN", "GBP", "CAD", "CHF", "CZK", "RON", "TRY", "SAR", "AED"}
 
 class PreferencesUpdate(BaseModel):
     preferred_locale: str | None = Field(default=None, max_length=8)
     preferred_timezone: str | None = Field(default=None, max_length=64)
-    display_currency: str | None = Field(default=None, min_length=3, max_length=3)
     use_discord_locale: bool | None = None
 
 
@@ -87,11 +85,6 @@ async def update_preferences(payload: PreferencesUpdate, current_user: User = De
     locale = values.get("preferred_locale")
     if locale is not None and locale not in SUPPORTED_LOCALES:
         raise HTTPException(422, "Unsupported interface language")
-    currency = values.get("display_currency")
-    if currency is not None:
-        currency = currency.upper()
-        if currency not in SUPPORTED_CURRENCIES: raise HTTPException(422, "Unsupported display currency")
-        values["display_currency"] = currency
     zone = values.get("preferred_timezone")
     if zone is not None:
         try: ZoneInfo(zone)

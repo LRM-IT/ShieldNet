@@ -108,17 +108,6 @@ import { ShellComponent } from '../shared/shell.component';
                 }
               </select>
             </div>
-            <div class="preference-row">
-              <div>
-                <strong>{{ 'profile.currency' | snT:'Display currency' }}</strong>
-                <small>{{ 'profile.currency_help' | snT:'Prices are stored in USD and converted using the official NBU rate.' }}</small>
-              </div>
-              <select [value]="currency()" (change)="changeCurrency($any($event.target).value)" aria-label="Display currency">
-                @for (item of currencies; track item.code) {
-                  <option [value]="item.code">{{ item.code }} — {{ item.name }}</option>
-                }
-              </select>
-            </div>
             <div class="regional-actions">
               @if (regionalError()) { <span class="save-message error">{{ regionalError() }}</span> }
               @if (regionalSaved()) { <span class="save-message success">{{ 'profile.regional_saved' | snT:'Language and regional settings saved.' }}</span> }
@@ -169,14 +158,6 @@ export class ProfileComponent implements OnInit {
       : ['UTC', 'Europe/Kyiv', 'Europe/Warsaw', 'Europe/Berlin', 'Europe/Paris', 'Europe/Rome', 'Asia/Dubai'];
     return available.includes(this.timezone()) ? available : [this.timezone(), ...available];
   })();
-  private readonly currencyStorageKey = 'guildconsole_currency';
-  readonly currencies = [
-    {code:'UAH',name:'Українська гривня'},{code:'USD',name:'US Dollar'},{code:'EUR',name:'Euro'},
-    {code:'PLN',name:'Polski złoty'},{code:'GBP',name:'Pound sterling'},{code:'CAD',name:'Canadian dollar'},
-    {code:'CHF',name:'Swiss franc'},{code:'CZK',name:'Česká koruna'},{code:'RON',name:'Romanian leu'},
-    {code:'TRY',name:'Türk lirası'},{code:'SAR',name:'Saudi riyal'},{code:'AED',name:'UAE dirham'},
-  ];
-  readonly currency = signal(localStorage.getItem(this.currencyStorageKey) || this.currencyForLocale(navigator.language));
   readonly savingRegional = signal(false);
   readonly regionalSaved = signal(false);
   readonly regionalError = signal('');
@@ -190,7 +171,6 @@ export class ProfileComponent implements OnInit {
   ngOnInit(): void {
     const profile=this.auth.profile();
     if(profile?.preferred_timezone&&this.timezones.includes(profile.preferred_timezone))this.timezone.set(profile.preferred_timezone);
-    if(profile?.display_currency&&this.currencies.some(x=>x.code===profile.display_currency))this.currency.set(profile.display_currency);
   }
 
   async changeLanguage(code: string): Promise<void> {
@@ -206,15 +186,6 @@ export class ProfileComponent implements OnInit {
     await this.auth.updatePreferences({preferred_timezone:zone});
   }
 
-  async changeCurrency(code: string): Promise<void> {
-    if (!this.currencies.some((item) => item.code === code)) return;
-    this.currency.set(code);
-    localStorage.setItem(this.currencyStorageKey, code);
-    document.documentElement.dataset['currency'] = code;
-    window.dispatchEvent(new CustomEvent('guildconsole-currency-change', {detail:code}));
-    await this.auth.updatePreferences({display_currency:code});
-  }
-
   async saveRegionalPreferences(): Promise<void> {
     if (this.savingRegional()) return;
     this.savingRegional.set(true);
@@ -224,11 +195,9 @@ export class ProfileComponent implements OnInit {
       await this.auth.updatePreferences({
         preferred_locale: this.i18n.locale(),
         preferred_timezone: this.timezone(),
-        display_currency: this.currency(),
         use_discord_locale: false,
       });
       localStorage.setItem(this.timezoneStorageKey, this.timezone());
-      localStorage.setItem(this.currencyStorageKey, this.currency());
       this.regionalSaved.set(true);
     } catch (error: any) {
       this.regionalError.set(
@@ -239,19 +208,4 @@ export class ProfileComponent implements OnInit {
     }
   }
 
-  private currencyForLocale(locale: string): string {
-    const region = locale.split('-')[1]?.toUpperCase();
-    if (region === 'UA') return 'UAH';
-    if (region === 'PL') return 'PLN';
-    if (region === 'GB') return 'GBP';
-    if (region === 'CA') return 'CAD';
-    if (region === 'CH') return 'CHF';
-    if (region === 'CZ') return 'CZK';
-    if (region === 'RO') return 'RON';
-    if (region === 'TR') return 'TRY';
-    if (region === 'SA') return 'SAR';
-    if (region === 'AE') return 'AED';
-    if (region === 'US') return 'USD';
-    return ['de','fr','it','es'].includes(locale.slice(0,2).toLowerCase()) ? 'EUR' : 'USD';
-  }
 }

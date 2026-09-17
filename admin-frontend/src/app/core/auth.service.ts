@@ -114,12 +114,12 @@ export class AuthService {
       this.http.get<UserProfile>('/api/v1/auth/me'),
     );
     this.profile.set(profile);
+    localStorage.removeItem('guildconsole_currency');
     if (profile.preferred_timezone) localStorage.setItem('guildconsole_timezone', profile.preferred_timezone);
-    if (profile.display_currency) localStorage.setItem('guildconsole_currency', profile.display_currency);
     return profile;
   }
 
-  async updatePreferences(values: Partial<Pick<UserProfile, 'preferred_locale'|'preferred_timezone'|'display_currency'|'use_discord_locale'>>): Promise<UserProfile> {
+  async updatePreferences(values: Partial<Pick<UserProfile, 'preferred_locale'|'preferred_timezone'|'use_discord_locale'>>): Promise<UserProfile> {
     const profile = await firstValueFrom(this.http.patch<UserProfile>('/api/v1/auth/me/preferences', values));
     this.profile.set({...this.profile(), ...profile} as UserProfile);
     return profile;

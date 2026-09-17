@@ -21,7 +21,6 @@ from app.services.billing_service import BillingService, PAID_PACKAGE_KEY, norma
 from app.services.billing_payments import BILLING_VAULT_KEY, BillingPaymentService, PaymentError
 from app.services.plugin_control_service import PluginControlService
 from app.services.guild_plugin_service import GuildPluginService
-from app.services.nbu_exchange import NBUExchangeService, ExchangeRateError, SUPPORTED_DISPLAY_CURRENCIES
 from app.services.billing_discounts import BillingDiscountService, DiscountError
 
 router = APIRouter(tags=["Billing"])
@@ -29,7 +28,6 @@ router = APIRouter(tags=["Billing"])
 class PlanUpdate(BaseModel):
     is_free: bool = False
     enabled: bool = True
-    currency: str = Field(default="USD", pattern=r"^[A-Z]{3}$")
     monthly_price: Decimal | None = Field(default=None, ge=0)
     quarterly_price: Decimal | None = Field(default=None, ge=0)
     yearly_price: Decimal | None = Field(default=None, ge=0)
@@ -55,11 +53,9 @@ class CheckoutRequest(BaseModel):
     plugin_key: str
     billing_period: str = Field(pattern=r"^(monthly|quarterly|yearly)$")
     provider: str = Field(pattern=r"^(wayforpay|liqpay|balance)$")
-    display_currency: str = Field(default="UAH", pattern=r"^[A-Z]{3}$")
 class WalletTopupRequest(BaseModel):
     amount: Decimal = Field(gt=0, le=1_000_000)
     provider: str = Field(pattern=r"^(wayforpay|liqpay)$")
-    display_currency: str = Field(default="UAH", pattern=r"^[A-Z]{3}$")
 class SubscriptionPurchaseRequest(BaseModel):
     guild_id: int
     billing_period: str = Field(pattern=r"^(monthly|quarterly|yearly)$")
@@ -177,14 +173,10 @@ async def revoke(subscription_id: UUID, _: User = Depends(require_superadmin), s
     return subscription_dict(row)
 
 @router.get("/discord/guilds/{guild_id}/billing")
-async def guild_billing(guild_id: int, display_currency: str = "UAH", user: User = Depends(get_current_user), session: AsyncSession = Depends(get_db_session)):
+async def guild_billing(guild_id: int, user: User = Depends(get_current_user), session: AsyncSession = Depends(get_db_session)):
     await require_guild_management(session, user, guild_id)
     plans = await BillingService(session).list_plans(); subscriptions = await BillingService(session).list_subscriptions(guild_id)
     wallet = await session.scalar(select(BillingWallet).where(BillingWallet.discord_user_id == user.discord_user_id)) if user.discord_user_id else None
-    try:
-        rate, effective = await NBUExchangeService(session).rate(display_currency)
-    except ExchangeRateError as exc:
-        raise HTTPException(503, str(exc)) from exc
     package = next((x for x in plans if x.plugin_key == PAID_PACKAGE_KEY), None)
     visible_plans = []
     if package and package.enabled:
@@ -193,13 +185,11 @@ async def guild_billing(guild_id: int, display_currency: str = "UAH", user: User
             if amount is None: discounted.append(None)
             else:
                 q=await BillingDiscountService(session).quote(guild_id,amount);discounted.append(q["final"]);discount_meta=q
-        values,_=await NBUExchangeService(session).quote_from_usd(discounted,display_currency)
-        data.update({"display_currency":display_currency.upper(),"display_monthly_price":values[0],"display_quarterly_price":values[1],"display_yearly_price":values[2],"discounted_monthly_price":discounted[0],"discounted_quarterly_price":discounted[1],"discounted_yearly_price":discounted[2],"discount":discount_meta}); visible_plans=[data]
+        data.update({"discounted_monthly_price":discounted[0],"discounted_quarterly_price":discounted[1],"discounted_yearly_price":discounted[2],"discount":discount_meta}); visible_plans=[data]
     tiers={x.plugin_key:("free" if x.is_free else "paid") for x in plans if x.plugin_key != PAID_PACKAGE_KEY}
     provider_config=await BillingPaymentService(session).provider_config()
     return {"free_plugin_keys":sorted(x.plugin_key for x in plans if x.plugin_key != PAID_PACKAGE_KEY and x.is_free),"plans":visible_plans,"module_tiers":tiers,"subscriptions":[subscription_dict(x) for x in subscriptions if x.plugin_key == PAID_PACKAGE_KEY],
             "providers":{key:{"active":value["active"]} for key,value in provider_config.items()},
-            "exchange_rate":{"base":"USD","currency":display_currency.upper(),"uah_per_unit":rate,"effective_at":effective,"source":"NBU"},
             "wallet":{"balance":wallet.balance,"currency":wallet.currency,"low_balance_enabled":wallet.low_balance_enabled,"low_balance_threshold":wallet.low_balance_threshold,"low_balance_discord_dm":wallet.low_balance_discord_dm,"low_balance_email":wallet.low_balance_email} if wallet else {"balance":Decimal("0.00"),"currency":"USD","low_balance_enabled":False,"low_balance_threshold":Decimal("0.00"),"low_balance_discord_dm":True,"low_balance_email":False},"email_available":bool(user.email)}
 
 @router.post("/discord/guilds/{guild_id}/billing/discount-card")
@@ -212,7 +202,7 @@ async def redeem_discount(guild_id:int,payload:RedeemDiscountIn,user:User=Depend
 @router.post("/billing/wallet/checkout")
 async def wallet_checkout(payload:WalletTopupRequest,request:Request,user:User=Depends(get_current_user),session:AsyncSession=Depends(get_db_session)):
     if not user.discord_user_id: raise HTTPException(400,"Discord account is required")
-    try:return await BillingPaymentService(session).create_wallet_topup(user.discord_user_id,payload.amount,payload.provider,str(request.base_url).rstrip("/"),payload.display_currency)
+    try:return await BillingPaymentService(session).create_wallet_topup(user.discord_user_id,payload.amount,payload.provider,str(request.base_url).rstrip("/"))
     except PaymentError as exc:raise HTTPException(400,str(exc)) from exc
 
 @router.post("/billing/subscriptions/purchase")
@@ -283,19 +273,6 @@ async def delete_tenure_discount(rule_id:UUID,_:User=Depends(require_superadmin)
     row=await session.get(BillingTenureDiscount,rule_id)
     if row is None:raise HTTPException(404,"Loyalty rule not found")
     await session.delete(row);await session.commit();return {"deleted":True,"id":rule_id}
-
-@router.get("/billing/exchange-rates")
-async def exchange_rates(_: User = Depends(get_current_user), session: AsyncSession = Depends(get_db_session)):
-    service = NBUExchangeService(session)
-    try: await service.refresh_if_stale()
-    except ExchangeRateError as exc: raise HTTPException(503, str(exc)) from exc
-    result = []
-    for currency in SUPPORTED_DISPLAY_CURRENCIES:
-        try:
-            rate, effective = await service.rate(currency)
-            result.append({"currency":currency,"uah_per_unit":rate,"effective_at":effective,"source":"NBU"})
-        except ExchangeRateError: continue
-    return result
 
 @router.get("/platform/billing/providers")
 async def providers(_: User = Depends(require_superadmin), session: AsyncSession = Depends(get_db_session)):
@@ -370,7 +347,7 @@ async def checkout(guild_id: int, payload: CheckoutRequest, request: Request, us
             raise HTTPException(400, str(exc)) from exc
     base_url = str(request.base_url).rstrip("/")
     try:
-        return await BillingPaymentService(session).create_checkout(guild_id, payload.plugin_key, payload.billing_period, payload.provider, base_url, payload.display_currency)
+        return await BillingPaymentService(session).create_checkout(guild_id, payload.plugin_key, payload.billing_period, payload.provider, base_url)
     except PaymentError as exc:
         raise HTTPException(400, str(exc)) from exc
 

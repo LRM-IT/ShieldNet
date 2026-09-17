@@ -64,7 +64,6 @@ class BillingPayment(Base, TimestampMixin):
     raw_status: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict, server_default="{}")
     paid_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     base_amount_usd: Mapped[Decimal | None] = mapped_column(Numeric(12, 2))
-    fx_rate: Mapped[Decimal | None] = mapped_column(Numeric(18, 8))
     quote_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     original_amount_usd: Mapped[Decimal | None] = mapped_column(Numeric(12, 2))
     discount_percent: Mapped[Decimal] = mapped_column(Numeric(5, 2), nullable=False, default=0, server_default="0")
@@ -99,16 +98,6 @@ class BillingWalletTransaction(Base):
     actor_user_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("core.users.id", ondelete="SET NULL"))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
 
-
-class BillingExchangeRate(Base, TimestampMixin):
-    __tablename__ = "exchange_rates"
-    __table_args__ = (UniqueConstraint("currency", name="uq_billing_exchange_rate_currency"), {"schema": "billing"})
-
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    currency: Mapped[str] = mapped_column(String(3), nullable=False)
-    uah_per_unit: Mapped[Decimal] = mapped_column(Numeric(18, 8), nullable=False)
-    effective_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    source: Mapped[str] = mapped_column(String(32), nullable=False, default="NBU", server_default="NBU")
 
 class BillingDiscountCard(Base, TimestampMixin):
     __tablename__ = "discount_cards"

@@ -14,15 +14,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.billing import BillingPayment, BillingPluginPlan, BillingSubscription, BillingWallet, BillingWalletTransaction
 from app.services.billing_service import PAID_PACKAGE_KEY, normalize_plugin_key
 from app.services.plugin_control_service import PluginControlService
-from app.services.nbu_exchange import NBUExchangeService, ExchangeRateError, SUPPORTED_DISPLAY_CURRENCIES
 from app.services.billing_discounts import BillingDiscountService
 
 
 BILLING_VAULT_KEY = "core_billing"
 PERIOD_DAYS = {"monthly": 30, "quarterly": 90, "yearly": 365}
-PROVIDER_CURRENCIES = {"wayforpay":{"UAH","USD","EUR"}, "liqpay":{"UAH","USD","EUR"}}
-
-
 class PaymentError(ValueError):
     pass
 
@@ -88,19 +84,12 @@ class BillingPaymentService:
         await self.session.commit(); await self.session.refresh(wallet)
         return wallet
 
-    async def create_wallet_topup(self, discord_user_id:int, display_amount:Decimal, provider:str, base_url:str, display_currency:str="USD") -> dict:
+    async def create_wallet_topup(self, discord_user_id:int, amount:Decimal, provider:str, base_url:str) -> dict:
         config=await self.provider_config()
         if provider not in config or not config[provider]["active"]: raise PaymentError("Payment provider is disabled or not configured")
-        currency=display_currency.upper()
-        if currency not in SUPPORTED_DISPLAY_CURRENCIES:
-            raise PaymentError("Unsupported display currency")
-        if currency not in PROVIDER_CURRENCIES[provider]:
-            raise PaymentError(f"{provider} does not support payments in {currency}; select UAH, USD or EUR in your profile")
-        charge_currency=currency
-        amount=display_amount
-        amount_usd,rate=await NBUExchangeService(self.session).convert_to_usd(display_amount,currency)
+        charge_currency="USD";amount_usd=amount
         order=f"wallet-{discord_user_id}-{uuid4().hex}"
-        payment=BillingPayment(id=uuid4(),order_reference=order,guild_id=None,plugin_key=None,billing_period=None,purpose="wallet_topup",owner_discord_id=discord_user_id,provider=provider,amount=amount,currency=charge_currency,base_amount_usd=amount_usd,original_amount_usd=amount_usd,fx_rate=rate,quote_expires_at=datetime.now(timezone.utc)+timedelta(minutes=30))
+        payment=BillingPayment(id=uuid4(),order_reference=order,guild_id=None,plugin_key=None,billing_period=None,purpose="wallet_topup",owner_discord_id=discord_user_id,provider=provider,amount=amount,currency=charge_currency,base_amount_usd=amount_usd,original_amount_usd=amount_usd,quote_expires_at=datetime.now(timezone.utc)+timedelta(minutes=30))
         self.session.add(payment);await self.session.commit()
         product="GuildConsole balance top-up";callback=f"{base_url}/api/v1/billing/callback/{provider}";result=f"{base_url}/servers"
         if provider=="wayforpay":
@@ -158,7 +147,7 @@ class BillingPaymentService:
         await self._activate(payment, str(payment.id), {"source":"wallet","confirmed":True,"auto_renew":auto_renew})
         return {"provider":"balance","order_reference":payment.order_reference,"status":"paid","balance":wallet.balance,"currency":wallet.currency}
 
-    async def create_checkout(self, guild_id: int, plugin_key: str, period: str, provider: str, base_url: str, display_currency: str = "USD") -> dict:
+    async def create_checkout(self, guild_id: int, plugin_key: str, period: str, provider: str, base_url: str) -> dict:
         key = PAID_PACKAGE_KEY
         if period not in PERIOD_DAYS or provider not in {"wayforpay", "liqpay"}:
             raise PaymentError("Unsupported billing period or provider")
@@ -180,22 +169,11 @@ class BillingPaymentService:
             self.session.add(payment); await self.session.flush()
             await self._activate(payment, str(payment.id), {"source":"voucher","confirmed":True})
             return {"provider":"voucher","order_reference":payment.order_reference,"status":"paid","discount":discount}
-        requested_currency = display_currency.upper()
-        if requested_currency not in SUPPORTED_DISPLAY_CURRENCIES:
-            requested_currency = "USD"
-        try:
-            display_amount = await NBUExchangeService(self.session).convert_from_usd(base_amount, requested_currency)
-        except ExchangeRateError as exc:
-            raise PaymentError(str(exc)) from exc
-        if requested_currency not in PROVIDER_CURRENCIES[provider]:
-            raise PaymentError(f"{provider} does not support payments in {requested_currency}; select UAH, USD or EUR in your profile")
-        charge_currency = requested_currency
-        amount = display_amount
-        _, fx_rate = await NBUExchangeService(self.session).convert_to_usd(Decimal("1"), charge_currency)
+        charge_currency="USD";amount=base_amount
         order = f"gc-{guild_id}-{uuid4().hex}"
         payment = BillingPayment(id=uuid4(), order_reference=order, guild_id=guild_id, plugin_key=key,
                                  billing_period=period, provider=provider, amount=amount, currency=charge_currency,
-                                 original_amount_usd=original_amount,base_amount_usd=base_amount,discount_percent=discount["total_percent"],discount_code=discount["card_code"],fx_rate=fx_rate, quote_expires_at=datetime.now(timezone.utc)+timedelta(minutes=30))
+                                 original_amount_usd=original_amount,base_amount_usd=base_amount,discount_percent=discount["total_percent"],discount_code=discount["card_code"],quote_expires_at=datetime.now(timezone.utc)+timedelta(minutes=30))
         self.session.add(payment)
         await self.session.commit()
         product = f"GuildConsole Paid Modules {period}"
@@ -210,14 +188,14 @@ class BillingPaymentService:
                       "productName":[product],"productPrice":[_money(amount)],"productCount":["1"],
                       "merchantSignature":_wfp_signature(secret, values),"serviceUrl":callback,"returnUrl":result}
             return {"provider":provider,"order_reference":order,"action":"https://secure.wayforpay.com/pay","method":"POST","fields":fields,
-                    "charge_amount":amount,"charge_currency":charge_currency,"display_amount":display_amount,"display_currency":requested_currency,"quote_minutes":30,"discount":discount}
+                    "charge_amount":amount,"charge_currency":charge_currency,"quote_minutes":30,"discount":discount}
         public = await self.secret("liqpay_public_key"); private = await self.secret("liqpay_private_key")
         payload = {"version":"3","public_key":public,"action":"pay","amount":_money(amount),"currency":charge_currency,
                    "description":product,"order_id":order,"server_url":callback,"result_url":result}
         data = base64.b64encode(json.dumps(payload, separators=(",", ":")).encode()).decode()
         return {"provider":provider,"order_reference":order,"action":"https://www.liqpay.ua/api/3/checkout","method":"POST",
                 "fields":{"data":data,"signature":_liqpay_signature(private, data)},"charge_amount":amount,"charge_currency":charge_currency,
-                "display_amount":display_amount,"display_currency":requested_currency,"quote_minutes":30,"discount":discount}
+                "quote_minutes":30,"discount":discount}
 
     async def _activate(self, payment: BillingPayment, provider_id: str | None, raw: dict) -> None:
         if payment.status == "paid":

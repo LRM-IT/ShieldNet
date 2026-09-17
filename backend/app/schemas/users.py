@@ -39,7 +39,6 @@ def user_to_response(user: User) -> dict:
         "discord_user_id": user.discord_user_id,
         "preferred_locale": user.preferred_locale,
         "preferred_timezone": user.preferred_timezone,
-        "display_currency": user.display_currency,
         "use_discord_locale": user.use_discord_locale,
         "status": user.status.value,
         "email_verified": user.email_verified,

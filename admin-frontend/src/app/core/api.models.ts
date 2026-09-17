@@ -16,7 +16,6 @@ export interface UserProfile {
   preferred_locale?: string | null;
   use_discord_locale?: boolean;
   preferred_timezone?: string | null;
-  display_currency?: string | null;
   status: string;
   email_verified: boolean;
   roles: string[];
