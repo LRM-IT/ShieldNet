@@ -1,13 +1,13 @@
 import {Component,OnInit,signal} from '@angular/core';
 import {FormsModule} from '@angular/forms';
-import {DatePipe} from '@angular/common';
+import {DatePipe,DecimalPipe} from '@angular/common';
 import {BillingPayment,BillingPlan,BillingProviders,BillingService,BillingSubscription,BillingWallet} from '../core/billing.service';
 import {ShellComponent} from '../shared/shell.component';
 import {TranslationService} from '../core/translation.service';
 
 type BillingTab='merchant'|'modules'|'pricing'|'discounts'|'balances'|'payments';
 
-@Component({standalone:true,imports:[FormsModule,DatePipe,ShellComponent],template:`
+@Component({standalone:true,imports:[FormsModule,DatePipe,DecimalPipe,ShellComponent],template:`
 <sn-shell title="Billing"><main class="page">
 <header><span>SUPERADMIN</span><h2>Billing</h2><p>Server activation, merchant providers, balances and payment operations.</p></header>
 <nav class="tabs" aria-label="Billing sections">
