@@ -2,7 +2,7 @@ import {HttpClient} from '@angular/common/http';
 import {Injectable} from '@angular/core';
 import {firstValueFrom} from 'rxjs';
 export interface BillingPlan{plugin_key:string;name?:string;is_free:boolean;enabled:boolean;currency:string;monthly_price:number|null;quarterly_price:number|null;yearly_price:number|null}
-export interface BillingSubscription{id:string;guild_id:string;plugin_key:string;status:string;billing_period:string;starts_at:string;expires_at:string;provider?:string|null}
+export interface BillingSubscription{id:string;guild_id:string;plugin_key:string;status:string;billing_period:string;starts_at:string;expires_at:string;provider?:string|null;auto_renew?:boolean}
 export interface BillingProviders{wayforpay:{enabled:boolean;configured:boolean;active:boolean;merchant_account:string;merchant_domain:string;secret_saved:boolean};liqpay:{enabled:boolean;configured:boolean;active:boolean;public_key:string;secret_saved:boolean}}
 export interface BillingPayment{id:string;order_reference:string;guild_id:string;guild_name?:string|null;plugin_key:string;billing_period:string;provider:string;amount:number;currency:string;status:string;signature_verified:boolean;created_at:string;paid_at?:string|null}
 export interface BillingWallet{discord_user_id:string;display_name?:string|null;email?:string|null;balance:number;currency:string}

@@ -1,12 +1,12 @@
 import {Component,OnInit,signal} from '@angular/core';
 import {ActivatedRoute,Router} from '@angular/router';
-import {DatePipe,DecimalPipe} from '@angular/common';
+import {DecimalPipe} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {BillingService} from '../core/billing.service';
 import {GuildService} from '../core/guild.service';
 import {ShellComponent} from '../shared/shell.component';
 import {TranslationService} from '../core/translation.service';
-@Component({standalone:true,imports:[ShellComponent,DatePipe,DecimalPipe,FormsModule],template:`
+@Component({standalone:true,imports:[ShellComponent,DecimalPipe,FormsModule],template:`
 <sn-shell title="Billing"><main class="page"><header><span>BILLING</span><h2>Balance and subscriptions</h2><p>Top up your personal balance, then select a Discord server and subscription period.</p></header>
 @if(error()){<div class="notice">{{error()}}</div>}@if(data()){<section class="summary"><div><small>Personal balance</small><strong>{{data().wallet.balance|number:'1.2-2'}} UAH</strong></div><div><small>Display currency</small><strong>{{currency}}</strong></div><div><small>NBU rate</small><strong>1 {{currency}} = {{data().exchange_rate.uah_per_unit|number:'1.2-4'}} UAH</strong></div></section>
 <section class="panel controls"><label>Discord server<select [(ngModel)]="selectedGuildId" (change)="changeGuild()">@for(g of guilds;track g.guild_id){<option [value]="g.guild_id">{{g.name}}</option>}</select></label><label class="check"><input type="checkbox" [(ngModel)]="autoRenew"> Automatic renewal from balance</label></section>
