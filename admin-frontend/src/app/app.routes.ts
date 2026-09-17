@@ -61,6 +61,7 @@ import { GuildAccessComponent } from './pages/guild-access.component';
 import { GuildAccessOverviewComponent } from './pages/guild-access-overview.component';
 import { BillingComponent } from './pages/billing.component';
 import { GuildBillingComponent } from './pages/guild-billing.component';
+import { DocumentationComponent } from './pages/documentation.component';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -69,6 +70,7 @@ export const routes: Routes = [
   { path: 'access-denied', component: AccessDeniedComponent },
   { path: 'servers', component: ServerSelectorComponent, canActivate: [authGuard] },
   { path: 'billing', component: GuildBillingComponent, canActivate: [authGuard] },
+  { path: 'documentation', component: DocumentationComponent, canActivate: [authGuard] },
   { path: 'platform/languages', component: PlatformLanguagesComponent },
   { path: 'platform/template-bank', component: TemplateBankComponent, canActivate: [platformGuard] },
   { path: 'platform/voting-templates', component: VotingTemplatesComponent, canActivate: [platformGuard] },
@@ -101,6 +103,8 @@ export const routes: Routes = [
   { path: 'guild/:guildId/backups', component: BackupsComponent, canActivate: [guildGuard], data: { guildModule: 'settings' } },
   { path: 'guild/:guildId/automations', component: AutomationsComponent, canActivate: [guildGuard], data: { guildModule: 'automations' } },
   { path: 'guild/:guildId/plugin-runtime', component: PluginRuntimeUsageComponent, canActivate: [guildGuard], data: { guildModule: 'plugins' } },
+  { path: 'guild/:guildId/documentation', component: DocumentationComponent, canActivate: [guildGuard], data: { guildModule: 'plugins' } },
+  { path: 'guild/:guildId/plugins/:pluginKey/documentation', component: DocumentationComponent, canActivate: [guildGuard], data: { guildModule: 'plugins' } },
   { path: 'guild/:guildId/plugins/guild-dm-broadcast', component: GuildDMBroadcastComponent, canActivate: [guildGuard], data: { guildModule: 'plugins' } },
   { path: 'guild/:guildId/plugins/welcome', component: PluginWelcomeComponent, canActivate: [guildGuard], data: { guildModule: 'plugins' } },
   { path: 'guild/:guildId/plugins/antiflood', component: PluginAntiFloodComponent, canActivate: [guildGuard], data: { guildModule: 'plugins' } },
