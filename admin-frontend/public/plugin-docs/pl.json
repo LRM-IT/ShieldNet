@@ -1,0 +1,106 @@
+{
+  "common": {
+    "configuration_title": "Konfiguracja",
+    "check_title": "Jak zweryfikować",
+    "troubleshooting_title": "Rozwiązywanie problemów",
+    "requirements": [
+      "Bot GuildConsole jest obecny na serwerze Discord.",
+      "Rola bota znajduje się powyżej każdej roli, którą {plugin} musi zarządzać.",
+      "Wymagane kanały i role Discord już istnieją, chyba że wtyczka może je utworzyć."
+    ],
+    "steps": [
+      "Otwórz sklep z wtyczkami i zainstaluj {plugin}.",
+      "Otwórz ustawienia wtyczki z menu serwera i wypełnij wszystkie wymagane pola.",
+      "Zapisz ustawienia, a następnie włącz wtyczkę w sklepie.",
+      "Przed użyciem z członkami uruchom scenariusz weryfikacyjny opisany na tej stronie."
+    ],
+    "troubleshooting": [
+      "Jeśli włączenie się nie powiedzie, przeczytaj błąd na karcie i uzupełnij brakujące ustawienia.",
+      "Sprawdź pozycję roli bota oraz jej uprawnienia do kanałów.",
+      "Potwierdź, że wybrane kanały i role nie zostały usunięte w Discordzie.",
+      "Wyłącz i włącz {plugin} ponownie po zmianie krytycznych uprawnień Discorda."
+    ]
+  },
+  "plugins": {
+    "welcome": {
+      "purpose": "Wita każdego nowego członka i kieruje go do następnej wymaganej akcji na serwerze.",
+      "configuration": "Wybierz kanał powitalny, sekwencję wiadomości, opóźnienia, rolę ukończenia oraz warunek, który zatrzymuje przypomnienia.",
+      "check": "Dołącz za pomocą konta testowego i potwierdź, że wiadomości pojawiają się w kolejności i zatrzymują się po przypisaniu skonfigurowanej roli."
+    },
+    "antiflood": {
+      "purpose": "Ogranicza powtarzające się wiadomości i chroni wybrane kanały przed zalewem.",
+      "configuration": "Utwórz limity liczby wiadomości i interwału, wybierz kanały, wykluczenia oraz akcję moderacyjną.",
+      "check": "Wysyłaj wiadomości za pomocą konta testowego, aż zostanie osiągnięty limit, i zweryfikuj skonfigurowane ostrzeżenie, usunięcie lub timeout."
+    },
+    "translator_groups": {
+      "purpose": "Tłumaczy i przekazuje wiadomości, pliki oraz obrazy między kanałami językowymi.",
+      "configuration": "Utwórz grupę, dodaj co najmniej dwa kanały, przypisz do każdego jeden język i wybierz dostawcę AI Center.",
+      "check": "Wyślij tekst i obraz w jednym kanale i zweryfikuj dostarczenie oraz tłumaczenie w każdym innym kanale grupy."
+    },
+    "first_introduction": {
+      "purpose": "Przypisuje role językowe, gdy członkowie reagują na wiadomości z flagami.",
+      "configuration": "Utwórz niezależne grupy językowe, wybierz kanał lub wątek, domyślny język, rolę dostępu oraz maskę nazwy roli.",
+      "check": "Opublikuj post z reakcjami, kliknij każdą flagę za pomocą konta testowego i sprawdź, czy zmienia się tylko oczekiwana rola językowa."
+    },
+    "verification_level1": {
+      "purpose": "Weryfikuje tożsamość członka za pomocą formularzy i opcjonalnych kontroli obrazów AI.",
+      "configuration": "Skonfiguruj komendy, akceptowane kanały, szablon nicku, tryb przeglądu, poziomy weryfikacji, znaczniki obrazów, akceptowane wartości i role wynikowe.",
+      "check": "Ukończ każdy poziom z danymi testowymi zgodnymi i niezgodnymi, a następnie zweryfikuj nick, role i wiadomości przeglądu."
+    },
+    "voting": {
+      "purpose": "Publikuje ankiety przy użyciu wielokrotnego użytku wizualnych szablonów i wyświetla ich wyniki.",
+      "configuration": "Wybierz szablon, kanał, pytanie, opcje, czas trwania oraz znaczniki szablonu dla tytułu i wartości wyników.",
+      "check": "Podejrzyj ankietę, opublikuj krótkie testowe głosowanie i potwierdź, że reakcje oraz końcowe wyniki są liczone poprawnie."
+    },
+    "guild-dm-broadcast": {
+      "purpose": "Wysyła kontrolowane kampanie wiadomości prywatnych do wybranych członków serwera.",
+      "configuration": "Wybierz odbiorców, wykluczenia, treść wiadomości, szybkość wysyłania i harmonogram dostarczania; przed rozpoczęciem użyj podglądu.",
+      "check": "Najpierw wyślij do małej grupy testowej i sprawdź liczniki dostarczonych, pominiętych i nieudanych wiadomości."
+    },
+    "role_menu": {
+      "purpose": "Pozwala członkom samodzielnie przypisywać sobie zatwierdzone role za pomocą przycisków lub menu wyboru.",
+      "configuration": "Utwórz panel, wybierz jego kanał i układ, dodaj role, etykiety oraz wzajemnie wykluczające się grupy.",
+      "check": "Opublikuj panel i zweryfikuj dodawanie, usuwanie oraz zachowanie wykluczania ról za pomocą konta testowego."
+    },
+    "ai_automod": {
+      "purpose": "Wykorzystuje AI Center do wykrywania ryzykownych wiadomości i stosowania działań moderacyjnych.",
+      "configuration": "Wybierz monitorowane kanały, wykluczone role, kategorie ryzyka, progi oraz działania, takie jak ostrzeżenie, usunięcie lub timeout.",
+      "check": "Użyj nieszkodliwych testowych fraz dla każdej włączonej kategorii i przejrzyj dziennik moderacji przed włączeniem surowych działań."
+    },
+    "event_manager": {
+      "purpose": "Planuje wydarzenia, zbiera odpowiedzi RSVP i wysyła przypomnienia w Discordzie.",
+      "configuration": "Ustaw strefę czasową, kanał ogłoszeń, opcje RSVP, interwały przypomnień oraz opcjonalne role uczestników.",
+      "check": "Utwórz testowe wydarzenie z bliskim terminem i potwierdź publikację, aktualizacje RSVP oraz każde przypomnienie."
+    },
+    "war_planner": {
+      "purpose": "Koordynuje wojny, fale, cele i przydziały uczestników.",
+      "configuration": "Utwórz daty wojny, fale i cele, a następnie przypisz uczestników oraz kanał publikacji.",
+      "check": "Opublikuj testowy plan i sprawdź, czy przypisania, zmiany statusu i czasy są widoczne dla uczestników."
+    },
+    "activity_ranking": {
+      "purpose": "Śledzi aktywność tekstową i głosową oraz tworzy rankingi serwera.",
+      "configuration": "Ustaw punkty, cooldown wiadomości, punktację głosową, wykluczone kanały i wykluczone role.",
+      "check": "Wygeneruj aktywność tekstową i głosową za pomocą testowego członka i potwierdź zaktualizowane sumy oraz komendę rankingu."
+    },
+    "audit_security": {
+      "purpose": "Rejestruje zmiany w Discordzie istotne dla bezpieczeństwa i wysyła filtrowane alerty audytu.",
+      "configuration": "Wybierz typy zdarzeń, kanał audytu, limit przechowywania oraz opcjonalną rolę do oznaczenia przy ważnych zdarzeniach.",
+      "check": "Wykonaj nieszkodliwą zmianę roli lub kanału i potwierdź poprawnie sformatowane zdarzenie audytu."
+    },
+    "backup_restore": {
+      "purpose": "Tworzy wersjonowane migawki i przywraca wybrane ustawienia GuildConsole oraz Discorda.",
+      "configuration": "Wybierz uwzględniane sekcje, retencję i harmonogram; przed zastosowaniem przejrzyj plan przywracania.",
+      "check": "Utwórz migawkę, potwierdź jej zawartość i przetestuj porównanie bez wykonywania destrukcyjnego przywracania."
+    },
+    "cross_guild_network": {
+      "purpose": "Łączy zaufane serwery Discorda i synchronizuje ogłoszenia sieciowe.",
+      "configuration": "Utwórz sieć, dodaj zaufane serwery, przypisz kanały ogłoszeń i skonfiguruj uprawnienia do publikowania.",
+      "check": "Wyślij testowe ogłoszenie i sprawdź dokładnie jedną kopię w każdym mapowanym kanale serwera."
+    },
+    "moderation": {
+      "purpose": "Zarządza zgłoszeniami, dowodami, ostrzeżeniami, sankcjami, odwołaniami i obciążeniem moderatorów.",
+      "configuration": "Wybierz role i kanały moderatorów, a następnie zdefiniuj kategorie spraw, sankcje, terminy i reguły powiadomień.",
+      "check": "Utwórz testową sprawę, przypisz ją, dodaj dowody, zamknij ją i zweryfikuj historię audytu."
+    }
+  }
+}

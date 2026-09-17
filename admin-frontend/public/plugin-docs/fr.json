@@ -1,0 +1,106 @@
+{
+  "common": {
+    "configuration_title": "Configuration",
+    "check_title": "Comment vérifier",
+    "troubleshooting_title": "Dépannage",
+    "requirements": [
+      "Le bot GuildConsole est présent sur le serveur Discord.",
+      "Le rôle du bot est placé au-dessus de chaque rôle que {plugin} doit gérer.",
+      "Les salons et rôles Discord requis existent déjà, sauf si le plugin peut les créer."
+    ],
+    "steps": [
+      "Ouvrez la boutique de plugins et installez {plugin}.",
+      "Ouvrez les paramètres du plugin depuis le menu du serveur et renseignez chaque champ obligatoire.",
+      "Enregistrez les paramètres, puis सक्रियez le plugin dans la boutique.",
+      "Exécutez le scénario de vérification décrit sur cette page avant de l’utiliser avec des membres."
+    ],
+    "troubleshooting": [
+      "Si l’activation échoue, lisez l’erreur sur la carte et complétez les paramètres manquants.",
+      "Vérifiez la position du rôle du bot ainsi que ses permissions sur les salons.",
+      "Confirmez que les salons et rôles sélectionnés n’ont pas été supprimés dans Discord.",
+      "Désactivez puis réactivez {plugin} après avoir modifié des permissions Discord critiques."
+    ]
+  },
+  "plugins": {
+    "welcome": {
+      "purpose": "Accueille chaque nouveau membre et l’oriente vers la prochaine action requise sur le serveur.",
+      "configuration": "Sélectionnez le salon de bienvenue, la séquence de messages, les délais, le rôle de fin et la condition qui arrête les rappels.",
+      "check": "Rejoignez avec un compte de test et confirmez que les messages apparaissent dans l’ordre et s’arrêtent après l’attribution du rôle configuré."
+    },
+    "antiflood": {
+      "purpose": "Limite les messages répétés et protège les salons sélectionnés contre les floods.",
+      "configuration": "Créez des limites pour le nombre de messages et l’intervalle, sélectionnez les salons, les exclusions et l’action de modération.",
+      "check": "Envoyez des messages avec un compte de test jusqu’à atteindre la limite et vérifiez l’avertissement, la suppression ou le timeout configuré."
+    },
+    "translator_groups": {
+      "purpose": "Traduit et transfère les messages, fichiers et images entre les salons de langues.",
+      "configuration": "Créez un groupe, ajoutez au moins deux salons, attribuez une langue à chacun et sélectionnez le fournisseur AI Center.",
+      "check": "Envoyez du texte et une image dans un salon et vérifiez la livraison et la traduction dans chaque autre salon du groupe."
+    },
+    "first_introduction": {
+      "purpose": "Attribue des rôles de langue lorsque les membres réagissent à des messages de drapeaux.",
+      "configuration": "Créez des groupes de langues indépendants, choisissez un salon ou un fil, la langue par défaut, le rôle d’accès et le masque du nom de rôle.",
+      "check": "Publiez le message de réaction, cliquez sur chaque drapeau avec un compte de test et vérifiez que seul le rôle de langue attendu change."
+    },
+    "verification_level1": {
+      "purpose": "Vérifie l’identité des membres via des formulaires et des contrôles d’image IA optionnels.",
+      "configuration": "Configurez les commandes, les salons acceptés, le modèle de pseudo, le mode de révision, les niveaux de vérification, les marqueurs d’image, les valeurs acceptées et les rôles de résultat.",
+      "check": "Complétez chaque niveau avec des données de test correspondantes et non correspondantes, puis vérifiez le pseudo, les rôles et les messages de révision."
+    },
+    "voting": {
+      "purpose": "Publie des sondages à l’aide de modèles visuels réutilisables et affiche leurs résultats.",
+      "configuration": "Sélectionnez un modèle, un salon, une question, des choix, une durée et les marqueurs du modèle pour le titre et les valeurs de résultat.",
+      "check": "Prévisualisez le sondage, publiez un court vote de test et confirmez que les réactions et les résultats finaux sont comptabilisés correctement."
+    },
+    "guild-dm-broadcast": {
+      "purpose": "Envoie des campagnes de messages privés contrôlées à des membres sélectionnés du serveur.",
+      "configuration": "Choisissez l’audience, les exclusions, le contenu du message, la vitesse d’envoi et le calendrier de livraison ; prévisualisez avant de commencer.",
+      "check": "Envoyez d’abord à une petite audience de test et examinez les compteurs de messages livrés, ignorés et échoués."
+    },
+    "role_menu": {
+      "purpose": "Permet aux membres de s’attribuer eux-mêmes des rôles approuvés à partir de boutons ou de menus de sélection.",
+      "configuration": "Créez un panneau, choisissez son salon et sa disposition, ajoutez des rôles, des libellés et des groupes mutuellement exclusifs.",
+      "check": "Publiez le panneau et vérifiez l’ajout, la suppression et le comportement d’exclusivité des rôles avec un compte de test."
+    },
+    "ai_automod": {
+      "purpose": "Utilise AI Center pour détecter les messages à risque et appliquer des actions de modération.",
+      "configuration": "Sélectionnez les salons surveillés, les rôles exclus, les catégories de risque, les seuils et des actions telles qu’avertissement, suppression ou timeout.",
+      "check": "Utilisez des phrases de test inoffensives pour chaque catégorie activée et examinez le journal de modération avant d’activer des actions strictes."
+    },
+    "event_manager": {
+      "purpose": "Planifie des événements, collecte les réponses et envoie des rappels dans Discord.",
+      "configuration": "Définissez le fuseau horaire, le salon d’annonce, les options de réponse, les intervalles de rappel et les rôles de participants optionnels.",
+      "check": "Créez un événement de test à court terme et confirmez la publication, les mises à jour des réponses et chaque rappel."
+    },
+    "war_planner": {
+      "purpose": "Coordonne les guerres, les vagues, les cibles et les affectations des participants.",
+      "configuration": "Créez les dates de guerre, les vagues et les cibles, puis attribuez les participants et le salon de publication.",
+      "check": "Publiez un plan de test et vérifiez que les affectations, les changements de statut et les horaires sont visibles pour les participants."
+    },
+    "activity_ranking": {
+      "purpose": "Suit l’activité textuelle et vocale et construit les classements du serveur.",
+      "configuration": "Définissez les points, le délai de récupération des messages, le score vocal, les salons exclus et les rôles exclus.",
+      "check": "Générez de l’activité textuelle et vocale avec un membre de test et confirmez les totaux mis à jour ainsi que la commande de classement."
+    },
+    "audit_security": {
+      "purpose": "Enregistre les changements Discord sensibles pour la sécurité et envoie des alertes d’audit filtrées.",
+      "configuration": "Sélectionnez les types d’événements, le salon d’audit, la limite de conservation et le rôle optionnel à mentionner pour les événements importants.",
+      "check": "Effectuez un changement inoffensif de rôle ou de salon et confirmez un événement d’audit correctement formaté."
+    },
+    "backup_restore": {
+      "purpose": "Crée des instantanés versionnés et restaure les paramètres sélectionnés de GuildConsole et de Discord.",
+      "configuration": "Choisissez les sections incluses, la conservation et le planning ; examinez un plan de restauration avant de l’appliquer.",
+      "check": "Créez un instantané, confirmez son contenu et testez la comparaison sans appliquer de restauration destructive."
+    },
+    "cross_guild_network": {
+      "purpose": "Relie des serveurs Discord de confiance et synchronise les annonces du réseau.",
+      "configuration": "Créez un réseau, ajoutez des serveurs de confiance, associez les salons d’annonce et configurez les permissions de publication.",
+      "check": "Envoyez une annonce de test et vérifiez qu’il n’y a exactement qu’une copie dans chaque salon de serveur associé."
+    },
+    "moderation": {
+      "purpose": "Gère les signalements, les preuves, les avertissements, les sanctions, les appels et la charge de travail des modérateurs.",
+      "configuration": "Sélectionnez les rôles et salons de modération, puis définissez les catégories de cas, les sanctions, les délais et les règles de notification.",
+      "check": "Créez un cas de test, attribuez-le, ajoutez des preuves, clôturez-le et vérifiez l’historique d’audit."
+    }
+  }
+}

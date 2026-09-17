@@ -1,0 +1,106 @@
+{
+  "common": {
+    "configuration_title": "Konfiguration",
+    "check_title": "So überprüfen Sie es",
+    "troubleshooting_title": "Fehlerbehebung",
+    "requirements": [
+      "Der GuildConsole-Bot ist auf dem Discord-Server vorhanden.",
+      "Die Bot-Rolle steht über jeder Rolle, die {plugin} verwalten muss.",
+      "Erforderliche Discord-Kanäle und -Rollen existieren bereits, sofern das Plugin sie nicht erstellen kann."
+    ],
+    "steps": [
+      "Öffnen Sie den Plugin-Store und installieren Sie {plugin}.",
+      "Öffnen Sie die Plugin-Einstellungen über das Servermenü und füllen Sie jedes erforderliche Feld aus.",
+      "Speichern Sie die Einstellungen und aktivieren Sie dann das Plugin im Store.",
+      "Führen Sie das auf dieser Seite beschriebene Verifizierungsszenario aus, bevor Sie es mit Mitgliedern verwenden."
+    ],
+    "troubleshooting": [
+      "Wenn die Aktivierung fehlschlägt, lesen Sie die Fehlermeldung auf der Karte und vervollständigen Sie die fehlenden Einstellungen.",
+      "Überprüfen Sie die Position der Bot-Rolle und ihre Kanalberechtigungen.",
+      "Bestätigen Sie, dass ausgewählte Kanäle und Rollen in Discord nicht gelöscht wurden.",
+      "Deaktivieren und aktivieren Sie {plugin} erneut, nachdem Sie kritische Discord-Berechtigungen geändert haben."
+    ]
+  },
+  "plugins": {
+    "welcome": {
+      "purpose": "Begrüßt jedes neue Mitglied und leitet es zur nächsten erforderlichen Serveraktion weiter.",
+      "configuration": "Wählen Sie den Begrüßungskanal, die Nachrichtenfolge, Verzögerungen, die Abschlussrolle und die Bedingung, die Erinnerungen stoppt.",
+      "check": "Treten Sie mit einem Testkonto bei und bestätigen Sie, dass die Nachrichten in der richtigen Reihenfolge erscheinen und nach Zuweisung der konfigurierten Rolle aufhören."
+    },
+    "antiflood": {
+      "purpose": "Begrenzt wiederholte Nachrichten und schützt ausgewählte Kanäle vor Floods.",
+      "configuration": "Erstellen Sie Limits für Nachrichtenanzahl und Intervall, wählen Sie Kanäle, Ausnahmen und die Moderationsaktion aus.",
+      "check": "Senden Sie mit einem Testkonto Nachrichten, bis das Limit erreicht ist, und überprüfen Sie die konfigurierte Warnung, Löschung oder den Timeout."
+    },
+    "translator_groups": {
+      "purpose": "Übersetzt und leitet Nachrichten, Dateien und Bilder zwischen Sprachkanälen weiter.",
+      "configuration": "Erstellen Sie eine Gruppe, fügen Sie mindestens zwei Kanäle hinzu, weisen Sie jedem eine Sprache zu und wählen Sie den AI-Center-Anbieter aus.",
+      "check": "Senden Sie Text und ein Bild in einem Kanal und überprüfen Sie die Zustellung und Übersetzung in jedem anderen Gruppenkanaal."
+    },
+    "first_introduction": {
+      "purpose": "Weist Sprachrollen zu, wenn Mitglieder auf Flaggen-Nachrichten reagieren.",
+      "configuration": "Erstellen Sie unabhängige Sprachgruppen, wählen Sie einen Kanal oder Thread, die Standardsprache, die Zugriffsrolle und die Rollen-Namensmaske.",
+      "check": "Veröffentlichen Sie den Reaktionsbeitrag, klicken Sie mit einem Testkonto auf jede Flagge und überprüfen Sie, dass sich nur die erwartete Sprachrolle ändert."
+    },
+    "verification_level1": {
+      "purpose": "Verifiziert die Identität von Mitgliedern über Formulare und optionale KI-Bildprüfungen.",
+      "configuration": "Konfigurieren Sie Befehle, akzeptierte Kanäle, Nickname-Vorlage, Prüfmodus, Verifizierungsstufen, Bildmarker, akzeptierte Werte und Ergebnisrollen.",
+      "check": "Schließen Sie jede Stufe mit übereinstimmenden und nicht übereinstimmenden Testdaten ab und überprüfen Sie Nickname, Rollen und Prüfnachrichten."
+    },
+    "voting": {
+      "purpose": "Veröffentlicht Umfragen mithilfe wiederverwendbarer visueller Vorlagen und zeigt deren Ergebnisse an.",
+      "configuration": "Wählen Sie eine Vorlage, Kanal, Frage, Auswahlmöglichkeiten, Dauer und die Vorlagenmarker für Titel- und Ergebniswerte aus.",
+      "check": "Zeigen Sie eine Vorschau der Umfrage an, veröffentlichen Sie eine kurze Testabstimmung und bestätigen Sie, dass Reaktionen und Endergebnisse korrekt gezählt werden."
+    },
+    "guild-dm-broadcast": {
+      "purpose": "Sendet kontrollierte Direktnachrichten-Kampagnen an ausgewählte Servermitglieder.",
+      "configuration": "Wählen Sie die Zielgruppe, Ausschlüsse, Nachrichteninhalt, Sendegeschwindigkeit und den Zustellungszeitplan; sehen Sie sich vor dem Start eine Vorschau an.",
+      "check": "Senden Sie zuerst an eine kleine Testgruppe und prüfen Sie die Zähler für zugestellt, übersprungen und fehlgeschlagen."
+    },
+    "role_menu": {
+      "purpose": "Ermöglicht Mitgliedern, sich genehmigte Rollen über Schaltflächen oder Auswahlmenüs selbst zuzuweisen.",
+      "configuration": "Erstellen Sie ein Panel, wählen Sie seinen Kanal und sein Layout, fügen Sie Rollen, Beschriftungen und gegenseitig ausschließende Gruppen hinzu.",
+      "check": "Veröffentlichen Sie das Panel und überprüfen Sie mit einem Testkonto das Hinzufügen, Entfernen und das Verhalten gegenseitiger Ausschlüsse bei Rollen."
+    },
+    "ai_automod": {
+      "purpose": "Verwendet AI Center, um riskante Nachrichten zu erkennen und Moderationsaktionen anzuwenden.",
+      "configuration": "Wählen Sie überwachte Kanäle, ausgeschlossene Rollen, Risikokategorien, Schwellenwerte und Aktionen wie Warnung, Löschung oder Timeout aus.",
+      "check": "Verwenden Sie harmlose Testphrasen für jede aktivierte Kategorie und prüfen Sie das Moderationsprotokoll, bevor Sie strenge Aktionen aktivieren."
+    },
+    "event_manager": {
+      "purpose": "Plant Ereignisse, sammelt Zusagen und sendet Erinnerungen in Discord.",
+      "configuration": "Legen Sie die Zeitzone, den Ankündigungskanal, RSVP-Optionen, Erinnerungsintervalle und optionale Teilnehmerrollen fest.",
+      "check": "Erstellen Sie ein Testereignis mit naher Frist und bestätigen Sie die Veröffentlichung, RSVP-Aktualisierungen und jede Erinnerung."
+    },
+    "war_planner": {
+      "purpose": "Koordiniert Kriege, Wellen, Ziele und Teilnehmerzuweisungen.",
+      "configuration": "Erstellen Sie die Kriegsdaten, Wellen und Ziele und weisen Sie dann Teilnehmer und den Veröffentlichungskanal zu.",
+      "check": "Veröffentlichen Sie einen Testplan und überprüfen Sie, dass Zuweisungen, Statusänderungen und Zeiten für Teilnehmer sichtbar sind."
+    },
+    "activity_ranking": {
+      "purpose": "Verfolgt Text- und Sprachaktivität und erstellt Server-Ranglisten.",
+      "configuration": "Legen Sie Punkte, Nachrichten-Cooldown, Sprachbewertung, ausgeschlossene Kanäle und ausgeschlossene Rollen fest.",
+      "check": "Erzeugen Sie Text- und Sprachaktivität mit einem Testmitglied und bestätigen Sie aktualisierte Gesamtwerte sowie den Ranglistenbefehl."
+    },
+    "audit_security": {
+      "purpose": "Protokolliert sicherheitsrelevante Discord-Änderungen und sendet gefilterte Audit-Benachrichtigungen.",
+      "configuration": "Wählen Sie Ereignistypen, den Audit-Kanal, das Aufbewahrungslimit und optional eine Rolle aus, die bei wichtigen Ereignissen erwähnt werden soll.",
+      "check": "Führen Sie eine harmlose Rollen- oder Kanaländerung durch und bestätigen Sie ein korrekt formatiertes Audit-Ereignis."
+    },
+    "backup_restore": {
+      "purpose": "Erstellt versionierte Schnappschüsse und stellt ausgewählte GuildConsole- und Discord-Einstellungen wieder her.",
+      "configuration": "Wählen Sie enthaltene Bereiche, Aufbewahrung und Zeitplan aus; prüfen Sie einen Wiederherstellungsplan, bevor Sie ihn anwenden.",
+      "check": "Erstellen Sie einen Schnappschuss, bestätigen Sie seinen Inhalt und testen Sie den Vergleich, ohne eine zerstörerische Wiederherstellung anzuwenden."
+    },
+    "cross_guild_network": {
+      "purpose": "Verbindet vertrauenswürdige Discord-Server und synchronisiert Netzwerkankündigungen.",
+      "configuration": "Erstellen Sie ein Netzwerk, fügen Sie vertrauenswürdige Server hinzu, ordnen Sie Ankündigungskanäle zu und konfigurieren Sie Veröffentlichungsberechtigungen.",
+      "check": "Senden Sie eine Testankündigung und überprüfen Sie genau eine Kopie in jedem zugeordneten Serverkanal."
+    },
+    "moderation": {
+      "purpose": "Verwaltet Meldungen, Beweise, Verwarnungen, Sanktionen, Einsprüche und die Arbeitslast der Moderatoren.",
+      "configuration": "Wählen Sie Moderatorenrollen und Kanäle aus und definieren Sie dann Fallkategorien, Sanktionen, Fristen und Benachrichtigungsregeln.",
+      "check": "Erstellen Sie einen Testfall, weisen Sie ihn zu, fügen Sie Beweise hinzu, schließen Sie ihn ab und überprüfen Sie den Audit-Verlauf."
+    }
+  }
+}
