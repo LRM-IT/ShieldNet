@@ -28,8 +28,16 @@ class BillingDiscountService:
         months=max(0,(now.year-guild.joined_at.year)*12+now.month-guild.joined_at.month-(1 if now.day<guild.joined_at.day else 0)) if guild else 0
         rules=list((await self.session.execute(select(BillingTenureDiscount).where(BillingTenureDiscount.active.is_(True),BillingTenureDiscount.minimum_months<=months).order_by(BillingTenureDiscount.minimum_months.desc()))).scalars())
         tenure=rules[0].percent if rules else Decimal("0")
-        redemption=await self.session.execute(select(BillingDiscountCard,BillingDiscountRedemption).join(BillingDiscountRedemption,BillingDiscountRedemption.card_id==BillingDiscountCard.id).where(BillingDiscountRedemption.guild_id==guild_id,BillingDiscountCard.active.is_(True),or_(BillingDiscountCard.valid_from.is_(None),BillingDiscountCard.valid_from<=now),or_(BillingDiscountCard.valid_until.is_(None),BillingDiscountCard.valid_until>now)).order_by(BillingDiscountCard.percent.desc()).limit(1))
-        pair=redemption.first();card=pair[0] if pair else None
-        card_percent=card.percent if card else Decimal("0");total=min(MAX_DISCOUNT,tenure+card_percent)
-        final=(amount*(Decimal("100")-total)/Decimal("100")).quantize(Decimal("0.01"),rounding=ROUND_HALF_UP)
-        return {"original":amount,"final":final,"total_percent":total,"tenure_percent":tenure,"card_percent":card_percent,"card_code":card.code if card else None,"tenure_months":months}
+        redemptions=await self.session.execute(select(BillingDiscountCard).join(BillingDiscountRedemption,BillingDiscountRedemption.card_id==BillingDiscountCard.id).where(BillingDiscountRedemption.guild_id==guild_id,BillingDiscountCard.active.is_(True),or_(BillingDiscountCard.valid_from.is_(None),BillingDiscountCard.valid_from<=now),or_(BillingDiscountCard.valid_until.is_(None),BillingDiscountCard.valid_until>now)))
+        cards=list(redemptions.scalars())
+        total=tenure;card_percent=Decimal("0");fixed_amount=Decimal("0");card=None
+        final=(amount*(Decimal("100")-tenure)/Decimal("100")).quantize(Decimal("0.01"),rounding=ROUND_HALF_UP)
+        for candidate in cards:
+            candidate_percent=candidate.percent if candidate.discount_type == "percent" else Decimal("0")
+            candidate_fixed=candidate.amount_uah or Decimal("0") if candidate.discount_type == "fixed" else Decimal("0")
+            candidate_total=min(MAX_DISCOUNT,tenure+candidate_percent)
+            candidate_final=(amount*(Decimal("100")-candidate_total)/Decimal("100")-candidate_fixed).quantize(Decimal("0.01"),rounding=ROUND_HALF_UP)
+            candidate_final=max(Decimal("0.00"),candidate_final)
+            if candidate_final < final:
+                final=candidate_final;total=candidate_total;card_percent=candidate_percent;fixed_amount=candidate_fixed;card=candidate
+        return {"original":amount,"final":final,"total_percent":total,"tenure_percent":tenure,"card_percent":card_percent,"fixed_amount_uah":fixed_amount,"card_type":card.discount_type if card else None,"card_code":card.code if card else None,"tenure_months":months}

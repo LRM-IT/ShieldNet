@@ -97,6 +97,14 @@ class BillingPaymentService:
         if original is None or original <= 0:
             raise PaymentError("Price is not configured for this period")
         discount=await BillingDiscountService(self.session).quote(guild_id,original);amount=discount["final"]
+        if amount <= 0:
+            payment = BillingPayment(id=uuid4(), order_reference=f"voucher-{guild_id}-{uuid4().hex}", guild_id=guild_id,
+                plugin_key=key, billing_period=period, provider="voucher", amount=Decimal("0.00"), currency=plan.currency,
+                status="created", signature_verified=True, original_amount_uah=original, base_amount_uah=Decimal("0.00"),
+                discount_percent=discount["total_percent"], discount_code=discount["card_code"])
+            self.session.add(payment); await self.session.flush()
+            await self._activate(payment, str(payment.id), {"source":"voucher","confirmed":True})
+            return {"provider":"voucher","order_reference":payment.order_reference,"status":"paid","balance":None,"currency":plan.currency}
         wallet = (await self.session.execute(select(BillingWallet).where(
             BillingWallet.discord_user_id == discord_user_id, BillingWallet.currency == plan.currency
         ).with_for_update())).scalar_one_or_none()
@@ -127,6 +135,14 @@ class BillingPaymentService:
         if original_amount is None or original_amount <= 0:
             raise PaymentError("Price is not configured for this period")
         discount=await BillingDiscountService(self.session).quote(guild_id,original_amount);base_amount=discount["final"]
+        if base_amount <= 0:
+            payment = BillingPayment(id=uuid4(), order_reference=f"voucher-{guild_id}-{uuid4().hex}", guild_id=guild_id,
+                plugin_key=key, billing_period=period, provider="voucher", amount=Decimal("0.00"), currency="UAH",
+                status="created", signature_verified=True, original_amount_uah=original_amount, base_amount_uah=Decimal("0.00"),
+                discount_percent=discount["total_percent"], discount_code=discount["card_code"])
+            self.session.add(payment); await self.session.flush()
+            await self._activate(payment, str(payment.id), {"source":"voucher","confirmed":True})
+            return {"provider":"voucher","order_reference":payment.order_reference,"status":"paid","discount":discount}
         requested_currency = display_currency.upper()
         if requested_currency not in SUPPORTED_DISPLAY_CURRENCIES:
             requested_currency = "UAH"
