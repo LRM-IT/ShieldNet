@@ -1653,6 +1653,9 @@
     "card_deleted": "Carta sconto eliminata.",
     "card_delete_error": "Impossibile eliminare la carta sconto.",
     "loyalty_deleted": "Regola fedeltà eliminata.",
-    "loyalty_delete_error": "Impossibile eliminare la regola fedeltà."
+    "loyalty_delete_error": "Impossibile eliminare la regola fedeltà.",
+    "payment_created": "Creato · non pagato",
+    "payment_paid": "Pagato",
+    "payment_failed": "Non riuscito"
   }
 }

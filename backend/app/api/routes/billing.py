@@ -69,7 +69,7 @@ def plan_dict(row):
             "monthly_price":row.monthly_price,"quarterly_price":row.quarterly_price,"yearly_price":row.yearly_price}
 
 def subscription_dict(row):
-    return {"id":row.id,"guild_id":row.guild_id,"plugin_key":row.plugin_key,"status":row.status,"billing_period":row.billing_period,
+    return {"id":row.id,"guild_id":str(row.guild_id),"plugin_key":row.plugin_key,"status":row.status,"billing_period":row.billing_period,
             "starts_at":row.starts_at,"expires_at":row.expires_at,"provider":row.provider,"external_order_id":row.external_order_id}
 
 @router.get("/platform/billing/plans")
@@ -260,7 +260,9 @@ async def save_providers(payload: ProviderUpdate, user: User = Depends(require_s
 @router.get("/platform/billing/payments")
 async def payments(_: User = Depends(require_superadmin), session: AsyncSession = Depends(get_db_session)):
     rows = list((await session.execute(select(BillingPayment).order_by(BillingPayment.created_at.desc()).limit(250))).scalars())
-    return [{"id":x.id,"order_reference":x.order_reference,"guild_id":x.guild_id,"plugin_key":x.plugin_key,
+    guild_ids={x.guild_id for x in rows}
+    guild_names={x.guild_id:x.name for x in (await session.execute(select(Guild).where(Guild.guild_id.in_(guild_ids)))).scalars()} if guild_ids else {}
+    return [{"id":x.id,"order_reference":x.order_reference,"guild_id":str(x.guild_id),"guild_name":guild_names.get(x.guild_id),"plugin_key":x.plugin_key,
              "billing_period":x.billing_period,"provider":x.provider,"amount":x.amount,"currency":x.currency,
              "status":x.status,"signature_verified":x.signature_verified,"original_amount_uah":x.original_amount_uah,
              "discount_percent":x.discount_percent,"discount_code":x.discount_code,"paid_at":x.paid_at,"created_at":x.created_at} for x in rows]

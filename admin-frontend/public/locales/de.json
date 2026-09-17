@@ -1655,6 +1655,9 @@
     "card_deleted": "Rabattkarte gelöscht.",
     "card_delete_error": "Rabattkarte konnte nicht gelöscht werden.",
     "loyalty_deleted": "Treueprogramm gelöscht.",
-    "loyalty_delete_error": "Treueprogramm konnte nicht gelöscht werden."
+    "loyalty_delete_error": "Treueprogramm konnte nicht gelöscht werden.",
+    "payment_created": "Erstellt · nicht bezahlt",
+    "payment_paid": "Bezahlt",
+    "payment_failed": "Fehlgeschlagen"
   }
 }

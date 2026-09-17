@@ -1655,6 +1655,9 @@
     "card_deleted": "تم حذف بطاقة الخصم.",
     "card_delete_error": "تعذر حذف بطاقة الخصم.",
     "loyalty_deleted": "تم حذف قاعدة الولاء.",
-    "loyalty_delete_error": "تعذر حذف قاعدة الولاء."
+    "loyalty_delete_error": "تعذر حذف قاعدة الولاء.",
+    "payment_created": "تم الإنشاء · غير مدفوع",
+    "payment_paid": "مدفوع",
+    "payment_failed": "فشل"
   }
 }

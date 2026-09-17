@@ -1654,6 +1654,9 @@
     "card_deleted": "Carte de réduction supprimée.",
     "card_delete_error": "Impossible de supprimer la carte de réduction.",
     "loyalty_deleted": "Règle de fidélité supprimée.",
-    "loyalty_delete_error": "Impossible de supprimer la règle de fidélité."
+    "loyalty_delete_error": "Impossible de supprimer la règle de fidélité.",
+    "payment_created": "Créé · non payé",
+    "payment_paid": "Payé",
+    "payment_failed": "Échec"
   }
 }

@@ -1545,6 +1545,9 @@
     "card_deleted": "Дисконтная карта удалена.",
     "card_delete_error": "Не удалось удалить дисконтную карту.",
     "loyalty_deleted": "Правило лояльности удалено.",
-    "loyalty_delete_error": "Не удалось удалить правило лояльности."
+    "loyalty_delete_error": "Не удалось удалить правило лояльности.",
+    "payment_created": "Создано · не оплачено",
+    "payment_paid": "Оплачено",
+    "payment_failed": "Ошибка"
   }
 }

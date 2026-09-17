@@ -1613,6 +1613,9 @@
     "card_deleted": "Discount card deleted.",
     "card_delete_error": "Unable to delete discount card.",
     "loyalty_deleted": "Loyalty rule deleted.",
-    "loyalty_delete_error": "Unable to delete loyalty rule."
+    "loyalty_delete_error": "Unable to delete loyalty rule.",
+    "payment_created": "Created · not paid",
+    "payment_paid": "Paid",
+    "payment_failed": "Failed"
   }
 }
