@@ -17,7 +17,7 @@ from app.models.billing import BillingPluginPlan, BillingSubscription, BillingPa
 from app.models.core import User
 from app.models.discord import Guild
 from app.models.plugins import PluginRegistry
-from app.services.billing_service import BillingService, FREE_PLUGIN_KEYS, PAID_PACKAGE_KEY, normalize_plugin_key
+from app.services.billing_service import BillingService, PAID_PACKAGE_KEY, normalize_plugin_key
 from app.services.billing_payments import BILLING_VAULT_KEY, BillingPaymentService, PaymentError
 from app.services.plugin_control_service import PluginControlService
 from app.services.guild_plugin_service import GuildPluginService
@@ -81,7 +81,7 @@ async def plans(_: User = Depends(require_superadmin), session: AsyncSession = D
         key = normalize_plugin_key(plugin.plugin_key)
         row = configured.get(key)
         result.append(plan_dict(row) if row else {
-            "plugin_key": key, "name": plugin.name, "is_free": key in FREE_PLUGIN_KEYS,
+            "plugin_key": key, "name": plugin.name, "is_free": False,
             "enabled": True, "currency": "UAH", "monthly_price": None,
             "quarterly_price": None, "yearly_price": None,
         })
@@ -110,8 +110,6 @@ async def save_plan(plugin_key: str, payload: PlanUpdate, _: User = Depends(requ
         session.add(row)
     values = payload.model_dump()
     values["currency"] = "UAH"
-    if key in FREE_PLUGIN_KEYS:
-        values["is_free"] = True
     for field, value in values.items(): setattr(row, field, value)
     await session.commit(); await session.refresh(row)
     return plan_dict(row)
@@ -160,7 +158,7 @@ async def guild_billing(guild_id: int, display_currency: str = "UAH", user: User
         values,_=await NBUExchangeService(session).quote(discounted,display_currency)
         data.update({"display_currency":display_currency.upper(),"display_monthly_price":values[0],"display_quarterly_price":values[1],"display_yearly_price":values[2],"discounted_monthly_price":discounted[0],"discounted_quarterly_price":discounted[1],"discounted_yearly_price":discounted[2],"discount":discount_meta}); visible_plans=[data]
     tiers={x.plugin_key:("free" if x.is_free else "paid") for x in plans if x.plugin_key != PAID_PACKAGE_KEY}
-    return {"free_plugin_keys":sorted(FREE_PLUGIN_KEYS),"plans":visible_plans,"module_tiers":tiers,"subscriptions":[subscription_dict(x) for x in subscriptions if x.plugin_key == PAID_PACKAGE_KEY],
+    return {"free_plugin_keys":sorted(x.plugin_key for x in plans if x.plugin_key != PAID_PACKAGE_KEY and x.is_free),"plans":visible_plans,"module_tiers":tiers,"subscriptions":[subscription_dict(x) for x in subscriptions if x.plugin_key == PAID_PACKAGE_KEY],
             "exchange_rate":{"base":"UAH","currency":display_currency.upper(),"uah_per_unit":rate,"effective_at":effective,"source":"NBU"},
             "wallet":{"balance":wallet.balance,"currency":wallet.currency} if wallet else {"balance":Decimal("0.00"),"currency":"UAH"}}
 

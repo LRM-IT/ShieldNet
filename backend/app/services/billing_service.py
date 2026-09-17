@@ -7,10 +7,6 @@ from app.models.billing import BillingPluginPlan, BillingSubscription
 from app.models.plugins import GuildPluginInstallation
 
 
-FREE_PLUGIN_KEYS = frozenset({
-    "welcome", "audit_security", "backup_restore", "guild_dm_broadcast",
-    "antiflood", "ai_automod",
-})
 PAID_PACKAGE_KEY = "__paid_modules__"
 
 def normalize_plugin_key(value: str) -> str:
@@ -25,8 +21,6 @@ class BillingService:
 
     async def is_entitled(self, guild_id: int, plugin_key: str) -> bool:
         key = normalize_plugin_key(plugin_key)
-        if key in FREE_PLUGIN_KEYS:
-            return True
         plan = (await self.session.execute(select(BillingPluginPlan).where(BillingPluginPlan.plugin_key == key))).scalar_one_or_none()
         if plan is not None and plan.is_free:
             return True
@@ -61,6 +55,6 @@ class BillingService:
         ))).scalars())
         result = []
         for item in installations:
-            if normalize_plugin_key(item.plugin_key) not in FREE_PLUGIN_KEYS and not await self.is_entitled(item.guild_id, item.plugin_key):
+            if not await self.is_entitled(item.guild_id, item.plugin_key):
                 result.append((item.guild_id, item.plugin_key))
         return result

@@ -12,7 +12,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.billing import BillingPayment, BillingPluginPlan, BillingSubscription, BillingWallet, BillingWalletTransaction
-from app.services.billing_service import FREE_PLUGIN_KEYS, PAID_PACKAGE_KEY, normalize_plugin_key
+from app.services.billing_service import PAID_PACKAGE_KEY, normalize_plugin_key
 from app.services.plugin_control_service import PluginControlService
 from app.services.nbu_exchange import NBUExchangeService, ExchangeRateError, SUPPORTED_DISPLAY_CURRENCIES
 from app.services.billing_discounts import BillingDiscountService
