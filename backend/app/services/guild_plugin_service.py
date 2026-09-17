@@ -1,13 +1,14 @@
 from datetime import datetime, timezone
 from uuid import UUID, uuid4
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.plugins import (
     GuildPluginInstallation,
     PluginMarketplaceItem,
     PluginRegistry,
+    PluginRuntimeInstance,
 )
 from app.schemas.guild_plugins import (
     GuildPluginInstallationResponse,
@@ -300,6 +301,12 @@ class GuildPluginService:
             # No runtime instance was ever created.
             pass
 
+        await self.session.execute(
+            delete(PluginRuntimeInstance).where(
+                PluginRuntimeInstance.guild_id == guild_id,
+                PluginRuntimeInstance.plugin_key == plugin_key,
+            )
+        )
         await self.session.delete(row)
         await self.session.commit()
 
