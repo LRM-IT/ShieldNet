@@ -58,7 +58,7 @@ interface ChannelOption {
             </span>
           </button>
 
-          <div class="options">
+          <div class="options" tabindex="0" (wheel)="$event.stopPropagation()">
             @for (group of groupedOptions(); track group.category) {
               <section>
                 <header>{{ group.category }}</header>
@@ -87,25 +87,27 @@ interface ChannelOption {
     </div>
   `,
   styles: [`
-    :host{display:block;position:relative}
-    .picker{position:relative}
+    :host{display:block;position:relative;isolation:isolate}
+    :host:has(.menu){z-index:1000}
+    .picker{position:relative;z-index:1}
     .trigger{width:100%;min-height:42px;display:flex;align-items:center;justify-content:space-between;gap:.8rem;text-align:left}
     .trigger-main,.clear{display:flex;align-items:center;gap:.6rem}
     .copy{display:grid;min-width:0}
     .copy strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     small{color:var(--muted);font-size:.72rem}
-    .menu{position:absolute;z-index:100;top:calc(100% + .4rem);left:0;right:0;min-width:340px;max-height:430px;padding:.6rem;border:1px solid var(--line);border-radius:12px;background:#071019;box-shadow:0 18px 50px rgba(0,0,0,.45)}
+    .menu{position:absolute;z-index:1000;top:calc(100% + .4rem);left:0;right:0;min-width:340px;height:min(430px,calc(100vh - 2rem));max-height:430px;display:flex;flex-direction:column;overflow:hidden;padding:.6rem;border:1px solid var(--line);border-radius:12px;background:#071019;box-shadow:0 18px 50px rgba(0,0,0,.45)}
     .search{display:grid;grid-template-columns:1fr 42px;gap:.4rem;margin-bottom:.45rem}
     input,button{font:inherit;border:1px solid var(--line);border-radius:8px;background:#08131d;color:var(--text);padding:.65rem}
     button{cursor:pointer}
     .clear{width:100%;color:var(--muted);text-align:left}
-    .options{overflow:auto;max-height:315px}
+    .options{flex:1;min-height:0;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable;padding-right:.2rem;touch-action:pan-y}
+    .options::-webkit-scrollbar{width:9px}.options::-webkit-scrollbar-track{background:#08131d;border-radius:9px}.options::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:9px}.options::-webkit-scrollbar-thumb:hover{background:var(--primary)}
     section header{position:sticky;top:0;padding:.55rem .45rem;background:#071019;color:var(--muted);font-size:.69rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
     .option{width:100%;display:grid;grid-template-columns:28px minmax(0,1fr) 22px;align-items:center;gap:.6rem;text-align:left;border-color:transparent;background:transparent}
     .option:hover,.option.selected{border-color:var(--primary);background:rgba(52,215,174,.08)}
     .empty,.error{padding:.8rem;color:var(--muted)}
     .error{color:#ff8290}
-    @media(max-width:700px){.menu{position:fixed;left:1rem;right:1rem;top:18vh;max-height:64vh}}
+    @media(max-width:700px){.menu{position:fixed;left:1rem;right:1rem;top:18vh;width:auto;min-width:0;height:64vh;max-height:64vh}}
   `],
 })
 export class DiscordChannelPickerComponent implements OnInit, OnChanges {
