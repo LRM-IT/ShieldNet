@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, signal } from '@angular/core';
+import { Component, OnInit, computed, effect, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslatePipe } from '../core/translate.pipe';
 import { TranslationService } from '../core/translation.service';
@@ -166,7 +166,16 @@ export class ProfileComponent implements OnInit {
     public readonly auth: AuthService,
     public readonly themes: ThemeService,
     public readonly i18n: TranslationService,
-  ) {}
+  ) {
+    effect(() => {
+      const savedZone = this.auth.profile()?.preferred_timezone;
+      if (!savedZone || !this.timezones.includes(savedZone) || this.timezone() === savedZone) return;
+      this.timezone.set(savedZone);
+      localStorage.setItem(this.timezoneStorageKey, savedZone);
+      document.documentElement.dataset['timezone'] = savedZone;
+      window.dispatchEvent(new CustomEvent('guildconsole-timezone-change', { detail: savedZone }));
+    });
+  }
 
   ngOnInit(): void {
     const profile=this.auth.profile();

@@ -122,6 +122,7 @@ export class AuthService {
   async updatePreferences(values: Partial<Pick<UserProfile, 'preferred_locale'|'preferred_timezone'|'use_discord_locale'>>): Promise<UserProfile> {
     const profile = await firstValueFrom(this.http.patch<UserProfile>('/api/v1/auth/me/preferences', values));
     this.profile.set({...this.profile(), ...profile} as UserProfile);
+    if (profile.preferred_timezone) localStorage.setItem('guildconsole_timezone', profile.preferred_timezone);
     return profile;
   }
 
