@@ -55,7 +55,7 @@
     "timezone": "Fuseau horaire",
     "timezone_help": "Used for logs, jobs and events.",
     "automatic": "Automatic",
-    "saved": "Preference saved",
+    "saved": "Preference saved", "save_region": "Enregistrer la langue et la région", "saving_region": "Enregistrement…", "regional_saved": "La langue et les paramètres régionaux ont été enregistrés.", "regional_save_error": "Impossible d’enregistrer la langue et les paramètres régionaux.",
     "discord_id": "Discord ID"
   },
   "dashboard": {

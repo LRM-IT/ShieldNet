@@ -81,6 +81,8 @@ class BillingWallet(Base, TimestampMixin):
     currency: Mapped[str] = mapped_column(String(3), nullable=False, default="UAH", server_default="UAH")
     low_balance_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default="false")
     low_balance_threshold: Mapped[Decimal] = mapped_column(Numeric(14, 2), nullable=False, default=0, server_default="0")
+    low_balance_discord_dm: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True, server_default="true")
+    low_balance_email: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default="false")
 
 
 class BillingWalletTransaction(Base):

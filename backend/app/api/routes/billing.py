@@ -57,7 +57,7 @@ class CheckoutRequest(BaseModel):
     provider: str = Field(pattern=r"^(wayforpay|liqpay|balance)$")
     display_currency: str = Field(default="UAH", pattern=r"^[A-Z]{3}$")
 class WalletTopupRequest(BaseModel):
-    amount_uah: Decimal = Field(gt=0, le=1_000_000)
+    amount: Decimal = Field(gt=0, le=1_000_000)
     provider: str = Field(pattern=r"^(wayforpay|liqpay)$")
     display_currency: str = Field(default="UAH", pattern=r"^[A-Z]{3}$")
 class SubscriptionPurchaseRequest(BaseModel):
@@ -67,6 +67,8 @@ class SubscriptionPurchaseRequest(BaseModel):
 class WalletSettingsRequest(BaseModel):
     low_balance_enabled: bool = False
     low_balance_threshold: Decimal = Field(default=0, ge=0, le=1_000_000)
+    low_balance_discord_dm: bool = True
+    low_balance_email: bool = False
 
 class WalletCreditRequest(BaseModel):
     discord_user_id: int
@@ -198,7 +200,7 @@ async def guild_billing(guild_id: int, display_currency: str = "UAH", user: User
     return {"free_plugin_keys":sorted(x.plugin_key for x in plans if x.plugin_key != PAID_PACKAGE_KEY and x.is_free),"plans":visible_plans,"module_tiers":tiers,"subscriptions":[subscription_dict(x) for x in subscriptions if x.plugin_key == PAID_PACKAGE_KEY],
             "providers":{key:{"active":value["active"]} for key,value in provider_config.items()},
             "exchange_rate":{"base":"UAH","currency":display_currency.upper(),"uah_per_unit":rate,"effective_at":effective,"source":"NBU"},
-            "wallet":{"balance":wallet.balance,"currency":wallet.currency,"low_balance_enabled":wallet.low_balance_enabled,"low_balance_threshold":wallet.low_balance_threshold} if wallet else {"balance":Decimal("0.00"),"currency":"UAH","low_balance_enabled":False,"low_balance_threshold":Decimal("0.00")}}
+            "wallet":{"balance":wallet.balance,"currency":wallet.currency,"low_balance_enabled":wallet.low_balance_enabled,"low_balance_threshold":wallet.low_balance_threshold,"low_balance_discord_dm":wallet.low_balance_discord_dm,"low_balance_email":wallet.low_balance_email} if wallet else {"balance":Decimal("0.00"),"currency":"UAH","low_balance_enabled":False,"low_balance_threshold":Decimal("0.00"),"low_balance_discord_dm":True,"low_balance_email":False},"email_available":bool(user.email)}
 
 @router.post("/discord/guilds/{guild_id}/billing/discount-card")
 async def redeem_discount(guild_id:int,payload:RedeemDiscountIn,user:User=Depends(get_current_user),session:AsyncSession=Depends(get_db_session)):
@@ -210,7 +212,7 @@ async def redeem_discount(guild_id:int,payload:RedeemDiscountIn,user:User=Depend
 @router.post("/billing/wallet/checkout")
 async def wallet_checkout(payload:WalletTopupRequest,request:Request,user:User=Depends(get_current_user),session:AsyncSession=Depends(get_db_session)):
     if not user.discord_user_id: raise HTTPException(400,"Discord account is required")
-    try:return await BillingPaymentService(session).create_wallet_topup(user.discord_user_id,payload.amount_uah,payload.provider,str(request.base_url).rstrip("/"),payload.display_currency)
+    try:return await BillingPaymentService(session).create_wallet_topup(user.discord_user_id,payload.amount,payload.provider,str(request.base_url).rstrip("/"),payload.display_currency)
     except PaymentError as exc:raise HTTPException(400,str(exc)) from exc
 
 @router.post("/billing/subscriptions/purchase")
@@ -225,8 +227,11 @@ async def wallet_settings(payload:WalletSettingsRequest,user:User=Depends(get_cu
     if not user.discord_user_id:raise HTTPException(400,"Discord account is required")
     wallet=await session.scalar(select(BillingWallet).where(BillingWallet.discord_user_id==user.discord_user_id,BillingWallet.currency=="UAH"))
     if wallet is None:wallet=BillingWallet(id=uuid4(),discord_user_id=user.discord_user_id,balance=Decimal("0.00"),currency="UAH");session.add(wallet)
+    if payload.low_balance_email and not user.email: raise HTTPException(422,"Email notifications require an email address in the user profile")
+    if payload.low_balance_enabled and not (payload.low_balance_discord_dm or payload.low_balance_email): raise HTTPException(422,"Select at least one notification channel")
     wallet.low_balance_enabled=payload.low_balance_enabled;wallet.low_balance_threshold=payload.low_balance_threshold
-    await session.commit();return {"low_balance_enabled":wallet.low_balance_enabled,"low_balance_threshold":wallet.low_balance_threshold}
+    wallet.low_balance_discord_dm=payload.low_balance_discord_dm;wallet.low_balance_email=payload.low_balance_email
+    await session.commit();return {"low_balance_enabled":wallet.low_balance_enabled,"low_balance_threshold":wallet.low_balance_threshold,"low_balance_discord_dm":wallet.low_balance_discord_dm,"low_balance_email":wallet.low_balance_email}
 
 @router.get("/platform/billing/discounts")
 async def discounts(_:User=Depends(require_superadmin),session:AsyncSession=Depends(get_db_session)):

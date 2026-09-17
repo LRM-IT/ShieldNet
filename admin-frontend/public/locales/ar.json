@@ -56,7 +56,7 @@
     "timezone": "المنطقة الزمنية",
     "timezone_help": "Used for logs, jobs and events.",
     "automatic": "Automatic",
-    "saved": "Preference saved",
+    "saved": "Preference saved", "save_region": "حفظ اللغة والمنطقة", "saving_region": "جارٍ الحفظ…", "regional_saved": "تم حفظ اللغة والإعدادات الإقليمية.", "regional_save_error": "تعذر حفظ اللغة والإعدادات الإقليمية.",
     "discord_id": "Discord ID"
   },
   "dashboard": {

@@ -119,6 +119,13 @@ import { ShellComponent } from '../shared/shell.component';
                 }
               </select>
             </div>
+            <div class="regional-actions">
+              @if (regionalError()) { <span class="save-message error">{{ regionalError() }}</span> }
+              @if (regionalSaved()) { <span class="save-message success">{{ 'profile.regional_saved' | snT:'Language and regional settings saved.' }}</span> }
+              <button type="button" class="save-regional" [disabled]="savingRegional()" (click)="saveRegionalPreferences()">
+                {{ savingRegional() ? ('profile.saving_region' | snT:'Saving…') : ('profile.save_region' | snT:'Save language and region') }}
+              </button>
+            </div>
           </article>
         </div>
       </section>
@@ -137,6 +144,7 @@ import { ShellComponent } from '../shared/shell.component';
     .theme-preview{height:44px;display:grid;grid-template-columns:1.5fr 1fr .55fr;overflow:hidden;border-radius:8px;border:1px solid rgba(255,255,255,.12)}.theme-preview i{display:block}.theme-copy{display:grid;gap:.25rem;min-width:0}.theme-copy strong{display:flex;align-items:center;gap:.45rem;font-size:.75rem}.theme-copy small{color:var(--muted);font-size:.59rem;line-height:1.35}.check{color:var(--primary);font-weight:900;text-align:center}
     .select-preference{display:grid;gap:.45rem;margin-top:1rem}.select-preference>label{color:var(--muted);font-size:.65rem;font-weight:750}.select-control{display:grid;grid-template-columns:34px 1fr;align-items:center;gap:.5rem;padding:0 .75rem;background:var(--surface-2);border:1px solid var(--line);border-radius:11px}.select-control:focus-within{border-color:var(--primary)}.select-control>span{font-size:1.2rem}.select-control select{width:100%;min-height:48px;color:var(--text);background:transparent;border:0;outline:0;font-weight:750}.select-control option,.preference-row option{color:#101820;background:#fff}
     .preference-row{display:grid;grid-template-columns:1fr auto;align-items:center;gap:1rem;padding:.9rem 0;border-bottom:1px solid var(--line)}.preference-row div{display:grid;gap:.25rem}.preference-row strong{font-size:.74rem}.preference-row small{color:var(--muted);font-size:.62rem}.preference-row select{min-width:220px;padding:.65rem .75rem;color:var(--text);background:var(--surface-2);border:1px solid var(--line);border-radius:9px}
+    .regional-actions{display:flex;align-items:center;justify-content:flex-end;gap:.75rem;padding-top:1rem}.save-regional{min-height:44px;padding:.7rem 1rem;border:0;border-radius:10px;background:var(--primary);color:#04130f;font-weight:900;cursor:pointer}.save-regional:disabled{opacity:.55;cursor:wait}.save-message{margin-right:auto;font-size:.7rem;font-weight:750}.save-message.success{color:var(--success)}.save-message.error{color:#ff8290}
     @media(max-width:950px){.profile-layout{grid-template-columns:1fr}.identity-card{position:static}.theme-grid{grid-template-columns:1fr}}
     @media(max-width:700px){.select-control{grid-template-columns:30px 1fr}}
     @media(max-width:600px){.theme-option{grid-template-columns:54px 1fr 18px}.section-heading,.preference-row{grid-template-columns:1fr;display:grid}.preference-row select{width:100%}}
@@ -169,6 +177,9 @@ export class ProfileComponent implements OnInit {
     {code:'TRY',name:'Türk lirası'},{code:'SAR',name:'Saudi riyal'},{code:'AED',name:'UAE dirham'},
   ];
   readonly currency = signal(localStorage.getItem(this.currencyStorageKey) || this.currencyForLocale(navigator.language));
+  readonly savingRegional = signal(false);
+  readonly regionalSaved = signal(false);
+  readonly regionalError = signal('');
 
   constructor(
     public readonly auth: AuthService,
@@ -202,6 +213,30 @@ export class ProfileComponent implements OnInit {
     document.documentElement.dataset['currency'] = code;
     window.dispatchEvent(new CustomEvent('guildconsole-currency-change', {detail:code}));
     await this.auth.updatePreferences({display_currency:code});
+  }
+
+  async saveRegionalPreferences(): Promise<void> {
+    if (this.savingRegional()) return;
+    this.savingRegional.set(true);
+    this.regionalSaved.set(false);
+    this.regionalError.set('');
+    try {
+      await this.auth.updatePreferences({
+        preferred_locale: this.i18n.locale(),
+        preferred_timezone: this.timezone(),
+        display_currency: this.currency(),
+        use_discord_locale: false,
+      });
+      localStorage.setItem(this.timezoneStorageKey, this.timezone());
+      localStorage.setItem(this.currencyStorageKey, this.currency());
+      this.regionalSaved.set(true);
+    } catch (error: any) {
+      this.regionalError.set(
+        error?.error?.detail || this.i18n.t('profile.regional_save_error', 'Unable to save language and regional settings.'),
+      );
+    } finally {
+      this.savingRegional.set(false);
+    }
   }
 
   private currencyForLocale(locale: string): string {

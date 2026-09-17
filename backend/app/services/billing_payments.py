@@ -88,16 +88,19 @@ class BillingPaymentService:
         await self.session.commit(); await self.session.refresh(wallet)
         return wallet
 
-    async def create_wallet_topup(self, discord_user_id:int, amount_uah:Decimal, provider:str, base_url:str, display_currency:str="UAH") -> dict:
+    async def create_wallet_topup(self, discord_user_id:int, display_amount:Decimal, provider:str, base_url:str, display_currency:str="UAH") -> dict:
         config=await self.provider_config()
         if provider not in config or not config[provider]["active"]: raise PaymentError("Payment provider is disabled or not configured")
         currency=display_currency.upper()
         if currency not in SUPPORTED_DISPLAY_CURRENCIES: currency="UAH"
         charge_currency=currency if currency in PROVIDER_CURRENCIES[provider] else "UAH"
-        if charge_currency=="UAH": amount,rate=amount_uah,Decimal("1")
+        if charge_currency==currency:
+            amount=display_amount
+            if currency=="UAH": rate=Decimal("1");amount_uah=display_amount
+            else: rate,_=await NBUExchangeService(self.session).rate(currency);amount_uah=(display_amount*rate).quantize(Decimal("0.01"))
         else:
-            rate,_=await NBUExchangeService(self.session).rate(charge_currency)
-            amount=await NBUExchangeService(self.session).convert_from_uah(amount_uah,charge_currency)
+            rate,_=await NBUExchangeService(self.session).rate(currency)
+            amount_uah=(display_amount*rate).quantize(Decimal("0.01"));amount=amount_uah
         order=f"wallet-{discord_user_id}-{uuid4().hex}"
         payment=BillingPayment(id=uuid4(),order_reference=order,guild_id=None,plugin_key=None,billing_period=None,purpose="wallet_topup",owner_discord_id=discord_user_id,provider=provider,amount=amount,currency=charge_currency,base_amount_uah=amount_uah,original_amount_uah=amount_uah,fx_rate=rate,quote_expires_at=datetime.now(timezone.utc)+timedelta(minutes=30))
         self.session.add(payment);await self.session.commit()

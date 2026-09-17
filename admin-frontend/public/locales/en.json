@@ -54,7 +54,7 @@
     "timezone": "Timezone",
     "timezone_help": "Used for logs, jobs and events.",
     "automatic": "Automatic",
-    "saved": "Preference saved",
+    "saved": "Preference saved", "save_region": "Save language and region", "saving_region": "Saving…", "regional_saved": "Language and regional settings saved.", "regional_save_error": "Unable to save language and regional settings.",
     "discord_id": "Discord ID"
   },
   "dashboard": {

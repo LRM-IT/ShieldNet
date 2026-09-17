@@ -181,16 +181,6 @@ interface PluginNavDefinition {
           </div>
 
           <div class="top-actions">
-            <button type="button" class="icon-action desktop-collapse"
-                    (click)="toggleMenuCollapsed()"
-                    [attr.aria-label]="menuCollapsed() ? 'Expand navigation' : 'Collapse navigation'">
-              {{ menuCollapsed() ? '»' : '«' }}
-            </button>
-            <button type="button" class="appearance-button"
-                    (click)="themes.cycleAppearanceMode()"
-                    [attr.aria-label]="'Appearance: ' + themes.appearanceMode()">
-              <span>{{ appearanceIcon() }}</span><b>{{ themes.appearanceMode().toUpperCase() }}</b>
-            </button>
             <button type="button" class="command-button"
                     (click)="openPalette()"
                     [attr.aria-label]="'palette.open' | snT:'Open command palette'">
