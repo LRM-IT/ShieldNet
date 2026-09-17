@@ -65,6 +65,10 @@ class User(Base, TimestampMixin):
     display_name: Mapped[str | None] = mapped_column(String(128))
     avatar_url: Mapped[str | None] = mapped_column(Text)
     discord_user_id: Mapped[int | None] = mapped_column(BigInteger, unique=True)
+    preferred_locale: Mapped[str | None] = mapped_column(String(8))
+    preferred_timezone: Mapped[str | None] = mapped_column(String(64))
+    display_currency: Mapped[str | None] = mapped_column(String(3))
+    use_discord_locale: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default="false")
 
     status: Mapped[UserStatus] = mapped_column(
         Enum(

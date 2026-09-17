@@ -1,4 +1,4 @@
-import { Component, computed, signal } from '@angular/core';
+import { Component, OnInit, computed, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslatePipe } from '../core/translate.pipe';
 import { TranslationService } from '../core/translation.service';
@@ -91,7 +91,7 @@ import { ShellComponent } from '../shared/shell.component';
                 <span>{{ i18n.currentLanguage()?.icon }}</span>
                 <select id="profile-language" [value]="i18n.locale()" (change)="changeLanguage($any($event.target).value)">
                   @for (language of i18n.languages(); track language.code) {
-                    <option [value]="language.code">{{ language.name }} — {{ language.code.toUpperCase() }}</option>
+                    <option [value]="language.code" [selected]="language.code === i18n.locale()">{{ language.name }} — {{ language.code.toUpperCase() }}</option>
                   }
                 </select>
               </div>
@@ -142,7 +142,7 @@ import { ShellComponent } from '../shared/shell.component';
     @media(max-width:600px){.theme-option{grid-template-columns:54px 1fr 18px}.section-heading,.preference-row{grid-template-columns:1fr;display:grid}.preference-row select{width:100%}}
   `],
 })
-export class ProfileComponent {
+export class ProfileComponent implements OnInit {
   readonly initial = computed(() =>
     (this.auth.profile()?.display_name || this.auth.profile()?.login || 'O')
       .slice(0, 1)
@@ -176,24 +176,32 @@ export class ProfileComponent {
     public readonly i18n: TranslationService,
   ) {}
 
+  ngOnInit(): void {
+    const profile=this.auth.profile();
+    if(profile?.preferred_timezone&&this.timezones.includes(profile.preferred_timezone))this.timezone.set(profile.preferred_timezone);
+    if(profile?.display_currency&&this.currencies.some(x=>x.code===profile.display_currency))this.currency.set(profile.display_currency);
+  }
+
   async changeLanguage(code: string): Promise<void> {
     await this.i18n.setLocale(code);
   }
 
-  changeTimezone(zone: string): void {
+  async changeTimezone(zone: string): Promise<void> {
     if (!this.timezones.includes(zone)) return;
     this.timezone.set(zone);
     localStorage.setItem(this.timezoneStorageKey, zone);
     document.documentElement.dataset['timezone'] = zone;
     window.dispatchEvent(new CustomEvent('guildconsole-timezone-change', { detail: zone }));
+    await this.auth.updatePreferences({preferred_timezone:zone});
   }
 
-  changeCurrency(code: string): void {
+  async changeCurrency(code: string): Promise<void> {
     if (!this.currencies.some((item) => item.code === code)) return;
     this.currency.set(code);
     localStorage.setItem(this.currencyStorageKey, code);
     document.documentElement.dataset['currency'] = code;
     window.dispatchEvent(new CustomEvent('guildconsole-currency-change', {detail:code}));
+    await this.auth.updatePreferences({display_currency:code});
   }
 
   private currencyForLocale(locale: string): string {

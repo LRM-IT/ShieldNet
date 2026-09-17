@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, Request, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from pydantic import BaseModel, Field
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from urllib.parse import urlencode
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,6 +16,15 @@ from app.services.auth import AuthService
 from app.services.discord_oauth import DiscordOAuthService
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
+
+SUPPORTED_LOCALES = {"en", "uk", "ru", "de", "ar", "fr", "it", "pl"}
+SUPPORTED_CURRENCIES = {"UAH", "USD", "EUR", "PLN", "GBP", "CAD", "CHF", "CZK", "RON", "TRY", "SAR", "AED"}
+
+class PreferencesUpdate(BaseModel):
+    preferred_locale: str | None = Field(default=None, max_length=8)
+    preferred_timezone: str | None = Field(default=None, max_length=64)
+    display_currency: str | None = Field(default=None, min_length=3, max_length=3)
+    use_discord_locale: bool | None = None
 
 
 @router.post("/login", response_model=TokenPair, include_in_schema=False)
@@ -69,6 +80,25 @@ async def me(current_user: User = Depends(get_current_user)) -> dict:
     payload["auth_source"] = getattr(current_user, "_auth_source", "discord_guild")
     payload["platform_context"] = payload["auth_source"] in {"local_platform", "discord_platform"}
     return payload
+
+@router.patch("/me/preferences")
+async def update_preferences(payload: PreferencesUpdate, current_user: User = Depends(get_current_user), session: AsyncSession = Depends(get_db_session)) -> dict:
+    values = payload.model_dump(exclude_unset=True)
+    locale = values.get("preferred_locale")
+    if locale is not None and locale not in SUPPORTED_LOCALES:
+        raise HTTPException(422, "Unsupported interface language")
+    currency = values.get("display_currency")
+    if currency is not None:
+        currency = currency.upper()
+        if currency not in SUPPORTED_CURRENCIES: raise HTTPException(422, "Unsupported display currency")
+        values["display_currency"] = currency
+    zone = values.get("preferred_timezone")
+    if zone is not None:
+        try: ZoneInfo(zone)
+        except ZoneInfoNotFoundError as exc: raise HTTPException(422, "Unsupported timezone") from exc
+    for key, value in values.items(): setattr(current_user, key, value)
+    await session.commit(); await session.refresh(current_user)
+    return user_to_response(current_user)
 
 
 

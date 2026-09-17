@@ -22,6 +22,7 @@ export class AppComponent {
     private readonly domTranslation: DomTranslationService,
   ) {
     this.themes.apply(this.themes.theme());
-    void this.i18n.initialize(this.auth.profile()?.preferred_locale).then(() => this.domTranslation.start());
+    void this.initialize();
   }
+  private async initialize():Promise<void>{let profile=this.auth.profile();if(!profile&&this.auth.accessToken){try{profile=await this.auth.loadProfile()}catch{}}await this.i18n.initialize(profile?.preferred_locale);this.domTranslation.start()}
 }
