@@ -80,11 +80,16 @@ async def plans(_: User = Depends(require_superadmin), session: AsyncSession = D
     for plugin in plugins:
         key = normalize_plugin_key(plugin.plugin_key)
         row = configured.get(key)
-        result.append(plan_dict(row) if row else {
-            "plugin_key": key, "name": plugin.name, "is_free": False,
-            "enabled": True, "currency": "UAH", "monthly_price": None,
-            "quarterly_price": None, "yearly_price": None,
-        })
+        if row:
+            data = plan_dict(row)
+            data["name"] = plugin.name
+            result.append(data)
+        else:
+            result.append({
+                "plugin_key": key, "name": plugin.name, "is_free": False,
+                "enabled": True, "currency": "UAH", "monthly_price": None,
+                "quarterly_price": None, "yearly_price": None,
+            })
     return result
 
 @router.get("/platform/billing/package")

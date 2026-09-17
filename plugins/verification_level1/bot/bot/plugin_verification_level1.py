@@ -375,7 +375,7 @@ class VerificationRuntime:
 
         status = "success" if not nickname_error and not role_error else "partial"
         embed = discord.Embed(
-            title=f"Verification Level 1: {action}",
+            title=f"Verification: {action}",
             description=f"Status: **{status}**",
         )
         embed.add_field(name="User", value=f"{member.mention} (`{member.id}`)", inline=False)

@@ -10,7 +10,7 @@ from .models import VerificationAudit, VerificationSettings, VerifiedMember
 from .schemas import MemberUpdatePayload, SettingsPayload
 from .service import get_or_create_settings, reset_member, save_settings
 
-router = APIRouter(prefix="/plugins/verification-level1", tags=["Verification Level 1"])
+router = APIRouter(prefix="/plugins/verification-level1", tags=["Verification"])
 
 
 async def db_session():

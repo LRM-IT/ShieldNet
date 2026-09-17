@@ -1,5 +1,5 @@
 {
-  "plugin.name": "Verification Level 1",
+  "plugin.name": "Verification",
   "verify.success": "You have been successfully verified",
   "rename.success": "Alliance and nickname changed successfully",
   "error.role": "Could not assign the role",

@@ -1,6 +1,6 @@
-# ShieldNet Verification Level 1 v1.1.0
+# GuildConsole Verification v2.0.0
 
-Native ShieldNet package using plugin.json and runtime:VerificationLevel1Plugin.
+GuildConsole multi-level verification package using plugin.json and runtime:VerificationLevel1Plugin.
 
 ```bash
 tar -xzf shieldnet-verification-level1-v1.1.0.tar.gz
