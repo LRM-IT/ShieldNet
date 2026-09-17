@@ -76,6 +76,7 @@ async def main() -> None:
                 status=GuildStatus.ACTIVE,
                 bot_status=BotStatus.ONLINE,
             ))
+            await session.commit()
             session.add(BillingSubscription(
                 id=uuid4(),
                 guild_id=TEST_GUILD_ID,
