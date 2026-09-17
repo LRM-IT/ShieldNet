@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges, computed, inject, signal } from '@angular/core';
+import { Component, ElementRef, EventEmitter, HostListener, Input, OnChanges, OnInit, Output, SimpleChanges, ViewChild, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
@@ -28,7 +28,7 @@ interface ChannelOption {
   imports: [CommonModule, FormsModule],
   template: `
     <div class="picker">
-      <button type="button" class="trigger" (click)="toggle()" [disabled]="loading()">
+      <button #trigger type="button" class="trigger" (click)="toggle()" [disabled]="loading()">
         <span class="trigger-main">
           <b>{{ selectedIcon() }}</b>
           <span class="copy">
@@ -40,7 +40,7 @@ interface ChannelOption {
       </button>
 
       @if (open()) {
-        <div class="menu">
+        <div class="menu" [style.top.px]="menuPosition().top" [style.left.px]="menuPosition().left" [style.width.px]="menuPosition().width" [style.height.px]="menuPosition().height">
           <div class="search">
             <input type="search" [(ngModel)]="query" placeholder="Search channel or category…" />
             <button type="button" (click)="refreshFromDiscord()" [disabled]="refreshing()">
@@ -95,7 +95,7 @@ interface ChannelOption {
     .copy{display:grid;min-width:0}
     .copy strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     small{color:var(--muted);font-size:.72rem}
-    .menu{position:absolute;z-index:1000;top:calc(100% + .4rem);left:0;right:0;min-width:340px;height:min(430px,calc(100vh - 2rem));max-height:430px;display:flex;flex-direction:column;overflow:hidden;padding:.6rem;border:1px solid var(--line);border-radius:12px;background:#071019;box-shadow:0 18px 50px rgba(0,0,0,.45)}
+    .menu{position:fixed;z-index:10000;min-width:300px;max-height:430px;display:flex;flex-direction:column;overflow:hidden;padding:.6rem;border:1px solid var(--line);border-radius:12px;background:#071019;box-shadow:0 18px 50px rgba(0,0,0,.45)}
     .search{display:grid;grid-template-columns:1fr 42px;gap:.4rem;margin-bottom:.45rem}
     input,button{font:inherit;border:1px solid var(--line);border-radius:8px;background:#08131d;color:var(--text);padding:.65rem}
     button{cursor:pointer}
@@ -107,11 +107,12 @@ interface ChannelOption {
     .option:hover,.option.selected{border-color:var(--primary);background:rgba(52,215,174,.08)}
     .empty,.error{padding:.8rem;color:var(--muted)}
     .error{color:#ff8290}
-    @media(max-width:700px){.menu{position:fixed;left:1rem;right:1rem;top:18vh;width:auto;min-width:0;height:64vh;max-height:64vh}}
+    @media(max-width:700px){.menu{min-width:0;max-height:calc(100vh - 2rem)}}
   `],
 })
 export class DiscordChannelPickerComponent implements OnInit, OnChanges {
   private readonly http = inject(HttpClient);
+  @ViewChild('trigger') trigger?: ElementRef<HTMLButtonElement>;
 
   @Input({ required: true }) guildId = '';
   @Input() value: string | number | null = null;
@@ -122,6 +123,7 @@ export class DiscordChannelPickerComponent implements OnInit, OnChanges {
   readonly refreshing = signal(false);
   readonly error = signal('');
   readonly channels = signal<ChannelOption[]>([]);
+  readonly menuPosition = signal({ top: 0, left: 0, width: 340, height: 430 });
   query = '';
 
   normalizedValue(): string {
@@ -162,7 +164,35 @@ export class DiscordChannelPickerComponent implements OnInit, OnChanges {
     if (changes['guildId'] && !changes['guildId'].firstChange) void this.load();
   }
 
-  toggle(): void { this.open.update((value) => !value); }
+  toggle(): void {
+    if (this.open()) {
+      this.open.set(false);
+      return;
+    }
+    this.updateMenuPosition();
+    this.open.set(true);
+  }
+
+  @HostListener('window:resize')
+  onViewportResize(): void {
+    if (this.open()) this.updateMenuPosition();
+  }
+
+  private updateMenuPosition(): void {
+    const rect = this.trigger?.nativeElement.getBoundingClientRect();
+    if (!rect) return;
+    const margin = 16;
+    const gap = 7;
+    const width = Math.min(Math.max(rect.width, 300), window.innerWidth - margin * 2);
+    const left = Math.min(Math.max(rect.left, margin), window.innerWidth - width - margin);
+    const roomBelow = window.innerHeight - rect.bottom - gap - margin;
+    const roomAbove = rect.top - gap - margin;
+    const height = Math.min(430, Math.max(220, roomBelow >= 220 ? roomBelow : roomAbove));
+    const top = roomBelow >= 220
+      ? rect.bottom + gap
+      : Math.max(margin, rect.top - gap - height);
+    this.menuPosition.set({ top, left, width, height });
+  }
 
   choose(channel: ChannelOption | null): void {
     const selectedId = channel?.id ?? null;
