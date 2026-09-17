@@ -58,7 +58,8 @@
     "saving_region": "Збереження…",
     "regional_saved": "Мову та регіональні налаштування збережено.",
     "regional_save_error": "Не вдалося зберегти мову та регіональні налаштування.",
-    "discord_id": "Discord ID"
+    "discord_id": "Discord ID",
+    "currency_help": "Ціни зберігаються в USD і перераховуються за офіційним курсом НБУ."
   },
   "dashboard": {
     "title": "Панель GuildConsole",
@@ -1452,10 +1453,10 @@
     "paid": "Платно",
     "save": "Зберегти",
     "paid_modules_price": "Ціна платних модулів",
-    "price_help": "Одна підписка оплачується окремо для кожного Discord-сервера. Базові ціни зберігаються у гривнях.",
-    "one_month_uah": "1 місяць, грн",
-    "three_months_uah": "3 місяці, грн",
-    "twelve_months_uah": "12 місяців, грн",
+    "price_help": "Одна підписка оплачується окремо для кожного Discord-сервера. Базові ціни зберігаються в USD.",
+    "one_month_uah": "1 місяць, USD",
+    "three_months_uah": "3 місяці, USD",
+    "twelve_months_uah": "12 місяців, USD",
     "save_pricing": "Зберегти тарифи",
     "nbu_rates": "Курси валют НБУ",
     "rates_help": "Ціни для показу оновлюються автоматично кожні шість годин.",
@@ -1479,7 +1480,6 @@
     "add_funds": "Додати кошти",
     "server_owner": "Власник сервера",
     "select_owner": "Виберіть власника",
-    "amount_uah": "Сума, грн",
     "comment": "Коментар",
     "comment_placeholder": "Причина або номер рахунку",
     "current_balances": "Поточні баланси",
@@ -1491,7 +1491,6 @@
     "card_type": "Тип картки",
     "percentage_discount": "Відсоткова знижка",
     "fixed_voucher": "Ваучер на фіксовану суму",
-    "voucher_amount_uah": "Сума ваучера, грн",
     "cards_vouchers": "Дисконтні картки та ваучери",
     "enter_card_voucher": "Введіть код картки або ваучера для цього сервера.",
     "voucher": "Ваучер:",
@@ -1603,7 +1602,10 @@
     "server_activation": "Активація сервера",
     "monthly": "Місяць",
     "quarterly": "Квартал",
-    "yearly": "Рік"
+    "yearly": "Рік",
+    "threshold_usd": "Поріг, USD",
+    "amount_usd": "Сума, USD",
+    "voucher_amount_usd": "Сума ваучера, USD"
   },
   "documentation": {
     "open_store": "Відкрити магазин плагінів",

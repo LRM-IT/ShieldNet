@@ -29,7 +29,7 @@ router = APIRouter(tags=["Billing"])
 class PlanUpdate(BaseModel):
     is_free: bool = False
     enabled: bool = True
-    currency: str = Field(default="UAH", pattern=r"^[A-Z]{3}$")
+    currency: str = Field(default="USD", pattern=r"^[A-Z]{3}$")
     monthly_price: Decimal | None = Field(default=None, ge=0)
     quarterly_price: Decimal | None = Field(default=None, ge=0)
     yearly_price: Decimal | None = Field(default=None, ge=0)
@@ -76,14 +76,14 @@ class WalletCreditRequest(BaseModel):
     comment: str = Field(default="", max_length=500)
 class DiscountCardIn(BaseModel):
     code:str=Field(min_length=3,max_length=64);discount_type:str=Field(default="percent",pattern=r"^(percent|fixed)$")
-    percent:Decimal=Field(default=10,ge=0,le=50);amount_uah:Decimal|None=Field(default=None,gt=0,le=1_000_000);active:bool=True
+    percent:Decimal=Field(default=10,ge=0,le=50);amount_usd:Decimal|None=Field(default=None,gt=0,le=1_000_000);active:bool=True
     valid_from:datetime|None=None;valid_until:datetime|None=None;max_redemptions:int|None=Field(default=None,ge=1)
     @model_validator(mode="after")
     def validate_value(self):
         if self.discount_type == "percent":
             if self.percent <= 0: raise ValueError("Percentage discount must be greater than zero")
-            self.amount_uah = None
-        elif self.amount_uah is None:
+            self.amount_usd = None
+        elif self.amount_usd is None:
             raise ValueError("Voucher amount must be greater than zero")
         else:
             self.percent = Decimal("0")
@@ -116,7 +116,7 @@ async def plans(_: User = Depends(require_superadmin), session: AsyncSession = D
         else:
             result.append({
                 "plugin_key": key, "name": plugin.name, "is_free": False,
-                "enabled": True, "currency": "UAH", "monthly_price": None,
+                "enabled": True, "currency": "USD", "monthly_price": None,
                 "quarterly_price": None, "yearly_price": None,
             })
     return result
@@ -131,7 +131,7 @@ async def save_paid_package(payload: PlanUpdate, _: User = Depends(require_super
     row = await session.scalar(select(BillingPluginPlan).where(BillingPluginPlan.plugin_key == PAID_PACKAGE_KEY))
     if row is None:
         row = BillingPluginPlan(id=uuid4(), plugin_key=PAID_PACKAGE_KEY, is_free=False); session.add(row)
-    row.is_free=False; row.enabled=payload.enabled; row.currency="UAH"
+    row.is_free=False; row.enabled=payload.enabled; row.currency="USD"
     row.monthly_price=payload.monthly_price
     row.quarterly_discount_percent=payload.quarterly_discount_percent
     row.yearly_discount_percent=payload.yearly_discount_percent
@@ -147,7 +147,7 @@ async def save_plan(plugin_key: str, payload: PlanUpdate, _: User = Depends(requ
         row = BillingPluginPlan(id=uuid4(), plugin_key=key)
         session.add(row)
     values = payload.model_dump()
-    values["currency"] = "UAH"
+    values["currency"] = "USD"
     for field, value in values.items(): setattr(row, field, value)
     await session.commit(); await session.refresh(row)
     return plan_dict(row)
@@ -193,21 +193,21 @@ async def guild_billing(guild_id: int, display_currency: str = "UAH", user: User
             if amount is None: discounted.append(None)
             else:
                 q=await BillingDiscountService(session).quote(guild_id,amount);discounted.append(q["final"]);discount_meta=q
-        values,_=await NBUExchangeService(session).quote(discounted,display_currency)
+        values,_=await NBUExchangeService(session).quote_from_usd(discounted,display_currency)
         data.update({"display_currency":display_currency.upper(),"display_monthly_price":values[0],"display_quarterly_price":values[1],"display_yearly_price":values[2],"discounted_monthly_price":discounted[0],"discounted_quarterly_price":discounted[1],"discounted_yearly_price":discounted[2],"discount":discount_meta}); visible_plans=[data]
     tiers={x.plugin_key:("free" if x.is_free else "paid") for x in plans if x.plugin_key != PAID_PACKAGE_KEY}
     provider_config=await BillingPaymentService(session).provider_config()
     return {"free_plugin_keys":sorted(x.plugin_key for x in plans if x.plugin_key != PAID_PACKAGE_KEY and x.is_free),"plans":visible_plans,"module_tiers":tiers,"subscriptions":[subscription_dict(x) for x in subscriptions if x.plugin_key == PAID_PACKAGE_KEY],
             "providers":{key:{"active":value["active"]} for key,value in provider_config.items()},
-            "exchange_rate":{"base":"UAH","currency":display_currency.upper(),"uah_per_unit":rate,"effective_at":effective,"source":"NBU"},
-            "wallet":{"balance":wallet.balance,"currency":wallet.currency,"low_balance_enabled":wallet.low_balance_enabled,"low_balance_threshold":wallet.low_balance_threshold,"low_balance_discord_dm":wallet.low_balance_discord_dm,"low_balance_email":wallet.low_balance_email} if wallet else {"balance":Decimal("0.00"),"currency":"UAH","low_balance_enabled":False,"low_balance_threshold":Decimal("0.00"),"low_balance_discord_dm":True,"low_balance_email":False},"email_available":bool(user.email)}
+            "exchange_rate":{"base":"USD","currency":display_currency.upper(),"uah_per_unit":rate,"effective_at":effective,"source":"NBU"},
+            "wallet":{"balance":wallet.balance,"currency":wallet.currency,"low_balance_enabled":wallet.low_balance_enabled,"low_balance_threshold":wallet.low_balance_threshold,"low_balance_discord_dm":wallet.low_balance_discord_dm,"low_balance_email":wallet.low_balance_email} if wallet else {"balance":Decimal("0.00"),"currency":"USD","low_balance_enabled":False,"low_balance_threshold":Decimal("0.00"),"low_balance_discord_dm":True,"low_balance_email":False},"email_available":bool(user.email)}
 
 @router.post("/discord/guilds/{guild_id}/billing/discount-card")
 async def redeem_discount(guild_id:int,payload:RedeemDiscountIn,user:User=Depends(get_current_user),session:AsyncSession=Depends(get_db_session)):
     await require_guild_management(session,user,guild_id)
     try: card=await BillingDiscountService(session).redeem(guild_id,payload.code,user.id)
     except DiscountError as exc: raise HTTPException(400,str(exc)) from exc
-    return {"code":card.code,"discount_type":card.discount_type,"percent":card.percent,"amount_uah":card.amount_uah,"active":card.active}
+    return {"code":card.code,"discount_type":card.discount_type,"percent":card.percent,"amount_usd":card.amount_usd,"active":card.active}
 
 @router.post("/billing/wallet/checkout")
 async def wallet_checkout(payload:WalletTopupRequest,request:Request,user:User=Depends(get_current_user),session:AsyncSession=Depends(get_db_session)):
@@ -225,8 +225,8 @@ async def purchase_subscription(payload:SubscriptionPurchaseRequest,user:User=De
 @router.put("/billing/wallet/settings")
 async def wallet_settings(payload:WalletSettingsRequest,user:User=Depends(get_current_user),session:AsyncSession=Depends(get_db_session)):
     if not user.discord_user_id:raise HTTPException(400,"Discord account is required")
-    wallet=await session.scalar(select(BillingWallet).where(BillingWallet.discord_user_id==user.discord_user_id,BillingWallet.currency=="UAH"))
-    if wallet is None:wallet=BillingWallet(id=uuid4(),discord_user_id=user.discord_user_id,balance=Decimal("0.00"),currency="UAH");session.add(wallet)
+    wallet=await session.scalar(select(BillingWallet).where(BillingWallet.discord_user_id==user.discord_user_id,BillingWallet.currency=="USD"))
+    if wallet is None:wallet=BillingWallet(id=uuid4(),discord_user_id=user.discord_user_id,balance=Decimal("0.00"),currency="USD");session.add(wallet)
     if payload.low_balance_email and not user.email: raise HTTPException(422,"Email notifications require an email address in the user profile")
     if payload.low_balance_enabled and not (payload.low_balance_discord_dm or payload.low_balance_email): raise HTTPException(422,"Select at least one notification channel")
     wallet.low_balance_enabled=payload.low_balance_enabled;wallet.low_balance_threshold=payload.low_balance_threshold
@@ -237,14 +237,14 @@ async def wallet_settings(payload:WalletSettingsRequest,user:User=Depends(get_cu
 async def discounts(_:User=Depends(require_superadmin),session:AsyncSession=Depends(get_db_session)):
     cards=list((await session.execute(select(BillingDiscountCard).order_by(BillingDiscountCard.created_at.desc()))).scalars())
     tenure=list((await session.execute(select(BillingTenureDiscount).order_by(BillingTenureDiscount.minimum_months))).scalars())
-    return {"cards":[{"id":x.id,"code":x.code,"discount_type":x.discount_type,"percent":x.percent,"amount_uah":x.amount_uah,"active":x.active,"valid_from":x.valid_from,"valid_until":x.valid_until,"max_redemptions":x.max_redemptions,"redemptions":x.redemptions} for x in cards],"tenure":[{"id":x.id,"minimum_months":x.minimum_months,"percent":x.percent,"active":x.active} for x in tenure],"maximum_combined_percent":50}
+    return {"cards":[{"id":x.id,"code":x.code,"discount_type":x.discount_type,"percent":x.percent,"amount_usd":x.amount_usd,"active":x.active,"valid_from":x.valid_from,"valid_until":x.valid_until,"max_redemptions":x.max_redemptions,"redemptions":x.redemptions} for x in cards],"tenure":[{"id":x.id,"minimum_months":x.minimum_months,"percent":x.percent,"active":x.active} for x in tenure],"maximum_combined_percent":50}
 
 @router.post("/platform/billing/discounts/cards")
 async def save_discount_card(payload:DiscountCardIn,_:User=Depends(require_superadmin),session:AsyncSession=Depends(get_db_session)):
     code=payload.code.strip().upper();row=await session.scalar(select(BillingDiscountCard).where(BillingDiscountCard.code==code))
     if row is None: row=BillingDiscountCard(id=uuid4(),code=code,redemptions=0);session.add(row)
     for k,v in payload.model_dump(exclude={"code"}).items():setattr(row,k,v)
-    await session.commit();return {"id":row.id,"code":row.code,"discount_type":row.discount_type,"percent":row.percent,"amount_uah":row.amount_uah,"active":row.active}
+    await session.commit();return {"id":row.id,"code":row.code,"discount_type":row.discount_type,"percent":row.percent,"amount_usd":row.amount_usd,"active":row.active}
 
 @router.put("/platform/billing/discounts/cards/{card_id}")
 async def update_discount_card(card_id:UUID,payload:DiscountCardIn,_:User=Depends(require_superadmin),session:AsyncSession=Depends(get_db_session)):
@@ -255,7 +255,7 @@ async def update_discount_card(card_id:UUID,payload:DiscountCardIn,_:User=Depend
     if duplicate:raise HTTPException(409,"Discount card code already exists")
     row.code=code
     for k,v in payload.model_dump(exclude={"code"}).items():setattr(row,k,v)
-    await session.commit();return {"id":row.id,"code":row.code,"discount_type":row.discount_type,"percent":row.percent,"amount_uah":row.amount_uah,"active":row.active}
+    await session.commit();return {"id":row.id,"code":row.code,"discount_type":row.discount_type,"percent":row.percent,"amount_usd":row.amount_usd,"active":row.active}
 
 @router.delete("/platform/billing/discounts/cards/{card_id}")
 async def delete_discount_card(card_id:UUID,_:User=Depends(require_superadmin),session:AsyncSession=Depends(get_db_session)):
@@ -325,7 +325,7 @@ async def payments(_: User = Depends(require_superadmin), session: AsyncSession 
     guild_names={x.guild_id:x.name for x in (await session.execute(select(Guild).where(Guild.guild_id.in_(guild_ids)))).scalars()} if guild_ids else {}
     return [{"id":x.id,"order_reference":x.order_reference,"guild_id":str(x.guild_id),"guild_name":guild_names.get(x.guild_id),"plugin_key":x.plugin_key,
              "billing_period":x.billing_period,"provider":x.provider,"amount":x.amount,"currency":x.currency,
-             "status":x.status,"signature_verified":x.signature_verified,"original_amount_uah":x.original_amount_uah,
+             "status":x.status,"signature_verified":x.signature_verified,"original_amount_usd":x.original_amount_usd,
              "discount_percent":x.discount_percent,"discount_code":x.discount_code,"paid_at":x.paid_at,"created_at":x.created_at} for x in rows]
 
 @router.get("/platform/billing/wallets")
@@ -335,7 +335,7 @@ async def wallets(_: User = Depends(require_superadmin), session: AsyncSession =
     balances = {x.discord_user_id:x for x in (await session.execute(select(BillingWallet).where(BillingWallet.discord_user_id.in_(owners)))).scalars()}
     return [{"discord_user_id":str(owner),"display_name":users.get(owner).display_name if users.get(owner) else None,
              "email":users.get(owner).email if users.get(owner) else None,"balance":balances.get(owner).balance if balances.get(owner) else Decimal("0.00"),
-             "currency":balances.get(owner).currency if balances.get(owner) else "UAH"} for owner in owners]
+             "currency":balances.get(owner).currency if balances.get(owner) else "USD"} for owner in owners]
 
 @router.post("/platform/billing/wallets/credit")
 async def credit_wallet(payload: WalletCreditRequest, user: User = Depends(require_superadmin), session: AsyncSession = Depends(get_db_session)):

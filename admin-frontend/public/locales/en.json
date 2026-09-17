@@ -59,7 +59,8 @@
     "saving_region": "Saving…",
     "regional_saved": "Language and regional settings saved.",
     "regional_save_error": "Unable to save language and regional settings.",
-    "discord_id": "Discord ID"
+    "discord_id": "Discord ID",
+    "currency_help": "Prices are stored in USD and converted using the official NBU rate."
   },
   "dashboard": {
     "title": "GuildConsole Dashboard",
@@ -1520,10 +1521,10 @@
     "paid": "Paid",
     "save": "Save",
     "paid_modules_price": "Paid Modules price",
-    "price_help": "One subscription price per Discord server. All base prices are stored in UAH.",
-    "one_month_uah": "1 month, UAH",
-    "three_months_uah": "3 months, UAH",
-    "twelve_months_uah": "12 months, UAH",
+    "price_help": "One subscription applies to one Discord server. All base prices are stored in USD.",
+    "one_month_uah": "1 month, USD",
+    "three_months_uah": "3 months, USD",
+    "twelve_months_uah": "12 months, USD",
     "save_pricing": "Save pricing",
     "nbu_rates": "NBU exchange rates",
     "rates_help": "Display prices refresh automatically every six hours.",
@@ -1547,7 +1548,6 @@
     "add_funds": "Add funds",
     "server_owner": "Server owner",
     "select_owner": "Select owner",
-    "amount_uah": "Amount, UAH",
     "comment": "Comment",
     "comment_placeholder": "Reason or invoice reference",
     "current_balances": "Current balances",
@@ -1559,7 +1559,6 @@
     "card_type": "Card type",
     "percentage_discount": "Percentage discount",
     "fixed_voucher": "Voucher for a fixed amount",
-    "voucher_amount_uah": "Voucher amount, UAH",
     "cards_vouchers": "Discount cards and vouchers",
     "enter_card_voucher": "Enter a card or voucher code for this server.",
     "voucher": "Voucher:",
@@ -1671,7 +1670,10 @@
     "server_activation": "Server activation",
     "monthly": "Monthly",
     "quarterly": "Quarterly",
-    "yearly": "Yearly"
+    "yearly": "Yearly",
+    "threshold_usd": "Threshold, USD",
+    "amount_usd": "Amount, USD",
+    "voucher_amount_usd": "Voucher amount, USD"
   },
   "documentation": {
     "open_store": "Open plugin store",

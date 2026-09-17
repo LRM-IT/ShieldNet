@@ -59,7 +59,8 @@
     "saving_region": "Salvataggio…",
     "regional_saved": "Lingua e impostazioni regionali salvate.",
     "regional_save_error": "Impossibile salvare la lingua e le impostazioni regionali.",
-    "discord_id": "Discord ID"
+    "discord_id": "Discord ID",
+    "currency_help": "I prezzi sono memorizzati in USD e convertiti al tasso ufficiale NBU."
   },
   "dashboard": {
     "title": "GuildConsole Dashboard",
@@ -1560,10 +1561,10 @@
     "paid": "A pagamento",
     "save": "Salva",
     "paid_modules_price": "Prezzo dei moduli a pagamento",
-    "price_help": "Ogni abbonamento vale per un server Discord. I prezzi base sono memorizzati in UAH.",
-    "one_month_uah": "1 mese, UAH",
-    "three_months_uah": "3 mesi, UAH",
-    "twelve_months_uah": "12 mesi, UAH",
+    "price_help": "Ogni abbonamento vale per un server Discord. I prezzi base sono memorizzati in USD.",
+    "one_month_uah": "1 mese, USD",
+    "three_months_uah": "3 mesi, USD",
+    "twelve_months_uah": "12 mesi, USD",
     "save_pricing": "Salva prezzi",
     "nbu_rates": "Tassi di cambio NBU",
     "rates_help": "I prezzi visualizzati si aggiornano automaticamente ogni sei ore.",
@@ -1587,7 +1588,6 @@
     "add_funds": "Aggiungi fondi",
     "server_owner": "Proprietario del server",
     "select_owner": "Seleziona proprietario",
-    "amount_uah": "Importo, UAH",
     "comment": "Commento",
     "comment_placeholder": "Motivo o riferimento fattura",
     "current_balances": "Saldi attuali",
@@ -1599,7 +1599,6 @@
     "card_type": "Tipo di carta",
     "percentage_discount": "Sconto percentuale",
     "fixed_voucher": "Buono di importo fisso",
-    "voucher_amount_uah": "Importo del buono, UAH",
     "cards_vouchers": "Carte sconto e buoni",
     "enter_card_voucher": "Inserisci un codice carta o buono per questo server.",
     "voucher": "Buono:",
@@ -1711,7 +1710,10 @@
     "server_activation": "Attivazione server",
     "monthly": "Mensile",
     "quarterly": "Trimestrale",
-    "yearly": "Annuale"
+    "yearly": "Annuale",
+    "threshold_usd": "Soglia, USD",
+    "amount_usd": "Importo, USD",
+    "voucher_amount_usd": "Importo del buono, USD"
   },
   "documentation": {
     "open_store": "Apri il negozio plugin",

@@ -61,7 +61,8 @@
     "saving_region": "جارٍ الحفظ…",
     "regional_saved": "تم حفظ اللغة والإعدادات الإقليمية.",
     "regional_save_error": "تعذر حفظ اللغة والإعدادات الإقليمية.",
-    "discord_id": "Discord ID"
+    "discord_id": "Discord ID",
+    "currency_help": "تُحفظ الأسعار بالدولار وتُحوّل وفق سعر NBU الرسمي."
   },
   "dashboard": {
     "title": "GuildConsole Dashboard",
@@ -1562,10 +1563,10 @@
     "paid": "مدفوع",
     "save": "حفظ",
     "paid_modules_price": "سعر الوحدات المدفوعة",
-    "price_help": "كل اشتراك مخصص لخادم Discord واحد. تُحفظ الأسعار الأساسية بالهريفنيا.",
-    "one_month_uah": "شهر واحد، هريفنيا",
-    "three_months_uah": "3 أشهر، هريفنيا",
-    "twelve_months_uah": "12 شهرًا، هريفنيا",
+    "price_help": "كل اشتراك مخصص لخادم Discord واحد. تُحفظ الأسعار الأساسية بالدولار.",
+    "one_month_uah": "شهر واحد، USD",
+    "three_months_uah": "3 أشهر، USD",
+    "twelve_months_uah": "12 شهرًا، USD",
     "save_pricing": "حفظ الأسعار",
     "nbu_rates": "أسعار صرف البنك الوطني الأوكراني",
     "rates_help": "تُحدّث أسعار العرض تلقائيًا كل ست ساعات.",
@@ -1589,7 +1590,6 @@
     "add_funds": "إضافة أموال",
     "server_owner": "مالك الخادم",
     "select_owner": "اختر المالك",
-    "amount_uah": "المبلغ بالهريفنيا",
     "comment": "تعليق",
     "comment_placeholder": "السبب أو مرجع الفاتورة",
     "current_balances": "الأرصدة الحالية",
@@ -1601,7 +1601,6 @@
     "card_type": "نوع البطاقة",
     "percentage_discount": "خصم بالنسبة المئوية",
     "fixed_voucher": "قسيمة بمبلغ ثابت",
-    "voucher_amount_uah": "قيمة القسيمة، UAH",
     "cards_vouchers": "بطاقات الخصم والقسائم",
     "enter_card_voucher": "أدخل رمز بطاقة أو قسيمة لهذا الخادم.",
     "voucher": "القسيمة:",
@@ -1713,7 +1712,10 @@
     "server_activation": "تفعيل الخادم",
     "monthly": "شهري",
     "quarterly": "ربع سنوي",
-    "yearly": "سنوي"
+    "yearly": "سنوي",
+    "threshold_usd": "الحد، USD",
+    "amount_usd": "المبلغ، USD",
+    "voucher_amount_usd": "قيمة القسيمة، USD"
   },
   "documentation": {
     "open_store": "فتح متجر الإضافات",

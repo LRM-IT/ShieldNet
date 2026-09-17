@@ -111,7 +111,7 @@ import { ShellComponent } from '../shared/shell.component';
             <div class="preference-row">
               <div>
                 <strong>{{ 'profile.currency' | snT:'Display currency' }}</strong>
-                <small>{{ 'profile.currency_help' | snT:'Prices are stored in UAH and converted using the official NBU rate.' }}</small>
+                <small>{{ 'profile.currency_help' | snT:'Prices are stored in USD and converted using the official NBU rate.' }}</small>
               </div>
               <select [value]="currency()" (change)="changeCurrency($any($event.target).value)" aria-label="Display currency">
                 @for (item of currencies; track item.code) {

@@ -60,7 +60,8 @@
     "saving_region": "Enregistrement…",
     "regional_saved": "La langue et les paramètres régionaux ont été enregistrés.",
     "regional_save_error": "Impossible d’enregistrer la langue et les paramètres régionaux.",
-    "discord_id": "Discord ID"
+    "discord_id": "Discord ID",
+    "currency_help": "Les prix sont stockés en USD et convertis au taux officiel de la NBU."
   },
   "dashboard": {
     "title": "GuildConsole Dashboard",
@@ -1561,10 +1562,10 @@
     "paid": "Payant",
     "save": "Enregistrer",
     "paid_modules_price": "Prix des modules payants",
-    "price_help": "Chaque abonnement concerne un serveur Discord. Les prix de base sont stockés en UAH.",
-    "one_month_uah": "1 mois, UAH",
-    "three_months_uah": "3 mois, UAH",
-    "twelve_months_uah": "12 mois, UAH",
+    "price_help": "Chaque abonnement concerne un serveur Discord. Les prix de base sont stockés en USD.",
+    "one_month_uah": "1 mois, USD",
+    "three_months_uah": "3 mois, USD",
+    "twelve_months_uah": "12 mois, USD",
     "save_pricing": "Enregistrer les tarifs",
     "nbu_rates": "Taux de change NBU",
     "rates_help": "Les prix affichés sont actualisés automatiquement toutes les six heures.",
@@ -1588,7 +1589,6 @@
     "add_funds": "Ajouter des fonds",
     "server_owner": "Propriétaire du serveur",
     "select_owner": "Sélectionner le propriétaire",
-    "amount_uah": "Montant, UAH",
     "comment": "Commentaire",
     "comment_placeholder": "Motif ou référence de facture",
     "current_balances": "Soldes actuels",
@@ -1600,7 +1600,6 @@
     "card_type": "Type de carte",
     "percentage_discount": "Remise en pourcentage",
     "fixed_voucher": "Bon d'un montant fixe",
-    "voucher_amount_uah": "Montant du bon, UAH",
     "cards_vouchers": "Cartes de réduction et bons",
     "enter_card_voucher": "Saisissez un code de carte ou de bon pour ce serveur.",
     "voucher": "Bon :",
@@ -1712,7 +1711,10 @@
     "server_activation": "Activation du serveur",
     "monthly": "Mensuel",
     "quarterly": "Trimestriel",
-    "yearly": "Annuel"
+    "yearly": "Annuel",
+    "threshold_usd": "Seuil, USD",
+    "amount_usd": "Montant, USD",
+    "voucher_amount_usd": "Montant du bon, USD"
   },
   "documentation": {
     "open_store": "Ouvrir la boutique",

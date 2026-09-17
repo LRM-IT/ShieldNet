@@ -34,10 +34,10 @@ class BillingDiscountService:
         final=(amount*(Decimal("100")-tenure)/Decimal("100")).quantize(Decimal("0.01"),rounding=ROUND_HALF_UP)
         for candidate in cards:
             candidate_percent=candidate.percent if candidate.discount_type == "percent" else Decimal("0")
-            candidate_fixed=candidate.amount_uah or Decimal("0") if candidate.discount_type == "fixed" else Decimal("0")
+            candidate_fixed=candidate.amount_usd or Decimal("0") if candidate.discount_type == "fixed" else Decimal("0")
             candidate_total=min(MAX_DISCOUNT,tenure+candidate_percent)
             candidate_final=(amount*(Decimal("100")-candidate_total)/Decimal("100")-candidate_fixed).quantize(Decimal("0.01"),rounding=ROUND_HALF_UP)
             candidate_final=max(Decimal("0.00"),candidate_final)
             if candidate_final < final:
                 final=candidate_final;total=candidate_total;card_percent=candidate_percent;fixed_amount=candidate_fixed;card=candidate
-        return {"original":amount,"final":final,"total_percent":total,"tenure_percent":tenure,"card_percent":card_percent,"fixed_amount_uah":fixed_amount,"card_type":card.discount_type if card else None,"card_code":card.code if card else None,"tenure_months":months}
+        return {"original":amount,"final":final,"total_percent":total,"tenure_percent":tenure,"card_percent":card_percent,"fixed_amount_usd":fixed_amount,"card_type":card.discount_type if card else None,"card_code":card.code if card else None,"tenure_months":months}

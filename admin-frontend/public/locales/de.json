@@ -61,7 +61,8 @@
     "saving_region": "Wird gespeichert…",
     "regional_saved": "Sprache und Region wurden gespeichert.",
     "regional_save_error": "Sprache und Region konnten nicht gespeichert werden.",
-    "discord_id": "Discord ID"
+    "discord_id": "Discord ID",
+    "currency_help": "Preise werden in USD gespeichert und zum offiziellen NBU-Kurs umgerechnet."
   },
   "dashboard": {
     "title": "GuildConsole Dashboard",
@@ -1562,10 +1563,10 @@
     "paid": "Kostenpflichtig",
     "save": "Speichern",
     "paid_modules_price": "Preis für kostenpflichtige Module",
-    "price_help": "Ein Abonnement gilt für einen Discord-Server. Alle Basispreise werden in UAH gespeichert.",
-    "one_month_uah": "1 Monat, UAH",
-    "three_months_uah": "3 Monate, UAH",
-    "twelve_months_uah": "12 Monate, UAH",
+    "price_help": "Ein Abonnement gilt für einen Discord-Server. Alle Basispreise werden in USD gespeichert.",
+    "one_month_uah": "1 Monat, USD",
+    "three_months_uah": "3 Monate, USD",
+    "twelve_months_uah": "12 Monate, USD",
     "save_pricing": "Preise speichern",
     "nbu_rates": "NBU-Wechselkurse",
     "rates_help": "Anzeigepreise werden alle sechs Stunden automatisch aktualisiert.",
@@ -1589,7 +1590,6 @@
     "add_funds": "Guthaben hinzufügen",
     "server_owner": "Serverbesitzer",
     "select_owner": "Besitzer auswählen",
-    "amount_uah": "Betrag, UAH",
     "comment": "Kommentar",
     "comment_placeholder": "Grund oder Rechnungsnummer",
     "current_balances": "Aktuelle Guthaben",
@@ -1601,7 +1601,6 @@
     "card_type": "Kartentyp",
     "percentage_discount": "Prozentualer Rabatt",
     "fixed_voucher": "Gutschein über einen festen Betrag",
-    "voucher_amount_uah": "Gutscheinbetrag, UAH",
     "cards_vouchers": "Rabattkarten und Gutscheine",
     "enter_card_voucher": "Geben Sie einen Karten- oder Gutscheincode für diesen Server ein.",
     "voucher": "Gutschein:",
@@ -1713,7 +1712,10 @@
     "server_activation": "Serveraktivierung",
     "monthly": "Monatlich",
     "quarterly": "Vierteljährlich",
-    "yearly": "Jährlich"
+    "yearly": "Jährlich",
+    "threshold_usd": "Schwellenwert, USD",
+    "amount_usd": "Betrag, USD",
+    "voucher_amount_usd": "Gutscheinbetrag, USD"
   },
   "documentation": {
     "open_store": "Plugin-Shop öffnen",

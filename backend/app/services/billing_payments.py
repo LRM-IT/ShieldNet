@@ -77,10 +77,10 @@ class BillingPaymentService:
 
     async def credit_wallet(self, discord_user_id: int, amount: Decimal, actor_id, comment: str | None = None) -> BillingWallet:
         wallet = (await self.session.execute(select(BillingWallet).where(
-            BillingWallet.discord_user_id == discord_user_id, BillingWallet.currency == "UAH"
+            BillingWallet.discord_user_id == discord_user_id, BillingWallet.currency == "USD"
         ).with_for_update())).scalar_one_or_none()
         if wallet is None:
-            wallet = BillingWallet(id=uuid4(), discord_user_id=discord_user_id, balance=Decimal("0.00"), currency="UAH")
+            wallet = BillingWallet(id=uuid4(), discord_user_id=discord_user_id, balance=Decimal("0.00"), currency="USD")
             self.session.add(wallet); await self.session.flush()
         wallet.balance += amount
         self.session.add(BillingWalletTransaction(id=uuid4(), wallet_id=wallet.id, amount=amount,
@@ -88,7 +88,7 @@ class BillingPaymentService:
         await self.session.commit(); await self.session.refresh(wallet)
         return wallet
 
-    async def create_wallet_topup(self, discord_user_id:int, display_amount:Decimal, provider:str, base_url:str, display_currency:str="UAH") -> dict:
+    async def create_wallet_topup(self, discord_user_id:int, display_amount:Decimal, provider:str, base_url:str, display_currency:str="USD") -> dict:
         config=await self.provider_config()
         if provider not in config or not config[provider]["active"]: raise PaymentError("Payment provider is disabled or not configured")
         currency=display_currency.upper()
@@ -98,10 +98,9 @@ class BillingPaymentService:
             raise PaymentError(f"{provider} does not support payments in {currency}; select UAH, USD or EUR in your profile")
         charge_currency=currency
         amount=display_amount
-        if currency=="UAH": rate=Decimal("1");amount_uah=display_amount
-        else: rate,_=await NBUExchangeService(self.session).rate(currency);amount_uah=(display_amount*rate).quantize(Decimal("0.01"))
+        amount_usd,rate=await NBUExchangeService(self.session).convert_to_usd(display_amount,currency)
         order=f"wallet-{discord_user_id}-{uuid4().hex}"
-        payment=BillingPayment(id=uuid4(),order_reference=order,guild_id=None,plugin_key=None,billing_period=None,purpose="wallet_topup",owner_discord_id=discord_user_id,provider=provider,amount=amount,currency=charge_currency,base_amount_uah=amount_uah,original_amount_uah=amount_uah,fx_rate=rate,quote_expires_at=datetime.now(timezone.utc)+timedelta(minutes=30))
+        payment=BillingPayment(id=uuid4(),order_reference=order,guild_id=None,plugin_key=None,billing_period=None,purpose="wallet_topup",owner_discord_id=discord_user_id,provider=provider,amount=amount,currency=charge_currency,base_amount_usd=amount_usd,original_amount_usd=amount_usd,fx_rate=rate,quote_expires_at=datetime.now(timezone.utc)+timedelta(minutes=30))
         self.session.add(payment);await self.session.commit()
         product="GuildConsole balance top-up";callback=f"{base_url}/api/v1/billing/callback/{provider}";result=f"{base_url}/servers"
         if provider=="wayforpay":
@@ -118,10 +117,10 @@ class BillingPaymentService:
         if payment.purpose!="wallet_topup":
             await self._activate(payment,provider_id,raw);return
         if payment.status=="paid": return
-        wallet=(await self.session.execute(select(BillingWallet).where(BillingWallet.discord_user_id==payment.owner_discord_id,BillingWallet.currency=="UAH").with_for_update())).scalar_one_or_none()
+        wallet=(await self.session.execute(select(BillingWallet).where(BillingWallet.discord_user_id==payment.owner_discord_id,BillingWallet.currency=="USD").with_for_update())).scalar_one_or_none()
         if wallet is None:
-            wallet=BillingWallet(id=uuid4(),discord_user_id=payment.owner_discord_id,balance=Decimal("0.00"),currency="UAH");self.session.add(wallet);await self.session.flush()
-        credit=payment.base_amount_uah or Decimal("0");wallet.balance+=credit
+            wallet=BillingWallet(id=uuid4(),discord_user_id=payment.owner_discord_id,balance=Decimal("0.00"),currency="USD");self.session.add(wallet);await self.session.flush()
+        credit=payment.base_amount_usd or Decimal("0");wallet.balance+=credit
         self.session.add(BillingWalletTransaction(id=uuid4(),wallet_id=wallet.id,amount=credit,balance_after=wallet.balance,operation="gateway_topup",payment_id=payment.id,comment=payment.provider))
         payment.status="paid";payment.signature_verified=True;payment.provider_payment_id=provider_id;payment.raw_status=raw;payment.paid_at=datetime.now(timezone.utc)
         await self.session.commit()
@@ -138,7 +137,7 @@ class BillingPaymentService:
         if amount <= 0:
             payment = BillingPayment(id=uuid4(), order_reference=f"voucher-{guild_id}-{uuid4().hex}", guild_id=guild_id,
                 plugin_key=key, billing_period=period, provider="voucher", amount=Decimal("0.00"), currency=plan.currency,
-                status="created", signature_verified=True,purpose="subscription",owner_discord_id=discord_user_id, original_amount_uah=original, base_amount_uah=Decimal("0.00"),
+                status="created", signature_verified=True,purpose="subscription",owner_discord_id=discord_user_id, original_amount_usd=original, base_amount_usd=Decimal("0.00"),
                 discount_percent=discount["total_percent"], discount_code=discount["card_code"])
             self.session.add(payment); await self.session.flush()
             await self._activate(payment, str(payment.id), {"source":"voucher","confirmed":True,"auto_renew":auto_renew})
@@ -150,7 +149,7 @@ class BillingPaymentService:
             raise PaymentError("Insufficient account balance")
         payment = BillingPayment(id=uuid4(), order_reference=f"balance-{guild_id}-{uuid4().hex}", guild_id=guild_id,
             plugin_key=key, billing_period=period, provider="balance", amount=amount, currency=plan.currency,
-            status="created", signature_verified=True,purpose="subscription",owner_discord_id=discord_user_id,original_amount_uah=original,base_amount_uah=amount,discount_percent=discount["total_percent"],discount_code=discount["card_code"])
+            status="created", signature_verified=True,purpose="subscription",owner_discord_id=discord_user_id,original_amount_usd=original,base_amount_usd=amount,discount_percent=discount["total_percent"],discount_code=discount["card_code"])
         self.session.add(payment); await self.session.flush()
         wallet.balance -= amount
         self.session.add(BillingWalletTransaction(id=uuid4(), wallet_id=wallet.id, amount=-amount,
@@ -159,7 +158,7 @@ class BillingPaymentService:
         await self._activate(payment, str(payment.id), {"source":"wallet","confirmed":True,"auto_renew":auto_renew})
         return {"provider":"balance","order_reference":payment.order_reference,"status":"paid","balance":wallet.balance,"currency":wallet.currency}
 
-    async def create_checkout(self, guild_id: int, plugin_key: str, period: str, provider: str, base_url: str, display_currency: str = "UAH") -> dict:
+    async def create_checkout(self, guild_id: int, plugin_key: str, period: str, provider: str, base_url: str, display_currency: str = "USD") -> dict:
         key = PAID_PACKAGE_KEY
         if period not in PERIOD_DAYS or provider not in {"wayforpay", "liqpay"}:
             raise PaymentError("Unsupported billing period or provider")
@@ -175,28 +174,28 @@ class BillingPaymentService:
         discount=await BillingDiscountService(self.session).quote(guild_id,original_amount);base_amount=discount["final"]
         if base_amount <= 0:
             payment = BillingPayment(id=uuid4(), order_reference=f"voucher-{guild_id}-{uuid4().hex}", guild_id=guild_id,
-                plugin_key=key, billing_period=period, provider="voucher", amount=Decimal("0.00"), currency="UAH",
-                status="created", signature_verified=True, original_amount_uah=original_amount, base_amount_uah=Decimal("0.00"),
+                plugin_key=key, billing_period=period, provider="voucher", amount=Decimal("0.00"), currency="USD",
+                status="created", signature_verified=True, original_amount_usd=original_amount, base_amount_usd=Decimal("0.00"),
                 discount_percent=discount["total_percent"], discount_code=discount["card_code"])
             self.session.add(payment); await self.session.flush()
             await self._activate(payment, str(payment.id), {"source":"voucher","confirmed":True})
             return {"provider":"voucher","order_reference":payment.order_reference,"status":"paid","discount":discount}
         requested_currency = display_currency.upper()
         if requested_currency not in SUPPORTED_DISPLAY_CURRENCIES:
-            requested_currency = "UAH"
+            requested_currency = "USD"
         try:
-            display_amount = await NBUExchangeService(self.session).convert_from_uah(base_amount, requested_currency)
+            display_amount = await NBUExchangeService(self.session).convert_from_usd(base_amount, requested_currency)
         except ExchangeRateError as exc:
             raise PaymentError(str(exc)) from exc
-        charge_currency = requested_currency if requested_currency in PROVIDER_CURRENCIES[provider] else "UAH"
-        if charge_currency == "UAH": amount, fx_rate = base_amount, Decimal("1")
-        else:
-            fx_rate, _ = await NBUExchangeService(self.session).rate(charge_currency)
-            amount = await NBUExchangeService(self.session).convert_from_uah(base_amount, charge_currency)
+        if requested_currency not in PROVIDER_CURRENCIES[provider]:
+            raise PaymentError(f"{provider} does not support payments in {requested_currency}; select UAH, USD or EUR in your profile")
+        charge_currency = requested_currency
+        amount = display_amount
+        _, fx_rate = await NBUExchangeService(self.session).convert_to_usd(Decimal("1"), charge_currency)
         order = f"gc-{guild_id}-{uuid4().hex}"
         payment = BillingPayment(id=uuid4(), order_reference=order, guild_id=guild_id, plugin_key=key,
                                  billing_period=period, provider=provider, amount=amount, currency=charge_currency,
-                                 original_amount_uah=original_amount,base_amount_uah=base_amount,discount_percent=discount["total_percent"],discount_code=discount["card_code"],fx_rate=fx_rate, quote_expires_at=datetime.now(timezone.utc)+timedelta(minutes=30))
+                                 original_amount_usd=original_amount,base_amount_usd=base_amount,discount_percent=discount["total_percent"],discount_code=discount["card_code"],fx_rate=fx_rate, quote_expires_at=datetime.now(timezone.utc)+timedelta(minutes=30))
         self.session.add(payment)
         await self.session.commit()
         product = f"GuildConsole Paid Modules {period}"

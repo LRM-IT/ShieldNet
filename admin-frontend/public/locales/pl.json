@@ -59,7 +59,8 @@
     "saving_region": "Zapisywanie…",
     "regional_saved": "Zapisano język i ustawienia regionalne.",
     "regional_save_error": "Nie udało się zapisać języka i ustawień regionalnych.",
-    "discord_id": "Discord ID"
+    "discord_id": "Discord ID",
+    "currency_help": "Ceny są przechowywane w USD i przeliczane według oficjalnego kursu NBU."
   },
   "dashboard": {
     "title": "GuildConsole Dashboard",
@@ -1560,10 +1561,10 @@
     "paid": "Płatny",
     "save": "Zapisz",
     "paid_modules_price": "Cena płatnych modułów",
-    "price_help": "Każda subskrypcja dotyczy jednego serwera Discord. Ceny bazowe są przechowywane w UAH.",
-    "one_month_uah": "1 miesiąc, UAH",
-    "three_months_uah": "3 miesiące, UAH",
-    "twelve_months_uah": "12 miesięcy, UAH",
+    "price_help": "Każda subskrypcja dotyczy jednego serwera Discord. Ceny bazowe są przechowywane w USD.",
+    "one_month_uah": "1 miesiąc, USD",
+    "three_months_uah": "3 miesiące, USD",
+    "twelve_months_uah": "12 miesięcy, USD",
     "save_pricing": "Zapisz ceny",
     "nbu_rates": "Kursy walut NBU",
     "rates_help": "Wyświetlane ceny są automatycznie odświeżane co sześć godzin.",
@@ -1587,7 +1588,6 @@
     "add_funds": "Dodaj środki",
     "server_owner": "Właściciel serwera",
     "select_owner": "Wybierz właściciela",
-    "amount_uah": "Kwota, UAH",
     "comment": "Komentarz",
     "comment_placeholder": "Powód lub numer faktury",
     "current_balances": "Aktualne salda",
@@ -1599,7 +1599,6 @@
     "card_type": "Typ karty",
     "percentage_discount": "Rabat procentowy",
     "fixed_voucher": "Kupon na stałą kwotę",
-    "voucher_amount_uah": "Kwota kuponu, UAH",
     "cards_vouchers": "Karty rabatowe i kupony",
     "enter_card_voucher": "Wprowadź kod karty lub kuponu dla tego serwera.",
     "voucher": "Kupon:",
@@ -1711,7 +1710,10 @@
     "server_activation": "Aktywacja serwera",
     "monthly": "Miesięcznie",
     "quarterly": "Kwartalnie",
-    "yearly": "Rocznie"
+    "yearly": "Rocznie",
+    "threshold_usd": "Próg, USD",
+    "amount_usd": "Kwota, USD",
+    "voucher_amount_usd": "Kwota kuponu, USD"
   },
   "documentation": {
     "open_store": "Otwórz sklep z wtyczkami",

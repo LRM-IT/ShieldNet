@@ -57,6 +57,21 @@ class NBUExchangeService:
         rate, _ = await self.rate(currency)
         return (amount / rate).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
+    async def convert_from_usd(self, amount: Decimal | None, currency: str) -> Decimal | None:
+        if amount is None: return None
+        usd_rate, _ = await self.rate("USD")
+        target_rate, _ = await self.rate(currency)
+        return (amount * usd_rate / target_rate).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+    async def convert_to_usd(self, amount: Decimal, currency: str) -> tuple[Decimal, Decimal]:
+        usd_rate, _ = await self.rate("USD")
+        source_rate, _ = await self.rate(currency)
+        return (amount * source_rate / usd_rate).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP), source_rate / usd_rate
+
     async def quote(self, amounts: list[Decimal | None], currency: str) -> tuple[list[Decimal | None], datetime]:
         rate, effective = await self.rate(currency)
         return [None if x is None else (x / rate).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP) for x in amounts], effective
+
+    async def quote_from_usd(self, amounts: list[Decimal | None], currency: str) -> tuple[list[Decimal | None], datetime]:
+        _, effective = await self.rate(currency)
+        return [await self.convert_from_usd(x, currency) for x in amounts], effective
