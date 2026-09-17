@@ -3,7 +3,6 @@ import { ActivatedRoute, Router, RouterLink, RouterLinkActive } from '@angular/r
 import { TranslatePipe } from '../core/translate.pipe';
 import { EventBusService } from '../core/event-bus.service';
 import { ThemeService } from '../core/theme.service';
-import { TranslationService } from '../core/translation.service';
 
 import { AuthService } from '../core/auth.service';
 import {
@@ -190,14 +189,6 @@ interface PluginNavDefinition {
                     [attr.aria-label]="'Appearance: ' + themes.appearanceMode()">
               <span>{{ appearanceIcon() }}</span><b>{{ themes.appearanceMode().toUpperCase() }}</b>
             </button>
-            <label class="locale-switcher" [attr.aria-label]="'profile.interface_language' | snT:'Interface language'">
-              <span>{{ i18n.currentLanguage()?.icon }}</span>
-              <select [value]="i18n.locale()" (change)="changeLocale($any($event.target).value)">
-                @for (language of i18n.languages(); track language.code) {
-                  <option [value]="language.code">{{ language.name }}</option>
-                }
-              </select>
-            </label>
             <button type="button" class="command-button"
                     (click)="openPalette()"
                     [attr.aria-label]="'palette.open' | snT:'Open command palette'">
@@ -304,7 +295,6 @@ interface PluginNavDefinition {
     .title-block{display:flex;align-items:center;gap:.75rem}.breadcrumb{display:flex;gap:.4rem;color:#557083;font-size:.58rem;font-weight:850;letter-spacing:.16em}.breadcrumb b{color:var(--primary)}h1{margin:.28rem 0 0;font-size:1.28rem}
     .menu-button{display:none;width:40px;height:40px;color:var(--text);background:var(--panel);border:1px solid var(--line);border-radius:9px}
     .top-actions{display:flex;align-items:center;gap:.75rem}
-    .locale-switcher{height:35px;display:flex;align-items:center;gap:.35rem;padding:0 .45rem;background:rgba(255,255,255,.025);border:1px solid var(--line);border-radius:9px}.locale-switcher span{font-size:.9rem}.locale-switcher select{width:74px;padding:0;border:0;background:transparent;color:var(--text);font:700 .62rem/1 inherit;cursor:pointer}.locale-switcher option{color:#101820;background:#fff}
     .command-button{height:35px;display:flex;align-items:center;gap:.45rem;padding:0 .65rem;color:#9fb3c1;background:rgba(255,255,255,.025);border:1px solid var(--line);border-radius:9px;cursor:pointer}
     .command-button:hover{color:var(--primary);border-color:rgba(53,226,178,.28)}
     .command-button span{font-size:.78rem}.command-button b{font-size:.58rem;letter-spacing:.08em}.health-chip{min-height:35px;display:flex;align-items:center;gap:.5rem;padding:0 .75rem;color:#a7c8bd;border:1px solid rgba(53,226,178,.18);border-radius:999px;background:rgba(53,226,178,.045);font-size:.62rem;font-weight:850;letter-spacing:.1em}
@@ -541,12 +531,7 @@ export class ShellComponent implements OnInit, OnDestroy {
     private readonly router: Router,
     public readonly themes: ThemeService,
     public readonly eventBus: EventBusService,
-    public readonly i18n: TranslationService,
   ) {}
-
-  async changeLocale(code: string): Promise<void> {
-    await this.i18n.setLocale(code);
-  }
 
 
   @HostListener('document:keydown', ['$event'])
