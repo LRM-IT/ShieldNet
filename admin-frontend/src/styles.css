@@ -92,7 +92,10 @@ a {
 }
 ::-webkit-scrollbar-thumb:hover { background: #345061; }
 
-.page { min-height: 100vh; }
+.page {
+  min-height: 100vh;
+  align-content: start;
+}
 
 .card {
   position: relative;
