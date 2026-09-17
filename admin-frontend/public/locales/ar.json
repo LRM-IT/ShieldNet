@@ -1057,9 +1057,9 @@
     "error": "Unable to run platform diagnostics."
   },
   "runtime_usage": {
-    "title": "Plugin Runtime",
-    "heading": "Runtime usage",
-    "description": "Requests, errors, rate limits and response time.",
+    "title": "متجر الإضافات",
+    "heading": "متجر الإضافات",
+    "description": "ثبّت الإضافات المتاحة لخادم Discord هذا وقم بإدارتها.",
     "refreshing": "Refreshing…",
     "refresh": "تحديث",
     "plugin": "Plugin",
@@ -1667,5 +1667,6 @@
     "payment_created": "تم الإنشاء · غير مدفوع",
     "payment_paid": "مدفوع",
     "payment_failed": "فشل"
-  }
+  },
+  "documentation": {"open_store":"فتح متجر الإضافات","all_plugins":"كل التوثيق","getting_started":"البدء","empty":"توثيق الإضافات غير متاح.","lifecycle":"دورة حياة الإضافة","heading":"التوثيق الداخلي","description":"إرشادات مفصلة لتثبيت إضافات GuildConsole وإعدادها وتشغيلها.","read_more":"التوثيق","quick_start":"الإعداد خطوة بخطوة","title":"التوثيق","store":"متجر الإضافات","features":"الميزات الرئيسية","purpose":"الغرض"}
 }

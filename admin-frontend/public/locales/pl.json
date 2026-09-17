@@ -1055,9 +1055,9 @@
     "error": "Unable to run platform diagnostics."
   },
   "runtime_usage": {
-    "title": "Plugin Runtime",
-    "heading": "Runtime usage",
-    "description": "Requests, errors, rate limits and response time.",
+    "title": "Sklep z wtyczkami",
+    "heading": "Sklep z wtyczkami",
+    "description": "Instaluj i zarządzaj wtyczkami dostępnymi dla tego serwera Discord.",
     "refreshing": "Refreshing…",
     "refresh": "Odśwież",
     "plugin": "Plugin",
@@ -1665,5 +1665,6 @@
     "payment_created": "Utworzono · nieopłacone",
     "payment_paid": "Opłacono",
     "payment_failed": "Niepowodzenie"
-  }
+  },
+  "documentation": {"open_store":"Otwórz sklep z wtyczkami","all_plugins":"Cała dokumentacja","getting_started":"Pierwsze kroki","empty":"Dokumentacja wtyczek jest niedostępna.","lifecycle":"Cykl życia wtyczki","heading":"Dokumentacja wewnętrzna","description":"Szczegółowe instrukcje instalacji, konfiguracji i obsługi wtyczek GuildConsole.","read_more":"Dokumentacja","quick_start":"Konfiguracja krok po kroku","title":"Dokumentacja","store":"Sklep z wtyczkami","features":"Główne funkcje","purpose":"Przeznaczenie"}
 }

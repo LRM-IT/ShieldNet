@@ -1055,9 +1055,9 @@
     "error": "Unable to run platform diagnostics."
   },
   "runtime_usage": {
-    "title": "Plugin Runtime",
-    "heading": "Runtime usage",
-    "description": "Requests, errors, rate limits and response time.",
+    "title": "Negozio plugin",
+    "heading": "Negozio plugin",
+    "description": "Installa e gestisci i plugin disponibili per questo server Discord.",
     "refreshing": "Refreshing…",
     "refresh": "Aggiorna",
     "plugin": "Plugin",
@@ -1665,5 +1665,6 @@
     "payment_created": "Creato · non pagato",
     "payment_paid": "Pagato",
     "payment_failed": "Non riuscito"
-  }
+  },
+  "documentation": {"open_store":"Apri il negozio plugin","all_plugins":"Tutta la documentazione","getting_started":"Per iniziare","empty":"La documentazione dei plugin non è disponibile.","lifecycle":"Ciclo di vita del plugin","heading":"Documentazione interna","description":"Guide dettagliate per installare, configurare e usare i plugin GuildConsole.","read_more":"Documentazione","quick_start":"Configurazione passo passo","title":"Documentazione","store":"Negozio plugin","features":"Funzioni principali","purpose":"Scopo"}
 }
