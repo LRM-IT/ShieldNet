@@ -1783,6 +1783,18 @@
     "registered": "تاريخ التسجيل",
     "owned_servers": "خوادم Discord المملوكة",
     "contact_owner": "التواصل مع مالك الخادم",
-    "dm_hint": "سيوصل البوت هذه الرسالة مباشرة إلى المالك."
+    "dm_hint": "سيوصل البوت هذه الرسالة مباشرة إلى المالك.",
+    "support_invite": "دعوة خادم الدعم",
+    "support_invite_title": "دعوة مالكي الخوادم الجدد",
+    "support_invite_help": "عند إضافة البوت إلى خادم Discord لأول مرة، يتلقى المالك رسالة خاصة تتضمن دعوة خادم الدعم.",
+    "enabled": "مفعّل",
+    "disabled": "معطّل",
+    "invite_url": "رابط دعوة Discord",
+    "invite_message": "رسالة خاصة",
+    "saving": "جارٍ الحفظ…",
+    "save_invite": "حفظ إعدادات الدعوة",
+    "invite_saved": "تم حفظ إعدادات الدعوة.",
+    "invite_load_error": "تعذر تحميل إعدادات الدعوة.",
+    "invite_save_error": "تعذر حفظ إعدادات الدعوة."
   }
 }

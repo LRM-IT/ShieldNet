@@ -1,7 +1,7 @@
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -12,6 +12,7 @@ from app.models.discord import Guild
 from app.models.member_actions import MemberActionType
 from app.schemas.member_actions import MemberActionCreate
 from app.services.member_action_service import MemberActionService
+from app.services.settings import SettingsService
 
 
 router = APIRouter(prefix="/platform/users", tags=["Platform Users"])
@@ -19,6 +20,32 @@ router = APIRouter(prefix="/platform/users", tags=["Platform Users"])
 
 class DirectMessagePayload(BaseModel):
     message: str = Field(min_length=1, max_length=2000)
+
+
+class SupportInviteSettingsPayload(BaseModel):
+    enabled: bool = False
+    invite_url: str = Field(default="", max_length=500)
+    message: str = Field(default="Welcome! Join our Discord support server for help and updates.", max_length=1400)
+
+    @field_validator("invite_url")
+    @classmethod
+    def validate_invite_url(cls, value: str) -> str:
+        value = value.strip()
+        if value and not (
+            value.startswith("https://discord.gg/")
+            or value.startswith("https://discord.com/invite/")
+        ):
+            raise ValueError("Enter a valid Discord invite URL")
+        return value
+
+
+async def support_invite_settings(session: AsyncSession) -> dict:
+    values = await SettingsService(session).list_module(0, "owner_support_invite")
+    return {
+        "enabled": bool(values.get("enabled", False)),
+        "invite_url": str(values.get("invite_url", "")),
+        "message": str(values.get("message", "Welcome! Join our Discord support server for help and updates.")),
+    }
 
 
 def serialize_user(user: User, guilds: list[Guild]) -> dict:
@@ -76,6 +103,28 @@ async def list_server_owners(
         by_owner.setdefault(guild.owner_discord_id, []).append(guild)
     items = [serialize_user(user, by_owner.get(user.discord_user_id or 0, [])) for user in users]
     return {"items": items, "total": len(items)}
+
+
+@router.get("/settings/support-invite")
+async def get_support_invite_settings(
+    _: User = Depends(require_superadmin),
+    session: AsyncSession = Depends(get_db_session),
+):
+    return await support_invite_settings(session)
+
+
+@router.put("/settings/support-invite")
+async def update_support_invite_settings(
+    payload: SupportInviteSettingsPayload,
+    current_user: User = Depends(require_superadmin),
+    session: AsyncSession = Depends(get_db_session),
+):
+    if payload.enabled and not payload.invite_url:
+        raise HTTPException(status_code=422, detail="Discord invite URL is required when the feature is enabled")
+    service = SettingsService(session)
+    for key, value in payload.model_dump().items():
+        await service.set(guild_id=0, module="owner_support_invite", key=key, value=value, updated_by=current_user.id)
+    return await support_invite_settings(session)
 
 
 @router.get("/{user_id}")

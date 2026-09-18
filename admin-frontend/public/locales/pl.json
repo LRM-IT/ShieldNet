@@ -1781,6 +1781,18 @@
     "registered": "Zarejestrowany",
     "owned_servers": "Posiadane serwery Discord",
     "contact_owner": "Skontaktuj się z właścicielem",
-    "dm_hint": "Bot dostarczy tę wiadomość bezpośrednio właścicielowi."
+    "dm_hint": "Bot dostarczy tę wiadomość bezpośrednio właścicielowi.",
+    "support_invite": "ZAPROSZENIE NA SERWER WSPARCIA",
+    "support_invite_title": "Zaproś nowych właścicieli",
+    "support_invite_help": "Gdy bot zostanie dodany po raz pierwszy, właściciel otrzyma DM z zaproszeniem na serwer wsparcia.",
+    "enabled": "Włączone",
+    "disabled": "Wyłączone",
+    "invite_url": "Link zaproszenia Discord",
+    "invite_message": "Wiadomość prywatna",
+    "saving": "Zapisywanie…",
+    "save_invite": "Zapisz ustawienia zaproszenia",
+    "invite_saved": "Ustawienia zaproszenia zapisane.",
+    "invite_load_error": "Nie udało się wczytać ustawień.",
+    "invite_save_error": "Nie udało się zapisać ustawień."
   }
 }

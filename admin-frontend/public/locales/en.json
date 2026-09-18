@@ -1741,6 +1741,18 @@
     "registered": "Registered",
     "owned_servers": "Owned Discord servers",
     "contact_owner": "Contact server owner",
-    "dm_hint": "The bot will deliver this message directly to the owner."
+    "dm_hint": "The bot will deliver this message directly to the owner.",
+    "support_invite": "SUPPORT SERVER INVITATION",
+    "support_invite_title": "Invite new server owners",
+    "support_invite_help": "When the bot is added to a Discord server for the first time, send its owner a DM with your support server invitation.",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "invite_url": "Discord invitation URL",
+    "invite_message": "Direct message",
+    "saving": "Saving…",
+    "save_invite": "Save invitation settings",
+    "invite_saved": "Invitation settings saved.",
+    "invite_load_error": "Unable to load invitation settings.",
+    "invite_save_error": "Unable to save invitation settings."
   }
 }

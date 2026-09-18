@@ -1783,6 +1783,18 @@
     "registered": "Registriert",
     "owned_servers": "Eigene Discord-Server",
     "contact_owner": "Serverbesitzer kontaktieren",
-    "dm_hint": "Der Bot stellt diese Nachricht direkt dem Besitzer zu."
+    "dm_hint": "Der Bot stellt diese Nachricht direkt dem Besitzer zu.",
+    "support_invite": "EINLADUNG ZUM SUPPORT-SERVER",
+    "support_invite_title": "Neue Serverbesitzer einladen",
+    "support_invite_help": "Wenn der Bot erstmals zu einem Discord-Server hinzugefügt wird, erhält der Besitzer eine DM mit der Einladung zum Support-Server.",
+    "enabled": "Aktiviert",
+    "disabled": "Deaktiviert",
+    "invite_url": "Discord-Einladungslink",
+    "invite_message": "Direktnachricht",
+    "saving": "Speichern…",
+    "save_invite": "Einladungseinstellungen speichern",
+    "invite_saved": "Einladungseinstellungen gespeichert.",
+    "invite_load_error": "Einladungseinstellungen konnten nicht geladen werden.",
+    "invite_save_error": "Einladungseinstellungen konnten nicht gespeichert werden."
   }
 }

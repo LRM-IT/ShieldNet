@@ -1781,6 +1781,18 @@
     "registered": "Registrato",
     "owned_servers": "Server Discord posseduti",
     "contact_owner": "Contatta il proprietario",
-    "dm_hint": "Il bot consegnerà il messaggio direttamente al proprietario."
+    "dm_hint": "Il bot consegnerà il messaggio direttamente al proprietario.",
+    "support_invite": "INVITO AL SERVER DI SUPPORTO",
+    "support_invite_title": "Invita i nuovi proprietari",
+    "support_invite_help": "Quando il bot viene aggiunto per la prima volta, il proprietario riceve un DM con l’invito al server di supporto.",
+    "enabled": "Attivo",
+    "disabled": "Disattivo",
+    "invite_url": "Link di invito Discord",
+    "invite_message": "Messaggio diretto",
+    "saving": "Salvataggio…",
+    "save_invite": "Salva impostazioni invito",
+    "invite_saved": "Impostazioni invito salvate.",
+    "invite_load_error": "Impossibile caricare le impostazioni.",
+    "invite_save_error": "Impossibile salvare le impostazioni."
   }
 }

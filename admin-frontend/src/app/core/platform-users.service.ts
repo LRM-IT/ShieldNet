@@ -25,6 +25,8 @@ export interface PlatformOwner {
   guilds: PlatformOwnerGuild[];
 }
 
+export interface SupportInviteSettings { enabled: boolean; invite_url: string; message: string; }
+
 @Injectable({ providedIn: 'root' })
 export class PlatformUsersService {
   constructor(private readonly http: HttpClient) {}
@@ -40,5 +42,13 @@ export class PlatformUsersService {
 
   sendDm(userId: string, message: string): Observable<{ id: string; status: string }> {
     return this.http.post<{ id: string; status: string }>(`/api/v1/platform/users/${userId}/dm`, { message });
+  }
+
+  supportInviteSettings(): Observable<SupportInviteSettings> {
+    return this.http.get<SupportInviteSettings>('/api/v1/platform/users/settings/support-invite');
+  }
+
+  saveSupportInviteSettings(value: SupportInviteSettings): Observable<SupportInviteSettings> {
+    return this.http.put<SupportInviteSettings>('/api/v1/platform/users/settings/support-invite', value);
   }
 }
