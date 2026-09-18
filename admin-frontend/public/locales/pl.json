@@ -1743,5 +1743,30 @@
     "hour_short": "g",
     "minute_short": "min",
     "second_short": "s"
+  },
+  "platform_users": {
+    "nav": "Właściciele serwerów",
+    "title": "Właściciele serwerów",
+    "eyebrow": "UŻYTKOWNICY PANELU",
+    "heading": "Właściciele serwerów Discord",
+    "intro": "Przeglądaj konta i serwery oraz kontaktuj się z właścicielem przez Discord.",
+    "search": "Szukaj według nazwy, e-maila lub ID Discord",
+    "search_button": "Szukaj",
+    "loading": "Ładowanie właścicieli…",
+    "empty": "Nie znaleziono właścicieli.",
+    "last_login": "Ostatnie logowanie",
+    "never": "nigdy",
+    "email": "E-mail",
+    "verified": "zweryfikowany",
+    "unverified": "niezweryfikowany",
+    "send_dm": "Wyślij DM Discord",
+    "message": "Wiadomość",
+    "message_placeholder": "Napisz do właściciela serwera…",
+    "cancel": "Anuluj",
+    "sending": "Wysyłanie…",
+    "queue": "Wyślij wiadomość",
+    "queued": "Wiadomość dodana do kolejki Discord.",
+    "load_error": "Nie udało się załadować użytkowników.",
+    "send_error": "Nie udało się wysłać wiadomości."
   }
 }

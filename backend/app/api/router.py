@@ -51,6 +51,7 @@ from app.api.routes.moderation_operations import router as moderation_operations
 from app.api.routes.permissions import router as permissions_router
 from app.api.routes.permission_simulator import router as permission_simulator_router
 from app.api.routes.platform_access import router as platform_access_router
+from app.api.routes.platform_users import router as platform_users_router
 from app.api.routes.server_control import router as server_control_router
 from app.api.routes.server_diff import router as server_diff_router
 from app.api.routes.security import router as security_router
@@ -129,6 +130,7 @@ api_router.include_router(audit_router)
 api_router.include_router(permissions_router)
 api_router.include_router(permission_simulator_router)
 api_router.include_router(platform_access_router)
+api_router.include_router(platform_users_router)
 api_router.include_router(jobs_router)
 api_router.include_router(internal_permissions_router)
 api_router.include_router(verification_router)

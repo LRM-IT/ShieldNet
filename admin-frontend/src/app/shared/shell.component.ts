@@ -70,7 +70,10 @@ interface PluginNavDefinition {
                     <a routerLink="/platform" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }"><span class="nav-icon">⌂</span><span>Platform overview</span></a>
                     <a routerLink="/servers" routerLinkActive="active"><span class="nav-icon">◫</span><span>Guild Control Centers</span></a>
                     <a routerLink="/platform/plugins" routerLinkActive="active"><span class="nav-icon">⬡</span><span>{{ 'shell.plugin_fabric' | snT:'Plugin fabric' }}</span></a>
-                    @if (auth.profile()?.is_superadmin) {<a routerLink="/platform/billing" routerLinkActive="active"><span class="nav-icon">₴</span><span>Billing</span></a>}
+                    @if (auth.profile()?.is_superadmin) {
+                      <a routerLink="/platform/users" routerLinkActive="active"><span class="nav-icon">♙</span><span>{{ 'platform_users.nav' | snT:'Server owners' }}</span></a>
+                      <a routerLink="/platform/billing" routerLinkActive="active"><span class="nav-icon">₴</span><span>Billing</span></a>
+                    }
                     <a routerLink="/platform/voting-templates" routerLinkActive="active"><span class="nav-icon">▣</span><span>Voting templates</span></a>
                     <a routerLink="/platform/languages" routerLinkActive="active"><span class="nav-icon">🌐</span><span>Languages</span></a>
                     <a routerLink="/platform/access" routerLinkActive="active"><span class="nav-icon">⚿</span><span>Platform access</span></a>

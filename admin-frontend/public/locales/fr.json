@@ -1744,5 +1744,30 @@
     "hour_short": "h",
     "minute_short": "min",
     "second_short": "s"
+  },
+  "platform_users": {
+    "nav": "Propriétaires",
+    "title": "Propriétaires de serveurs",
+    "eyebrow": "UTILISATEURS DU PANNEAU",
+    "heading": "Propriétaires de serveurs Discord",
+    "intro": "Consultez les comptes, leurs serveurs et contactez un propriétaire via Discord.",
+    "search": "Rechercher par nom, e-mail ou ID Discord",
+    "search_button": "Rechercher",
+    "loading": "Chargement des propriétaires…",
+    "empty": "Aucun propriétaire trouvé.",
+    "last_login": "Dernière connexion",
+    "never": "jamais",
+    "email": "E-mail",
+    "verified": "vérifié",
+    "unverified": "non vérifié",
+    "send_dm": "Envoyer un MP Discord",
+    "message": "Message",
+    "message_placeholder": "Écrivez au propriétaire du serveur…",
+    "cancel": "Annuler",
+    "sending": "Envoi…",
+    "queue": "Envoyer",
+    "queued": "Message placé dans la file de livraison Discord.",
+    "load_error": "Impossible de charger les utilisateurs.",
+    "send_error": "Impossible d’envoyer le message."
   }
 }

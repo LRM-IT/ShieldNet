@@ -38,6 +38,7 @@ import { OperationsComponent } from './pages/operations.component';
 import { SecurityComponent } from './pages/security.component';
 import { JobsCenterComponent } from './pages/jobs-center.component';
 import { PlatformAccessComponent } from './pages/platform-access.component';
+import { PlatformUsersComponent } from './pages/platform-users.component';
 import { ModerationOperationsComponent } from './pages/moderation-operations.component';
 import { MembersComponent } from './pages/members.component';
 import { ServerControlComponent } from './pages/server-control.component';
@@ -77,6 +78,7 @@ export const routes: Routes = [
   { path: 'platform/media-assets', component: MediaAssetsComponent, canActivate: [platformGuard] },
   { path: 'platform/template-designer', component: TemplateDesignerComponent, canActivate: [platformGuard] },
   { path: 'platform/access', component: PlatformAccessComponent, canActivate: [platformGuard] },
+  { path: 'platform/users', component: PlatformUsersComponent, canActivate: [superadminGuard] },
   { path: 'platform/plugins', component: PluginsComponent, canActivate: [platformGuard] },
   { path: 'platform/billing', component: BillingComponent, canActivate: [superadminGuard] },
   { path: 'platform/jobs', component: JobsCenterComponent, canActivate: [platformGuard] },

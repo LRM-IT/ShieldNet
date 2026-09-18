@@ -1745,5 +1745,30 @@
     "hour_short": "Std",
     "minute_short": "Min",
     "second_short": "Sek"
+  },
+  "platform_users": {
+    "nav": "Serverbesitzer",
+    "title": "Serverbesitzer",
+    "eyebrow": "PANEL-BENUTZER",
+    "heading": "Discord-Serverbesitzer",
+    "intro": "Panel-Konten und Server anzeigen und Besitzer über Discord kontaktieren.",
+    "search": "Nach Name, E-Mail oder Discord-ID suchen",
+    "search_button": "Suchen",
+    "loading": "Serverbesitzer werden geladen…",
+    "empty": "Keine Serverbesitzer gefunden.",
+    "last_login": "Letzte Anmeldung",
+    "never": "nie",
+    "email": "E-Mail",
+    "verified": "bestätigt",
+    "unverified": "nicht bestätigt",
+    "send_dm": "Discord-DM senden",
+    "message": "Nachricht",
+    "message_placeholder": "Nachricht an den Serverbesitzer…",
+    "cancel": "Abbrechen",
+    "sending": "Wird gesendet…",
+    "queue": "Nachricht senden",
+    "queued": "Nachricht wurde zur Discord-Zustellung eingereiht.",
+    "load_error": "Benutzer konnten nicht geladen werden.",
+    "send_error": "Nachricht konnte nicht gesendet werden."
   }
 }

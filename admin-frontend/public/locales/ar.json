@@ -1745,5 +1745,30 @@
     "hour_short": "س",
     "minute_short": "د",
     "second_short": "ث"
+  },
+  "platform_users": {
+    "nav": "مالكو الخوادم",
+    "title": "مالكو الخوادم",
+    "eyebrow": "مستخدمو اللوحة",
+    "heading": "مالكو خوادم Discord",
+    "intro": "اعرض حسابات اللوحة وخوادمها وتواصل مع المالك عبر Discord.",
+    "search": "البحث بالاسم أو البريد أو معرف Discord",
+    "search_button": "بحث",
+    "loading": "جارٍ تحميل مالكي الخوادم…",
+    "empty": "لم يتم العثور على مالكي خوادم.",
+    "last_login": "آخر تسجيل دخول",
+    "never": "أبدًا",
+    "email": "البريد الإلكتروني",
+    "verified": "موثّق",
+    "unverified": "غير موثّق",
+    "send_dm": "إرسال رسالة Discord",
+    "message": "الرسالة",
+    "message_placeholder": "اكتب رسالة إلى مالك الخادم…",
+    "cancel": "إلغاء",
+    "sending": "جارٍ الإرسال…",
+    "queue": "إرسال الرسالة",
+    "queued": "تمت إضافة الرسالة إلى قائمة تسليم Discord.",
+    "load_error": "تعذر تحميل المستخدمين.",
+    "send_error": "تعذر إرسال الرسالة."
   }
 }

@@ -1743,5 +1743,30 @@
     "hour_short": "h",
     "minute_short": "min",
     "second_short": "s"
+  },
+  "platform_users": {
+    "nav": "Proprietari server",
+    "title": "Proprietari server",
+    "eyebrow": "UTENTI DEL PANNELLO",
+    "heading": "Proprietari dei server Discord",
+    "intro": "Visualizza account e server e contatta un proprietario tramite Discord.",
+    "search": "Cerca per nome, email o ID Discord",
+    "search_button": "Cerca",
+    "loading": "Caricamento proprietari…",
+    "empty": "Nessun proprietario trovato.",
+    "last_login": "Ultimo accesso",
+    "never": "mai",
+    "email": "Email",
+    "verified": "verificata",
+    "unverified": "non verificata",
+    "send_dm": "Invia DM Discord",
+    "message": "Messaggio",
+    "message_placeholder": "Scrivi al proprietario del server…",
+    "cancel": "Annulla",
+    "sending": "Invio…",
+    "queue": "Invia messaggio",
+    "queued": "Messaggio accodato per la consegna su Discord.",
+    "load_error": "Impossibile caricare gli utenti.",
+    "send_error": "Impossibile inviare il messaggio."
   }
 }

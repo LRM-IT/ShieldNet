@@ -1703,5 +1703,30 @@
     "hour_short": "h",
     "minute_short": "m",
     "second_short": "s"
+  },
+  "platform_users": {
+    "nav": "Server owners",
+    "title": "Server owners",
+    "eyebrow": "PANEL USERS",
+    "heading": "Discord server owners",
+    "intro": "View panel accounts, their servers and contact an owner through Discord.",
+    "search": "Search by name, email or Discord ID",
+    "search_button": "Search",
+    "loading": "Loading server owners…",
+    "empty": "No server owners found.",
+    "last_login": "Last login",
+    "never": "never",
+    "email": "Email",
+    "verified": "verified",
+    "unverified": "not verified",
+    "send_dm": "Send Discord DM",
+    "message": "Message",
+    "message_placeholder": "Write a message to the server owner…",
+    "cancel": "Cancel",
+    "sending": "Sending…",
+    "queue": "Send message",
+    "queued": "Message queued for delivery through Discord.",
+    "load_error": "Unable to load users.",
+    "send_error": "Unable to send the message."
   }
 }
