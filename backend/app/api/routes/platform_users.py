@@ -53,7 +53,11 @@ async def list_server_owners(
     _: User = Depends(require_superadmin),
     session: AsyncSession = Depends(get_db_session),
 ):
-    guilds = (await session.execute(select(Guild).order_by(Guild.name))).scalars().all()
+    guilds = (
+        await session.execute(
+            select(Guild).where(Guild.last_sync_at.is_not(None)).order_by(Guild.name)
+        )
+    ).scalars().all()
     owner_ids = {guild.owner_discord_id for guild in guilds}
     if not owner_ids:
         return {"items": [], "total": 0}
@@ -85,7 +89,9 @@ async def get_server_owner(
         raise HTTPException(status_code=404, detail="Server owner not found")
     guilds = (
         await session.execute(
-            select(Guild).where(Guild.owner_discord_id == owner.discord_user_id).order_by(Guild.name)
+            select(Guild)
+            .where(Guild.owner_discord_id == owner.discord_user_id, Guild.last_sync_at.is_not(None))
+            .order_by(Guild.name)
         )
     ).scalars().all()
     if not guilds:
@@ -112,7 +118,7 @@ async def send_owner_dm(
     guild = (
         await session.execute(
             select(Guild)
-            .where(Guild.owner_discord_id == owner.discord_user_id)
+            .where(Guild.owner_discord_id == owner.discord_user_id, Guild.last_sync_at.is_not(None))
             .order_by(Guild.bot_status.desc(), Guild.name)
             .limit(1)
         )
