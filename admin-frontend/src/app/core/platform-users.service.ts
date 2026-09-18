@@ -8,6 +8,7 @@ export interface PlatformOwnerGuild {
   icon_url: string | null;
   status: string;
   bot_status: string;
+  invite_url: string | null;
 }
 
 export interface PlatformOwner {

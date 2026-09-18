@@ -9,6 +9,7 @@ from app.api.dependencies.platform_access import require_superadmin
 from app.db.session import get_db_session
 from app.models.core import User
 from app.models.discord import Guild
+from app.models.explorer import GuildInvite
 from app.models.member_actions import MemberActionType
 from app.schemas.member_actions import MemberActionCreate
 from app.services.member_action_service import MemberActionService
@@ -48,7 +49,8 @@ async def support_invite_settings(session: AsyncSession) -> dict:
     }
 
 
-def serialize_user(user: User, guilds: list[Guild]) -> dict:
+def serialize_user(user: User, guilds: list[Guild], invite_codes: dict[int, str] | None = None) -> dict:
+    invite_codes = invite_codes or {}
     return {
         "id": str(user.id),
         "display_name": user.display_name,
@@ -68,6 +70,7 @@ def serialize_user(user: User, guilds: list[Guild]) -> dict:
                 "icon_url": guild.icon_url,
                 "status": guild.status.value,
                 "bot_status": guild.bot_status.value,
+                "invite_url": f"https://discord.gg/{invite_codes[guild.guild_id]}" if guild.guild_id in invite_codes else None,
             }
             for guild in guilds
         ],
@@ -85,6 +88,18 @@ async def list_server_owners(
             select(Guild).where(Guild.last_sync_at.is_not(None)).order_by(Guild.name)
         )
     ).scalars().all()
+    invites = (
+        await session.execute(
+            select(GuildInvite)
+            .where(GuildInvite.guild_id.in_([guild.guild_id for guild in guilds]))
+            .order_by(GuildInvite.temporary, GuildInvite.expires_at.nulls_first(), GuildInvite.uses.desc())
+        )
+    ).scalars().all() if guilds else []
+    invite_codes: dict[int, str] = {}
+    for invite in invites:
+        if invite.max_uses and invite.uses >= invite.max_uses:
+            continue
+        invite_codes.setdefault(invite.guild_id, invite.code)
     owner_ids = {guild.owner_discord_id for guild in guilds}
     if not owner_ids:
         return {"items": [], "total": 0}
@@ -101,7 +116,7 @@ async def list_server_owners(
     by_owner: dict[int, list[Guild]] = {}
     for guild in guilds:
         by_owner.setdefault(guild.owner_discord_id, []).append(guild)
-    items = [serialize_user(user, by_owner.get(user.discord_user_id or 0, [])) for user in users]
+    items = [serialize_user(user, by_owner.get(user.discord_user_id or 0, []), invite_codes) for user in users]
     return {"items": items, "total": len(items)}
 
 
@@ -145,7 +160,19 @@ async def get_server_owner(
     ).scalars().all()
     if not guilds:
         raise HTTPException(status_code=404, detail="Server owner not found")
-    return serialize_user(owner, guilds)
+    invites = (
+        await session.execute(
+            select(GuildInvite)
+            .where(GuildInvite.guild_id.in_([guild.guild_id for guild in guilds]))
+            .order_by(GuildInvite.temporary, GuildInvite.expires_at.nulls_first(), GuildInvite.uses.desc())
+        )
+    ).scalars().all()
+    invite_codes: dict[int, str] = {}
+    for invite in invites:
+        if invite.max_uses and invite.uses >= invite.max_uses:
+            continue
+        invite_codes.setdefault(invite.guild_id, invite.code)
+    return serialize_user(owner, guilds, invite_codes)
 
 
 @router.post("/{user_id}/dm", status_code=status.HTTP_202_ACCEPTED)

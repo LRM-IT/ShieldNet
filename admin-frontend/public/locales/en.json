@@ -1753,6 +1753,12 @@
     "save_invite": "Save invitation settings",
     "invite_saved": "Invitation settings saved.",
     "invite_load_error": "Unable to load invitation settings.",
-    "invite_save_error": "Unable to save invitation settings."
+    "invite_save_error": "Unable to save invitation settings.",
+    "status_need_setup": "Connected, initial setup not completed",
+    "status_active": "Configured",
+    "bot_online": "bot online",
+    "bot_offline": "bot offline",
+    "join_server": "Join server",
+    "invite_unavailable": "Invitation unavailable"
   }
 }

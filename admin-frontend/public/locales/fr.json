@@ -1794,6 +1794,12 @@
     "save_invite": "Enregistrer les paramètres",
     "invite_saved": "Paramètres d’invitation enregistrés.",
     "invite_load_error": "Impossible de charger les paramètres.",
-    "invite_save_error": "Impossible d’enregistrer les paramètres."
+    "invite_save_error": "Impossible d’enregistrer les paramètres.",
+    "status_need_setup": "Connecté, configuration initiale inachevée",
+    "status_active": "Configuré",
+    "bot_online": "bot en ligne",
+    "bot_offline": "bot hors ligne",
+    "join_server": "Rejoindre le serveur",
+    "invite_unavailable": "Invitation indisponible"
   }
 }

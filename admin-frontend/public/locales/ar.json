@@ -1795,6 +1795,12 @@
     "save_invite": "حفظ إعدادات الدعوة",
     "invite_saved": "تم حفظ إعدادات الدعوة.",
     "invite_load_error": "تعذر تحميل إعدادات الدعوة.",
-    "invite_save_error": "تعذر حفظ إعدادات الدعوة."
+    "invite_save_error": "تعذر حفظ إعدادات الدعوة.",
+    "status_need_setup": "متصل، لم يكتمل الإعداد الأولي",
+    "status_active": "تم الإعداد",
+    "bot_online": "البوت متصل",
+    "bot_offline": "البوت غير متصل",
+    "join_server": "الانضمام إلى الخادم",
+    "invite_unavailable": "الدعوة غير متاحة"
   }
 }
