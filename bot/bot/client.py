@@ -141,11 +141,11 @@ class ShieldNetBot(discord.Client):
             await interaction.response.defer()
             data = await self.activity_ranking.leaderboard(interaction.guild.id)
             if not data.get("enabled"):
-                await interaction.followup.send("Activity & Ranking is disabled.", ephemeral=True)
+                await interaction.followup.send("Levels & Rewards is disabled.", ephemeral=True)
                 return
             rows = data.get("leaderboard") or []
-            text = "\n".join(f"**{row['rank']}.** <@{row['discord_user_id']}> — **{row['points']:g}** points" for row in rows) or "No activity recorded yet."
-            embed = discord.Embed(title="🏆 Activity leaderboard", description=text, colour=discord.Colour.gold())
+            text = "\n".join(f"**{row['rank']}.** <@{row['discord_user_id']}> — level **{row.get('level', 1)}**, {row['points']:g} XP" for row in rows) or "No activity recorded yet."
+            embed = discord.Embed(title="🏆 Levels & rewards", description=text, colour=discord.Colour.gold())
             await interaction.followup.send(embed=embed)
 
         @self.tree.command(name="shieldnet_modules", description="Show enabled modules.")

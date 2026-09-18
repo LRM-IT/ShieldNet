@@ -17,12 +17,20 @@ router = APIRouter(tags=["Activity & Ranking plugin"])
 internal_router = APIRouter(prefix="/internal/plugin-activity-ranking", tags=["Internal Activity & Ranking"], dependencies=[Depends(verify_internal_service_token)])
 
 
+class RewardRoleInput(BaseModel):
+    level: int = Field(ge=2, le=10000)
+    role_id: str = Field(min_length=1, max_length=32)
+
+
 class SettingsInput(BaseModel):
     message_points: int = Field(default=1, ge=0, le=1000)
     voice_points_per_minute: float = Field(default=0.2, ge=0, le=1000)
     message_cooldown_seconds: int = Field(default=60, ge=0, le=3600)
     excluded_channel_ids: list[str] = Field(default_factory=list, max_length=100)
     excluded_role_ids: list[str] = Field(default_factory=list, max_length=100)
+    level_base_points: int = Field(default=100, ge=1, le=1000000)
+    level_growth: float = Field(default=1.5, ge=1, le=5)
+    reward_roles: list[RewardRoleInput] = Field(default_factory=list, max_length=100)
 
 
 class ActivityInput(BaseModel):
@@ -47,14 +55,24 @@ def config(item) -> dict:
         "message_cooldown_seconds": int(raw.get("message_cooldown_seconds", 60)),
         "excluded_channel_ids": raw.get("excluded_channel_ids", []),
         "excluded_role_ids": raw.get("excluded_role_ids", []),
+        "level_base_points": int(raw.get("level_base_points", 100)),
+        "level_growth": float(raw.get("level_growth", 1.5)),
+        "reward_roles": raw.get("reward_roles", []),
     }
+
+
+def level_for(points: float, settings: dict) -> int:
+    base = max(1, settings["level_base_points"])
+    growth = max(1.0, settings["level_growth"])
+    return max(1, int((max(0.0, points) / base) ** (1 / growth)) + 1)
 
 
 async def leaderboard(session: AsyncSession, guild_id: int, item, limit: int = 100) -> list[dict]:
     scores = (item.configuration or {}).get("scores", {}) if item else {}
     members = (await session.execute(select(DiscordMember).where(DiscordMember.guild_id == guild_id, DiscordMember.discord_user_id.in_([int(key) for key in scores] or [0])))).scalars().all()
     names = {str(member.discord_user_id): member.global_name or member.username for member in members}
-    rows = [{"discord_user_id": user_id, "name": names.get(user_id, f"User {user_id}"), **values} for user_id, values in scores.items()]
+    settings = config(item)
+    rows = [{"discord_user_id": user_id, "name": names.get(user_id, f"User {user_id}"), **values, "level": level_for(float(values.get("points", 0)), settings)} for user_id, values in scores.items()]
     rows.sort(key=lambda value: (-float(value.get("points", 0)), value["name"].casefold()))
     return [{"rank": index + 1, **value} for index, value in enumerate(rows[:limit])]
 
@@ -72,7 +90,9 @@ async def save_settings(guild_id: int, payload: SettingsInput, user: User = Depe
     item = await installation(session, guild_id, True)
     if not item:
         raise HTTPException(409, "Install Activity & Ranking first")
-    item.configuration = {**(item.configuration or {}), **payload.model_dump()}
+    values = payload.model_dump()
+    values["reward_roles"] = sorted(values["reward_roles"], key=lambda reward: reward["level"])
+    item.configuration = {**(item.configuration or {}), **values}
     await session.commit()
     return await get_settings(guild_id, user, session)
 
@@ -104,10 +124,13 @@ async def activity(payload: ActivityInput, session: AsyncSession = Depends(get_d
     scores = dict(data.get("scores") or {})
     user_id = str(payload.discord_user_id)
     score = dict(scores.get(user_id) or {"points": 0, "messages": 0, "voice_minutes": 0})
+    previous_level = level_for(float(score.get("points", 0)), settings)
     score["points"] = round(float(score.get("points", 0)) + points, 2)
     if payload.kind == "message": score["messages"] = int(score.get("messages", 0)) + int(payload.amount)
     else: score["voice_minutes"] = round(float(score.get("voice_minutes", 0)) + payload.amount, 1)
     scores[user_id] = score
     item.configuration = {**data, "scores": scores}
     await session.commit()
-    return {"recorded": True, "score": score}
+    level = level_for(float(score.get("points", 0)), settings)
+    reward_role_ids = [str(reward.get("role_id")) for reward in settings["reward_roles"] if reward.get("role_id") and int(reward.get("level", 0)) <= level]
+    return {"recorded": True, "score": {**score, "level": level}, "leveled_up": level > previous_level, "reward_role_ids": reward_role_ids}

@@ -132,7 +132,7 @@ export class PluginRuntimeUsageComponent implements OnInit {
       this.guildPlugins.listInstalled(this.guildId),
       this.guildPlugins.marketplace(this.guildId),
       this.runtimeService.list(this.guildId),
-      firstValueFrom(this.http.get<PluginDocumentation>(`/plugin-docs/${this.i18n.locale()}.json?v=16.1`)),
+      firstValueFrom(this.http.get<PluginDocumentation>(`/plugin-docs/${this.i18n.locale()}.json?v=16.2`)),
     ]);
     if (plugins.status === 'fulfilled') this.installations.set(plugins.value);
     else this.error.set(this.i18n.t('runtime_usage.load_plugins_error', 'Unable to load installed plugins.'));

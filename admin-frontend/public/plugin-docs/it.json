@@ -78,9 +78,9 @@
       "check": "Pubblica un piano di test e verifica che assegnazioni, cambi di stato e orari siano visibili ai partecipanti."
     },
     "activity_ranking": {
-      "purpose": "Traccia l'attività testuale e vocale e crea classifiche del server.",
-      "configuration": "Imposta i punti, il cooldown dei messaggi, il punteggio vocale, i canali esclusi e i ruoli esclusi.",
-      "check": "Genera attività testuale e vocale con un membro di test e conferma i totali aggiornati e il comando della classifica."
+      "purpose": "Assegna XP per l'attività testuale e vocale, calcola i livelli e concede ruoli premio.",
+      "configuration": "Configura XP, cooldown, curva dei livelli ed esclusioni, quindi associa i livelli ai ruoli Discord. Il ruolo del bot deve essere sopra i ruoli premio.",
+      "check": "Genera attività di prova e verifica l'aumento di livello, il ruolo assegnato e livello e XP con /leaderboard."
     },
     "audit_security": {
       "purpose": "Registra le modifiche di Discord sensibili per la sicurezza e invia avvisi di audit filtrati.",

@@ -78,9 +78,9 @@
       "check": "Veröffentlichen Sie einen Testplan und überprüfen Sie, dass Zuweisungen, Statusänderungen und Zeiten für Teilnehmer sichtbar sind."
     },
     "activity_ranking": {
-      "purpose": "Verfolgt Text- und Sprachaktivität und erstellt Server-Ranglisten.",
-      "configuration": "Legen Sie Punkte, Nachrichten-Cooldown, Sprachbewertung, ausgeschlossene Kanäle und ausgeschlossene Rollen fest.",
-      "check": "Erzeugen Sie Text- und Sprachaktivität mit einem Testmitglied und bestätigen Sie aktualisierte Gesamtwerte sowie den Ranglistenbefehl."
+      "purpose": "Vergibt XP für Text- und Sprachaktivität, berechnet Level und erteilt Belohnungsrollen.",
+      "configuration": "Konfigurieren Sie XP, Cooldown, Levelkurve und Ausschlüsse und ordnen Sie Level Discord-Rollen zu. Die Bot-Rolle muss über den Belohnungsrollen stehen.",
+      "check": "Erzeugen Sie Testaktivität und prüfen Sie Levelaufstieg, Rollenzuweisung sowie Level und XP im Befehl /leaderboard."
     },
     "audit_security": {
       "purpose": "Protokolliert sicherheitsrelevante Discord-Änderungen und sendet gefilterte Audit-Benachrichtigungen.",

@@ -481,7 +481,7 @@ export class ShellComponent implements OnInit, OnDestroy {
     { keys: ['ai_automod', 'ai-automod'], label: 'plugin_names.ai_automod', icon: 'AI', path: 'plugins/ai-automod' },
     { keys: ['event_manager', 'event-manager'], label: 'plugin_names.event_manager', icon: '◷', path: 'plugins/event-manager' },
     { keys: ['war_planner', 'war-planner'], label: 'plugin_names.war_planner', icon: '⚔', path: 'plugins/war-planner' },
-    { keys: ['activity_ranking', 'activity-ranking'], label: 'plugin_names.activity_ranking', icon: '↗', path: 'plugins/activity-ranking' },
+    { keys: ['activity_ranking', 'activity-ranking'], label: 'plugin_names.activity_ranking', icon: '🏆', path: 'plugins/activity-ranking' },
     { keys: ['audit_security', 'audit-security'], label: 'plugin_names.audit_security', icon: '◉', path: 'plugins/audit-security' },
     { keys: ['backup_restore', 'backup-restore'], label: 'plugin_names.backup_restore', icon: '◫', path: 'backups' },
     { keys: ['cross_guild_network', 'cross-guild-network'], label: 'plugin_names.cross_guild_network', icon: '⌘', path: 'plugins/cross-guild-network' },

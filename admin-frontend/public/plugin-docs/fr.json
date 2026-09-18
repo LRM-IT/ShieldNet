@@ -78,9 +78,9 @@
       "check": "Publiez un plan de test et vérifiez que les affectations, les changements de statut et les horaires sont visibles pour les participants."
     },
     "activity_ranking": {
-      "purpose": "Suit l’activité textuelle et vocale et construit les classements du serveur.",
-      "configuration": "Définissez les points, le délai de récupération des messages, le score vocal, les salons exclus et les rôles exclus.",
-      "check": "Générez de l’activité textuelle et vocale avec un membre de test et confirmez les totaux mis à jour ainsi que la commande de classement."
+      "purpose": "Attribue de l’XP pour l’activité textuelle et vocale, calcule les niveaux et accorde des rôles de récompense.",
+      "configuration": "Configurez l’XP, le délai, la courbe des niveaux et les exclusions, puis associez les niveaux aux rôles Discord. Le rôle du bot doit être au-dessus des rôles de récompense.",
+      "check": "Générez une activité de test et vérifiez le niveau, le rôle accordé et l’affichage du niveau et de l’XP avec /leaderboard."
     },
     "audit_security": {
       "purpose": "Enregistre les changements Discord sensibles pour la sécurité et envoie des alertes d’audit filtrées.",

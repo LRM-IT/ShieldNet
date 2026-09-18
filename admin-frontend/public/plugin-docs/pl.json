@@ -78,9 +78,9 @@
       "check": "Opublikuj testowy plan i sprawdź, czy przypisania, zmiany statusu i czasy są widoczne dla uczestników."
     },
     "activity_ranking": {
-      "purpose": "Śledzi aktywność tekstową i głosową oraz tworzy rankingi serwera.",
-      "configuration": "Ustaw punkty, cooldown wiadomości, punktację głosową, wykluczone kanały i wykluczone role.",
-      "check": "Wygeneruj aktywność tekstową i głosową za pomocą testowego członka i potwierdź zaktualizowane sumy oraz komendę rankingu."
+      "purpose": "Przyznaje XP za aktywność tekstową i głosową, oblicza poziomy i nadaje role nagród.",
+      "configuration": "Skonfiguruj XP, czas oczekiwania, krzywą poziomów i wykluczenia, a następnie przypisz poziomy do ról Discord. Rola bota musi być wyżej niż role nagród.",
+      "check": "Wygeneruj aktywność testową i sprawdź awans poziomu, nadanie roli oraz poziom i XP w /leaderboard."
     },
     "audit_security": {
       "purpose": "Rejestruje zmiany w Discordzie istotne dla bezpieczeństwa i wysyła filtrowane alerty audytu.",
