@@ -34,6 +34,10 @@ export class PlatformUsersService {
     return this.http.get<{ items: PlatformOwner[]; total: number }>('/api/v1/platform/users', { params });
   }
 
+  get(userId: string): Observable<PlatformOwner> {
+    return this.http.get<PlatformOwner>(`/api/v1/platform/users/${userId}`);
+  }
+
   sendDm(userId: string, message: string): Observable<{ id: string; status: string }> {
     return this.http.post<{ id: string; status: string }>(`/api/v1/platform/users/${userId}/dm`, { message });
   }

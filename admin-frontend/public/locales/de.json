@@ -1769,6 +1769,20 @@
     "queue": "Nachricht senden",
     "queued": "Nachricht wurde zur Discord-Zustellung eingereiht.",
     "load_error": "Benutzer konnten nicht geladen werden.",
-    "send_error": "Nachricht konnte nicht gesendet werden."
+    "send_error": "Nachricht konnte nicht gesendet werden.",
+    "list_intro": "Öffnen Sie ein Benutzerprofil, um Server anzuzeigen und eine Nachricht zu senden.",
+    "user": "Benutzer",
+    "servers": "Server",
+    "open_profile": "Profil öffnen",
+    "profile": "Benutzerprofil",
+    "back": "Zurück zu Benutzern",
+    "loading_profile": "Profil wird geladen…",
+    "server_owner": "SERVERBESITZER",
+    "email_status": "E-Mail-Status",
+    "locale": "Sprache",
+    "registered": "Registriert",
+    "owned_servers": "Eigene Discord-Server",
+    "contact_owner": "Serverbesitzer kontaktieren",
+    "dm_hint": "Der Bot stellt diese Nachricht direkt dem Besitzer zu."
   }
 }

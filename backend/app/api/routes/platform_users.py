@@ -74,6 +74,25 @@ async def list_server_owners(
     return {"items": items, "total": len(items)}
 
 
+@router.get("/{user_id}")
+async def get_server_owner(
+    user_id: UUID,
+    _: User = Depends(require_superadmin),
+    session: AsyncSession = Depends(get_db_session),
+):
+    owner = await session.get(User, user_id)
+    if owner is None or owner.deleted_at is not None or owner.discord_user_id is None:
+        raise HTTPException(status_code=404, detail="Server owner not found")
+    guilds = (
+        await session.execute(
+            select(Guild).where(Guild.owner_discord_id == owner.discord_user_id).order_by(Guild.name)
+        )
+    ).scalars().all()
+    if not guilds:
+        raise HTTPException(status_code=404, detail="Server owner not found")
+    return serialize_user(owner, guilds)
+
+
 @router.post("/{user_id}/dm", status_code=status.HTTP_202_ACCEPTED)
 async def send_owner_dm(
     user_id: UUID,

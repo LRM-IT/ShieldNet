@@ -1767,6 +1767,20 @@
     "queue": "Invia messaggio",
     "queued": "Messaggio accodato per la consegna su Discord.",
     "load_error": "Impossibile caricare gli utenti.",
-    "send_error": "Impossibile inviare il messaggio."
+    "send_error": "Impossibile inviare il messaggio.",
+    "list_intro": "Apri un profilo per visualizzare i server e inviare un messaggio.",
+    "user": "Utente",
+    "servers": "Server",
+    "open_profile": "Apri profilo",
+    "profile": "Profilo utente",
+    "back": "Torna agli utenti",
+    "loading_profile": "Caricamento profilo…",
+    "server_owner": "PROPRIETARIO SERVER",
+    "email_status": "Stato email",
+    "locale": "Lingua",
+    "registered": "Registrato",
+    "owned_servers": "Server Discord posseduti",
+    "contact_owner": "Contatta il proprietario",
+    "dm_hint": "Il bot consegnerà il messaggio direttamente al proprietario."
   }
 }

@@ -1727,6 +1727,20 @@
     "queue": "Send message",
     "queued": "Message queued for delivery through Discord.",
     "load_error": "Unable to load users.",
-    "send_error": "Unable to send the message."
+    "send_error": "Unable to send the message.",
+    "list_intro": "Open a user profile to view servers and send a message.",
+    "user": "User",
+    "servers": "Servers",
+    "open_profile": "Open profile",
+    "profile": "User profile",
+    "back": "Back to users",
+    "loading_profile": "Loading profile…",
+    "server_owner": "SERVER OWNER",
+    "email_status": "Email status",
+    "locale": "Language",
+    "registered": "Registered",
+    "owned_servers": "Owned Discord servers",
+    "contact_owner": "Contact server owner",
+    "dm_hint": "The bot will deliver this message directly to the owner."
   }
 }

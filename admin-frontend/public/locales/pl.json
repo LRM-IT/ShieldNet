@@ -1767,6 +1767,20 @@
     "queue": "Wyślij wiadomość",
     "queued": "Wiadomość dodana do kolejki Discord.",
     "load_error": "Nie udało się załadować użytkowników.",
-    "send_error": "Nie udało się wysłać wiadomości."
+    "send_error": "Nie udało się wysłać wiadomości.",
+    "list_intro": "Otwórz profil użytkownika, aby zobaczyć serwery i wysłać wiadomość.",
+    "user": "Użytkownik",
+    "servers": "Serwery",
+    "open_profile": "Otwórz profil",
+    "profile": "Profil użytkownika",
+    "back": "Wróć do użytkowników",
+    "loading_profile": "Ładowanie profilu…",
+    "server_owner": "WŁAŚCICIEL SERWERA",
+    "email_status": "Status e-maila",
+    "locale": "Język",
+    "registered": "Zarejestrowany",
+    "owned_servers": "Posiadane serwery Discord",
+    "contact_owner": "Skontaktuj się z właścicielem",
+    "dm_hint": "Bot dostarczy tę wiadomość bezpośrednio właścicielowi."
   }
 }
