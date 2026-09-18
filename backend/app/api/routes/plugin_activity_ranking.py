@@ -31,6 +31,9 @@ class SettingsInput(BaseModel):
     level_base_points: int = Field(default=100, ge=1, le=1000000)
     level_growth: float = Field(default=1.5, ge=1, le=5)
     reward_roles: list[RewardRoleInput] = Field(default_factory=list, max_length=100)
+    announce_level_up: bool = True
+    announcement_channel_id: str | None = Field(default=None, max_length=32)
+    announcement_message: str = Field(default="🎉 {member} reached level {level}!", min_length=1, max_length=500)
 
 
 class ActivityInput(BaseModel):
@@ -58,6 +61,9 @@ def config(item) -> dict:
         "level_base_points": int(raw.get("level_base_points", 100)),
         "level_growth": float(raw.get("level_growth", 1.5)),
         "reward_roles": raw.get("reward_roles", []),
+        "announce_level_up": bool(raw.get("announce_level_up", True)),
+        "announcement_channel_id": raw.get("announcement_channel_id"),
+        "announcement_message": str(raw.get("announcement_message", "🎉 {member} reached level {level}!")),
     }
 
 
@@ -133,4 +139,12 @@ async def activity(payload: ActivityInput, session: AsyncSession = Depends(get_d
     await session.commit()
     level = level_for(float(score.get("points", 0)), settings)
     reward_role_ids = [str(reward.get("role_id")) for reward in settings["reward_roles"] if reward.get("role_id") and int(reward.get("level", 0)) <= level]
-    return {"recorded": True, "score": {**score, "level": level}, "leveled_up": level > previous_level, "reward_role_ids": reward_role_ids}
+    return {
+        "recorded": True,
+        "score": {**score, "level": level},
+        "leveled_up": level > previous_level,
+        "reward_role_ids": reward_role_ids,
+        "announce_level_up": settings["announce_level_up"],
+        "announcement_channel_id": settings["announcement_channel_id"],
+        "announcement_message": settings["announcement_message"],
+    }
