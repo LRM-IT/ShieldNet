@@ -27,6 +27,7 @@ export class ExplorerService {
   load(id: string): Observable<ExplorerData> {
     return this.http.get<ExplorerData>(
       `/api/v1/discord/guilds/${id}/explorer`,
+      { params: { _ts: Date.now().toString() } },
     ).pipe(timeout(15000));
   }
 
