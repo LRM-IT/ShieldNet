@@ -1988,7 +1988,14 @@
     "commands": "Basic Discord commands",
     "commands_help": "Administrators can use /group_add, /group_language in a channel, and /group_unlanguage. All other settings stay here.",
     "requirements": "The bot needs Message Content access and permission to manage webhooks in target channels. Translation does not run until this plugin and the AI Center translation route are enabled.",
-    "save": "Save settings"
+    "save": "Save settings",
+    "load_error": "Could not load translation settings.",
+    "cache_cleared": "Translation cache cleared.",
+    "cache_error": "Could not clear translation cache.",
+    "install_error": "Could not install plugin.",
+    "state_error": "Could not change plugin state.",
+    "saved": "Translation settings saved.",
+    "save_error": "Could not save translation settings."
   },
   "public_docs": {
     "brand": "Discord management platform",

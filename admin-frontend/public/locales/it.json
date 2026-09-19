@@ -2102,7 +2102,14 @@
     "commands": "Comandi Discord di base",
     "commands_help": "Gli amministratori possono utilizzare /group_add, /group_language in un canale e /group_unlanguage. Tutte le altre impostazioni rimangono qui.",
     "requirements": "Il bot necessita dell'accesso al contenuto del messaggio e dell'autorizzazione per gestire i webhook nei canali di destinazione. La traduzione non viene eseguita finché questo plugin e il percorso di traduzione AI Center non vengono abilitati.",
-    "save": "Salva impostazioni"
+    "save": "Salva impostazioni",
+    "load_error": "Impossibile caricare le impostazioni di traduzione.",
+    "cache_cleared": "La cache delle traduzioni è stata svuotata.",
+    "cache_error": "Impossibile svuotare la cache delle traduzioni.",
+    "install_error": "Impossibile installare il plugin.",
+    "state_error": "Impossibile modificare lo stato del plugin.",
+    "saved": "Le impostazioni di traduzione sono state salvate.",
+    "save_error": "Impossibile salvare le impostazioni di traduzione."
   },
   "ai_automod": {
     "title": "AI AutoMod",

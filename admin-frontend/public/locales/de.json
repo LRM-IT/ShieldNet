@@ -2104,7 +2104,14 @@
     "commands": "Grundlegende Discord-Befehle",
     "commands_help": "Administratoren können /group_add, /group_language in einem Kanal und /group_unlanguage verwenden. Alle anderen Einstellungen bleiben hier.",
     "requirements": "Der Bot benötigt Zugriff auf Nachrichteninhalte und die Berechtigung, Webhooks in Zielkanälen zu verwalten. Die Übersetzung wird erst ausgeführt, wenn dieses Plugin und die Übersetzungsroute AI Center aktiviert sind.",
-    "save": "Einstellungen speichern"
+    "save": "Einstellungen speichern",
+    "load_error": "Die Übersetzungseinstellungen konnten nicht geladen werden.",
+    "cache_cleared": "Der Übersetzungscache wurde geleert.",
+    "cache_error": "Der Übersetzungscache konnte nicht geleert werden.",
+    "install_error": "Das Plugin konnte nicht installiert werden.",
+    "state_error": "Der Pluginstatus konnte nicht geändert werden.",
+    "saved": "Die Übersetzungseinstellungen wurden gespeichert.",
+    "save_error": "Die Übersetzungseinstellungen konnten nicht gespeichert werden."
   },
   "ai_automod": {
     "title": "AI AutoMod",

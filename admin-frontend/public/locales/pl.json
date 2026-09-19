@@ -2102,7 +2102,14 @@
     "commands": "Podstawowe polecenia Discord",
     "commands_help": "Administratorzy mogą używać /group_add, /group_language w kanale i /group_unlanguage. Wszystkie pozostałe ustawienia pozostają tutaj.",
     "requirements": "Bot potrzebuje dostępu do treści wiadomości i pozwolenia na zarządzanie webhookami w kanałach docelowych. Tłumaczenie nie zostanie uruchomione, dopóki nie zostanie włączona ta wtyczka i trasa tłumaczenia AI Center.",
-    "save": "Zapisz ustawienia"
+    "save": "Zapisz ustawienia",
+    "load_error": "Nie udało się wczytać ustawień tłumaczenia.",
+    "cache_cleared": "Pamięć podręczna tłumaczeń została wyczyszczona.",
+    "cache_error": "Nie udało się wyczyścić pamięci podręcznej tłumaczeń.",
+    "install_error": "Nie udało się zainstalować wtyczki.",
+    "state_error": "Nie udało się zmienić stanu wtyczki.",
+    "saved": "Ustawienia tłumaczenia zostały zapisane.",
+    "save_error": "Nie udało się zapisać ustawień tłumaczenia."
   },
   "ai_automod": {
     "title": "AI AutoMod",
