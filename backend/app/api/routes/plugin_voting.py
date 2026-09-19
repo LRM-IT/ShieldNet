@@ -224,7 +224,11 @@ async def preview_result_image(guild_id: int, payload: ResultPreviewIn,
             MediaTemplate.is_default.is_(True)).order_by(MediaTemplate.updated_at.desc()).limit(1)
         )).scalar_one_or_none()
         if not template:
-            raise HTTPException(404, "No default voting template is available.")
+            template = (await session.execute(select(MediaTemplate).where(
+                MediaTemplate.category == "voting", MediaTemplate.is_active.is_(True)
+            ).order_by(MediaTemplate.updated_at.desc()).limit(1))).scalar_one_or_none()
+        if not template:
+            raise HTTPException(404, "No active voting result template is available.")
 
     votes = [max(1, round(72 * (0.55 ** index))) for index in range(len(payload.options))]
     serialized = {
@@ -236,7 +240,7 @@ async def preview_result_image(guild_id: int, payload: ResultPreviewIn,
     }
     data = build_voting_render_data(serialized, payload.language)
     content = await TemplateRenderer(session).render(template, data)
-    return Response(content=content.getvalue(), media_type="image/png")
+    return Response(content=content.getvalue(), media_type="image/png", headers={"Cache-Control": "no-store"})
 
 
 @router.post("/discord/guilds/{guild_id}/plugins/voting/polls")
