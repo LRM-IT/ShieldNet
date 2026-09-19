@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from redis.asyncio import Redis
 
 from app.api.dependencies.auth import get_current_user
 from app.api.dependencies.guild_access import require_guild_module
@@ -15,6 +16,7 @@ from app.models.core import User
 from app.models.global_languages import GlobalLanguage
 from app.models.guild_languages import GuildLanguage
 from app.models.plugins import GuildPluginInstallation
+from app.core.config import settings
 
 router = APIRouter(tags=["Translator Groups plugin"])
 internal_router = APIRouter(
@@ -53,6 +55,14 @@ class Group(BaseModel):
 class SettingsInput(BaseModel):
     groups: list[Group] = Field(default_factory=list, max_length=30)
     include_source_link: bool = True
+    cache_enabled: bool = True
+    cache_ttl_hours: int = Field(default=72, ge=1, le=720)
+    cache_max_entries: int = Field(default=2000, ge=100, le=50000)
+    cache_min_characters: int = Field(default=4, ge=1, le=500)
+    max_source_characters: int = Field(default=4000, ge=100, le=12000)
+    fallback_to_original: bool = True
+    forward_attachments: bool = True
+    forward_stickers: bool = True
 
 
 class GroupCommand(BaseModel):
@@ -102,6 +112,14 @@ async def _settings(session: AsyncSession, guild_id: int) -> dict:
         "enabled": bool(installation and installation.enabled),
         "groups": config.get("groups", []),
         "include_source_link": config.get("include_source_link", True),
+        "cache_enabled": config.get("cache_enabled", True),
+        "cache_ttl_hours": config.get("cache_ttl_hours", 72),
+        "cache_max_entries": config.get("cache_max_entries", 2000),
+        "cache_min_characters": config.get("cache_min_characters", 4),
+        "max_source_characters": config.get("max_source_characters", 4000),
+        "fallback_to_original": config.get("fallback_to_original", True),
+        "forward_attachments": config.get("forward_attachments", True),
+        "forward_stickers": config.get("forward_stickers", True),
         "languages": await _languages(session, guild_id),
     }
 
@@ -122,6 +140,34 @@ async def save_settings(guild_id: int, payload: SettingsInput, user: User = Depe
     installation.configuration = payload.model_dump()
     await session.commit()
     return await _settings(session, guild_id)
+
+
+@router.get("/discord/guilds/{guild_id}/plugins/translator-groups/cache")
+async def cache_stats(guild_id: int, user: User = Depends(get_current_user), session: AsyncSession = Depends(get_db_session)):
+    await require_guild_module(session, user, guild_id, "plugins")
+    redis = Redis.from_url(settings.redis_url, decode_responses=True)
+    try:
+        count = int(await redis.zcard(f"shieldnet:translator-cache-index:{guild_id}"))
+        hits = int(await redis.get(f"shieldnet:translator-cache-hits:{guild_id}") or 0)
+        misses = int(await redis.get(f"shieldnet:translator-cache-misses:{guild_id}") or 0)
+        return {"entries": count, "hits": hits, "misses": misses}
+    finally:
+        await redis.aclose()
+
+
+@router.delete("/discord/guilds/{guild_id}/plugins/translator-groups/cache")
+async def clear_cache(guild_id: int, user: User = Depends(get_current_user), session: AsyncSession = Depends(get_db_session)):
+    await require_guild_module(session, user, guild_id, "plugins")
+    redis = Redis.from_url(settings.redis_url, decode_responses=True)
+    index = f"shieldnet:translator-cache-index:{guild_id}"
+    try:
+        keys = await redis.zrange(index, 0, -1)
+        if keys:
+            await redis.delete(*keys)
+        await redis.delete(index, f"shieldnet:translator-cache-hits:{guild_id}", f"shieldnet:translator-cache-misses:{guild_id}")
+        return {"cleared": len(keys)}
+    finally:
+        await redis.aclose()
 
 
 @internal_router.get("/guilds/{guild_id}/configuration")

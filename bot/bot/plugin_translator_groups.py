@@ -2,11 +2,13 @@ from __future__ import annotations
 
 import logging
 import time
+import hashlib
 from io import BytesIO
 from urllib.parse import quote
 
 import discord
 import httpx
+from redis.asyncio import Redis
 
 from bot.backend import BackendClient
 from bot.config import settings
@@ -21,6 +23,7 @@ class TranslatorGroups:
         self.base = settings.backend_url.rstrip("/") + "/api/v1/internal/plugin-translator-groups"
         self.headers = {"X-ShieldNet-Service-Token": settings.internal_service_token}
         self.cache: dict[int, tuple[float, dict]] = {}
+        self.redis = Redis.from_url(settings.redis_url, decode_responses=True)
 
     async def configuration(self, guild_id: int, *, refresh: bool = False) -> dict:
         cached = self.cache.get(guild_id)
@@ -72,7 +75,7 @@ class TranslatorGroups:
         config = await self.configuration(message.guild.id)
         if not config["enabled"]:
             return
-        attachments = await self._attachments(message)
+        attachments = await self._attachments(message) if config.get("forward_attachments", True) else []
         for channel_id, language in self.targets(config, message.channel.id):
             channel = message.guild.get_channel(channel_id)
             if not isinstance(channel, discord.TextChannel):
@@ -81,29 +84,17 @@ class TranslatorGroups:
                 translated = ""
                 if message.content.strip():
                     try:
-                        response = await self.backend.execute_ai(
-                            guild_id=message.guild.id,
-                            module_key="translator",
-                            capability="translation",
-                            input_text=message.content,
-                            source_language="auto",
-                            target_language=language,
-                            metadata={
-                                "origin": "translator_groups",
-                                "source_message_id": str(message.id),
-                                "source_channel_id": str(message.channel.id),
-                                "target_channel_id": str(channel_id),
-                            },
-                        )
-                        translated = str(response.get("text") or "").strip()
+                        source_text = message.content[:int(config.get("max_source_characters", 4000))]
+                        translated = await self._cached_translation(message, channel_id, language, source_text, config)
                         if not translated:
-                            translated = message.content
+                            translated = source_text if config.get("fallback_to_original", True) else ""
                     except Exception:
                         logger.exception("Text translation failed; forwarding original guild=%s source=%s target=%s",
                                          message.guild.id, message.id, channel_id)
-                        translated = message.content
+                        translated = message.content[:int(config.get("max_source_characters", 4000))] if config.get("fallback_to_original", True) else ""
                 fallback_links = [url for item in attachments if (url := item.get("fallback_url"))]
-                fallback_links.extend(sticker.url for sticker in message.stickers)
+                if config.get("forward_stickers", True):
+                    fallback_links.extend(sticker.url for sticker in message.stickers)
                 suffix_parts = [f"📎 {url}" for url in fallback_links]
                 if config.get("include_source_link", True):
                     suffix_parts.append(f"↗ {message.jump_url}")
@@ -125,6 +116,37 @@ class TranslatorGroups:
             except Exception:
                 logger.exception("Group translation failed guild=%s source=%s target=%s",
                                  message.guild.id, message.id, channel_id)
+
+    async def _cached_translation(self, message: discord.Message, channel_id: int, language: str, source_text: str, config: dict) -> str:
+        use_cache = bool(config.get("cache_enabled", True)) and len(source_text.strip()) >= int(config.get("cache_min_characters", 4))
+        digest = hashlib.sha256(f"{language}\0{source_text.strip()}".encode("utf-8")).hexdigest()
+        key = f"shieldnet:translator-cache:{message.guild.id}:{digest}"
+        if use_cache:
+            cached = await self.redis.get(key)
+            if cached is not None:
+                await self.redis.incr(f"shieldnet:translator-cache-hits:{message.guild.id}")
+                return cached
+            await self.redis.incr(f"shieldnet:translator-cache-misses:{message.guild.id}")
+        response = await self.backend.execute_ai(
+            guild_id=message.guild.id,module_key="translator",capability="translation",input_text=source_text,
+            source_language="auto",target_language=language,
+            metadata={"origin":"translator_groups","source_message_id":str(message.id),"source_channel_id":str(message.channel.id),"target_channel_id":str(channel_id)},
+        )
+        translated = str(response.get("text") or "").strip()
+        if use_cache and translated:
+            ttl = int(config.get("cache_ttl_hours", 72)) * 3600
+            index = f"shieldnet:translator-cache-index:{message.guild.id}"
+            pipe = self.redis.pipeline()
+            pipe.set(key, translated, ex=ttl)
+            pipe.zadd(index, {key: time.time()})
+            pipe.expire(index, ttl)
+            await pipe.execute()
+            excess = int(await self.redis.zcard(index)) - int(config.get("cache_max_entries", 2000))
+            if excess > 0:
+                expired = await self.redis.zpopmin(index, excess)
+                if expired:
+                    await self.redis.delete(*(item[0] for item in expired))
+        return translated
 
     async def _webhook(self, channel: discord.TextChannel) -> discord.Webhook:
         hooks = await channel.webhooks()
