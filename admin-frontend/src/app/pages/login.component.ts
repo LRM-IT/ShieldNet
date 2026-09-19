@@ -287,7 +287,7 @@ import { PublicBrandComponent } from '../shared/public-brand.component';
     .footer-actions>a{color:#76938f;font-size:.62rem;font-weight:850;letter-spacing:.08em;white-space:nowrap}
     .footer-actions>a:hover{color:var(--primary)}
     .footer-actions>a b{margin-left:.25rem;color:var(--primary)}
-    .footer-language{width:145px;font-size:.68rem;letter-spacing:0}
+    .footer-language{width:190px;font-size:.68rem;letter-spacing:0}
     .footer-actions>span{white-space:nowrap}
 
     .visual-footer{
