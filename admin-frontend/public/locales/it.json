@@ -1547,6 +1547,7 @@
     "Предпросмотр голосования": "Anteprima votazione"
   },
   "billing": {
+    "low_balance_title":"Promemoria saldo basso","low_balance_help":"Una notifica quando il saldo raggiunge la soglia scelta.","check_dm":"Verifica DM","dm_checking":"Verifica…","dm_available":"Il DM è stato consegnato.","dm_unavailable":"Impossibile consegnare il DM. Abilita i messaggi diretti e riprova.","dm_pending":"La verifica è ancora in corso.","dm_check_error":"Impossibile verificare i DM Discord.","expiry_title":"Scadenza abbonamento server","expiry_help":"Avvisa prima della scadenza dell’abbonamento del server selezionato.","enable_expiry":"Abilita promemoria scadenza","days_before":"Avvisa prima, giorni","no_subscription_reminder":"Attiva prima l’abbonamento del server.",
     "title": "Fatturazione",
     "subtitle": "Abbonamento ai moduli a pagamento, fornitori di pagamento, saldi e operazioni.",
     "merchant": "Esercente",

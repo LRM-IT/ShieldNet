@@ -1548,6 +1548,7 @@
     "Предпросмотр голосования": "Aperçu du vote"
   },
   "billing": {
+    "low_balance_title":"Rappel de solde faible","low_balance_help":"Une notification lorsque le solde atteint le seuil choisi.","check_dm":"Vérifier les MP","dm_checking":"Vérification…","dm_available":"Le message privé a été livré.","dm_unavailable":"Le message privé n’a pas pu être livré. Autorisez les messages directs puis réessayez.","dm_pending":"La vérification est toujours en cours.","dm_check_error":"Impossible de vérifier les messages privés Discord.","expiry_title":"Expiration de l’abonnement serveur","expiry_help":"Avertir avant l’expiration de l’abonnement du serveur sélectionné.","enable_expiry":"Activer le rappel d’expiration","days_before":"Prévenir avant, jours","no_subscription_reminder":"Activez d’abord l’abonnement du serveur.",
     "title": "Facturation",
     "subtitle": "Abonnement aux modules payants, prestataires de paiement, soldes et opérations.",
     "merchant": "Marchand",

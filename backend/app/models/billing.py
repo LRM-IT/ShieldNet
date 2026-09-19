@@ -41,6 +41,12 @@ class BillingSubscription(Base, TimestampMixin):
     granted_by_user_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("core.users.id", ondelete="SET NULL"))
     owner_discord_id: Mapped[int | None] = mapped_column(BigInteger)
     auto_renew: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default="false")
+    expiry_notice_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default="false")
+    expiry_notice_days: Mapped[int] = mapped_column(nullable=False, default=3, server_default="3")
+    expiry_notice_discord_dm: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True, server_default="true")
+    expiry_notice_email: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default="false")
+    expiry_notice_sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    expiry_notice_for_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
 class BillingPayment(Base, TimestampMixin):
@@ -82,6 +88,7 @@ class BillingWallet(Base, TimestampMixin):
     low_balance_threshold: Mapped[Decimal] = mapped_column(Numeric(14, 2), nullable=False, default=0, server_default="0")
     low_balance_discord_dm: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True, server_default="true")
     low_balance_email: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default="false")
+    low_balance_notice_sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
 class BillingWalletTransaction(Base):

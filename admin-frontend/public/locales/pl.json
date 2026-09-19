@@ -1547,6 +1547,7 @@
     "Предпросмотр голосования": "Podgląd głosowania"
   },
   "billing": {
+    "low_balance_title":"Przypomnienie o niskim saldzie","low_balance_help":"Jedno powiadomienie po osiągnięciu wybranego progu.","check_dm":"Sprawdź DM","dm_checking":"Sprawdzanie…","dm_available":"Wiadomość DM została dostarczona.","dm_unavailable":"Nie udało się dostarczyć DM. Zezwól na wiadomości bezpośrednie i spróbuj ponownie.","dm_pending":"Sprawdzanie nadal trwa.","dm_check_error":"Nie udało się sprawdzić DM Discord.","expiry_title":"Wygaśnięcie subskrypcji serwera","expiry_help":"Ostrzegaj przed wygaśnięciem subskrypcji wybranego serwera.","enable_expiry":"Włącz przypomnienie o wygaśnięciu","days_before":"Powiadom wcześniej, dni","no_subscription_reminder":"Najpierw aktywuj subskrypcję serwera.",
     "title": "Rozliczenia",
     "subtitle": "Subskrypcja płatnych modułów, operatorzy płatności, salda i operacje.",
     "merchant": "Sprzedawca",

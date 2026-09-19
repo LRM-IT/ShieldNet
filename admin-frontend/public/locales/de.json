@@ -1549,6 +1549,7 @@
     "Предпросмотр голосования": "Abstimmungsvorschau"
   },
   "billing": {
+    "low_balance_title":"Erinnerung bei niedrigem Guthaben","low_balance_help":"Eine Benachrichtigung, sobald das Guthaben den Grenzwert erreicht.","check_dm":"DM prüfen","dm_checking":"Prüfung…","dm_available":"Die DM wurde erfolgreich zugestellt.","dm_unavailable":"Die DM konnte nicht zugestellt werden. Erlaube Direktnachrichten und versuche es erneut.","dm_pending":"Die Prüfung läuft noch.","dm_check_error":"Discord-DM konnte nicht geprüft werden.","expiry_title":"Ablauf des Server-Abonnements","expiry_help":"Vor Ablauf des ausgewählten Server-Abonnements warnen.","enable_expiry":"Ablauferinnerung aktivieren","days_before":"Benachrichtigen vor, Tage","no_subscription_reminder":"Aktiviere zuerst das Server-Abonnement.",
     "title": "Abrechnung",
     "subtitle": "Abonnement für kostenpflichtige Module, Zahlungsanbieter, Guthaben und Zahlungsvorgänge.",
     "merchant": "Händler",

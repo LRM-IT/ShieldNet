@@ -1507,6 +1507,7 @@
     "Access unavailable": "Access unavailable"
   },
   "billing": {
+    "low_balance_title":"Low balance reminder","low_balance_help":"Receive one notification when the balance reaches the selected threshold.","check_dm":"Check DM","dm_checking":"Checking…","dm_available":"The DM was delivered successfully.","dm_unavailable":"The DM could not be delivered. Allow direct messages from server members and try again.","dm_pending":"The check is still running. Try again in a few seconds.","dm_check_error":"Unable to check Discord direct messages.","expiry_title":"Server subscription expiry","expiry_help":"Warn before the selected server subscription expires.","enable_expiry":"Enable subscription expiry reminder","days_before":"Notify before, days","no_subscription_reminder":"Activate the server subscription before configuring its reminder.",
     "title": "Billing",
     "subtitle": "Paid Modules subscription, merchant providers, balances and payment operations.",
     "merchant": "Merchant",
