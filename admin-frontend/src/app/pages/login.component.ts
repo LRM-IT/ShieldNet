@@ -4,10 +4,11 @@ import { AuthService } from '../core/auth.service';
 import { TranslatePipe } from '../core/translate.pipe';
 import { TranslationService } from '../core/translation.service';
 import { RouterLink } from '@angular/router';
+import { LanguagePickerComponent } from '../shared/language-picker.component';
 
 @Component({
   standalone: true,
-  imports: [TranslatePipe,RouterLink],
+  imports: [TranslatePipe,RouterLink,LanguagePickerComponent],
   template: `
     <main class="access-page">
       <section class="visual-zone">
@@ -25,6 +26,7 @@ import { RouterLink } from '@angular/router';
               <small>{{ "login.brand_subtitle" | snT:"SECURE CONTROL FABRIC" }}</small>
             </span>
           </a>
+          <sn-language-picker class="public-language" [value]="i18n.locale()" [options]="i18n.languages()" (valueChange)="i18n.setLocale($event)" />
 
           <div class="hero">
             <div class="classification">{{ "login.classification" | snT:"RESTRICTED SYSTEM · AUTHORIZED OPERATORS ONLY" }}</div>
@@ -35,6 +37,7 @@ import { RouterLink } from '@angular/router';
             <p>
               {{ "login.hero_description" | snT:"One hardened control surface for servers, identities, automation, security policy and plugin runtimes." }}
             </p>
+            <p class="project-summary">{{ "login.project_summary" | snT:"GuildConsole is a modular management platform for Discord communities. Server owners can connect several guilds, delegate panel access, manage members and security, automate routine work and add only the plugins their community needs." }}</p>
 
             <div class="capabilities">
               <article>
@@ -50,6 +53,7 @@ import { RouterLink } from '@angular/router';
                 <span>{{ "login.observe_desc" | snT:"Health, audit and runtime telemetry" }}</span>
               </article>
             </div>
+            <div class="public-links"><a routerLink="/docs">{{'login.documentation'|snT:'Read public documentation'}} <b>→</b></a><a routerLink="/privacy-policy">{{'merchant.privacy'|snT:'Privacy policy'}}</a></div>
           </div>
 
           <div class="visual-footer">
@@ -72,6 +76,7 @@ import { RouterLink } from '@angular/router';
           <p class="intro">
             {{ "login.intro" | snT:"Continue through Discord to verify your identity and server permissions." }}
           </p>
+          <div class="product-points"><p><b>{{'login.for_owners'|snT:'For server owners'}}</b><span>{{'login.for_owners_text'|snT:'One account for server status, subscriptions, plugins and delegated access.'}}</span></p><p><b>{{'login.for_teams'|snT:'For administration teams'}}</b><span>{{'login.for_teams_text'|snT:'Shared tools for moderation, audit, members, roles, events and automation.'}}</span></p><p><b>{{'login.for_communities'|snT:'For multilingual communities'}}</b><span>{{'login.for_communities_text'|snT:'Language roles, translated channel groups and reusable translation caching.'}}</span></p></div>
 
           <div class="security-status">
             <div>
@@ -212,6 +217,7 @@ import { RouterLink } from '@angular/router';
     .brand>span:last-child{display:grid;gap:.12rem}
     .brand strong{font-size:.94rem;letter-spacing:.16em}
     .brand small{color:#66808e;font-size:.58rem;letter-spacing:.17em}
+    .public-language{position:absolute;right:2.5rem;top:2rem;width:220px}
 
     .hero{
       width:min(680px,100%);
@@ -254,6 +260,8 @@ import { RouterLink } from '@angular/router';
       line-height:1.75
     }
 
+    .hero>.project-summary{max-width:680px;color:#b1c1c6;font-size:.86rem;line-height:1.7}
+
     .capabilities{
       display:grid;
       grid-template-columns:repeat(3,1fr);
@@ -284,6 +292,11 @@ import { RouterLink } from '@angular/router';
       font-size:.72rem;
       line-height:1.45
     }
+
+    .public-links{display:flex;align-items:center;gap:1.2rem;margin-top:1.25rem;font-size:.75rem}
+    .public-links a:first-child{color:var(--primary);font-weight:800}
+    .public-links a:last-child{color:#71858f}
+    .public-links b{margin-left:.35rem}
 
     .visual-footer{
       display:flex;
@@ -350,6 +363,10 @@ import { RouterLink } from '@angular/router';
 
     h2{margin:.3rem 0 0;font-size:1.35rem}
     .intro{margin:1.5rem 0;color:var(--muted);line-height:1.7}
+    .product-points{display:grid;gap:.55rem;margin:-.5rem 0 1.25rem}
+    .product-points p{display:grid;gap:.18rem;margin:0;padding:.7rem .8rem;border-left:2px solid rgba(53,226,178,.35);background:rgba(53,226,178,.025)}
+    .product-points b{font-size:.7rem}
+    .product-points span{color:#71858f;font-size:.66rem;line-height:1.45}
 
     .security-status{
       display:grid;
@@ -471,6 +488,7 @@ import { RouterLink } from '@angular/router';
 
     @media(max-width:650px){
       .visual-content{padding:1.4rem}
+      .public-language{position:relative;right:auto;top:auto;width:100%;margin-top:1.2rem}
       .hero{padding:4rem 0 3rem}
       h1{font-size:2.8rem}
       .capabilities{grid-template-columns:1fr}
@@ -485,7 +503,7 @@ export class LoginComponent {
   readonly loading = signal(false);
   readonly error = signal('');
 
-  constructor(private readonly auth: AuthService, private readonly i18n: TranslationService) {}
+  constructor(private readonly auth: AuthService, readonly i18n: TranslationService) {}
 
   async login(): Promise<void> {
     this.loading.set(true);

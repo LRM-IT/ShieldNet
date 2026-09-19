@@ -68,6 +68,7 @@ import { SupportComponent } from './pages/support.component';
 import { MerchantInformationComponent } from './pages/merchant-information.component';
 import { SeoComponent } from './pages/seo.component';
 import { SystemSettingsComponent } from './pages/system-settings.component';
+import { PublicDocumentationComponent } from './pages/public-documentation.component';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -79,6 +80,7 @@ export const routes: Routes = [
   { path: 'documentation', component: DocumentationComponent, canActivate: [authGuard] },
   { path: 'support', component: SupportComponent, canActivate: [authGuard] },
   { path: 'privacy-policy', component: MerchantInformationComponent },
+  { path: 'docs', component: PublicDocumentationComponent },
   { path: 'merchant-information', redirectTo: 'privacy-policy', pathMatch: 'full' },
   { path: 'platform/languages', component: PlatformLanguagesComponent },
   { path: 'platform/template-bank', component: TemplateBankComponent, canActivate: [platformGuard] },
@@ -99,7 +101,8 @@ export const routes: Routes = [
   { path: 'platform/logs', component: LiveLogsComponent, canActivate: [platformGuard] },
   { path: 'platform/notifications', component: NotificationsComponent, canActivate: [platformGuard] },
   { path: 'platform/doctor', component: DoctorComponent, canActivate: [platformGuard] },
-  { path: '', component: LandingComponent, canActivate: [authGuard] },
+  { path: '', component: LoginComponent },
+  { path: 'app', component: LandingComponent, canActivate: [authGuard] },
   { path: 'platform', component: EnterpriseDashboardComponent, canActivate: [platformGuard] },
   {
     path: 'guild/:guildId',

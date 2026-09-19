@@ -31,7 +31,7 @@ export class AuthService {
     const tokens = await firstValueFrom(this.http.post<TokenPair>('/api/v1/auth/platform/login', { identity, password }));
     this.saveTokens(tokens);
     const profile = await this.loadProfile();
-    await this.router.navigateByUrl(profile.platform_context ? '/' : '/');
+    await this.router.navigateByUrl('/app');
   }
 
   async startDiscordLogin(): Promise<void> {
@@ -74,7 +74,7 @@ export class AuthService {
     });
 
     await this.loadProfile();
-    await this.router.navigateByUrl('/');
+    await this.router.navigateByUrl('/app');
   }
 
   saveTokens(tokens: TokenPair): void {
