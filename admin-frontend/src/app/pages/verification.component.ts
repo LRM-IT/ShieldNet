@@ -10,6 +10,7 @@ import { GuildRoleService } from '../core/guild-role.service';
 import { VerificationService } from '../core/verification.service';
 import { ShellComponent } from '../shared/shell.component';
 import { TranslatePipe } from '../core/translate.pipe';
+import { TranslationService } from '../core/translation.service';
 import { DiscordChannelPickerComponent } from '../shared/discord-channel-picker.component';
 
 @Component({
@@ -60,19 +61,19 @@ import { DiscordChannelPickerComponent } from '../shared/discord-channel-picker.
           <sn-discord-channel-picker [guildId]="guildId" [value]="reviewChannelId || null" (valueChange)="reviewChannelId=$event || ''" />
         </label>
 
-        <label>Гілка або канал запуску верифікації
+        <label>{{'verification.invocation_channel'|snT:'Verification command channel or thread'}}
           <sn-discord-channel-picker [guildId]="guildId" [value]="invocationChannelId || null" (valueChange)="invocationChannelId=$event || ''" />
-          <small class="muted">Текстові команди та /verify приймаються лише в цьому каналі або гілці.</small>
+          <small class="muted">{{'verification.invocation_channel_help'|snT:'Text commands and /verify are accepted only in this channel or thread.'}}</small>
         </label>
 
-        <label>Текстові команди виклику
+        <label>{{'verification.text_commands'|snT:'Text commands'}}
           <input [(ngModel)]="textCommands" maxlength="255" placeholder="!verify, !верифікація">
-          <small class="muted">До 10 команд через кому. Підтримуються префікси !, . та ?.</small>
+          <small class="muted">{{'verification.text_commands_help'|snT:'Up to 10 comma-separated commands. Prefixes !, . and ? are supported.'}}</small>
         </label>
 
-        <label>Назва slash-команди
+        <label>{{'verification.slash_command'|snT:'Slash command name'}}
           <div class="command-input"><span>/</span><input [(ngModel)]="slashCommandName" maxlength="32" placeholder="verify"></div>
-          <small class="muted">Латинські малі літери, цифри, _ або -. Після збереження команда оновиться в Discord автоматично.</small>
+          <small class="muted">{{'verification.slash_command_help'|snT:'Use lowercase Latin letters, numbers, _ or -. Discord updates the command automatically after saving.'}}</small>
         </label>
 
         <label>
@@ -136,46 +137,46 @@ import { DiscordChannelPickerComponent } from '../shared/discord-channel-picker.
       </section>
 
       <section class="card panel levels">
-        <div class="heading"><div><h2>Рівні верифікації</h2><p class="muted">Перший рівень використовує форму вище. Додаткові рівні перевіряють зображення профілю через AI Center.</p></div>
-          <button class="btn" (click)="addLevel()">Додати рівень</button></div>
+        <div class="heading"><div><h2>{{'verification.levels'|snT:'Verification levels'}}</h2><p class="muted">{{'verification.levels_help'|snT:'The first level uses the form above. Additional levels check profile images through AI Center.'}}</p></div>
+          <button class="btn" (click)="addLevel()">{{'verification.add_level'|snT:'Add level'}}</button></div>
         @for (level of levels(); track level.id) {
-          <details class="level-card"><summary><strong>{{level.name}}</strong><span>{{level.enabled ? 'ACTIVE' : 'DISABLED'}}⌄</span></summary>
+          <details class="level-card"><summary><strong>{{level.name}}</strong><span>{{level.enabled ? ('verification.active'|snT:'ACTIVE') : ('verification.disabled'|snT:'DISABLED')}}⌄</span></summary>
             <div class="level-body">
-              <label>Назва рівня<input [(ngModel)]="level.name" maxlength="80"></label>
-              <label class="check"><input type="checkbox" [(ngModel)]="level.enabled"> Рівень активний</label>
-              <label>Гілка прийому зображень<sn-discord-channel-picker [guildId]="guildId" [value]="level.channel_id" (valueChange)="level.channel_id=$event" /></label>
-              <div class="criteria"><div class="heading"><div><h3>Ознаки та ролі</h3><p class="muted">AI перевіряє кожну ознаку окремо й об’єднує ролі всіх збігів.</p></div><button class="btn secondary" (click)="addCriterion(level)">Додати ознаку</button></div>
+              <label>{{'verification.level_name'|snT:'Level name'}}<input [(ngModel)]="level.name" maxlength="80"></label>
+              <label class="check"><input type="checkbox" [(ngModel)]="level.enabled"> {{'verification.level_enabled'|snT:'Level enabled'}}</label>
+              <label>{{'verification.image_channel'|snT:'Image submission channel'}}<sn-discord-channel-picker [guildId]="guildId" [value]="level.channel_id" (valueChange)="level.channel_id=$event" /></label>
+              <div class="criteria"><div class="heading"><div><h3>{{'verification.criteria_roles'|snT:'Criteria and roles'}}</h3><p class="muted">{{'verification.criteria_help'|snT:'AI checks each criterion separately and combines roles from all matches.'}}</p></div><button class="btn secondary" (click)="addCriterion(level)">{{'verification.add_criterion'|snT:'Add criterion'}}</button></div>
                 @for (criterion of level.criteria; track $index) {
-                  <article class="criterion"><label>Назва ознаки<input [(ngModel)]="criterion.label" maxlength="80" placeholder="Наприклад: Leader"></label>
-                    <label>Допустимі значення<input [(ngModel)]="criterion.values_text" maxlength="1000" placeholder="Наприклад: R4, R5"><span class="field-help">Вкажіть через кому або з нового рядка. Збіг будь-якого значення активує ролі нижче.</span></label>
-                    <label>Ролі при цьому збігу<select multiple [(ngModel)]="criterion.role_ids">
+                  <article class="criterion"><label>{{'verification.criterion_name'|snT:'Criterion name'}}<input [(ngModel)]="criterion.label" maxlength="80" [placeholder]="'verification.criterion_example'|snT:'For example: Leader'"></label>
+                    <label>{{'verification.accepted_values'|snT:'Accepted values'}}<input [(ngModel)]="criterion.values_text" maxlength="1000" [placeholder]="'verification.values_example'|snT:'For example: R4, R5'"><span class="field-help">{{'verification.values_help'|snT:'Separate values with commas or new lines. Any matching value activates the roles below.'}}</span></label>
+                    <label>{{'verification.match_roles'|snT:'Roles for this match'}}<select multiple [(ngModel)]="criterion.role_ids">
                       @for (role of roles(); track role.discord_role_id) { <option [value]="role.discord_role_id">{{role.name}}</option> }
                     </select></label>
-                    <button class="btn danger" (click)="removeCriterion(level,$index)">Видалити ознаку</button>
+                    <button class="btn danger" (click)="removeCriterion(level,$index)">{{'verification.remove_criterion'|snT:'Remove criterion'}}</button>
                   </article>
-                } @empty { <p class="muted">Додайте хоча б одне правило, наприклад Leader зі значеннями R4 та R5.</p> }
+                } @empty { <p class="muted">{{'verification.criteria_empty'|snT:'Add at least one rule, for example Leader with values R4 and R5.'}}</p> }
               </div>
-              <label>Еталонне зображення<input type="file" accept="image/png,image/jpeg,image/webp" (change)="selectTemplate(level,$event)"></label>
+              <label>{{'verification.reference_image'|snT:'Reference image'}}<input type="file" accept="image/png,image/jpeg,image/webp" (change)="selectTemplate(level,$event)"></label>
               @if (level.preview || level.template_url) {
                 <div class="marker-image"><img [src]="level.preview || level.template_url"><div class="marker" [style.left.%]="level.marker.x*100" [style.top.%]="level.marker.y*100" [style.width.%]="level.marker.width*100" [style.height.%]="level.marker.height*100"></div></div>
-                <button class="btn secondary" (click)="openMarkerEditor(level)">Графічно вибрати область перевірки</button>
+                <button class="btn secondary" (click)="openMarkerEditor(level)">{{'verification.select_region'|snT:'Select the verification region visually'}}</button>
               }
-              <p class="muted">Виділіть на зображенні область, у якій AI має шукати ознаку підтвердження.</p>
-              <div class="buttons"><button class="btn" (click)="saveLevel(level)">Зберегти рівень</button><button class="btn danger" (click)="removeLevel(level)">Видалити</button></div>
+              <p class="muted">{{'verification.region_help'|snT:'Mark the area where AI should look for the verification criterion.'}}</p>
+              <div class="buttons"><button class="btn" (click)="saveLevel(level)">{{'verification.save_level'|snT:'Save level'}}</button><button class="btn danger" (click)="removeLevel(level)">{{'verification.delete'|snT:'Delete'}}</button></div>
             </div>
           </details>
-        } @empty { <p class="muted">Додаткових рівнів ще немає.</p> }
+        } @empty { <p class="muted">{{'verification.no_levels'|snT:'No additional levels yet.'}}</p> }
       </section>
 
       @if (markerLevel) {
         <div class="marker-modal" role="dialog" aria-modal="true">
           <section class="card marker-dialog">
-            <div class="heading"><div><h2>Область перевірки</h2><p class="muted">Проведіть мишею або пальцем по потрібній області зображення.</p></div><button class="btn secondary" (click)="closeMarkerEditor()">Закрити</button></div>
+            <div class="heading"><div><h2>{{'verification.verification_region'|snT:'Verification region'}}</h2><p class="muted">{{'verification.region_editor_help'|snT:'Drag over the required image area with a mouse or finger.'}}</p></div><button class="btn secondary" (click)="closeMarkerEditor()">{{'verification.close'|snT:'Close'}}</button></div>
             <div class="marker-editor" (pointerdown)="markerStart($event)" (pointermove)="markerMove($event)" (pointerup)="markerEnd($event)" (pointercancel)="markerEnd($event)">
               <img [src]="markerLevel.preview || markerLevel.template_url" draggable="false">
               <div class="marker active" [style.left.%]="markerDraft.x*100" [style.top.%]="markerDraft.y*100" [style.width.%]="markerDraft.width*100" [style.height.%]="markerDraft.height*100"></div>
             </div>
-            <div class="buttons"><button class="btn secondary" (click)="resetMarker()">Виділити все зображення</button><button class="btn" (click)="applyMarker()">Застосувати область</button></div>
+            <div class="buttons"><button class="btn secondary" (click)="resetMarker()">{{'verification.select_entire_image'|snT:'Select entire image'}}</button><button class="btn" (click)="applyMarker()">{{'verification.apply_region'|snT:'Apply region'}}</button></div>
           </section>
         </div>
       }
@@ -201,7 +202,7 @@ import { DiscordChannelPickerComponent } from '../shared/discord-channel-picker.
           >
 
           <button class="btn" (click)="reloadRequests()">
-            Search
+            {{ "verification.search" | snT:"Search" }}
           </button>
 
           <button
@@ -256,25 +257,25 @@ import { DiscordChannelPickerComponent } from '../shared/discord-channel-picker.
               {{ "verification.all_statuses" | snT:"All statuses" }}
             </option>
             <option value="pending">
-              Pending
+              {{'verification.pending'|snT:'Pending'}}
             </option>
             <option value="approved">
-              Approved
+              {{'verification.approved'|snT:'Approved'}}
             </option>
             <option value="processing">
-              Processing
+              {{'verification.processing'|snT:'Processing'}}
             </option>
             <option value="completed">
-              Completed
+              {{'verification.completed'|snT:'Completed'}}
             </option>
             <option value="rejected">
-              Rejected
+              {{'verification.rejected'|snT:'Rejected'}}
             </option>
             <option value="changes_requested">
-              Changes requested
+              {{'verification.changes_requested'|snT:'Changes requested'}}
             </option>
             <option value="failed">
-              Failed
+              {{'verification.failed'|snT:'Failed'}}
             </option>
           </select>
         </div>
@@ -298,13 +299,13 @@ import { DiscordChannelPickerComponent } from '../shared/discord-channel-picker.
               </strong>
 
               <div class="muted">
-                Alliance: {{ item.alliance }}
-                · Discord ID:
+                {{'verification.alliance'|snT:'Alliance'}}: {{ item.alliance }}
+                · {{'verification.discord_id'|snT:'Discord ID'}}:
                 {{ item.discord_user_id }}
               </div>
 
               <small class="muted">
-                Created: {{ item.created_at }}
+                {{'verification.created'|snT:'Created'}}: {{ item.created_at }}
               </small>
 
               @if (
@@ -328,7 +329,7 @@ import { DiscordChannelPickerComponent } from '../shared/discord-channel-picker.
                   item.status === 'rejected'
                 "
               >
-                {{ item.status }}
+                {{ statusLabel(item.status) }}
               </span>
 
               @if (item.status === 'failed' || item.status === 'processing') {
@@ -343,7 +344,7 @@ import { DiscordChannelPickerComponent } from '../shared/discord-channel-picker.
                     class="btn"
                     (click)="openApprove(item)"
                   >
-                    Approve
+                    {{'verification.approve'|snT:'Approve'}}
                   </button>
 
                   <button class="btn secondary" (click)="openChanges(item)">{{ "verification.request_changes" | snT:"Request changes" }}</button>
@@ -351,7 +352,7 @@ import { DiscordChannelPickerComponent } from '../shared/discord-channel-picker.
                     class="btn danger"
                     (click)="openReject(item)"
                   >
-                    Reject
+                    {{'verification.reject'|snT:'Reject'}}
                   </button>
                 </div>
               }
@@ -371,7 +372,7 @@ import { DiscordChannelPickerComponent } from '../shared/discord-channel-picker.
           >
             <h3>
               {{
-                decisionMode() === 'approve' ? 'Approve verification' : decisionMode() === 'changes' ? 'Request changes' : 'Reject verification'
+                decisionMode() === 'approve' ? ('verification.approve_verification'|snT:'Approve verification') : decisionMode() === 'changes' ? ('verification.request_changes'|snT:'Request changes') : ('verification.reject_verification'|snT:'Reject verification')
               }}
             </h3>
 
@@ -381,7 +382,7 @@ import { DiscordChannelPickerComponent } from '../shared/discord-channel-picker.
 
             <label>
               {{
-                decisionMode() === 'approve' ? 'Comment (optional)' : 'Reason (required)'
+                decisionMode() === 'approve' ? ('verification.comment_optional'|snT:'Comment (optional)') : ('verification.reason_required'|snT:'Reason (required)')
               }}
 
               <textarea
@@ -401,7 +402,7 @@ import { DiscordChannelPickerComponent } from '../shared/discord-channel-picker.
                 class="btn secondary"
                 (click)="closeDecision()"
               >
-                Cancel
+                {{'verification.cancel'|snT:'Cancel'}}
               </button>
 
               <button
@@ -414,8 +415,8 @@ import { DiscordChannelPickerComponent } from '../shared/discord-channel-picker.
               >
                 {{
                   deciding()
-                    ? 'Saving…'
-                    : decisionMode() === 'approve' ? 'Approve' : decisionMode() === 'changes' ? 'Request changes' : 'Reject'
+                    ? ('verification.saving'|snT:'Saving…')
+                    : decisionMode() === 'approve' ? ('verification.approve'|snT:'Approve') : decisionMode() === 'changes' ? ('verification.request_changes'|snT:'Request changes') : ('verification.reject'|snT:'Reject')
                 }}
               </button>
             </footer>
@@ -682,6 +683,7 @@ export class VerificationComponent
     private readonly route: ActivatedRoute,
     private readonly verification: VerificationService,
     private readonly guildRoles: GuildRoleService,
+    private readonly i18n: TranslationService,
   ) {}
 
   async ngOnInit(): Promise<void> {
@@ -717,7 +719,7 @@ export class VerificationComponent
   }
 
   async addLevel(): Promise<void> {
-    const row=await this.verification.createLevel(this.guildId,{name:`Рівень ${this.levels().length+2}`,enabled:false,channel_id:null,expected_text:'',role_ids:[],criteria:[],marker:{x:0,y:0,width:1,height:1}});
+    const row=await this.verification.createLevel(this.guildId,{name:`${this.i18n.t('verification.level','Level')} ${this.levels().length+2}`,enabled:false,channel_id:null,expected_text:'',role_ids:[],criteria:[],marker:{x:0,y:0,width:1,height:1}});
     this.levels.update(items=>[...items,row]);
   }
   selectTemplate(level:any,event:Event):void { const file=(event.target as HTMLInputElement).files?.[0]; if(!file)return; level.file=file; if(level.preview)URL.revokeObjectURL(level.preview); level.preview=URL.createObjectURL(file); setTimeout(()=>this.openMarkerEditor(level)); }
@@ -729,7 +731,7 @@ export class VerificationComponent
   markerStart(event:PointerEvent):void { event.preventDefault(); (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId); const point=this.markerPoint(event); this.markerOrigin=point; this.markerDraft={x:point.x,y:point.y,width:.001,height:.001}; }
   markerMove(event:PointerEvent):void { if(!this.markerOrigin)return; const point=this.markerPoint(event),origin=this.markerOrigin; this.markerDraft={x:Math.min(origin.x,point.x),y:Math.min(origin.y,point.y),width:Math.max(.001,Math.abs(point.x-origin.x)),height:Math.max(.001,Math.abs(point.y-origin.y))}; }
   markerEnd(event:PointerEvent):void { if(!this.markerOrigin)return; this.markerMove(event); this.markerOrigin=null; try{(event.currentTarget as HTMLElement).releasePointerCapture(event.pointerId)}catch{} }
-  addCriterion(level:any):void { level.criteria=level.criteria||[]; level.criteria.push({label:`Ознака ${level.criteria.length+1}`,expected_text:'',values:[],values_text:'',role_ids:[]}); }
+  addCriterion(level:any):void { level.criteria=level.criteria||[]; level.criteria.push({label:`${this.i18n.t('verification.criterion','Criterion')} ${level.criteria.length+1}`,expected_text:'',values:[],values_text:'',role_ids:[]}); }
   removeCriterion(level:any,index:number):void { level.criteria.splice(index,1); }
   async saveLevel(level:any):Promise<void> {
     const criteria=(level.criteria||[]).map((item:any)=>{
@@ -739,9 +741,14 @@ export class VerificationComponent
     const payload={name:level.name,enabled:level.enabled,channel_id:level.channel_id?Number(level.channel_id):null,expected_text:criteria[0]?.expected_text||'',role_ids:criteria[0]?.role_ids||[],criteria,marker:level.marker};
     if(level.file)await this.verification.uploadLevelTemplate(this.guildId,level.id,level.file,level.marker);
     const saved=await this.verification.updateLevel(this.guildId,level.id,payload);
-    Object.assign(level,saved,{file:null,preview:null,criteria:(saved.criteria||[]).map((criterion:any)=>({...criterion,values_text:(criterion.values||[criterion.expected_text]).filter(Boolean).join(', ')}))}); this.message.set(`Рівень ${level.name} збережено.`);
+    Object.assign(level,saved,{file:null,preview:null,criteria:(saved.criteria||[]).map((criterion:any)=>({...criterion,values_text:(criterion.values||[criterion.expected_text]).filter(Boolean).join(', ')}))}); this.message.set(this.i18n.t('verification.level_saved','Level {name} saved.').replace('{name}',level.name));
   }
   async removeLevel(level:any):Promise<void> { await this.verification.deleteLevel(this.guildId,level.id); this.levels.update(items=>items.filter(item=>item.id!==level.id)); }
+
+  statusLabel(status:string):string {
+    const fallback:Record<string,string>={pending:'Pending',approved:'Approved',processing:'Processing',completed:'Completed',rejected:'Rejected',changes_requested:'Changes requested',failed:'Failed'};
+    return this.i18n.t(`verification.${status}`,fallback[status]||status);
+  }
 
   pendingCount(): number {
     return this.requests().filter(
@@ -866,11 +873,11 @@ export class VerificationComponent
       );
 
       this.message.set(
-        'Verification settings saved.',
+        this.i18n.t('verification.settings_saved','Verification settings saved.'),
       );
     } catch {
       this.message.set(
-        'Unable to save verification settings.',
+        this.i18n.t('verification.settings_save_error','Unable to save verification settings.'),
       );
     } finally {
       this.saving.set(false);
@@ -929,7 +936,7 @@ export class VerificationComponent
       !reason
     ) {
       this.decisionError.set(
-        'Reason is required.',
+        this.i18n.t('verification.reason_required_error','Reason is required.'),
       );
       return;
     }
@@ -950,7 +957,7 @@ export class VerificationComponent
       await this.reloadRequests();
     } catch {
       this.decisionError.set(
-        'Unable to save this decision.',
+        this.i18n.t('verification.decision_save_error','Unable to save this decision.'),
       );
     } finally {
       this.deciding.set(false);
