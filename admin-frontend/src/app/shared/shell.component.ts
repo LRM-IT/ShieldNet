@@ -73,12 +73,26 @@ interface PluginNavDefinition {
                     @if (auth.profile()?.is_superadmin) {
                       <a routerLink="/platform/users" routerLinkActive="active"><span class="nav-icon">♙</span><span>{{ 'platform_users.nav' | snT:'Server owners' }}</span></a>
                       <a routerLink="/platform/billing" routerLinkActive="active"><span class="nav-icon">₴</span><span>Billing</span></a>
-                      <a routerLink="/platform/system-settings" routerLinkActive="active"><span class="nav-icon">⚙</span><span>System settings</span></a>
-                      <a routerLink="/platform/seo" routerLinkActive="active"><span class="nav-icon">⌕</span><span>SEO</span></a>
                       <a routerLink="/platform/privacy-policy" routerLinkActive="active"><span class="nav-icon">§</span><span>{{ 'merchant.privacy' | snT:'Privacy policy' }}</span></a>
                     }
                     <a routerLink="/platform/voting-templates" routerLinkActive="active"><span class="nav-icon">▣</span><span>Voting templates</span></a>
                     <a routerLink="/platform/languages" routerLinkActive="active"><span class="nav-icon">🌐</span><span>Languages</span></a>
+                  </div>
+                }
+              </section>
+
+              <section class="accordion-section" [class.open]="accordionOpen('system')">
+                <button type="button" class="accordion-trigger" (click)="toggleAccordion('system')" [attr.aria-expanded]="accordionOpen('system')">
+                  <span class="accordion-icon">⚙</span>
+                  <span class="accordion-title"><strong>System</strong><small>Infrastructure and access</small></span>
+                  <span class="accordion-arrow">›</span>
+                </button>
+                @if (accordionOpen('system')) {
+                  <div class="accordion-items">
+                    @if (auth.profile()?.is_superadmin) {
+                      <a routerLink="/platform/system-settings" routerLinkActive="active"><span class="nav-icon">⚙</span><span>System settings</span></a>
+                      <a routerLink="/platform/seo" routerLinkActive="active"><span class="nav-icon">⌕</span><span>SEO</span></a>
+                    }
                     <a routerLink="/platform/access" routerLinkActive="active"><span class="nav-icon">⚿</span><span>Platform access</span></a>
                   </div>
                 }
@@ -459,7 +473,9 @@ export class ShellComponent implements OnInit, OnDestroy {
   private syncAccordionWithRoute(): void {
     const url = this.router.url;
     let section = '';
-    if (url.startsWith('/platform/jobs') || url.startsWith('/platform/operations') ||
+    if (url.startsWith('/platform/system-settings') || url.startsWith('/platform/seo') ||
+        url.startsWith('/platform/access')) section = 'system';
+    else if (url.startsWith('/platform/jobs') || url.startsWith('/platform/operations') ||
         url.startsWith('/platform/health') || url.startsWith('/platform/logs') ||
         url.startsWith('/platform/notifications')) section = 'operations';
     else if (url.startsWith('/platform')) section = 'platform';
