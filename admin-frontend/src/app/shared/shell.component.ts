@@ -44,16 +44,16 @@ interface PluginNavDefinition {
         <a [routerLink]="homeLink()" class="brand" aria-label="GuildConsole home">
           <span class="brand-symbol"><span></span><span></span><span></span></span>
           <span class="brand-copy">
-            <strong>GUILDCONSOLE</strong>
-            <small>{{ 'shell.control_fabric' | snT:'CONTROL FABRIC' }}</small>
+            <strong>GuildConsole</strong>
+            <small>Discord Management</small>
           </span>
         </a>
 
         <div class="rail-state">
           <span class="pulse"></span>
           <div>
-            <strong>{{ 'shell.control_plane' | snT:'CONTROL PLANE' }}</strong>
-            <small>{{ 'shell.encrypted_session' | snT:'Encrypted session active' }}</small>
+            <strong>{{ 'shell.system_nominal' | snT:'System online' }}</strong>
+            <small>{{ 'shell.encrypted_session' | snT:'Secure session' }}</small>
           </div>
         </div>
 
@@ -179,7 +179,7 @@ interface PluginNavDefinition {
                     (click)="mobileMenu.set(!mobileMenu())"
                     aria-label="Open navigation">☰</button>
             <div>
-              <div class="breadcrumb"><span>GUILDCONSOLE</span><b>/</b><span>COMMAND</span></div>
+              <div class="breadcrumb"><span>GuildConsole</span><b>/</b><span>Admin</span></div>
               <h1>{{ title }}</h1>
             </div>
           </div>
@@ -315,6 +315,43 @@ interface PluginNavDefinition {
     .palette-empty{padding:2rem;text-align:center;color:var(--muted)}
     @media(max-width:1000px){.workspace,.workspace.menu-collapsed{grid-template-columns:1fr}.desktop-collapse{display:none}.rail{position:fixed;left:0;transform:translateX(-102%);width:min(290px,88vw);transition:transform .22s ease}.menu-open .rail{transform:translateX(0)}.menu-button{display:grid;place-items:center}.scrim{display:block;position:fixed;inset:0;z-index:25;background:rgba(0,0,0,.6);backdrop-filter:blur(3px)}}
     @media(max-width:680px){.topbar{min-height:74px;padding:.8rem 1rem}.viewport{padding:1rem}.health-chip,.clock small,.command-button b,.support-button{display:none}.clock{min-width:auto}.breadcrumb{display:none}h1{margin:0;font-size:1.05rem}}
+
+    /* Commercial application shell */
+    .workspace{grid-template-columns:264px minmax(0,1fr);background:transparent}
+    .workspace.menu-collapsed{grid-template-columns:76px minmax(0,1fr)}
+    .rail{padding:0 .8rem .8rem;background:rgba(8,17,26,.96);border-right:1px solid rgba(148,163,184,.13);box-shadow:8px 0 30px rgba(0,0,0,.08);scrollbar-width:thin}
+    .brand{min-height:76px;padding:.9rem .65rem;border-bottom:0}
+    .brand-symbol{width:34px;height:34px;border:0;border-radius:10px;background:linear-gradient(145deg,var(--primary),#0ea5a8);box-shadow:0 8px 24px rgba(45,212,191,.2)}
+    .brand-symbol span{background:#043b3a;box-shadow:none}
+    .brand-copy strong{font-size:1rem;letter-spacing:-.02em;text-transform:none}.brand-copy small{font-size:.58rem;letter-spacing:.08em;text-transform:uppercase}
+    .rail-state{margin:.15rem .2rem .8rem;padding:.62rem .7rem;border-color:rgba(52,211,153,.14);border-radius:10px;background:rgba(52,211,153,.045)}
+    .rail-state strong{font-size:.64rem;letter-spacing:.04em;text-transform:none}.rail-state small{font-size:.58rem}
+    nav{gap:.4rem;margin-top:0}.accordion-section{gap:.2rem}
+    .accordion-trigger{min-height:48px;padding:.55rem .58rem;border-color:transparent;background:transparent;border-radius:10px;color:#94a3b8}
+    .accordion-trigger:hover{background:rgba(255,255,255,.035);border-color:transparent}
+    .accordion-section.open>.accordion-trigger{color:#e2e8f0;border-color:transparent;background:rgba(255,255,255,.035)}
+    .accordion-icon,.nav-icon{border:0;background:transparent;color:#78909f}
+    .accordion-title strong{font-size:.75rem;font-weight:700}.accordion-title small{font-size:.57rem;color:#617384}
+    .accordion-items{gap:.1rem;margin-left:1rem;padding:.1rem 0 .25rem .5rem;border-left:1px solid rgba(148,163,184,.11)}
+    .accordion-items.standalone{margin-left:0;padding-left:0}
+    nav a{min-height:40px;padding:.48rem .65rem;border-radius:9px;font-size:.76rem;font-weight:600;color:#879aaa}
+    nav a:hover{color:#e2e8f0;background:rgba(255,255,255,.035)}
+    nav a.active{color:#e8fffb;background:rgba(45,212,191,.1);border-color:transparent;box-shadow:none}
+    nav a.active .nav-icon{color:var(--primary);background:transparent;border:0}
+    .operator{margin:.7rem .2rem 0;padding:.8rem .55rem;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.02)}
+    .operator img,.avatar-fallback{width:36px;height:36px;border-radius:10px}.operator-copy strong{font-size:.74rem}.operator-copy small{font-size:.58rem}
+    .profile-arrow{border:0;background:rgba(255,255,255,.035)}
+    .stage{background:transparent}.topbar{min-height:76px;padding:.85rem 1.75rem;background:rgba(7,16,24,.82);border-bottom:1px solid rgba(148,163,184,.12);box-shadow:0 1px 0 rgba(255,255,255,.015);backdrop-filter:blur(20px) saturate(140%)}
+    .breadcrumb{font-size:.58rem;color:#64748b;letter-spacing:.08em;text-transform:uppercase}.breadcrumb b{color:var(--primary)}h1{margin:.18rem 0 0;font-size:1.22rem;font-weight:700}
+    .top-actions{gap:.55rem}.support-button,.command-button{height:38px;border-color:var(--line);background:rgba(255,255,255,.025);border-radius:10px;color:#9badbb}
+    .support-button:hover,.support-button.active,.command-button:hover{background:rgba(45,212,191,.07);color:var(--primary);border-color:rgba(45,212,191,.22)}
+    .health-chip{min-height:38px;padding:0 .8rem;border-color:rgba(52,211,153,.16);background:rgba(52,211,153,.055);color:#a7d9c7;font-size:.6rem;letter-spacing:.06em}
+    .clock{min-width:106px}.clock small{font-size:.52rem}.clock strong{font-size:.74rem}
+    .viewport{width:100%;max-width:1720px;margin:0 auto;padding:1.5rem 1.75rem 3rem}
+    .command-palette{border-color:rgba(148,163,184,.18);background:#0b1722;box-shadow:0 30px 100px rgba(0,0,0,.55)}
+    .palette-search{background:#08131c}.command-list>button:hover{background:rgba(45,212,191,.065);border-color:rgba(45,212,191,.12)}
+    @media(max-width:1000px){.workspace,.workspace.menu-collapsed{grid-template-columns:1fr}.rail{width:min(280px,90vw);padding-top:0}.viewport{padding:1.2rem}.topbar{padding:.75rem 1.2rem}}
+    @media(max-width:680px){.viewport{padding:1rem .8rem 2rem}.topbar{padding:.65rem .8rem}.title-block{gap:.55rem}}
   `],
 })
 export class ShellComponent implements OnInit, OnDestroy {
