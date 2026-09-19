@@ -63,6 +63,22 @@ class SettingsInput(BaseModel):
     fallback_to_original: bool = True
     forward_attachments: bool = True
     forward_stickers: bool = True
+    protected_terms: list[str] = Field(default_factory=list, max_length=100)
+
+    @field_validator("protected_terms")
+    @classmethod
+    def clean_protected_terms(cls, values: list[str]) -> list[str]:
+        result: list[str] = []
+        seen: set[str] = set()
+        for value in values:
+            term = value.strip()
+            if not term or term.casefold() in seen:
+                continue
+            if len(term) > 80:
+                raise ValueError("Protected terms cannot exceed 80 characters")
+            seen.add(term.casefold())
+            result.append(term)
+        return result
 
 
 class GroupCommand(BaseModel):
@@ -120,6 +136,7 @@ async def _settings(session: AsyncSession, guild_id: int) -> dict:
         "fallback_to_original": config.get("fallback_to_original", True),
         "forward_attachments": config.get("forward_attachments", True),
         "forward_stickers": config.get("forward_stickers", True),
+        "protected_terms": config.get("protected_terms", []),
         "languages": await _languages(session, guild_id),
     }
 

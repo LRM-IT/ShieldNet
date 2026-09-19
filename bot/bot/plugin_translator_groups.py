@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import time
 import hashlib
+import re
 from io import BytesIO
 from urllib.parse import quote
 
@@ -85,7 +86,9 @@ class TranslatorGroups:
                 if message.content.strip():
                     try:
                         source_text = message.content[:int(config.get("max_source_characters", 4000))]
-                        translated = await self._cached_translation(message, channel_id, language, source_text, config)
+                        protected_text, protected = self._protect_terms(source_text, config.get("protected_terms", []))
+                        translated = await self._cached_translation(message, channel_id, language, protected_text, config)
+                        translated = self._restore_terms(translated, protected)
                         if not translated:
                             translated = source_text if config.get("fallback_to_original", True) else ""
                     except Exception:
@@ -119,7 +122,8 @@ class TranslatorGroups:
 
     async def _cached_translation(self, message: discord.Message, channel_id: int, language: str, source_text: str, config: dict) -> str:
         use_cache = bool(config.get("cache_enabled", True)) and len(source_text.strip()) >= int(config.get("cache_min_characters", 4))
-        digest = hashlib.sha256(f"{language}\0{source_text.strip()}".encode("utf-8")).hexdigest()
+        terms_version = "\0".join(str(x).casefold() for x in config.get("protected_terms", []))
+        digest = hashlib.sha256(f"{language}\0{terms_version}\0{source_text.strip()}".encode("utf-8")).hexdigest()
         key = f"shieldnet:translator-cache:{message.guild.id}:{digest}"
         if use_cache:
             cached = await self.redis.get(key)
@@ -147,6 +151,25 @@ class TranslatorGroups:
                 if expired:
                     await self.redis.delete(*(item[0] for item in expired))
         return translated
+
+    @staticmethod
+    def _protect_terms(value: str, terms: list[str]) -> tuple[str, dict[str, str]]:
+        cleaned = sorted({str(term).strip() for term in terms if str(term).strip()}, key=len, reverse=True)
+        if not cleaned:
+            return value, {}
+        pattern = re.compile("|".join(re.escape(term) for term in cleaned), re.IGNORECASE)
+        replacements: dict[str, str] = {}
+        def replace(match: re.Match[str]) -> str:
+            token = f"__SNPROTECTED{len(replacements)}__"
+            replacements[token] = match.group(0)
+            return token
+        return pattern.sub(replace, value), replacements
+
+    @staticmethod
+    def _restore_terms(value: str, replacements: dict[str, str]) -> str:
+        for token, original in replacements.items():
+            value = re.sub(re.escape(token), lambda _match, text=original: text, value, flags=re.IGNORECASE)
+        return value
 
     async def _webhook(self, channel: discord.TextChannel) -> discord.Webhook:
         hooks = await channel.webhooks()
