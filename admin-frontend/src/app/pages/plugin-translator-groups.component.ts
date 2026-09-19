@@ -5,6 +5,8 @@ import { ActivatedRoute } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { ShellComponent } from '../shared/shell.component';
 import { GuildPluginService } from '../core/guild-plugin.service';
+import { TranslatePipe } from '../core/translate.pipe';
+import { TranslationService } from '../core/translation.service';
 
 interface Language { code: string; name: string; }
 interface Channel { id: string; name: string; type: string; }
@@ -15,61 +17,61 @@ interface CacheStats { entries:number;hits:number;misses:number; }
 
 @Component({
   standalone: true,
-  imports: [FormsModule, ShellComponent],
+  imports: [FormsModule, ShellComponent, TranslatePipe],
   template: `
-    <sn-shell title="Translator Groups"><main class="page">
-      <header><span>GUILD PLUGIN</span><h2>Translator Groups</h2>
-        <p>Messages in one language channel are translated into the other channels of its group through AI Center.</p></header>
+    <sn-shell [title]="'translator_groups.title'|snT:'Translator Groups'"><main class="page">
+      <header><span>{{'translator_groups.eyebrow'|snT:'GUILD PLUGIN'}}</span><h2>{{'translator_groups.title'|snT:'Translator Groups'}}</h2>
+        <p>{{'translator_groups.description'|snT:'Messages in one language channel are translated into the other channels of its group through AI Center.'}}</p></header>
       @if (error()) { <div class="panel error">{{ error() }}</div> }
       @if (success()) { <div class="panel success">{{ success() }}</div> }
       @if (!settings.installed) {
-        <section class="panel"><p>Install this plugin to configure translation groups.</p>
-          <button (click)="install()" [disabled]="busy()">Install plugin</button></section>
+        <section class="panel"><p>{{'translator_groups.install_hint'|snT:'Install this plugin to configure translation groups.'}}</p>
+          <button (click)="install()" [disabled]="busy()">{{'translator_groups.install'|snT:'Install plugin'}}</button></section>
       } @else {
-        <section class="panel"><div class="heading"><div><h3>Translation setup</h3>
-          <p>Configure the <strong>translation</strong> route and provider in AI Center. Server Languages controls the available language codes.</p></div>
+        <section class="panel"><div class="heading"><div><h3>{{'translator_groups.setup'|snT:'Translation setup'}}</h3>
+          <p>{{'translator_groups.setup_help'|snT:'Configure the translation route and provider in AI Center. Server Languages controls the available language codes.'}}</p></div>
           </div>
-          <div class="checks-grid"><label class="check"><input type="checkbox" [(ngModel)]="settings.include_source_link"> Include link to source message</label><label class="check"><input type="checkbox" [(ngModel)]="settings.forward_attachments"> Forward attachments</label><label class="check"><input type="checkbox" [(ngModel)]="settings.forward_stickers"> Forward stickers</label><label class="check"><input type="checkbox" [(ngModel)]="settings.fallback_to_original"> Send original text if AI fails</label><label class="check"><input type="checkbox" [(ngModel)]="settings.detect_source_language"> Detect the actual message language</label></div>
-          <div class="detail-grid"><label>Maximum source text length<input type="number" min="100" max="12000" step="100" [(ngModel)]="settings.max_source_characters"><small>Longer messages are truncated before being sent to AI.</small></label><label>Minimum characters for detection<input type="number" min="3" max="500" [(ngModel)]="settings.detection_min_characters" [disabled]="!settings.detect_source_language"><small>Short messages use the language assigned to the source channel.</small></label></div>
+          <div class="checks-grid"><label class="check"><input type="checkbox" [(ngModel)]="settings.include_source_link"> {{'translator_groups.source_link'|snT:'Include link to source message'}}</label><label class="check"><input type="checkbox" [(ngModel)]="settings.forward_attachments"> {{'translator_groups.attachments'|snT:'Forward attachments'}}</label><label class="check"><input type="checkbox" [(ngModel)]="settings.forward_stickers"> {{'translator_groups.stickers'|snT:'Forward stickers'}}</label><label class="check"><input type="checkbox" [(ngModel)]="settings.fallback_to_original"> {{'translator_groups.fallback'|snT:'Send original text if AI fails'}}</label><label class="check"><input type="checkbox" [(ngModel)]="settings.detect_source_language"> {{'translator_groups.detect_language'|snT:'Detect the actual message language'}}</label></div>
+          <div class="detail-grid"><label>{{'translator_groups.max_length'|snT:'Maximum source text length'}}<input type="number" min="100" max="12000" step="100" [(ngModel)]="settings.max_source_characters"><small>{{'translator_groups.max_length_help'|snT:'Longer messages are truncated before being sent to AI.'}}</small></label><label>{{'translator_groups.detection_length'|snT:'Minimum characters for detection'}}<input type="number" min="3" max="500" [(ngModel)]="settings.detection_min_characters" [disabled]="!settings.detect_source_language"><small>{{'translator_groups.detection_help'|snT:'Short messages use the language assigned to the source channel.'}}</small></label></div>
         </section>
-        <section class="panel"><h3>Words and phrases that must not be translated</h3><p>Add brand names, game terms, commands, role names or usernames. Enter one term per line; matching is case-insensitive and the original spelling is preserved.</p><label>Protected terms<textarea rows="7" [(ngModel)]="protectedTermsText" placeholder="GuildConsole&#10;/verify&#10;R5&#10;ShieldNet"></textarea><small>Up to 100 entries, 80 characters each.</small></label></section>
-        <section class="panel cache-panel"><div class="heading"><div><h3>Translation cache</h3><p>Reuse translations of identical text and avoid repeated AI token charges.</p></div><label class="check switch"><input type="checkbox" [(ngModel)]="settings.cache_enabled"> Cache enabled</label></div>
-          <div class="cache-stats"><div><strong>{{cacheStats().entries}}</strong><span>Cached translations</span></div><div><strong>{{cacheStats().hits}}</strong><span>AI requests saved</span></div><div><strong>{{cacheStats().misses}}</strong><span>Cache misses</span></div><div><strong>{{hitRate()}}%</strong><span>Hit rate</span></div></div>
-          <div class="detail-grid" [class.disabled]="!settings.cache_enabled"><label>Retention, hours<input type="number" min="1" max="720" [(ngModel)]="settings.cache_ttl_hours"><small>Expired translations are generated again.</small></label><label>Maximum entries<input type="number" min="100" max="50000" step="100" [(ngModel)]="settings.cache_max_entries"><small>Oldest entries are removed first.</small></label><label>Minimum text length<input type="number" min="1" max="500" [(ngModel)]="settings.cache_min_characters"><small>Shorter messages bypass the cache.</small></label></div>
-          <div class="cache-actions"><span>Cache keys are isolated per Discord server and target language.</span><button class="secondary danger" (click)="clearCache()" [disabled]="busy()||!cacheStats().entries">Clear cache</button></div>
+        <section class="panel"><h3>{{'translator_groups.protected_title'|snT:'Words and phrases that must not be translated'}}</h3><p>{{'translator_groups.protected_help'|snT:'Add brand names, game terms, commands, role names or usernames. Enter one term per line; matching is case-insensitive and the original spelling is preserved.'}}</p><label>{{'translator_groups.protected_terms'|snT:'Protected terms'}}<textarea rows="7" [(ngModel)]="protectedTermsText" placeholder="GuildConsole&#10;/verify&#10;R5&#10;ShieldNet"></textarea><small>{{'translator_groups.protected_limit'|snT:'Up to 100 entries, 80 characters each.'}}</small></label></section>
+        <section class="panel cache-panel"><div class="heading"><div><h3>{{'translator_groups.cache_title'|snT:'Translation cache'}}</h3><p>{{'translator_groups.cache_help'|snT:'Reuse translations of identical text and avoid repeated AI token charges.'}}</p></div><label class="check switch"><input type="checkbox" [(ngModel)]="settings.cache_enabled"> {{'translator_groups.cache_enabled'|snT:'Cache enabled'}}</label></div>
+          <div class="cache-stats"><div><strong>{{cacheStats().entries}}</strong><span>{{'translator_groups.cached'|snT:'Cached translations'}}</span></div><div><strong>{{cacheStats().hits}}</strong><span>{{'translator_groups.saved_requests'|snT:'AI requests saved'}}</span></div><div><strong>{{cacheStats().misses}}</strong><span>{{'translator_groups.cache_misses'|snT:'Cache misses'}}</span></div><div><strong>{{hitRate()}}%</strong><span>{{'translator_groups.hit_rate'|snT:'Hit rate'}}</span></div></div>
+          <div class="detail-grid" [class.disabled]="!settings.cache_enabled"><label>{{'translator_groups.retention'|snT:'Retention, hours'}}<input type="number" min="1" max="720" [(ngModel)]="settings.cache_ttl_hours"><small>{{'translator_groups.retention_help'|snT:'Expired translations are generated again.'}}</small></label><label>{{'translator_groups.max_entries'|snT:'Maximum entries'}}<input type="number" min="100" max="50000" step="100" [(ngModel)]="settings.cache_max_entries"><small>{{'translator_groups.max_entries_help'|snT:'Oldest entries are removed first.'}}</small></label><label>{{'translator_groups.min_length'|snT:'Minimum text length'}}<input type="number" min="1" max="500" [(ngModel)]="settings.cache_min_characters"><small>{{'translator_groups.min_length_help'|snT:'Shorter messages bypass the cache.'}}</small></label></div>
+          <div class="cache-actions"><span>{{'translator_groups.cache_scope'|snT:'Cache keys are isolated per Discord server and target language.'}}</span><button class="secondary danger" (click)="clearCache()" [disabled]="busy()||!cacheStats().entries">{{'translator_groups.clear_cache'|snT:'Clear cache'}}</button></div>
         </section>
-        <section class="panel"><div class="heading"><div><h3>Groups</h3><p>Each group links two or more text channels.</p></div>
-          <button (click)="addGroup()" [disabled]="busy()">Add group</button></div>
+        <section class="panel"><div class="heading"><div><h3>{{'translator_groups.groups'|snT:'Groups'}}</h3><p>{{'translator_groups.groups_help'|snT:'Each group links two or more text channels.'}}</p></div>
+          <button (click)="addGroup()" [disabled]="busy()">{{'translator_groups.add_group'|snT:'Add group'}}</button></div>
           @for (group of settings.groups; track $index; let gi = $index) {
             <article class="group">
               <button class="group-summary" type="button" (click)="group.expanded=!group.expanded" [attr.aria-expanded]="group.expanded">
-                <span><strong>{{ group.name || 'New group' }}</strong><small>{{ group.channels.length }} channels · {{ group.enabled ? 'Enabled' : 'Disabled' }}</small></span>
+                <span><strong>{{ group.name || ('translator_groups.new_group'|snT:'New group') }}</strong><small>{{ group.channels.length }} {{'translator_groups.channels'|snT:'channels'}} · {{ group.enabled ? ('translator_groups.enabled'|snT:'Enabled') : ('translator_groups.disabled'|snT:'Disabled') }}</small></span>
                 <span class="chevron" [class.open]="group.expanded">⌄</span>
               </button>
               @if (group.expanded) {
                 <div class="group-body">
-                  <div class="heading"><label>Group name<input [(ngModel)]="group.name" maxlength="60"></label>
-                    <div class="actions"><label class="check"><input type="checkbox" [(ngModel)]="group.enabled"> Enabled</label>
-                      <button class="secondary" (click)="settings.groups.splice(gi, 1)">Delete group</button></div></div>
+                  <div class="heading"><label>{{'translator_groups.group_name'|snT:'Group name'}}<input [(ngModel)]="group.name" maxlength="60"></label>
+                    <div class="actions"><label class="check"><input type="checkbox" [(ngModel)]="group.enabled"> {{'translator_groups.enabled'|snT:'Enabled'}}</label>
+                      <button class="secondary" (click)="settings.groups.splice(gi, 1)">{{'translator_groups.delete_group'|snT:'Delete group'}}</button></div></div>
                   @for (binding of group.channels; track $index; let bi = $index) {
-                    <div class="binding"><label>Channel<select [(ngModel)]="binding.channel_id">
-                        <option value="">Select channel</option>
+                    <div class="binding"><label>{{'translator_groups.channel'|snT:'Channel'}}<select [(ngModel)]="binding.channel_id">
+                        <option value="">{{'translator_groups.select_channel'|snT:'Select channel'}}</option>
                         @for (channel of channels(); track channel.id) { <option [value]="channel.id">#{{ channel.name }}</option> }
                       </select></label>
-                      <label>Language<select [(ngModel)]="binding.language"><option value="">Select language</option>
+                      <label>{{'translator_groups.language'|snT:'Language'}}<select [(ngModel)]="binding.language"><option value="">{{'translator_groups.select_language'|snT:'Select language'}}</option>
                         @for (language of settings.languages; track language.code) { <option [value]="language.code">{{ language.name }} ({{ language.code }})</option> }
                       </select></label>
-                      <button class="secondary remove" (click)="group.channels.splice(bi, 1)">Remove</button></div>
+                      <button class="secondary remove" (click)="group.channels.splice(bi, 1)">{{'translator_groups.remove'|snT:'Remove'}}</button></div>
                   }
-                  <button class="secondary" (click)="group.channels.push({channel_id: '', language: ''})">Add channel</button>
+                  <button class="secondary" (click)="group.channels.push({channel_id: '', language: ''})">{{'translator_groups.add_channel'|snT:'Add channel'}}</button>
                 </div>
               }
             </article>
-          } @empty { <p>No translation groups yet.</p> }
+          } @empty { <p>{{'translator_groups.empty_groups'|snT:'No translation groups yet.'}}</p> }
         </section>
-        <section class="panel"><h3>Basic Discord commands</h3><p>Administrators can use <strong>/group_add</strong>, <strong>/group_language</strong> in a channel, and <strong>/group_unlanguage</strong>. All other settings stay here.</p>
-          <p>The bot needs Message Content access and permission to manage webhooks in target channels. Translation does not run until this plugin and the AI Center translation route are enabled.</p></section>
-        <button class="save" (click)="save()" [disabled]="busy()">Save settings</button>
+        <section class="panel"><h3>{{'translator_groups.commands'|snT:'Basic Discord commands'}}</h3><p>{{'translator_groups.commands_help'|snT:'Administrators can use /group_add, /group_language in a channel, and /group_unlanguage. All other settings stay here.'}}</p>
+          <p>{{'translator_groups.requirements'|snT:'The bot needs Message Content access and permission to manage webhooks in target channels. Translation does not run until this plugin and the AI Center translation route are enabled.'}}</p></section>
+        <button class="save" (click)="save()" [disabled]="busy()">{{'translator_groups.save'|snT:'Save settings'}}</button>
       }
     </main></sn-shell>
   `,
@@ -93,6 +95,7 @@ export class PluginTranslatorGroupsComponent implements OnInit {
   private readonly http = inject(HttpClient);
   private readonly route = inject(ActivatedRoute);
   private readonly plugins = inject(GuildPluginService);
+  private readonly i18n = inject(TranslationService);
   readonly guildId = this.route.snapshot.paramMap.get('guildId') || '';
   readonly channels = signal<Channel[]>([]);
   readonly busy = signal(false);
@@ -114,17 +117,17 @@ export class PluginTranslatorGroupsComponent implements OnInit {
       this.protectedTermsText=(settings.protected_terms||[]).join('\n');
       this.cacheStats.set(cache);
       this.channels.set((structure.channels || []).filter(item => ['text', '0', 'guild_text'].includes(String(item.type).toLowerCase())));
-    } catch { this.error.set('Could not load translation settings.'); }
+    } catch { this.error.set(this.i18n.t('translator_groups.load_error','Could not load translation settings.')); }
   }
 
   addGroup(): void { this.settings.groups.push({name:'',enabled:true,channels:[],expanded:true}); }
   hitRate(): number { const value=this.cacheStats();const total=value.hits+value.misses;return total?Math.round(value.hits*100/total):0; }
-  async clearCache():Promise<void>{this.busy.set(true);this.error.set('');try{await firstValueFrom(this.http.delete(`${this.url.replace('/settings','')}/cache`));this.cacheStats.set({entries:0,hits:0,misses:0});this.success.set('Translation cache cleared.')}catch(error:any){this.error.set(error?.error?.detail||'Could not clear translation cache.')}finally{this.busy.set(false)}}
+  async clearCache():Promise<void>{this.busy.set(true);this.error.set('');try{await firstValueFrom(this.http.delete(`${this.url.replace('/settings','')}/cache`));this.cacheStats.set({entries:0,hits:0,misses:0});this.success.set(this.i18n.t('translator_groups.cache_cleared','Translation cache cleared.'))}catch(error:any){this.error.set(error?.error?.detail||this.i18n.t('translator_groups.cache_error','Could not clear translation cache.'))}finally{this.busy.set(false)}}
 
   async install(): Promise<void> {
     this.busy.set(true); this.error.set('');
     try { await this.plugins.install(this.guildId, 'translator_groups'); await this.ngOnInit(); }
-    catch (error: any) { this.error.set(error?.error?.detail || 'Could not install plugin.'); }
+    catch (error: any) { this.error.set(error?.error?.detail || this.i18n.t('translator_groups.install_error','Could not install plugin.')); }
     finally { this.busy.set(false); }
   }
 
@@ -134,7 +137,7 @@ export class PluginTranslatorGroupsComponent implements OnInit {
       if (this.settings.enabled) await this.plugins.disable(this.guildId, 'translator_groups');
       else await this.plugins.enable(this.guildId, 'translator_groups');
       await this.ngOnInit();
-    } catch (error: any) { this.error.set(error?.error?.detail || 'Could not change plugin state.'); }
+    } catch (error: any) { this.error.set(error?.error?.detail || this.i18n.t('translator_groups.state_error','Could not change plugin state.')); }
     finally { this.busy.set(false); }
   }
 
@@ -142,8 +145,8 @@ export class PluginTranslatorGroupsComponent implements OnInit {
     this.busy.set(true); this.error.set(''); this.success.set('');
     const protected_terms=[...new Set(this.protectedTermsText.split(/\r?\n/).map(x=>x.trim()).filter(Boolean))];
     const payload = {groups:this.settings.groups.map(({name,enabled,channels})=>({name,enabled,channels})),include_source_link:this.settings.include_source_link,cache_enabled:this.settings.cache_enabled,cache_ttl_hours:this.settings.cache_ttl_hours,cache_max_entries:this.settings.cache_max_entries,cache_min_characters:this.settings.cache_min_characters,max_source_characters:this.settings.max_source_characters,fallback_to_original:this.settings.fallback_to_original,forward_attachments:this.settings.forward_attachments,forward_stickers:this.settings.forward_stickers,protected_terms,detect_source_language:this.settings.detect_source_language,detection_min_characters:this.settings.detection_min_characters};
-    try { const saved=await firstValueFrom(this.http.put<Settings>(this.url, payload)); this.settings={...saved,groups:(saved.groups||[]).map(group=>({...group,expanded:false}))}; this.success.set('Translation settings saved.'); }
-    catch (error: any) { this.error.set(error?.error?.detail || 'Could not save translation settings.'); }
+    try { const saved=await firstValueFrom(this.http.put<Settings>(this.url, payload)); this.settings={...saved,groups:(saved.groups||[]).map(group=>({...group,expanded:false}))}; this.success.set(this.i18n.t('translator_groups.saved','Translation settings saved.')); }
+    catch (error: any) { this.error.set(error?.error?.detail || this.i18n.t('translator_groups.save_error','Could not save translation settings.')); }
     finally { this.busy.set(false); }
   }
 }
