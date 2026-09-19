@@ -26,6 +26,15 @@ from app.services.billing_discounts import BillingDiscountService, DiscountError
 
 router = APIRouter(tags=["Billing"])
 
+def billing_message(locale:str|None,key:str,**values)->str:
+    language=locale if locale in {"uk","ru"} else "en"
+    messages={
+        "dm_check":{"uk":"✅ GuildConsole: особисті повідомлення доступні. Сповіщення про баланс і підписку можуть надходити сюди.","ru":"✅ GuildConsole: личные сообщения доступны. Уведомления о балансе и подписке могут приходить сюда.","en":"✅ GuildConsole: direct messages are available. Balance and subscription alerts can be delivered here."},
+        "low_balance":{"uk":"⚠️ GuildConsole: ваш баланс становить {balance:.2f} USD і досяг установленого порога {threshold:.2f} USD.","ru":"⚠️ GuildConsole: ваш баланс составляет {balance:.2f} USD и достиг установленного порога {threshold:.2f} USD.","en":"⚠️ GuildConsole: your balance is {balance:.2f} USD and has reached the configured threshold of {threshold:.2f} USD."},
+        "expiry":{"uk":"⏳ GuildConsole: підписка сервера «{name}» завершується {expires} UTC (залишилось приблизно {days} дн.).","ru":"⏳ GuildConsole: подписка сервера «{name}» заканчивается {expires} UTC (осталось примерно {days} дн.).","en":"⏳ GuildConsole: the subscription for “{name}” expires at {expires} UTC (approximately {days} days remaining)."},
+    }
+    return messages[key][language].format(**values)
+
 class PlanUpdate(BaseModel):
     is_free: bool = False
     enabled: bool = True
@@ -238,7 +247,7 @@ async def subscription_reminder(guild_id:int,payload:SubscriptionReminderRequest
 async def check_discord_dm(payload:DmCheckRequest,user:User=Depends(get_current_user),session:AsyncSession=Depends(get_db_session)):
     guild=await session.get(Guild,payload.guild_id)
     if not user.discord_user_id or guild is None or guild.owner_discord_id!=user.discord_user_id:raise HTTPException(403,"Only the Discord server owner can test direct messages")
-    action=MemberAction(guild_id=guild.guild_id,discord_user_id=user.discord_user_id,action_type=MemberActionType.SEND_DM,payload={"message":"✅ GuildConsole: особисті повідомлення доступні. Сповіщення про баланс і підписку можуть надходити сюди.","source":"billing_dm_check"},requested_by=user.id)
+    action=MemberAction(guild_id=guild.guild_id,discord_user_id=user.discord_user_id,action_type=MemberActionType.SEND_DM,payload={"message":billing_message(user.preferred_locale,"dm_check"),"source":"billing_dm_check"},requested_by=user.id)
     session.add(action);await session.commit();await session.refresh(action)
     return {"id":str(action.id),"status":action.status.value}
 
@@ -422,7 +431,8 @@ async def reconcile_billing(session: AsyncSession = Depends(get_db_session)):
         if wallet.low_balance_notice_sent_at is not None or not wallet.low_balance_discord_dm:continue
         guild=await session.scalar(select(Guild).where(Guild.owner_discord_id==wallet.discord_user_id,Guild.last_sync_at.is_not(None)).order_by(Guild.bot_status.desc()).limit(1))
         if guild is None:continue
-        session.add(MemberAction(guild_id=guild.guild_id,discord_user_id=wallet.discord_user_id,action_type=MemberActionType.SEND_DM,payload={"message":f"⚠️ GuildConsole: ваш баланс становить {wallet.balance:.2f} USD і досяг установленого порога {wallet.low_balance_threshold:.2f} USD.","source":"low_balance_reminder"},requested_by=None))
+        owner=await session.scalar(select(User).where(User.discord_user_id==wallet.discord_user_id))
+        session.add(MemberAction(guild_id=guild.guild_id,discord_user_id=wallet.discord_user_id,action_type=MemberActionType.SEND_DM,payload={"message":billing_message(owner.preferred_locale if owner else None,"low_balance",balance=wallet.balance,threshold=wallet.low_balance_threshold),"source":"low_balance_reminder"},requested_by=None))
         wallet.low_balance_notice_sent_at=now;queued.append({"type":"low_balance","guild_id":str(guild.guild_id)})
     reminders=list((await session.execute(select(BillingSubscription).where(BillingSubscription.status=="active",BillingSubscription.expiry_notice_enabled.is_(True),BillingSubscription.expires_at>now,BillingSubscription.expires_at<=now+timedelta(days=30)))).scalars())
     for item in reminders:
@@ -431,8 +441,9 @@ async def reconcile_billing(session: AsyncSession = Depends(get_db_session)):
         guild=await session.get(Guild,item.guild_id);owner_id=item.owner_discord_id or (guild.owner_discord_id if guild else None)
         if item.expiry_notice_discord_dm and owner_id:
             name=guild.name if guild else str(item.guild_id);days=max(0,(item.expires_at-now).days)
-            session.add(MemberAction(guild_id=item.guild_id,discord_user_id=owner_id,action_type=MemberActionType.SEND_DM,payload={"message":f"⏳ GuildConsole: підписка сервера «{name}» завершується {item.expires_at:%Y-%m-%d %H:%M} UTC (залишилось приблизно {days} дн.).","source":"subscription_expiry_reminder"},requested_by=None))
+            owner=await session.scalar(select(User).where(User.discord_user_id==owner_id))
+            session.add(MemberAction(guild_id=item.guild_id,discord_user_id=owner_id,action_type=MemberActionType.SEND_DM,payload={"message":billing_message(owner.preferred_locale if owner else None,"expiry",name=name,expires=f"{item.expires_at:%Y-%m-%d %H:%M}",days=days),"source":"subscription_expiry_reminder"},requested_by=None))
             queued.append({"type":"subscription_expiry","guild_id":str(item.guild_id)})
-        item.expiry_notice_sent_at=now;item.expiry_notice_for_expires_at=item.expires_at
+            item.expiry_notice_sent_at=now;item.expiry_notice_for_expires_at=item.expires_at
     await session.commit()
     return {"count":len(disabled),"disabled":disabled,"renewed":renewed,"notifications":queued}
