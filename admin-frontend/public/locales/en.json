@@ -1169,10 +1169,12 @@
     "step_1": "Discord verifies your account.",
     "step_2": "GuildConsole checks server access.",
     "step_3": "A scoped console session is issued.",
+    "step_4": "Terms, payment, refunds and seller information.",
     "footer": "By continuing, you enter a monitored administrative environment.",
     "build": "BUILD 2.0 // SECURE",
     "error": "Unable to start Discord authentication."
   },
+  "merchant": {"back":"Back to sign in","loading":"Loading information…","eyebrow":"CUSTOMER INFORMATION","title":"Terms, payment and refunds","subtitle":"Information about the seller and the provision of GuildConsole digital services.","seller":"Seller information","business_name":"Business name","tax_id":"Registration / tax number","legal_address":"Legal address","actual_address":"Actual address","phone":"Phone","service":"Service description","fulfillment":"Provision and activation","payment":"Payment methods","area":"Service territory","refunds":"Refund policy","cancellation":"Cancellation policy","offer":"Public offer and terms","privacy":"Privacy policy","editor":"Edit public information","saving":"Saving…","save":"Save changes","saved":"Public information saved.","save_error":"Unable to save public information."},
   "permissions_engine": {
     "title": "Permissions",
     "heading": "Permissions Engine",

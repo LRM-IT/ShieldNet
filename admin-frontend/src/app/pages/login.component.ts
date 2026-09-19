@@ -3,10 +3,11 @@ import { Component, signal } from '@angular/core';
 import { AuthService } from '../core/auth.service';
 import { TranslatePipe } from '../core/translate.pipe';
 import { TranslationService } from '../core/translation.service';
+import { RouterLink } from '@angular/router';
 
 @Component({
   standalone: true,
-  imports: [TranslatePipe],
+  imports: [TranslatePipe,RouterLink],
   template: `
     <main class="access-page">
       <section class="visual-zone">
@@ -105,6 +106,7 @@ import { TranslationService } from '../core/translation.service';
             <div><span>01</span><p>{{ "login.step_1" | snT:"Discord verifies your account." }}</p></div>
             <div><span>02</span><p>{{ "login.step_2" | snT:"GuildConsole checks server access." }}</p></div>
             <div><span>03</span><p>{{ "login.step_3" | snT:"A scoped console session is issued." }}</p></div>
+            <a routerLink="/merchant-information"><span>04</span><p>{{ "login.step_4" | snT:"Terms, payment, refunds and seller information." }}</p></a>
           </div>
 
           <footer>
@@ -426,7 +428,7 @@ import { TranslationService } from '../core/translation.service';
       margin-top:1.4rem
     }
 
-    .trust-grid>div{
+    .trust-grid>div,.trust-grid>a{
       display:grid;
       grid-template-columns:30px 1fr;
       align-items:center;
@@ -444,6 +446,7 @@ import { TranslationService } from '../core/translation.service';
       color:#768a97;
       font-size:.72rem
     }
+    .trust-grid>a:hover p{color:var(--primary)}
 
     footer{
       display:grid;
