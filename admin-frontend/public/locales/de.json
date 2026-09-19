@@ -13,6 +13,7 @@
     "rtl": false,
     "version": 3
   },
+  "support": { "nav": "Vorschläge und Fehler" },
   "shell": {
     "control_fabric": "STEUERZENTRALE",
     "control_plane": "STEUERUNGSEBENE",

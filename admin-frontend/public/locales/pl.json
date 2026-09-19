@@ -11,6 +11,7 @@
     "rtl": false,
     "version": 3
   },
+  "support": { "nav": "Sugestie i błędy" },
   "shell": {
     "control_fabric": "CENTRUM STEROWANIA",
     "control_plane": "WARSTWA STEROWANIA",

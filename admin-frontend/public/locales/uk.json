@@ -10,6 +10,7 @@
     "rtl": false,
     "version": 3
   },
+  "support": { "nav": "Пропозиції та помилки" },
   "shell": {
     "control_fabric": "ЦЕНТР КЕРУВАННЯ",
     "control_plane": "КОНТУР КЕРУВАННЯ",

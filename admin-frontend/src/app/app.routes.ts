@@ -64,6 +64,7 @@ import { GuildAccessOverviewComponent } from './pages/guild-access-overview.comp
 import { BillingComponent } from './pages/billing.component';
 import { GuildBillingComponent } from './pages/guild-billing.component';
 import { DocumentationComponent } from './pages/documentation.component';
+import { SupportComponent } from './pages/support.component';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -73,6 +74,7 @@ export const routes: Routes = [
   { path: 'servers', component: ServerSelectorComponent, canActivate: [authGuard] },
   { path: 'billing', component: GuildBillingComponent, canActivate: [authGuard] },
   { path: 'documentation', component: DocumentationComponent, canActivate: [authGuard] },
+  { path: 'support', component: SupportComponent, canActivate: [authGuard] },
   { path: 'platform/languages', component: PlatformLanguagesComponent },
   { path: 'platform/template-bank', component: TemplateBankComponent, canActivate: [platformGuard] },
   { path: 'platform/voting-templates', component: VotingTemplatesComponent, canActivate: [platformGuard] },

@@ -11,6 +11,7 @@
     "rtl": false,
     "version": 3
   },
+  "support": { "nav": "Suggerimenti ed errori" },
   "shell": {
     "control_fabric": "CENTRO DI CONTROLLO",
     "control_plane": "PIANO DI CONTROLLO",

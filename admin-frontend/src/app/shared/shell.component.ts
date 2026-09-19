@@ -184,6 +184,7 @@ interface PluginNavDefinition {
           </div>
 
           <div class="top-actions">
+            <a routerLink="/support" routerLinkActive="active" class="support-button">{{ 'support.nav' | snT:'Предложения и ошибки' }}</a>
             <button type="button" class="command-button"
                     (click)="openPalette()"
                     [attr.aria-label]="'palette.open' | snT:'Open command palette'">
@@ -290,6 +291,7 @@ interface PluginNavDefinition {
     .title-block{display:flex;align-items:center;gap:.75rem}.breadcrumb{display:flex;gap:.4rem;color:#557083;font-size:.58rem;font-weight:850;letter-spacing:.16em}.breadcrumb b{color:var(--primary)}h1{margin:.28rem 0 0;font-size:1.28rem}
     .menu-button{display:none;width:40px;height:40px;color:var(--text);background:var(--panel);border:1px solid var(--line);border-radius:9px}
     .top-actions{display:flex;align-items:center;gap:.75rem}
+    .support-button{height:35px;display:flex;align-items:center;padding:0 .75rem;color:#9fb3c1;background:rgba(255,255,255,.025);border:1px solid var(--line);border-radius:9px;font-size:.68rem;font-weight:750}.support-button:hover,.support-button.active{color:var(--primary);border-color:rgba(53,226,178,.28)}
     .command-button{height:35px;display:flex;align-items:center;gap:.45rem;padding:0 .65rem;color:#9fb3c1;background:rgba(255,255,255,.025);border:1px solid var(--line);border-radius:9px;cursor:pointer}
     .command-button:hover{color:var(--primary);border-color:rgba(53,226,178,.28)}
     .command-button span{font-size:.78rem}.command-button b{font-size:.58rem;letter-spacing:.08em}.health-chip{min-height:35px;display:flex;align-items:center;gap:.5rem;padding:0 .75rem;color:#a7c8bd;border:1px solid rgba(53,226,178,.18);border-radius:999px;background:rgba(53,226,178,.045);font-size:.62rem;font-weight:850;letter-spacing:.1em}
@@ -311,7 +313,7 @@ interface PluginNavDefinition {
     .command-list kbd{color:#738895;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:6px;padding:.18rem .35rem}
     .palette-empty{padding:2rem;text-align:center;color:var(--muted)}
     @media(max-width:1000px){.workspace,.workspace.menu-collapsed{grid-template-columns:1fr}.desktop-collapse{display:none}.rail{position:fixed;left:0;transform:translateX(-102%);width:min(290px,88vw);transition:transform .22s ease}.menu-open .rail{transform:translateX(0)}.menu-button{display:grid;place-items:center}.scrim{display:block;position:fixed;inset:0;z-index:25;background:rgba(0,0,0,.6);backdrop-filter:blur(3px)}}
-    @media(max-width:680px){.topbar{min-height:74px;padding:.8rem 1rem}.viewport{padding:1rem}.health-chip,.clock small,.command-button b{display:none}.clock{min-width:auto}.breadcrumb{display:none}h1{margin:0;font-size:1.05rem}}
+    @media(max-width:680px){.topbar{min-height:74px;padding:.8rem 1rem}.viewport{padding:1rem}.health-chip,.clock small,.command-button b,.support-button{display:none}.clock{min-width:auto}.breadcrumb{display:none}h1{margin:0;font-size:1.05rem}}
   `],
 })
 export class ShellComponent implements OnInit, OnDestroy {

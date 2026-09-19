@@ -10,6 +10,7 @@
     "rtl": false,
     "version": 3
   },
+  "support": { "nav": "Предложения и ошибки" },
   "shell": {
     "control_fabric": "ЦЕНТР УПРАВЛЕНИЯ",
     "control_plane": "КОНТУР УПРАВЛЕНИЯ",

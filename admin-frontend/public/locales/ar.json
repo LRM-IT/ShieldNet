@@ -13,6 +13,7 @@
     "rtl": true,
     "version": 3
   },
+  "support": { "nav": "الاقتراحات والأخطاء" },
   "shell": {
     "control_fabric": "نسيج التحكم",
     "control_plane": "مستوى التحكم",

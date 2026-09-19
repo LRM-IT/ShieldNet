@@ -11,6 +11,7 @@
     "rtl": false,
     "version": 2
   },
+  "support": { "nav": "Feedback & issues" },
   "shell": {
     "control_fabric": "CONTROL FABRIC",
     "control_plane": "CONTROL PLANE",
