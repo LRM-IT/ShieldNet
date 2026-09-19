@@ -35,8 +35,10 @@ class GuildRegistrationService:
             bot_online=True,
         )
         guild.preferred_language = payload.preferred_language
-        if guild.status == GuildStatus.LEFT:
-            guild.status = GuildStatus.NEED_SETUP
+        # A successful bot synchronization is the complete server connection.
+        # Plugin configuration and the optional setup wizard must not affect the
+        # guild connection status.
+        guild.status = GuildStatus.ACTIVE
         guild.bot_status = BotStatus.ONLINE
         guild.left_at = None
         guild.last_sync_at = datetime.now(UTC)

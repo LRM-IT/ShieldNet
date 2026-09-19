@@ -53,7 +53,7 @@ class GuildRegistryService:
                 owner_discord_id=safe_owner_id,
                 member_count=max(member_count or 0, 0),
                 preferred_language="uk",
-                status=GuildStatus.NEED_SETUP,
+                status=(GuildStatus.ACTIVE if bot_online else GuildStatus.INACTIVE),
                 bot_status=(
                     BotStatus.ONLINE if bot_online else BotStatus.OFFLINE
                 ),

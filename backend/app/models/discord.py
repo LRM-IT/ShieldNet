@@ -22,7 +22,7 @@ class Guild(Base, TimestampMixin):
     owner_discord_id: Mapped[int]=mapped_column(BigInteger,nullable=False)
     member_count: Mapped[int]=mapped_column(Integer,nullable=False,default=0,server_default='0')
     preferred_language: Mapped[str]=mapped_column(String(16),nullable=False,default='uk',server_default='uk')
-    status: Mapped[GuildStatus]=mapped_column(Enum(GuildStatus,name='guild_status',schema='discord',values_callable=lambda c:[i.value for i in c]),nullable=False,server_default='need_setup')
+    status: Mapped[GuildStatus]=mapped_column(Enum(GuildStatus,name='guild_status',schema='discord',values_callable=lambda c:[i.value for i in c]),nullable=False,server_default='inactive')
     bot_status: Mapped[BotStatus]=mapped_column(Enum(BotStatus,name='bot_status',schema='discord',values_callable=lambda c:[i.value for i in c]),nullable=False,server_default='online')
     joined_at: Mapped[datetime]=mapped_column(DateTime(timezone=True),nullable=False,server_default=func.now())
     left_at: Mapped[datetime|None]=mapped_column(DateTime(timezone=True))
