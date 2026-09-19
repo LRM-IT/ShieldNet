@@ -1,4 +1,5 @@
 import { Component, OnInit, computed, effect, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { TranslatePipe } from '../core/translate.pipe';
 import { TranslationService } from '../core/translation.service';
@@ -9,7 +10,7 @@ import { ShellComponent } from '../shared/shell.component';
 
 @Component({
   standalone: true,
-  imports: [ShellComponent, RouterLink, TranslatePipe],
+  imports: [ShellComponent, RouterLink, TranslatePipe, FormsModule],
   template: `
     <sn-shell [title]="'profile.title' | snT:'Profile'">
       <section class="profile-layout">
@@ -102,7 +103,7 @@ import { ShellComponent } from '../shared/shell.component';
                 <strong>{{ 'profile.timezone' | snT:'Timezone' }}</strong>
                 <small>{{ 'profile.timezone_help' | snT:'Used for logs, jobs and events.' }}</small>
               </div>
-              <select [value]="timezone()" (change)="changeTimezone($any($event.target).value)" aria-label="Timezone">
+              <select [ngModel]="timezone()" (ngModelChange)="changeTimezone($event)" aria-label="Timezone">
                 @for (zone of timezones; track zone) {
                   <option [value]="zone">{{ zone }}</option>
                 }
@@ -186,13 +187,11 @@ export class ProfileComponent implements OnInit {
     await this.i18n.setLocale(code);
   }
 
-  async changeTimezone(zone: string): Promise<void> {
+  changeTimezone(zone: string): void {
     if (!this.timezones.includes(zone)) return;
     this.timezone.set(zone);
-    localStorage.setItem(this.timezoneStorageKey, zone);
-    document.documentElement.dataset['timezone'] = zone;
-    window.dispatchEvent(new CustomEvent('guildconsole-timezone-change', { detail: zone }));
-    await this.auth.updatePreferences({preferred_timezone:zone});
+    this.regionalSaved.set(false);
+    this.regionalError.set('');
   }
 
   async saveRegionalPreferences(): Promise<void> {
@@ -207,6 +206,8 @@ export class ProfileComponent implements OnInit {
         use_discord_locale: false,
       });
       localStorage.setItem(this.timezoneStorageKey, this.timezone());
+      document.documentElement.dataset['timezone'] = this.timezone();
+      window.dispatchEvent(new CustomEvent('guildconsole-timezone-change', { detail: this.timezone() }));
       this.regionalSaved.set(true);
     } catch (error: any) {
       this.regionalError.set(
