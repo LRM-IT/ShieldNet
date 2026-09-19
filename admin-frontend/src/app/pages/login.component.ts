@@ -52,12 +52,11 @@ import { LanguagePickerComponent } from '../shared/language-picker.component';
                 <span>{{ "login.observe_desc" | snT:"Health, audit and runtime telemetry" }}</span>
               </article>
             </div>
-            <div class="public-links"><a routerLink="/docs">{{'login.documentation'|snT:'Read public documentation'}} <b>→</b></a></div>
           </div>
 
           <div class="visual-footer">
             <span><i></i> {{ "login.online" | snT:"CONTROL PLANE ONLINE" }}</span>
-            <sn-language-picker class="footer-language" [value]="i18n.locale()" [options]="i18n.languages()" (valueChange)="i18n.setLocale($event)" />
+            <div class="footer-actions"><a routerLink="/docs">{{'login.documentation'|snT:'Read public documentation'}} <b>→</b></a><sn-language-picker class="footer-language" [value]="i18n.locale()" [options]="i18n.languages()" (valueChange)="i18n.setLocale($event)" /><span>GUILDCONSOLE // LRM-IT</span></div>
           </div>
         </div>
       </section>
@@ -291,10 +290,12 @@ import { LanguagePickerComponent } from '../shared/language-picker.component';
       line-height:1.45
     }
 
-    .public-links{display:flex;align-items:center;gap:1.2rem;margin-top:1.25rem;font-size:.75rem}
-    .public-links a:first-child{color:var(--primary);font-weight:800}
-    .public-links b{margin-left:.35rem}
-    .footer-language{width:155px;font-size:.72rem}
+    .footer-actions{display:flex;align-items:center;justify-content:flex-end;gap:1rem}
+    .footer-actions>a{color:#76938f;font-size:.62rem;font-weight:850;letter-spacing:.08em;white-space:nowrap}
+    .footer-actions>a:hover{color:var(--primary)}
+    .footer-actions>a b{margin-left:.25rem;color:var(--primary)}
+    .footer-language{width:145px;font-size:.68rem;letter-spacing:0}
+    .footer-actions>span{white-space:nowrap}
 
     .visual-footer{
       display:flex;
@@ -306,7 +307,7 @@ import { LanguagePickerComponent } from '../shared/language-picker.component';
       letter-spacing:.13em
     }
 
-    .visual-footer span:first-child{display:flex;align-items:center;gap:.5rem}
+    .visual-footer>span:first-child{display:flex;align-items:center;gap:.5rem}
     .visual-footer i{
       width:.45rem;
       height:.45rem;
@@ -491,6 +492,7 @@ import { LanguagePickerComponent } from '../shared/language-picker.component';
       .capabilities{grid-template-columns:1fr}
       .capabilities article{min-height:auto}
       .visual-footer{align-items:flex-start;flex-direction:column}
+      .footer-actions{width:100%;justify-content:flex-start;flex-wrap:wrap}
       .access-zone{padding:1rem}
       .access-card{padding:1rem 0}
     }
