@@ -25,7 +25,7 @@ export interface BillingWallet{discord_user_id:string;display_name?:string|null;
  walletTopup(x:any){return firstValueFrom(this.http.post<any>('/api/v1/billing/wallet/checkout',x))}
  purchaseSubscription(x:any){return firstValueFrom(this.http.post<any>('/api/v1/billing/subscriptions/purchase',x))}
  saveWalletSettings(x:any){return firstValueFrom(this.http.put<any>('/api/v1/billing/wallet/settings',x))}
- redeemDiscount(guildId:string,code:string){return firstValueFrom(this.http.post<any>(`/api/v1/discord/guilds/${guildId}/billing/discount-card`,{code}))}
+ redeemVoucher(code:string){return firstValueFrom(this.http.post<any>('/api/v1/billing/wallet/voucher',{code}))}
  discounts(){return firstValueFrom(this.http.get<any>('/api/v1/platform/billing/discounts'))}
  saveDiscountCard(x:any){return firstValueFrom(this.http.post('/api/v1/platform/billing/discounts/cards',x))}
  updateDiscountCard(id:string,x:any){return firstValueFrom(this.http.put(`/api/v1/platform/billing/discounts/cards/${id}`,x))}

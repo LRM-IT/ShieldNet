@@ -4,7 +4,7 @@ from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse, PlainTextResponse
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -71,19 +71,8 @@ class WalletCreditRequest(BaseModel):
     amount: Decimal = Field(gt=0, le=1_000_000)
     comment: str = Field(default="", max_length=500)
 class DiscountCardIn(BaseModel):
-    code:str=Field(min_length=3,max_length=64);discount_type:str=Field(default="percent",pattern=r"^(percent|fixed)$")
-    percent:Decimal=Field(default=10,ge=0,le=50);amount_usd:Decimal|None=Field(default=None,gt=0,le=1_000_000);active:bool=True
+    code:str=Field(min_length=3,max_length=64);amount_usd:Decimal=Field(gt=0,le=1_000_000);active:bool=True
     valid_from:datetime|None=None;valid_until:datetime|None=None;max_redemptions:int|None=Field(default=None,ge=1)
-    @model_validator(mode="after")
-    def validate_value(self):
-        if self.discount_type == "percent":
-            if self.percent <= 0: raise ValueError("Percentage discount must be greater than zero")
-            self.amount_usd = None
-        elif self.amount_usd is None:
-            raise ValueError("Voucher amount must be greater than zero")
-        else:
-            self.percent = Decimal("0")
-        return self
 class TenureDiscountIn(BaseModel):
     minimum_months:int=Field(ge=1,le=240);percent:Decimal=Field(gt=0,le=50);active:bool=True
 class RedeemDiscountIn(BaseModel): code:str=Field(min_length=3,max_length=64)
@@ -192,12 +181,12 @@ async def guild_billing(guild_id: int, user: User = Depends(get_current_user), s
             "providers":{key:{"active":value["active"]} for key,value in provider_config.items()},
             "wallet":{"balance":wallet.balance,"currency":wallet.currency,"low_balance_enabled":wallet.low_balance_enabled,"low_balance_threshold":wallet.low_balance_threshold,"low_balance_discord_dm":wallet.low_balance_discord_dm,"low_balance_email":wallet.low_balance_email} if wallet else {"balance":Decimal("0.00"),"currency":"USD","low_balance_enabled":False,"low_balance_threshold":Decimal("0.00"),"low_balance_discord_dm":True,"low_balance_email":False},"email_available":bool(user.email)}
 
-@router.post("/discord/guilds/{guild_id}/billing/discount-card")
-async def redeem_discount(guild_id:int,payload:RedeemDiscountIn,user:User=Depends(get_current_user),session:AsyncSession=Depends(get_db_session)):
-    await require_guild_management(session,user,guild_id)
-    try: card=await BillingDiscountService(session).redeem(guild_id,payload.code,user.id)
+@router.post("/billing/wallet/voucher")
+async def redeem_voucher(payload:RedeemDiscountIn,user:User=Depends(get_current_user),session:AsyncSession=Depends(get_db_session)):
+    if not user.discord_user_id: raise HTTPException(400,"Discord account is required")
+    try: card,wallet=await BillingDiscountService(session).redeem_wallet(payload.code,user.id,user.discord_user_id)
     except DiscountError as exc: raise HTTPException(400,str(exc)) from exc
-    return {"code":card.code,"discount_type":card.discount_type,"percent":card.percent,"amount_usd":card.amount_usd,"active":card.active}
+    return {"code":card.code,"amount_usd":card.amount_usd,"balance":wallet.balance,"currency":wallet.currency}
 
 @router.post("/billing/wallet/checkout")
 async def wallet_checkout(payload:WalletTopupRequest,request:Request,user:User=Depends(get_current_user),session:AsyncSession=Depends(get_db_session)):
@@ -227,14 +216,14 @@ async def wallet_settings(payload:WalletSettingsRequest,user:User=Depends(get_cu
 async def discounts(_:User=Depends(require_superadmin),session:AsyncSession=Depends(get_db_session)):
     cards=list((await session.execute(select(BillingDiscountCard).order_by(BillingDiscountCard.created_at.desc()))).scalars())
     tenure=list((await session.execute(select(BillingTenureDiscount).order_by(BillingTenureDiscount.minimum_months))).scalars())
-    return {"cards":[{"id":x.id,"code":x.code,"discount_type":x.discount_type,"percent":x.percent,"amount_usd":x.amount_usd,"active":x.active,"valid_from":x.valid_from,"valid_until":x.valid_until,"max_redemptions":x.max_redemptions,"redemptions":x.redemptions} for x in cards],"tenure":[{"id":x.id,"minimum_months":x.minimum_months,"percent":x.percent,"active":x.active} for x in tenure],"maximum_combined_percent":50}
+    return {"cards":[{"id":x.id,"code":x.code,"amount_usd":x.amount_usd,"active":x.active,"valid_from":x.valid_from,"valid_until":x.valid_until,"max_redemptions":x.max_redemptions,"redemptions":x.redemptions} for x in cards],"tenure":[{"id":x.id,"minimum_months":x.minimum_months,"percent":x.percent,"active":x.active} for x in tenure],"maximum_combined_percent":50}
 
 @router.post("/platform/billing/discounts/cards")
 async def save_discount_card(payload:DiscountCardIn,_:User=Depends(require_superadmin),session:AsyncSession=Depends(get_db_session)):
     code=payload.code.strip().upper();row=await session.scalar(select(BillingDiscountCard).where(BillingDiscountCard.code==code))
     if row is None: row=BillingDiscountCard(id=uuid4(),code=code,redemptions=0);session.add(row)
     for k,v in payload.model_dump(exclude={"code"}).items():setattr(row,k,v)
-    await session.commit();return {"id":row.id,"code":row.code,"discount_type":row.discount_type,"percent":row.percent,"amount_usd":row.amount_usd,"active":row.active}
+    await session.commit();return {"id":row.id,"code":row.code,"amount_usd":row.amount_usd,"active":row.active}
 
 @router.put("/platform/billing/discounts/cards/{card_id}")
 async def update_discount_card(card_id:UUID,payload:DiscountCardIn,_:User=Depends(require_superadmin),session:AsyncSession=Depends(get_db_session)):
@@ -245,7 +234,7 @@ async def update_discount_card(card_id:UUID,payload:DiscountCardIn,_:User=Depend
     if duplicate:raise HTTPException(409,"Discount card code already exists")
     row.code=code
     for k,v in payload.model_dump(exclude={"code"}).items():setattr(row,k,v)
-    await session.commit();return {"id":row.id,"code":row.code,"discount_type":row.discount_type,"percent":row.percent,"amount_usd":row.amount_usd,"active":row.active}
+    await session.commit();return {"id":row.id,"code":row.code,"amount_usd":row.amount_usd,"active":row.active}
 
 @router.delete("/platform/billing/discounts/cards/{card_id}")
 async def delete_discount_card(card_id:UUID,_:User=Depends(require_superadmin),session:AsyncSession=Depends(get_db_session)):
