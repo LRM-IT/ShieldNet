@@ -7,10 +7,11 @@ import { TranslationService } from '../core/translation.service';
 import { AuthService } from '../core/auth.service';
 import { ThemeService } from '../core/theme.service';
 import { ShellComponent } from '../shared/shell.component';
+import { TimezonePickerComponent } from '../shared/timezone-picker.component';
 
 @Component({
   standalone: true,
-  imports: [ShellComponent, RouterLink, TranslatePipe, FormsModule],
+  imports: [ShellComponent, RouterLink, TranslatePipe, FormsModule, TimezonePickerComponent],
   template: `
     <sn-shell [title]="'profile.title' | snT:'Profile'">
       <section class="profile-layout">
@@ -103,11 +104,7 @@ import { ShellComponent } from '../shared/shell.component';
                 <strong>{{ 'profile.timezone' | snT:'Timezone' }}</strong>
                 <small>{{ 'profile.timezone_help' | snT:'Used for logs, jobs and events.' }}</small>
               </div>
-              <select [ngModel]="timezone()" (ngModelChange)="changeTimezone($event)" aria-label="Timezone">
-                @for (zone of timezones; track zone) {
-                  <option [value]="zone">{{ zone }}</option>
-                }
-              </select>
+              <sn-timezone-picker [value]="timezone()" [options]="timezones" (valueChange)="changeTimezone($event)" />
             </div>
             <div class="regional-actions">
               @if (regionalError()) { <span class="save-message error">{{ regionalError() }}</span> }
