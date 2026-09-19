@@ -8,10 +8,16 @@ from app.models.core import User
 from app.services.settings import SettingsService
 
 router=APIRouter(tags=["Public SEO"]);MODULE="public_seo"
-DEFAULTS={"site_name":"GuildConsole","title":"GuildConsole — керування Discord-серверами","description":"GuildConsole — захищена панель керування Discord-серверами, автоматизацією, безпекою, модерацією та плагінами.","keywords":"Discord, керування Discord сервером, Discord бот, автоматизація Discord, модерація Discord, GuildConsole","canonical_url":"https://guildconsole.lrm-it.com/","og_title":"GuildConsole — контроль Discord-інфраструктури","og_description":"Керуйте Discord-серверами, безпекою, автоматизацією та плагінами з єдиної захищеної панелі.","og_image":"","robots":"index,follow"}
+DEFAULTS={"site_name":"GuildConsole","title":"GuildConsole — керування Discord-серверами","description":"GuildConsole — захищена панель керування Discord-серверами, автоматизацією, безпекою, модерацією та плагінами.","keywords":"Discord, керування Discord сервером, Discord бот, автоматизація Discord, модерація Discord, GuildConsole","canonical_url":"https://guildconsole.lrm-it.com/","og_title":"GuildConsole — контроль Discord-інфраструктури","og_description":"Керуйте Discord-серверами, безпекою, автоматизацією та плагінами з єдиної захищеної панелі.","og_image":"","robots":"index,follow","analytics_enabled":False,"google_analytics_id":"","google_tag_manager_id":"","meta_pixel_id":"","yandex_metrika_id":"","clarity_project_id":""}
 
 class SeoUpdate(BaseModel):
     site_name:str=Field(max_length=100);title:str=Field(max_length=200);description:str=Field(max_length=500);keywords:str=Field(max_length=1000);canonical_url:str=Field(max_length=500);og_title:str=Field(max_length=200);og_description:str=Field(max_length=500);og_image:str=Field(max_length=1000);robots:str=Field(pattern=r"^(index|noindex),(follow|nofollow)$")
+    analytics_enabled:bool=False
+    google_analytics_id:str=Field(default="",max_length=50)
+    google_tag_manager_id:str=Field(default="",max_length=50)
+    meta_pixel_id:str=Field(default="",max_length=50)
+    yandex_metrika_id:str=Field(default="",max_length=50)
+    clarity_project_id:str=Field(default="",max_length=50)
 
 async def values(session):
     saved=await SettingsService(session).get(0,MODULE,"main",{})
