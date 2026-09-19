@@ -27,5 +27,5 @@ export class AppComponent {
     this.themes.apply(this.themes.theme());
     void this.initialize();
   }
-  private async initialize():Promise<void>{void this.seo.apply();let profile=this.auth.profile();if(!profile&&this.auth.accessToken){try{profile=await this.auth.loadProfile()}catch{}}await this.i18n.initialize(profile?.preferred_locale);this.domTranslation.start()}
+  private async initialize():Promise<void>{let profile=this.auth.profile();if(!profile&&this.auth.accessToken){try{profile=await this.auth.loadProfile()}catch{}}await this.i18n.initialize(profile?.preferred_locale);await this.seo.apply(this.i18n.locale());this.domTranslation.start()}
 }

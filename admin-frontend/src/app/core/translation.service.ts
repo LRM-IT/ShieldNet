@@ -66,6 +66,7 @@ export class TranslationService {
     document.documentElement.lang = selected;
     document.documentElement.dir =
       (dictionary['_language'] as LanguageEntity)?.rtl ? 'rtl' : 'ltr';
+    window.dispatchEvent(new CustomEvent('guildconsole-locale-changed', { detail: selected }));
 
     if (persist) {
       // Local persistence is immediate. Backend profile persistence is optional

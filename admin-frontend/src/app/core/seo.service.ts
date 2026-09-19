@@ -4,6 +4,7 @@ import {Meta,Title} from '@angular/platform-browser';
 import {firstValueFrom} from 'rxjs';
 
 export interface SeoSettings {
+  locale?:string;
   site_name:string; title:string; description:string; keywords:string; canonical_url:string;
   og_title:string; og_description:string; og_image:string; robots:string;
   analytics_enabled:boolean; google_analytics_id:string; google_tag_manager_id:string;
@@ -15,10 +16,11 @@ export class SeoService {
   private current:SeoSettings|null=null;
   constructor(private http:HttpClient,private title:Title,private meta:Meta){
     window.addEventListener('guildconsole-cookie-consent',()=>this.applyTracking());
+    window.addEventListener('guildconsole-locale-changed',(event)=>void this.apply((event as CustomEvent<string>).detail||'en'));
   }
-  get(){return firstValueFrom(this.http.get<SeoSettings>('/api/v1/public/seo'))}
-  save(v:SeoSettings){return firstValueFrom(this.http.put<SeoSettings>('/api/v1/platform/seo',v))}
-  async apply(){try{this.applyValues(await this.get())}catch{}}
+  get(locale='en'){return firstValueFrom(this.http.get<SeoSettings>('/api/v1/public/seo',{params:{locale}}))}
+  save(v:SeoSettings,locale='en'){return firstValueFrom(this.http.put<SeoSettings>('/api/v1/platform/seo',v,{params:{locale}}))}
+  async apply(locale='en'){try{this.applyValues(await this.get(locale))}catch{}}
   applyValues(v:SeoSettings){
     this.current=v;
     this.title.setTitle(v.title);
