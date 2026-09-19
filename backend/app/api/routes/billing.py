@@ -4,7 +4,7 @@ from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse, PlainTextResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, EmailStr, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -23,6 +23,7 @@ from app.services.billing_payments import BILLING_VAULT_KEY, BillingPaymentServi
 from app.services.plugin_control_service import PluginControlService
 from app.services.guild_plugin_service import GuildPluginService
 from app.services.billing_discounts import BillingDiscountService, DiscountError
+from app.services.email_delivery import EMAIL_VAULT_KEY, EmailDeliveryService
 
 router = APIRouter(tags=["Billing"])
 
@@ -34,6 +35,10 @@ def billing_message(locale:str|None,key:str,**values)->str:
         "expiry":{"uk":"⏳ GuildConsole: підписка сервера «{name}» завершується {expires} UTC (залишилось приблизно {days} дн.).","ru":"⏳ GuildConsole: подписка сервера «{name}» заканчивается {expires} UTC (осталось примерно {days} дн.).","en":"⏳ GuildConsole: the subscription for “{name}” expires at {expires} UTC (approximately {days} days remaining)."},
     }
     return messages[key][language].format(**values)
+
+def real_email(user:User|None)->str|None:
+    if user is None or not user.email_verified or user.email.endswith("@users.guildconsole.invalid"):return None
+    return user.email
 
 class PlanUpdate(BaseModel):
     is_free: bool = False
@@ -82,6 +87,18 @@ class SubscriptionReminderRequest(BaseModel):
     email: bool = False
 class DmCheckRequest(BaseModel):
     guild_id: int
+class EmailSettingsRequest(BaseModel):
+    enabled: bool = False
+    host: str = Field(default="",max_length=255)
+    port: int = Field(default=587,ge=1,le=65535)
+    username: str = Field(default="",max_length=320)
+    password: str = Field(default="",max_length=500)
+    from_email: str = Field(default="",max_length=320)
+    from_name: str = Field(default="GuildConsole",max_length=160)
+    use_tls: bool = True
+    use_ssl: bool = False
+class EmailTestRequest(BaseModel):
+    recipient: EmailStr
 
 class WalletCreditRequest(BaseModel):
     discord_user_id: int
@@ -194,10 +211,10 @@ async def guild_billing(guild_id: int, user: User = Depends(get_current_user), s
                 q=await BillingDiscountService(session).quote(guild_id,amount);discounted.append(q["final"]);discount_meta=q
         data.update({"discounted_monthly_price":discounted[0],"discounted_quarterly_price":discounted[1],"discounted_yearly_price":discounted[2],"discount":discount_meta}); visible_plans=[data]
     tiers={x.plugin_key:("free" if x.is_free else "paid") for x in plans if x.plugin_key != PAID_PACKAGE_KEY}
-    provider_config=await BillingPaymentService(session).provider_config()
+    provider_config=await BillingPaymentService(session).provider_config();email_config=await EmailDeliveryService(session).public_config()
     return {"free_plugin_keys":sorted(x.plugin_key for x in plans if x.plugin_key != PAID_PACKAGE_KEY and x.is_free),"plans":visible_plans,"module_tiers":tiers,"subscriptions":[subscription_dict(x) for x in subscriptions if x.plugin_key == PAID_PACKAGE_KEY],
             "providers":{key:{"active":value["active"]} for key,value in provider_config.items()},
-            "wallet":{"balance":wallet.balance,"currency":wallet.currency,"low_balance_enabled":wallet.low_balance_enabled,"low_balance_threshold":wallet.low_balance_threshold,"low_balance_discord_dm":wallet.low_balance_discord_dm,"low_balance_email":wallet.low_balance_email} if wallet else {"balance":Decimal("0.00"),"currency":"USD","low_balance_enabled":False,"low_balance_threshold":Decimal("0.00"),"low_balance_discord_dm":True,"low_balance_email":False},"email_available":bool(user.email)}
+            "wallet":{"balance":wallet.balance,"currency":wallet.currency,"low_balance_enabled":wallet.low_balance_enabled,"low_balance_threshold":wallet.low_balance_threshold,"low_balance_discord_dm":wallet.low_balance_discord_dm,"low_balance_email":wallet.low_balance_email} if wallet else {"balance":Decimal("0.00"),"currency":"USD","low_balance_enabled":False,"low_balance_threshold":Decimal("0.00"),"low_balance_discord_dm":True,"low_balance_email":False},"email_available":bool(real_email(user)),"smtp_available":bool(email_config["enabled"] and email_config["configured"])}
 
 @router.post("/billing/wallet/voucher")
 async def redeem_voucher(payload:RedeemDiscountIn,user:User=Depends(get_current_user),session:AsyncSession=Depends(get_db_session)):
@@ -224,23 +241,27 @@ async def wallet_settings(payload:WalletSettingsRequest,user:User=Depends(get_cu
     if not user.discord_user_id:raise HTTPException(400,"Discord account is required")
     wallet=await session.scalar(select(BillingWallet).where(BillingWallet.discord_user_id==user.discord_user_id,BillingWallet.currency=="USD"))
     if wallet is None:wallet=BillingWallet(id=uuid4(),discord_user_id=user.discord_user_id,balance=Decimal("0.00"),currency="USD");session.add(wallet)
-    if payload.low_balance_email and not user.email: raise HTTPException(422,"Email notifications require an email address in the user profile")
+    if payload.low_balance_email and not real_email(user): raise HTTPException(422,"Email notifications require a verified email address in the user profile")
+    email_config=await EmailDeliveryService(session).public_config()
+    if payload.low_balance_email and not (email_config["enabled"] and email_config["configured"]):raise HTTPException(422,"Email delivery is not configured by the platform administrator")
     if payload.low_balance_enabled and not (payload.low_balance_discord_dm or payload.low_balance_email): raise HTTPException(422,"Select at least one notification channel")
     wallet.low_balance_enabled=payload.low_balance_enabled;wallet.low_balance_threshold=payload.low_balance_threshold
     wallet.low_balance_discord_dm=payload.low_balance_discord_dm;wallet.low_balance_email=payload.low_balance_email
-    wallet.low_balance_notice_sent_at=None
+    wallet.low_balance_notice_sent_at=None;wallet.low_balance_dm_notice_sent_at=None;wallet.low_balance_email_notice_sent_at=None
     await session.commit();return {"low_balance_enabled":wallet.low_balance_enabled,"low_balance_threshold":wallet.low_balance_threshold,"low_balance_discord_dm":wallet.low_balance_discord_dm,"low_balance_email":wallet.low_balance_email}
 
 @router.put("/billing/subscriptions/{guild_id}/reminder")
 async def subscription_reminder(guild_id:int,payload:SubscriptionReminderRequest,user:User=Depends(get_current_user),session:AsyncSession=Depends(get_db_session)):
     guild=await session.get(Guild,guild_id)
     if not user.discord_user_id or guild is None or guild.owner_discord_id!=user.discord_user_id:raise HTTPException(403,"Only the Discord server owner can change subscription reminders")
-    if payload.email and not user.email:raise HTTPException(422,"Email notifications require an email address in the user profile")
+    if payload.email and not real_email(user):raise HTTPException(422,"Email notifications require a verified email address in the user profile")
+    email_config=await EmailDeliveryService(session).public_config()
+    if payload.email and not (email_config["enabled"] and email_config["configured"]):raise HTTPException(422,"Email delivery is not configured by the platform administrator")
     if payload.enabled and not (payload.discord_dm or payload.email):raise HTTPException(422,"Select at least one notification channel")
     row=await session.scalar(select(BillingSubscription).where(BillingSubscription.guild_id==guild_id,BillingSubscription.plugin_key==PAID_PACKAGE_KEY))
     if row is None:raise HTTPException(404,"Server subscription not found")
     row.expiry_notice_enabled=payload.enabled;row.expiry_notice_days=payload.days_before;row.expiry_notice_discord_dm=payload.discord_dm;row.expiry_notice_email=payload.email
-    row.expiry_notice_sent_at=None;row.expiry_notice_for_expires_at=None
+    row.expiry_notice_sent_at=None;row.expiry_notice_for_expires_at=None;row.expiry_dm_notice_for_expires_at=None;row.expiry_email_notice_for_expires_at=None
     await session.commit();return subscription_dict(row)
 
 @router.post("/billing/wallet/dm-check",status_code=202)
@@ -328,6 +349,25 @@ async def save_providers(payload: ProviderUpdate, user: User = Depends(require_s
         if value.strip():
             await vault.put_secret(BILLING_VAULT_KEY, name, value.strip(), "platform", "global", user.id)
     return await BillingPaymentService(session).provider_config()
+
+@router.get("/platform/billing/email")
+async def email_settings(_:User=Depends(require_superadmin),session:AsyncSession=Depends(get_db_session)):
+    return await EmailDeliveryService(session).public_config()
+
+@router.put("/platform/billing/email")
+async def save_email_settings(payload:EmailSettingsRequest,user:User=Depends(require_superadmin),session:AsyncSession=Depends(get_db_session)):
+    values={"enabled":"true" if payload.enabled else "false","host":payload.host,"port":str(payload.port),"username":payload.username,"password":payload.password,"from_email":payload.from_email,"from_name":payload.from_name,"use_tls":"true" if payload.use_tls else "false","use_ssl":"true" if payload.use_ssl else "false"}
+    vault=PluginControlService(session)
+    for name,value in values.items():
+        if name=="password" and not value:continue
+        await vault.put_secret(EMAIL_VAULT_KEY,name,value.strip(),"platform","global",user.id)
+    return await EmailDeliveryService(session).public_config()
+
+@router.post("/platform/billing/email/test")
+async def test_email(payload:EmailTestRequest,_:User=Depends(require_superadmin),session:AsyncSession=Depends(get_db_session)):
+    try:await EmailDeliveryService(session).send(str(payload.recipient),"GuildConsole SMTP test","GuildConsole SMTP is configured correctly. Billing email notifications can be delivered.")
+    except Exception as exc:raise HTTPException(502,f"SMTP test failed: {exc}") from exc
+    return {"delivered":True}
 
 @router.get("/platform/billing/payments")
 async def payments(_: User = Depends(require_superadmin), session: AsyncSession = Depends(get_db_session)):
@@ -426,24 +466,31 @@ async def reconcile_billing(session: AsyncSession = Depends(get_db_session)):
     wallets=list((await session.execute(select(BillingWallet).where(BillingWallet.low_balance_enabled.is_(True)))).scalars())
     for wallet in wallets:
         if wallet.balance>wallet.low_balance_threshold:
-            wallet.low_balance_notice_sent_at=None
+            wallet.low_balance_notice_sent_at=None;wallet.low_balance_dm_notice_sent_at=None;wallet.low_balance_email_notice_sent_at=None
             continue
-        if wallet.low_balance_notice_sent_at is not None or not wallet.low_balance_discord_dm:continue
-        guild=await session.scalar(select(Guild).where(Guild.owner_discord_id==wallet.discord_user_id,Guild.last_sync_at.is_not(None)).order_by(Guild.bot_status.desc()).limit(1))
-        if guild is None:continue
         owner=await session.scalar(select(User).where(User.discord_user_id==wallet.discord_user_id))
-        session.add(MemberAction(guild_id=guild.guild_id,discord_user_id=wallet.discord_user_id,action_type=MemberActionType.SEND_DM,payload={"message":billing_message(owner.preferred_locale if owner else None,"low_balance",balance=wallet.balance,threshold=wallet.low_balance_threshold),"source":"low_balance_reminder"},requested_by=None))
-        wallet.low_balance_notice_sent_at=now;queued.append({"type":"low_balance","guild_id":str(guild.guild_id)})
+        message=billing_message(owner.preferred_locale if owner else None,"low_balance",balance=wallet.balance,threshold=wallet.low_balance_threshold)
+        if wallet.low_balance_discord_dm and wallet.low_balance_dm_notice_sent_at is None:
+            guild=await session.scalar(select(Guild).where(Guild.owner_discord_id==wallet.discord_user_id,Guild.last_sync_at.is_not(None)).order_by(Guild.bot_status.desc()).limit(1))
+            if guild is not None:
+                session.add(MemberAction(guild_id=guild.guild_id,discord_user_id=wallet.discord_user_id,action_type=MemberActionType.SEND_DM,payload={"message":message,"source":"low_balance_reminder"},requested_by=None));wallet.low_balance_dm_notice_sent_at=now;queued.append({"type":"low_balance_dm","guild_id":str(guild.guild_id)})
+        email=real_email(owner)
+        if wallet.low_balance_email and email and wallet.low_balance_email_notice_sent_at is None:
+            try:await EmailDeliveryService(session).send(email,"GuildConsole: low balance",message);wallet.low_balance_email_notice_sent_at=now;queued.append({"type":"low_balance_email","user_id":str(owner.id)})
+            except Exception:pass
     reminders=list((await session.execute(select(BillingSubscription).where(BillingSubscription.status=="active",BillingSubscription.expiry_notice_enabled.is_(True),BillingSubscription.expires_at>now,BillingSubscription.expires_at<=now+timedelta(days=30)))).scalars())
     for item in reminders:
         if item.expires_at>now+timedelta(days=item.expiry_notice_days):continue
-        if item.expiry_notice_for_expires_at==item.expires_at:continue
         guild=await session.get(Guild,item.guild_id);owner_id=item.owner_discord_id or (guild.owner_discord_id if guild else None)
-        if item.expiry_notice_discord_dm and owner_id:
-            name=guild.name if guild else str(item.guild_id);days=max(0,(item.expires_at-now).days)
-            owner=await session.scalar(select(User).where(User.discord_user_id==owner_id))
+        name=guild.name if guild else str(item.guild_id);days=max(0,(item.expires_at-now).days);owner=await session.scalar(select(User).where(User.discord_user_id==owner_id)) if owner_id else None
+        message=billing_message(owner.preferred_locale if owner else None,"expiry",name=name,expires=f"{item.expires_at:%Y-%m-%d %H:%M}",days=days)
+        if item.expiry_notice_discord_dm and owner_id and item.expiry_dm_notice_for_expires_at!=item.expires_at:
             session.add(MemberAction(guild_id=item.guild_id,discord_user_id=owner_id,action_type=MemberActionType.SEND_DM,payload={"message":billing_message(owner.preferred_locale if owner else None,"expiry",name=name,expires=f"{item.expires_at:%Y-%m-%d %H:%M}",days=days),"source":"subscription_expiry_reminder"},requested_by=None))
-            queued.append({"type":"subscription_expiry","guild_id":str(item.guild_id)})
-            item.expiry_notice_sent_at=now;item.expiry_notice_for_expires_at=item.expires_at
+            queued.append({"type":"subscription_expiry_dm","guild_id":str(item.guild_id)});item.expiry_dm_notice_for_expires_at=item.expires_at
+        email=real_email(owner)
+        if item.expiry_notice_email and email and item.expiry_email_notice_for_expires_at!=item.expires_at:
+            try:await EmailDeliveryService(session).send(email,"GuildConsole: server subscription expiry",message);item.expiry_email_notice_for_expires_at=item.expires_at;queued.append({"type":"subscription_expiry_email","guild_id":str(item.guild_id)})
+            except Exception:pass
+        if item.expiry_dm_notice_for_expires_at==item.expires_at or item.expiry_email_notice_for_expires_at==item.expires_at:item.expiry_notice_sent_at=now;item.expiry_notice_for_expires_at=item.expires_at
     await session.commit()
     return {"count":len(disabled),"disabled":disabled,"renewed":renewed,"notifications":queued}

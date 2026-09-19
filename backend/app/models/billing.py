@@ -47,6 +47,8 @@ class BillingSubscription(Base, TimestampMixin):
     expiry_notice_email: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default="false")
     expiry_notice_sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     expiry_notice_for_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    expiry_dm_notice_for_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    expiry_email_notice_for_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
 class BillingPayment(Base, TimestampMixin):
@@ -89,6 +91,8 @@ class BillingWallet(Base, TimestampMixin):
     low_balance_discord_dm: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True, server_default="true")
     low_balance_email: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default="false")
     low_balance_notice_sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    low_balance_dm_notice_sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    low_balance_email_notice_sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
 class BillingWalletTransaction(Base):

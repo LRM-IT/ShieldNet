@@ -6,6 +6,7 @@ export interface BillingSubscription{id:string;guild_id:string;plugin_key:string
 export interface BillingProviders{wayforpay:{enabled:boolean;configured:boolean;active:boolean;merchant_account:string;merchant_domain:string;secret_saved:boolean};liqpay:{enabled:boolean;configured:boolean;active:boolean;public_key:string;secret_saved:boolean}}
 export interface BillingPayment{id:string;order_reference:string;guild_id:string;guild_name?:string|null;plugin_key:string;billing_period:string;provider:string;amount:number;currency:string;status:string;signature_verified:boolean;created_at:string;paid_at?:string|null}
 export interface BillingWallet{discord_user_id:string;display_name?:string|null;email?:string|null;balance:number;currency:string}
+export interface BillingEmailSettings{enabled:boolean;host:string;port:number;username:string;from_email:string;from_name:string;use_tls:boolean;use_ssl:boolean;password_saved:boolean;configured:boolean}
 @Injectable({providedIn:'root'}) export class BillingService{
  constructor(private http:HttpClient){}
  plans(){return firstValueFrom(this.http.get<BillingPlan[]>('/api/v1/platform/billing/plans'))}
@@ -17,6 +18,9 @@ export interface BillingWallet{discord_user_id:string;display_name?:string|null;
  revoke(id:string){return firstValueFrom(this.http.delete<BillingSubscription>(`/api/v1/platform/billing/subscriptions/${id}`))}
  providers(){return firstValueFrom(this.http.get<BillingProviders>('/api/v1/platform/billing/providers'))}
  saveProviders(x:any){return firstValueFrom(this.http.put<BillingProviders>('/api/v1/platform/billing/providers',x))}
+ emailSettings(){return firstValueFrom(this.http.get<BillingEmailSettings>('/api/v1/platform/billing/email'))}
+ saveEmailSettings(x:any){return firstValueFrom(this.http.put<BillingEmailSettings>('/api/v1/platform/billing/email',x))}
+ testEmail(recipient:string){return firstValueFrom(this.http.post<any>('/api/v1/platform/billing/email/test',{recipient}))}
  payments(){return firstValueFrom(this.http.get<BillingPayment[]>('/api/v1/platform/billing/payments'))}
  wallets(){return firstValueFrom(this.http.get<BillingWallet[]>('/api/v1/platform/billing/wallets'))}
  creditWallet(x:{discord_user_id:string;amount:number;comment:string}){return firstValueFrom(this.http.post('/api/v1/platform/billing/wallets/credit',x))}
