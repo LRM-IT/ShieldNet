@@ -26,7 +26,6 @@ import { LanguagePickerComponent } from '../shared/language-picker.component';
               <small>{{ "login.brand_subtitle" | snT:"SECURE CONTROL FABRIC" }}</small>
             </span>
           </a>
-          <sn-language-picker class="public-language" [value]="i18n.locale()" [options]="i18n.languages()" (valueChange)="i18n.setLocale($event)" />
 
           <div class="hero">
             <div class="classification">{{ "login.classification" | snT:"RESTRICTED SYSTEM · AUTHORIZED OPERATORS ONLY" }}</div>
@@ -53,12 +52,12 @@ import { LanguagePickerComponent } from '../shared/language-picker.component';
                 <span>{{ "login.observe_desc" | snT:"Health, audit and runtime telemetry" }}</span>
               </article>
             </div>
-            <div class="public-links"><a routerLink="/docs">{{'login.documentation'|snT:'Read public documentation'}} <b>→</b></a><a routerLink="/privacy-policy">{{'merchant.privacy'|snT:'Privacy policy'}}</a></div>
+            <div class="public-links"><a routerLink="/docs">{{'login.documentation'|snT:'Read public documentation'}} <b>→</b></a></div>
           </div>
 
           <div class="visual-footer">
             <span><i></i> {{ "login.online" | snT:"CONTROL PLANE ONLINE" }}</span>
-            <span>GUILDCONSOLE // LRM-IT</span>
+            <sn-language-picker class="footer-language" [value]="i18n.locale()" [options]="i18n.languages()" (valueChange)="i18n.setLocale($event)" />
           </div>
         </div>
       </section>
@@ -217,7 +216,6 @@ import { LanguagePickerComponent } from '../shared/language-picker.component';
     .brand>span:last-child{display:grid;gap:.12rem}
     .brand strong{font-size:.94rem;letter-spacing:.16em}
     .brand small{color:#66808e;font-size:.58rem;letter-spacing:.17em}
-    .public-language{position:absolute;right:2.5rem;top:2rem;width:220px}
 
     .hero{
       width:min(680px,100%);
@@ -295,8 +293,8 @@ import { LanguagePickerComponent } from '../shared/language-picker.component';
 
     .public-links{display:flex;align-items:center;gap:1.2rem;margin-top:1.25rem;font-size:.75rem}
     .public-links a:first-child{color:var(--primary);font-weight:800}
-    .public-links a:last-child{color:#71858f}
     .public-links b{margin-left:.35rem}
+    .footer-language{width:155px;font-size:.72rem}
 
     .visual-footer{
       display:flex;
@@ -488,7 +486,6 @@ import { LanguagePickerComponent } from '../shared/language-picker.component';
 
     @media(max-width:650px){
       .visual-content{padding:1.4rem}
-      .public-language{position:relative;right:auto;top:auto;width:100%;margin-top:1.2rem}
       .hero{padding:4rem 0 3rem}
       h1{font-size:2.8rem}
       .capabilities{grid-template-columns:1fr}
