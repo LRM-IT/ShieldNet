@@ -10,11 +10,13 @@ from urllib.parse import quote
 import discord
 import httpx
 from redis.asyncio import Redis
+from langdetect import DetectorFactory, LangDetectException, detect_langs
 
 from bot.backend import BackendClient
 from bot.config import settings
 
 logger = logging.getLogger(__name__)
+DetectorFactory.seed = 0
 
 
 class TranslatorGroups:
@@ -68,6 +70,29 @@ class TranslatorGroups:
                     result.setdefault(target_id, item["language"])
         return list(result.items())
 
+    @staticmethod
+    def configured_source_language(config: dict, source_id: int) -> str:
+        for group in config.get("groups", []):
+            if not group.get("enabled"):
+                continue
+            for item in group.get("channels", []):
+                if item.get("channel_id") == str(source_id):
+                    return str(item.get("language") or "auto").lower()
+        return "auto"
+
+    @staticmethod
+    def detect_source_language(text: str, fallback: str, config: dict) -> str:
+        if not config.get("detect_source_language", True) or len(text.strip()) < int(config.get("detection_min_characters", 8)):
+            return fallback
+        try:
+            detected = detect_langs(text)[0]
+            if detected.prob < 0.55:
+                return fallback
+            aliases = {"zh-cn":"zh","zh-tw":"zh","iw":"he"}
+            return aliases.get(detected.lang.lower(), detected.lang.lower())
+        except LangDetectException:
+            return fallback
+
     async def process(self, message: discord.Message) -> None:
         if message.guild is None or message.author.bot or message.webhook_id:
             return
@@ -76,6 +101,8 @@ class TranslatorGroups:
         config = await self.configuration(message.guild.id)
         if not config["enabled"]:
             return
+        configured_source = self.configured_source_language(config, message.channel.id)
+        actual_source = self.detect_source_language(message.content, configured_source, config) if message.content.strip() else configured_source
         attachments = await self._attachments(message) if config.get("forward_attachments", True) else []
         for channel_id, language in self.targets(config, message.channel.id):
             channel = message.guild.get_channel(channel_id)
@@ -86,9 +113,12 @@ class TranslatorGroups:
                 if message.content.strip():
                     try:
                         source_text = message.content[:int(config.get("max_source_characters", 4000))]
-                        protected_text, protected = self._protect_terms(source_text, config.get("protected_terms", []))
-                        translated = await self._cached_translation(message, channel_id, language, protected_text, config)
-                        translated = self._restore_terms(translated, protected)
+                        if actual_source == language.lower():
+                            translated = source_text
+                        else:
+                            protected_text, protected = self._protect_terms(source_text, config.get("protected_terms", []))
+                            translated = await self._cached_translation(message, channel_id, actual_source, language, protected_text, config)
+                            translated = self._restore_terms(translated, protected)
                         if not translated:
                             translated = source_text if config.get("fallback_to_original", True) else ""
                     except Exception:
@@ -120,11 +150,11 @@ class TranslatorGroups:
                 logger.exception("Group translation failed guild=%s source=%s target=%s",
                                  message.guild.id, message.id, channel_id)
 
-    async def _cached_translation(self, message: discord.Message, channel_id: int, language: str, source_text: str, config: dict) -> str:
+    async def _cached_translation(self, message: discord.Message, channel_id: int, source_language: str, language: str, source_text: str, config: dict) -> str:
         use_cache = bool(config.get("cache_enabled", True)) and len(source_text.strip()) >= int(config.get("cache_min_characters", 4))
         terms_version = "\0".join(str(x).casefold() for x in config.get("protected_terms", []))
         terms_hash = hashlib.sha256(terms_version.encode("utf-8")).hexdigest() if terms_version else ""
-        digest = hashlib.sha256(f"{language}\0{terms_version}\0{source_text.strip()}".encode("utf-8")).hexdigest()
+        digest = hashlib.sha256(f"{source_language}\0{language}\0{terms_version}\0{source_text.strip()}".encode("utf-8")).hexdigest()
         key = f"shieldnet:translator-cache:{message.guild.id}:{digest}"
         if use_cache:
             cached = await self.redis.get(key)
@@ -134,7 +164,7 @@ class TranslatorGroups:
             await self.redis.incr(f"shieldnet:translator-cache-misses:{message.guild.id}")
             try:
                 async with httpx.AsyncClient(timeout=10) as client:
-                    archive = await client.post(f"{self.base}/archive/lookup", headers=self.headers, json={"source_text":source_text,"target_language":language,"protected_terms_hash":terms_hash})
+                    archive = await client.post(f"{self.base}/archive/lookup", headers=self.headers, json={"source_text":source_text,"source_language":source_language,"target_language":language,"protected_terms_hash":terms_hash})
                     archive.raise_for_status()
                     archived = archive.json()
                 if archived.get("found"):
@@ -146,7 +176,7 @@ class TranslatorGroups:
                 logger.warning("Shared translation archive lookup failed guild=%s", message.guild.id, exc_info=True)
         response = await self.backend.execute_ai(
             guild_id=message.guild.id,module_key="translator",capability="translation",input_text=source_text,
-            source_language="auto",target_language=language,
+            source_language=source_language,target_language=language,
             metadata={"origin":"translator_groups","source_message_id":str(message.id),"source_channel_id":str(message.channel.id),"target_channel_id":str(channel_id)},
         )
         translated = str(response.get("text") or "").strip()
@@ -154,7 +184,7 @@ class TranslatorGroups:
             await self._store_local_cache(message.guild.id, key, translated, config)
             try:
                 async with httpx.AsyncClient(timeout=10) as client:
-                    stored = await client.post(f"{self.base}/archive/store", headers=self.headers, json={"source_text":source_text,"target_language":language,"protected_terms_hash":terms_hash,"translated_text":translated})
+                    stored = await client.post(f"{self.base}/archive/store", headers=self.headers, json={"source_text":source_text,"source_language":source_language,"target_language":language,"protected_terms_hash":terms_hash,"translated_text":translated})
                     stored.raise_for_status()
             except Exception:
                 logger.warning("Shared translation archive store failed guild=%s", message.guild.id, exc_info=True)

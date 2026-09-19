@@ -50,13 +50,14 @@ class PluginEvent(Base):
 class TranslationCacheArchive(Base):
     __tablename__ = "translation_cache_archive"
     __table_args__ = (
-        UniqueConstraint("source_hash", "target_language", "protected_terms_hash", name="uq_translation_archive_lookup"),
+        UniqueConstraint("source_hash", "source_language", "target_language", "protected_terms_hash", name="uq_translation_archive_lookup"),
         {"schema": "plugins"},
     )
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     source_hash: Mapped[str] = mapped_column(String(64), nullable=False)
     source_text: Mapped[str] = mapped_column(Text, nullable=False)
+    source_language: Mapped[str] = mapped_column(String(16), nullable=False, default="auto", server_default="auto")
     target_language: Mapped[str] = mapped_column(String(16), nullable=False)
     protected_terms_hash: Mapped[str] = mapped_column(String(64), nullable=False, default="", server_default="")
     translated_text: Mapped[str] = mapped_column(Text, nullable=False)

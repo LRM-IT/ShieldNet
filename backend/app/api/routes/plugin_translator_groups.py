@@ -69,6 +69,8 @@ class SettingsInput(BaseModel):
     forward_attachments: bool = True
     forward_stickers: bool = True
     protected_terms: list[str] = Field(default_factory=list, max_length=100)
+    detect_source_language: bool = True
+    detection_min_characters: int = Field(default=8, ge=3, le=500)
 
     @field_validator("protected_terms")
     @classmethod
@@ -98,6 +100,7 @@ class BindCommand(GroupCommand):
 
 class ArchiveLookup(BaseModel):
     source_text: str = Field(min_length=1, max_length=12000)
+    source_language: str = Field(default="auto", min_length=2, max_length=16)
     target_language: str = Field(min_length=2, max_length=16)
     protected_terms_hash: str = Field(default="", max_length=64)
 
@@ -156,6 +159,8 @@ async def _settings(session: AsyncSession, guild_id: int) -> dict:
         "forward_attachments": config.get("forward_attachments", True),
         "forward_stickers": config.get("forward_stickers", True),
         "protected_terms": config.get("protected_terms", []),
+        "detect_source_language": config.get("detect_source_language", True),
+        "detection_min_characters": config.get("detection_min_characters", 8),
         "languages": await _languages(session, guild_id),
     }
 
@@ -215,6 +220,7 @@ async def internal_config(guild_id: int, session: AsyncSession = Depends(get_db_
 async def archive_lookup(payload: ArchiveLookup, session: AsyncSession = Depends(get_db_session)):
     entry = await session.scalar(select(TranslationCacheArchive).where(
         TranslationCacheArchive.source_hash == _source_hash(payload.source_text),
+        TranslationCacheArchive.source_language == payload.source_language,
         TranslationCacheArchive.target_language == payload.target_language,
         TranslationCacheArchive.protected_terms_hash == payload.protected_terms_hash,
     ))
@@ -231,7 +237,7 @@ async def archive_store(payload: ArchiveStore, session: AsyncSession = Depends(g
     now = datetime.now(UTC)
     statement = pg_insert(TranslationCacheArchive).values(
         id=uuid4(),source_hash=_source_hash(payload.source_text),source_text=payload.source_text,
-        target_language=payload.target_language,protected_terms_hash=payload.protected_terms_hash,
+        source_language=payload.source_language,target_language=payload.target_language,protected_terms_hash=payload.protected_terms_hash,
         translated_text=payload.translated_text,updated_at=now,last_used_at=now,
     ).on_conflict_do_update(
         constraint="uq_translation_archive_lookup",
@@ -252,7 +258,7 @@ async def platform_archive(query: str = "", limit: int = 50, _: User = Depends(r
     total = int(await session.scalar(select(func.count()).select_from(TranslationCacheArchive).where(*filters)) or 0)
     saved = int(await session.scalar(select(func.coalesce(func.sum(TranslationCacheArchive.hit_count), 0))) or 0)
     rows = (await session.scalars(select(TranslationCacheArchive).where(*filters).order_by(desc(TranslationCacheArchive.last_used_at)).limit(limit))).all()
-    return {"total":total,"saved_ai_requests":saved,"items":[{"id":str(x.id),"source_text":x.source_text,"target_language":x.target_language,"translated_text":x.translated_text,"hit_count":x.hit_count,"created_at":x.created_at,"last_used_at":x.last_used_at} for x in rows]}
+    return {"total":total,"saved_ai_requests":saved,"items":[{"id":str(x.id),"source_text":x.source_text,"source_language":x.source_language,"target_language":x.target_language,"translated_text":x.translated_text,"hit_count":x.hit_count,"created_at":x.created_at,"last_used_at":x.last_used_at} for x in rows]}
 
 
 @router.delete("/platform/system/translation-archive/{entry_id}")
