@@ -68,6 +68,7 @@ from app.models.plugins import (
     PluginRuntimeEvent,
     PluginRuntimeState,
     PluginRegistry,
+    TranslationCacheArchive,
 )
 from app.models.settings import ModuleSetting
 

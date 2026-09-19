@@ -47,6 +47,25 @@ class PluginEvent(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
 
 
+class TranslationCacheArchive(Base):
+    __tablename__ = "translation_cache_archive"
+    __table_args__ = (
+        UniqueConstraint("source_hash", "target_language", "protected_terms_hash", name="uq_translation_archive_lookup"),
+        {"schema": "plugins"},
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    source_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    source_text: Mapped[str] = mapped_column(Text, nullable=False)
+    target_language: Mapped[str] = mapped_column(String(16), nullable=False)
+    protected_terms_hash: Mapped[str] = mapped_column(String(64), nullable=False, default="", server_default="")
+    translated_text: Mapped[str] = mapped_column(Text, nullable=False)
+    hit_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    last_used_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
+
+
 
 class PluginMarketplaceItem(Base):
     __tablename__ = "marketplace_items"

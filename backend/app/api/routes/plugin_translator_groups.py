@@ -1,21 +1,26 @@
 from __future__ import annotations
 
 from copy import deepcopy
+from datetime import UTC, datetime
+import hashlib
+from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field, field_validator
-from sqlalchemy import select
+from sqlalchemy import delete, desc, func, or_, select
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from redis.asyncio import Redis
 
 from app.api.dependencies.auth import get_current_user
 from app.api.dependencies.guild_access import require_guild_module
 from app.api.dependencies.internal import verify_internal_service_token
+from app.api.dependencies.platform_access import require_superadmin
 from app.db.session import get_db_session
 from app.models.core import User
 from app.models.global_languages import GlobalLanguage
 from app.models.guild_languages import GuildLanguage
-from app.models.plugins import GuildPluginInstallation
+from app.models.plugins import GuildPluginInstallation, TranslationCacheArchive
 from app.core.config import settings
 
 router = APIRouter(tags=["Translator Groups plugin"])
@@ -89,6 +94,20 @@ class GroupCommand(BaseModel):
 class BindCommand(GroupCommand):
     channel_id: str
     language: str
+
+
+class ArchiveLookup(BaseModel):
+    source_text: str = Field(min_length=1, max_length=12000)
+    target_language: str = Field(min_length=2, max_length=16)
+    protected_terms_hash: str = Field(default="", max_length=64)
+
+
+class ArchiveStore(ArchiveLookup):
+    translated_text: str = Field(min_length=1, max_length=30000)
+
+
+def _source_hash(value: str) -> str:
+    return hashlib.sha256(value.strip().encode("utf-8")).hexdigest()
 
 
 async def _installation(session: AsyncSession, guild_id: int) -> GuildPluginInstallation | None:
@@ -190,6 +209,66 @@ async def clear_cache(guild_id: int, user: User = Depends(get_current_user), ses
 @internal_router.get("/guilds/{guild_id}/configuration")
 async def internal_config(guild_id: int, session: AsyncSession = Depends(get_db_session)):
     return await _settings(session, guild_id)
+
+
+@internal_router.post("/archive/lookup")
+async def archive_lookup(payload: ArchiveLookup, session: AsyncSession = Depends(get_db_session)):
+    entry = await session.scalar(select(TranslationCacheArchive).where(
+        TranslationCacheArchive.source_hash == _source_hash(payload.source_text),
+        TranslationCacheArchive.target_language == payload.target_language,
+        TranslationCacheArchive.protected_terms_hash == payload.protected_terms_hash,
+    ))
+    if entry is None:
+        return {"found": False}
+    entry.hit_count += 1
+    entry.last_used_at = datetime.now(UTC)
+    await session.commit()
+    return {"found": True, "translated_text": entry.translated_text}
+
+
+@internal_router.post("/archive/store")
+async def archive_store(payload: ArchiveStore, session: AsyncSession = Depends(get_db_session)):
+    now = datetime.now(UTC)
+    statement = pg_insert(TranslationCacheArchive).values(
+        id=uuid4(),source_hash=_source_hash(payload.source_text),source_text=payload.source_text,
+        target_language=payload.target_language,protected_terms_hash=payload.protected_terms_hash,
+        translated_text=payload.translated_text,updated_at=now,last_used_at=now,
+    ).on_conflict_do_update(
+        constraint="uq_translation_archive_lookup",
+        set_={"translated_text":payload.translated_text,"source_text":payload.source_text,"updated_at":now,"last_used_at":now},
+    )
+    await session.execute(statement)
+    await session.commit()
+    return {"stored": True}
+
+
+@router.get("/platform/system/translation-archive")
+async def platform_archive(query: str = "", limit: int = 50, _: User = Depends(require_superadmin), session: AsyncSession = Depends(get_db_session)):
+    limit = max(1, min(limit, 200))
+    filters = []
+    if query.strip():
+        pattern = f"%{query.strip()}%"
+        filters.append(or_(TranslationCacheArchive.source_text.ilike(pattern), TranslationCacheArchive.translated_text.ilike(pattern)))
+    total = int(await session.scalar(select(func.count()).select_from(TranslationCacheArchive).where(*filters)) or 0)
+    saved = int(await session.scalar(select(func.coalesce(func.sum(TranslationCacheArchive.hit_count), 0))) or 0)
+    rows = (await session.scalars(select(TranslationCacheArchive).where(*filters).order_by(desc(TranslationCacheArchive.last_used_at)).limit(limit))).all()
+    return {"total":total,"saved_ai_requests":saved,"items":[{"id":str(x.id),"source_text":x.source_text,"target_language":x.target_language,"translated_text":x.translated_text,"hit_count":x.hit_count,"created_at":x.created_at,"last_used_at":x.last_used_at} for x in rows]}
+
+
+@router.delete("/platform/system/translation-archive/{entry_id}")
+async def delete_archive_entry(entry_id: UUID, _: User = Depends(require_superadmin), session: AsyncSession = Depends(get_db_session)):
+    result = await session.execute(delete(TranslationCacheArchive).where(TranslationCacheArchive.id == entry_id))
+    await session.commit()
+    if not result.rowcount:
+        raise HTTPException(404, "Translation archive entry not found")
+    return {"deleted": True}
+
+
+@router.delete("/platform/system/translation-archive")
+async def clear_archive(_: User = Depends(require_superadmin), session: AsyncSession = Depends(get_db_session)):
+    result = await session.execute(delete(TranslationCacheArchive))
+    await session.commit()
+    return {"deleted": result.rowcount or 0}
 
 
 async def _required(session: AsyncSession, guild_id: int) -> GuildPluginInstallation:

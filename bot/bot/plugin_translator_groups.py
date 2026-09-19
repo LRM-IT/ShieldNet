@@ -123,6 +123,7 @@ class TranslatorGroups:
     async def _cached_translation(self, message: discord.Message, channel_id: int, language: str, source_text: str, config: dict) -> str:
         use_cache = bool(config.get("cache_enabled", True)) and len(source_text.strip()) >= int(config.get("cache_min_characters", 4))
         terms_version = "\0".join(str(x).casefold() for x in config.get("protected_terms", []))
+        terms_hash = hashlib.sha256(terms_version.encode("utf-8")).hexdigest() if terms_version else ""
         digest = hashlib.sha256(f"{language}\0{terms_version}\0{source_text.strip()}".encode("utf-8")).hexdigest()
         key = f"shieldnet:translator-cache:{message.guild.id}:{digest}"
         if use_cache:
@@ -131,6 +132,18 @@ class TranslatorGroups:
                 await self.redis.incr(f"shieldnet:translator-cache-hits:{message.guild.id}")
                 return cached
             await self.redis.incr(f"shieldnet:translator-cache-misses:{message.guild.id}")
+            try:
+                async with httpx.AsyncClient(timeout=10) as client:
+                    archive = await client.post(f"{self.base}/archive/lookup", headers=self.headers, json={"source_text":source_text,"target_language":language,"protected_terms_hash":terms_hash})
+                    archive.raise_for_status()
+                    archived = archive.json()
+                if archived.get("found"):
+                    translated = str(archived.get("translated_text") or "")
+                    if translated:
+                        await self._store_local_cache(message.guild.id, key, translated, config)
+                        return translated
+            except Exception:
+                logger.warning("Shared translation archive lookup failed guild=%s", message.guild.id, exc_info=True)
         response = await self.backend.execute_ai(
             guild_id=message.guild.id,module_key="translator",capability="translation",input_text=source_text,
             source_language="auto",target_language=language,
@@ -138,19 +151,28 @@ class TranslatorGroups:
         )
         translated = str(response.get("text") or "").strip()
         if use_cache and translated:
-            ttl = int(config.get("cache_ttl_hours", 72)) * 3600
-            index = f"shieldnet:translator-cache-index:{message.guild.id}"
-            pipe = self.redis.pipeline()
-            pipe.set(key, translated, ex=ttl)
-            pipe.zadd(index, {key: time.time()})
-            pipe.expire(index, ttl)
-            await pipe.execute()
-            excess = int(await self.redis.zcard(index)) - int(config.get("cache_max_entries", 2000))
-            if excess > 0:
-                expired = await self.redis.zpopmin(index, excess)
-                if expired:
-                    await self.redis.delete(*(item[0] for item in expired))
+            await self._store_local_cache(message.guild.id, key, translated, config)
+            try:
+                async with httpx.AsyncClient(timeout=10) as client:
+                    stored = await client.post(f"{self.base}/archive/store", headers=self.headers, json={"source_text":source_text,"target_language":language,"protected_terms_hash":terms_hash,"translated_text":translated})
+                    stored.raise_for_status()
+            except Exception:
+                logger.warning("Shared translation archive store failed guild=%s", message.guild.id, exc_info=True)
         return translated
+
+    async def _store_local_cache(self, guild_id: int, key: str, translated: str, config: dict) -> None:
+        ttl = int(config.get("cache_ttl_hours", 72)) * 3600
+        index = f"shieldnet:translator-cache-index:{guild_id}"
+        pipe = self.redis.pipeline()
+        pipe.set(key, translated, ex=ttl)
+        pipe.zadd(index, {key: time.time()})
+        pipe.expire(index, ttl)
+        await pipe.execute()
+        excess = int(await self.redis.zcard(index)) - int(config.get("cache_max_entries", 2000))
+        if excess > 0:
+            expired = await self.redis.zpopmin(index, excess)
+            if expired:
+                await self.redis.delete(*(item[0] for item in expired))
 
     @staticmethod
     def _protect_terms(value: str, terms: list[str]) -> tuple[str, dict[str, str]]:
