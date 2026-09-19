@@ -66,6 +66,7 @@ import { GuildBillingComponent } from './pages/guild-billing.component';
 import { DocumentationComponent } from './pages/documentation.component';
 import { SupportComponent } from './pages/support.component';
 import { MerchantInformationComponent } from './pages/merchant-information.component';
+import { SeoComponent } from './pages/seo.component';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -87,6 +88,7 @@ export const routes: Routes = [
   { path: 'platform/users/:userId', component: PlatformUserProfileComponent, canActivate: [superadminGuard] },
   { path: 'platform/plugins', component: PluginsComponent, canActivate: [platformGuard] },
   { path: 'platform/billing', component: BillingComponent, canActivate: [superadminGuard] },
+  { path: 'platform/seo', component: SeoComponent, canActivate: [superadminGuard] },
   { path: 'platform/jobs', component: JobsCenterComponent, canActivate: [platformGuard] },
   { path: 'platform/operations', component: OperationsComponent, canActivate: [platformGuard] },
   { path: 'platform/health', component: HealthMonitorComponent, canActivate: [platformGuard] },

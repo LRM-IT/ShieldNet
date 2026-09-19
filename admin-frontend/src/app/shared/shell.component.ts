@@ -73,6 +73,7 @@ interface PluginNavDefinition {
                     @if (auth.profile()?.is_superadmin) {
                       <a routerLink="/platform/users" routerLinkActive="active"><span class="nav-icon">♙</span><span>{{ 'platform_users.nav' | snT:'Server owners' }}</span></a>
                       <a routerLink="/platform/billing" routerLinkActive="active"><span class="nav-icon">₴</span><span>Billing</span></a>
+                      <a routerLink="/platform/seo" routerLinkActive="active"><span class="nav-icon">⌕</span><span>SEO</span></a>
                     }
                     <a routerLink="/platform/voting-templates" routerLinkActive="active"><span class="nav-icon">▣</span><span>Voting templates</span></a>
                     <a routerLink="/platform/languages" routerLinkActive="active"><span class="nav-icon">🌐</span><span>Languages</span></a>
