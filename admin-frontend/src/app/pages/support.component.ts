@@ -7,7 +7,7 @@ import {ShellComponent} from '../shared/shell.component';
 
 @Component({selector:'sn-support',standalone:true,imports:[CommonModule,FormsModule,ShellComponent],template:`
 <sn-shell title="Предложения и ошибки"><main class="page">
- <header><div><span>ОБРАТНАЯ СВЯЗЬ</span><h2>Предложения и ошибки</h2><p>{{staff()?'Обработка обращений пользователей панели.':'Сообщите об ошибке или предложите улучшение.'}}</p></div><button class="primary" (click)="showCreate.set(!showCreate())">+ Создать тикет</button></header>
+ <header><div><span>ОБРАТНАЯ СВЯЗЬ</span><h2>Предложения и ошибки</h2><p>{{staff()?'Обработка обращений пользователей панели.':'Если что-то не работает, выберите тему «Ошибка», подробно опишите проблему — и мы её рассмотрим. Если вам не хватает какой-либо функции или вы хотите заказать личный плагин, создайте тикет с темой «Пожелание».'}}</p></div><button class="primary" (click)="showCreate.set(!showCreate())">+ Создать тикет</button></header>
  @if(error()){<div class="notice error">{{error()}}</div>}@if(success()){<div class="notice success">{{success()}}</div>}
  @if(showCreate()){<section class="card create"><h3>Новый тикет</h3><label>Тема<select [(ngModel)]="form.topic"><option value="bug">Ошибка</option><option value="suggestion">Пожелание</option></select></label><label>Заголовок<input [(ngModel)]="form.subject" maxlength="160"></label><label>Описание<textarea [(ngModel)]="form.body" rows="6" maxlength="10000"></textarea></label><button class="primary" [disabled]="busy()||form.subject.trim().length<3||form.body.trim().length<3" (click)="create()">Отправить</button></section>}
  <section class="workspace">
