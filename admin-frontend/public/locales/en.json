@@ -1999,5 +1999,17 @@
     "help_text": "After signing in, open Feedback & issues to report a bug, attach screenshots or suggest a feature or custom plugin. Include the server, plugin, expected result and the steps that caused the problem.",
     "open_console": "Sign in to GuildConsole",
     "footer": "Discord server operations by LRM-IT"
+  },
+  "system_nav": {
+    "title": "System",
+    "subtitle": "Infrastructure and access",
+    "email": "Email / SMTP",
+    "translation_cache": "Translation cache",
+    "platform_access": "Platform access"
+  },
+  "system_settings": {
+    "eyebrow": "SUPERADMIN · INFRASTRUCTURE",
+    "email_description": "System email delivery for alerts, reminders and platform messages.",
+    "cache_description": "Shared translation archive used by every Discord server."
   }
 }

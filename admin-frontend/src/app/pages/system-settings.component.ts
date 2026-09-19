@@ -6,11 +6,12 @@ import {firstValueFrom} from 'rxjs';
 import {BillingEmailSettings,BillingService} from '../core/billing.service';
 import {ShellComponent} from '../shared/shell.component';
 import {ModalService} from '../core/modal.service';
+import {ActivatedRoute} from '@angular/router';
+import {TranslatePipe} from '../core/translate.pipe';
 
-@Component({standalone:true,imports:[FormsModule,ShellComponent,DatePipe],template:`
-<sn-shell title="System settings"><main class="page">
-  <header><span>SUPERADMIN · INFRASTRUCTURE</span><h2>System settings</h2><p>Shared infrastructure used by the entire GuildConsole platform.</p></header>
-  <nav class="tabs" aria-label="System settings sections"><button [class.active]="tab()==='email'" (click)="tab.set('email')">Email / SMTP</button><button [class.active]="tab()==='translations'" (click)="tab.set('translations')">Translation archive <span>{{archive().total}}</span></button></nav>
+@Component({standalone:true,imports:[FormsModule,ShellComponent,DatePipe,TranslatePipe],template:`
+<sn-shell [title]="tab()==='email'?('system_nav.email'|snT:'Email / SMTP'):('system_nav.translation_cache'|snT:'Translation cache')"><main class="page">
+  <header><span>{{'system_settings.eyebrow'|snT:'SUPERADMIN · INFRASTRUCTURE'}}</span><h2>{{tab()==='email'?('system_nav.email'|snT:'Email / SMTP'):('system_nav.translation_cache'|snT:'Translation cache')}}</h2><p>{{tab()==='email'?('system_settings.email_description'|snT:'System email delivery for alerts, reminders and platform messages.'):('system_settings.cache_description'|snT:'Shared translation archive used by every Discord server.')}}</p></header>
   @if(error()){<div class="notice error">{{error()}}</div>}@if(success()){<div class="notice success">{{success()}}</div>}
   @if(tab()==='email'){
   <article class="card">
@@ -37,8 +38,8 @@ export class SystemSettingsComponent implements OnInit{
  settings=signal<BillingEmailSettings|null>(null);error=signal('');success=signal('');testRecipient='';
  archive=signal<any>({total:0,saved_ai_requests:0,items:[]});archiveQuery='';
  form={enabled:false,host:'',port:587,username:'',password:'',from_email:'',from_name:'GuildConsole',use_tls:true,use_ssl:false};
- constructor(private api:BillingService,private http:HttpClient,private modal:ModalService){}
- async ngOnInit(){await Promise.all([this.load(),this.loadArchive()])}
+ constructor(private api:BillingService,private http:HttpClient,private modal:ModalService,route:ActivatedRoute){this.tab.set(route.snapshot.data['systemSection']==='translations'?'translations':'email')}
+ async ngOnInit(){if(this.tab()==='email')await this.load();else await this.loadArchive()}
  async load(){this.error.set('');try{const value=await this.api.emailSettings();this.settings.set(value);this.form={...this.form,...value,password:''}}catch(e:any){this.error.set(e?.error?.detail||'Unable to load system email settings.')}}
  async save(){this.error.set('');this.success.set('');try{const value=await this.api.saveEmailSettings(this.form);this.settings.set(value);this.form.password='';this.success.set('SMTP settings saved.')}catch(e:any){this.error.set(e?.error?.detail||'Unable to save SMTP settings.')}}
  async sendTest(){this.error.set('');this.success.set('');try{await this.api.testEmail(this.testRecipient.trim());this.success.set('Test email delivered.')}catch(e:any){this.error.set(e?.error?.detail||'Unable to deliver test email.')}}
