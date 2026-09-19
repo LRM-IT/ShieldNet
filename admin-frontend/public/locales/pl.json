@@ -13,6 +13,7 @@
   },
   "support": {"nav":"Sugestie i błędy","title":"Sugestie i błędy","eyebrow":"OPINIE","subtitle":"Skontaktuj się z zespołem wsparcia GuildConsole.","submit_tab":"Wyślij zgłoszenie","all_tickets":"Wszystkie zgłoszenia","my_tickets":"Moje zgłoszenia","new_ticket":"Nowe zgłoszenie","bug":"Błąd","bug_help":"Wybierz ten temat, jeśli coś nie działa. Opisz problem, wykonane kroki i wynik.","suggestion":"Sugestia","suggestion_help":"Wybierz ten temat, jeśli brakuje funkcji, masz pomysł lub potrzebujesz własnej wtyczki.","topic":"Temat","subject":"Tytuł","subject_placeholder":"Krótko opisz zgłoszenie","description":"Szczegółowy opis","description_placeholder":"Dodaj informacje potrzebne do rozpatrzenia","send_ticket":"Wyślij zgłoszenie","all_statuses":"Wszystkie statusy","status_open":"Otwarte","status_progress":"W toku","status_resolved":"Rozwiązane","status_closed":"Zamknięte","no_tickets":"Brak zgłoszeń.","select_ticket":"Wybierz zgłoszenie.","priority_low":"Niski","priority_normal":"Normalny","priority_high":"Wysoki","priority_urgent":"Pilny","staff":"Zespół wsparcia","user":"Użytkownik","reply_placeholder":"Wpisz odpowiedź...","send_reply":"Wyślij odpowiedź","load_error":"Unable to load tickets.","open_error":"Unable to open ticket.","created":"Ticket created.","create_error":"Unable to create ticket.","reply_error":"Unable to send reply.","update_error":"Unable to update ticket.","attach_images":"Dołącz obrazy","image_limits":"Do 5 obrazów, maksymalnie 10 MB każdy."},
   "cookies": {"title": "Pliki cookie w GuildConsole", "text": "Używamy niezbędnych plików cookie i pamięci przeglądarki do logowania, bezpieczeństwa, języka i ustawień interfejsu. Kontynuując, wyrażasz zgodę na ich użycie.", "more": "Informacje o prywatności", "accept": "Akceptuję"},
+  "privacy_page": {"language":"Język","eyebrow":"PRAWO I PRYWATNOŚĆ","title":"Polityka prywatności i warunki świadczenia usług","subtitle":"Jak GuildConsole przetwarza dane, świadczy usługi cyfrowe, przyjmuje płatności i obsługuje zwroty.","edit":"Edytuj stronę","close_editor":"Zamknij edytor","locale_hint":"Edytujesz treść dla wybranego języka.","cancel":"Anuluj"},
   "shell": {
     "control_fabric": "CENTRUM STEROWANIA",
     "control_plane": "WARSTWA STEROWANIA",
@@ -1170,7 +1171,7 @@
     "step_1": "Discord verifies your account.",
     "step_2": "GuildConsole checks server access.",
     "step_3": "A scoped console session is issued.",
-    "step_4": "Warunki, płatności, zwroty i informacje o sprzedawcy.",
+    "step_4": "Prywatność, warunki, płatności i zwroty.",
     "footer": "By continuing, you enter a monitored administrative environment.",
     "build": "BUILD 2.0 // SECURE",
     "error": "Unable to start Discord authentication."

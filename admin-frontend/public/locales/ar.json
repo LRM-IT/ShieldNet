@@ -15,6 +15,7 @@
   },
   "support": {"nav":"الاقتراحات والأخطاء","title":"الاقتراحات والأخطاء","eyebrow":"الملاحظات","subtitle":"تواصل مع فريق دعم GuildConsole.","submit_tab":"إرسال طلب","all_tickets":"كل التذاكر","my_tickets":"تذاكري","new_ticket":"تذكرة جديدة","bug":"خطأ","bug_help":"اختر هذا الموضوع إذا كان شيء ما لا يعمل. صف المشكلة والخطوات والنتيجة.","suggestion":"اقتراح","suggestion_help":"اختر هذا الموضوع إذا كنت تحتاج ميزة أو لديك فكرة تحسين أو تريد إضافة مخصصة.","topic":"الموضوع","subject":"العنوان","subject_placeholder":"صف طلبك باختصار","description":"وصف تفصيلي","description_placeholder":"أضف التفاصيل اللازمة لمراجعة الطلب","send_ticket":"إرسال الطلب","all_statuses":"كل الحالات","status_open":"مفتوحة","status_progress":"قيد المعالجة","status_resolved":"تم الحل","status_closed":"مغلقة","no_tickets":"لا توجد تذاكر بعد.","select_ticket":"اختر تذكرة من القائمة.","priority_low":"منخفضة","priority_normal":"عادية","priority_high":"عالية","priority_urgent":"عاجلة","staff":"فريق الدعم","user":"المستخدم","reply_placeholder":"اكتب ردك...","send_reply":"إرسال الرد","load_error":"Unable to load tickets.","open_error":"Unable to open ticket.","created":"Ticket created.","create_error":"Unable to create ticket.","reply_error":"Unable to send reply.","update_error":"Unable to update ticket.","attach_images":"إرفاق صور","image_limits":"حتى 5 صور، بحد أقصى 10 ميغابايت لكل صورة."},
   "cookies": {"title": "ملفات تعريف الارتباط في GuildConsole", "text": "نستخدم ملفات تعريف الارتباط الضرورية وتخزين المتصفح لتسجيل الدخول والأمان واللغة وإعدادات الواجهة. بمتابعة الاستخدام، فإنك توافق على ذلك.", "more": "تفاصيل الخصوصية", "accept": "موافق"},
+  "privacy_page": {"language":"اللغة","eyebrow":"الشؤون القانونية والخصوصية","title":"سياسة الخصوصية وشروط الخدمة","subtitle":"كيفية معالجة GuildConsole للبيانات وتقديم الخدمات الرقمية وقبول المدفوعات ومعالجة المبالغ المستردة.","edit":"تحرير الصفحة","close_editor":"إغلاق المحرر","locale_hint":"أنت تقوم بتحرير محتوى اللغة المحددة.","cancel":"إلغاء"},
   "shell": {
     "control_fabric": "نسيج التحكم",
     "control_plane": "مستوى التحكم",
@@ -1172,7 +1173,7 @@
     "step_1": "Discord verifies your account.",
     "step_2": "GuildConsole checks server access.",
     "step_3": "A scoped console session is issued.",
-    "step_4": "الشروط والدفع والاسترداد ومعلومات البائع.",
+    "step_4": "الخصوصية والشروط والمدفوعات والمبالغ المستردة.",
     "footer": "By continuing, you enter a monitored administrative environment.",
     "build": "BUILD 2.0 // SECURE",
     "error": "Unable to start Discord authentication."

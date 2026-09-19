@@ -106,7 +106,7 @@ import { RouterLink } from '@angular/router';
             <div><span>01</span><p>{{ "login.step_1" | snT:"Discord verifies your account." }}</p></div>
             <div><span>02</span><p>{{ "login.step_2" | snT:"GuildConsole checks server access." }}</p></div>
             <div><span>03</span><p>{{ "login.step_3" | snT:"A scoped console session is issued." }}</p></div>
-            <a routerLink="/merchant-information"><span>04</span><p>{{ "login.step_4" | snT:"Terms, payment, refunds and seller information." }}</p></a>
+            <a routerLink="/privacy-policy"><span>04</span><p>{{ "login.step_4" | snT:"Terms, payment, refunds and seller information." }}</p></a>
           </div>
 
           <footer>

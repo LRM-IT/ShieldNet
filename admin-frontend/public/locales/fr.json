@@ -14,6 +14,7 @@
   },
   "support": {"nav":"Suggestions et erreurs","title":"Suggestions et erreurs","eyebrow":"COMMENTAIRES","subtitle":"Contactez l’équipe d’assistance GuildConsole.","submit_tab":"Envoyer une demande","all_tickets":"Tous les tickets","my_tickets":"Mes tickets","new_ticket":"Nouveau ticket","bug":"Erreur","bug_help":"Choisissez ce sujet si quelque chose ne fonctionne pas. Décrivez le problème, vos actions et le résultat.","suggestion":"Suggestion","suggestion_help":"Choisissez ce sujet pour une fonctionnalité manquante, une idée d’amélioration ou un plugin personnalisé.","topic":"Sujet","subject":"Titre","subject_placeholder":"Décrivez brièvement votre demande","description":"Description détaillée","description_placeholder":"Ajoutez les détails nécessaires","send_ticket":"Envoyer la demande","all_statuses":"Tous les statuts","status_open":"Ouvert","status_progress":"En cours","status_resolved":"Résolu","status_closed":"Fermé","no_tickets":"Aucun ticket.","select_ticket":"Sélectionnez un ticket.","priority_low":"Faible","priority_normal":"Normale","priority_high":"Élevée","priority_urgent":"Urgente","staff":"Équipe d’assistance","user":"Utilisateur","reply_placeholder":"Saisissez votre réponse...","send_reply":"Envoyer la réponse","load_error":"Unable to load tickets.","open_error":"Unable to open ticket.","created":"Ticket created.","create_error":"Unable to create ticket.","reply_error":"Unable to send reply.","update_error":"Unable to update ticket.","attach_images":"Joindre des images","image_limits":"Jusqu’à 5 images de 10 Mo maximum chacune."},
   "cookies": {"title": "Cookies sur GuildConsole", "text": "Nous utilisons des cookies nécessaires et le stockage du navigateur pour l’authentification, la sécurité, la langue et les réglages de l’interface. En continuant, vous acceptez leur utilisation.", "more": "Informations de confidentialité", "accept": "Accepter"},
+  "privacy_page": {"language":"Langue","eyebrow":"JURIDIQUE ET CONFIDENTIALITÉ","title":"Politique de confidentialité et conditions de service","subtitle":"Comment GuildConsole traite les données, fournit les services numériques, accepte les paiements et gère les remboursements.","edit":"Modifier la page","close_editor":"Fermer l’éditeur","locale_hint":"Vous modifiez le contenu de la langue sélectionnée.","cancel":"Annuler"},
   "shell": {
     "control_fabric": "CENTRE DE CONTRÔLE",
     "control_plane": "PLAN DE CONTRÔLE",
@@ -1171,7 +1172,7 @@
     "step_1": "Discord verifies your account.",
     "step_2": "GuildConsole checks server access.",
     "step_3": "A scoped console session is issued.",
-    "step_4": "Conditions, paiement, remboursements et informations vendeur.",
+    "step_4": "Confidentialité, conditions, paiements et remboursements.",
     "footer": "By continuing, you enter a monitored administrative environment.",
     "build": "BUILD 2.0 // SECURE",
     "error": "Unable to start Discord authentication."

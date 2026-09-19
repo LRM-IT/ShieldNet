@@ -13,6 +13,7 @@
   },
   "support": {"nav":"Feedback & issues","title":"Feedback & issues","eyebrow":"FEEDBACK","subtitle":"Contact the GuildConsole support team.","submit_tab":"Submit request","all_tickets":"All tickets","my_tickets":"My tickets","new_ticket":"New ticket","bug":"Bug","bug_help":"choose this topic if something does not work. Describe the problem, your actions and the result.","suggestion":"Suggestion","suggestion_help":"choose this topic if you need a feature, have an improvement idea or want a custom plugin.","topic":"Topic","subject":"Subject","subject_placeholder":"Briefly describe your request","description":"Detailed description","description_placeholder":"Add the details needed to review the request","send_ticket":"Send request","all_statuses":"All statuses","status_open":"Open","status_progress":"In progress","status_resolved":"Resolved","status_closed":"Closed","no_tickets":"No tickets yet.","select_ticket":"Select a ticket from the list.","priority_low":"Low","priority_normal":"Normal","priority_high":"High","priority_urgent":"Urgent","staff":"Support team","user":"User","reply_placeholder":"Enter your reply...","send_reply":"Send reply","load_error":"Unable to load tickets.","open_error":"Unable to open ticket.","created":"Ticket created.","create_error":"Unable to create ticket.","reply_error":"Unable to send reply.","update_error":"Unable to update ticket.","attach_images":"Attach images","image_limits":"Up to 5 images, 10 MB each."},
   "cookies": {"title": "Cookies on GuildConsole", "text": "We use necessary cookies and browser storage for authentication, security, language and interface settings. By continuing, you consent to their use.", "more": "Privacy details", "accept": "Accept"},
+  "privacy_page": {"language":"Language","eyebrow":"LEGAL & PRIVACY","title":"Privacy policy and service terms","subtitle":"How GuildConsole processes data, provides digital services, accepts payments and handles refunds.","edit":"Edit page","close_editor":"Close editor","locale_hint":"You are editing content for the selected language.","cancel":"Cancel"},
   "shell": {
     "control_fabric": "CONTROL FABRIC",
     "control_plane": "CONTROL PLANE",
@@ -1170,7 +1171,7 @@
     "step_1": "Discord verifies your account.",
     "step_2": "GuildConsole checks server access.",
     "step_3": "A scoped console session is issued.",
-    "step_4": "Terms, payment, refunds and seller information.",
+    "step_4": "Privacy, terms, payments and refunds.",
     "footer": "By continuing, you enter a monitored administrative environment.",
     "build": "BUILD 2.0 // SECURE",
     "error": "Unable to start Discord authentication."
