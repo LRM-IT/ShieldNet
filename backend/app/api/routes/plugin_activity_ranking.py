@@ -32,6 +32,9 @@ class SettingsInput(BaseModel):
     level_growth: float = Field(default=1.5, ge=1, le=5)
     reward_roles: list[RewardRoleInput] = Field(default_factory=list, max_length=100)
     announce_level_up: bool = True
+    announce_in_reply: bool = True
+    announce_in_dm: bool = False
+    announce_in_channel: bool = False
     announcement_channel_id: str | None = Field(default=None, max_length=32)
     announcement_message: str = Field(default="🎉 {member} reached level {level}!", min_length=1, max_length=500)
 
@@ -62,6 +65,9 @@ def config(item) -> dict:
         "level_growth": float(raw.get("level_growth", 1.5)),
         "reward_roles": raw.get("reward_roles", []),
         "announce_level_up": bool(raw.get("announce_level_up", True)),
+        "announce_in_reply": bool(raw.get("announce_in_reply", not raw.get("announcement_channel_id"))),
+        "announce_in_dm": bool(raw.get("announce_in_dm", False)),
+        "announce_in_channel": bool(raw.get("announce_in_channel", bool(raw.get("announcement_channel_id")))),
         "announcement_channel_id": raw.get("announcement_channel_id"),
         "announcement_message": str(raw.get("announcement_message", "🎉 {member} reached level {level}!")),
     }
@@ -145,6 +151,9 @@ async def activity(payload: ActivityInput, session: AsyncSession = Depends(get_d
         "leveled_up": level > previous_level,
         "reward_role_ids": reward_role_ids,
         "announce_level_up": settings["announce_level_up"],
+        "announce_in_reply": settings["announce_in_reply"],
+        "announce_in_dm": settings["announce_in_dm"],
+        "announce_in_channel": settings["announce_in_channel"],
         "announcement_channel_id": settings["announcement_channel_id"],
         "announcement_message": settings["announcement_message"],
     }
