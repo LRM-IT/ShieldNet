@@ -3,13 +3,14 @@ import { RouterLink } from '@angular/router';
 import { TranslatePipe } from '../core/translate.pipe';
 import { LanguagePickerComponent } from '../shared/language-picker.component';
 import { TranslationService } from '../core/translation.service';
+import { PublicBrandComponent } from '../shared/public-brand.component';
 
 @Component({
   standalone: true,
-  imports: [RouterLink, TranslatePipe, LanguagePickerComponent],
+  imports: [RouterLink, TranslatePipe, LanguagePickerComponent, PublicBrandComponent],
   template: `
     <main>
-      <nav><a class="brand" routerLink="/"><b>GUILDCONSOLE</b><span>{{'public_docs.brand'|snT:'Discord management platform'}}</span></a><div><a class="login" routerLink="/login">{{'public_docs.login'|snT:'Open console'}}</a></div></nav>
+      <nav><sn-public-brand/><div><a class="login" routerLink="/login">{{'public_docs.login'|snT:'Open console'}}</a></div></nav>
       <header><span>{{'public_docs.eyebrow'|snT:'PUBLIC DOCUMENTATION'}}</span><h1>{{'public_docs.title'|snT:'GuildConsole documentation'}}</h1><p>{{'public_docs.intro'|snT:'A practical guide to connecting a Discord server, managing access, installing plugins and operating GuildConsole safely.'}}</p><div class="actions"><a routerLink="/docs" fragment="start">{{'public_docs.start'|snT:'Get started'}}</a><a class="secondary" routerLink="/docs" fragment="modules">{{'public_docs.explore'|snT:'Explore features'}}</a></div></header>
 
       <section class="toc"><strong>{{'public_docs.on_page'|snT:'On this page'}}</strong><a routerLink="/docs" fragment="about">{{'public_docs.about_nav'|snT:'About GuildConsole'}}</a><a routerLink="/docs" fragment="start">{{'public_docs.start_nav'|snT:'First connection'}}</a><a routerLink="/docs" fragment="modules">{{'public_docs.modules_nav'|snT:'Platform features'}}</a><a routerLink="/docs" fragment="plugins">{{'public_docs.plugins_nav'|snT:'Plugins'}}</a><a routerLink="/docs" fragment="security">{{'public_docs.security_nav'|snT:'Security and billing'}}</a><a routerLink="/docs" fragment="help">{{'public_docs.help_nav'|snT:'Help'}}</a></section>

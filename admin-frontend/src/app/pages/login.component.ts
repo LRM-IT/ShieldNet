@@ -5,10 +5,11 @@ import { TranslatePipe } from '../core/translate.pipe';
 import { TranslationService } from '../core/translation.service';
 import { RouterLink } from '@angular/router';
 import { LanguagePickerComponent } from '../shared/language-picker.component';
+import { PublicBrandComponent } from '../shared/public-brand.component';
 
 @Component({
   standalone: true,
-  imports: [TranslatePipe,RouterLink,LanguagePickerComponent],
+  imports: [TranslatePipe,RouterLink,LanguagePickerComponent,PublicBrandComponent],
   template: `
     <main class="access-page">
       <section class="visual-zone">
@@ -17,15 +18,7 @@ import { LanguagePickerComponent } from '../shared/language-picker.component';
         <div class="orbit orbit-two"></div>
 
         <div class="visual-content">
-          <a class="brand" href="/" aria-label="GuildConsole">
-            <span class="brand-symbol">
-              <i></i><i></i><i></i>
-            </span>
-            <span>
-              <strong>GUILDCONSOLE</strong>
-              <small>{{ "login.brand_subtitle" | snT:"SECURE CONTROL FABRIC" }}</small>
-            </span>
-          </a>
+          <sn-public-brand />
 
           <div class="hero">
             <div class="classification">{{ "login.classification" | snT:"RESTRICTED SYSTEM · AUTHORIZED OPERATORS ONLY" }}</div>
