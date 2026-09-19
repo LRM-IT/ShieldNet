@@ -8,10 +8,11 @@ import { AuthService } from '../core/auth.service';
 import { ThemeService } from '../core/theme.service';
 import { ShellComponent } from '../shared/shell.component';
 import { TimezonePickerComponent } from '../shared/timezone-picker.component';
+import { LanguagePickerComponent } from '../shared/language-picker.component';
 
 @Component({
   standalone: true,
-  imports: [ShellComponent, RouterLink, TranslatePipe, FormsModule, TimezonePickerComponent],
+  imports: [ShellComponent, RouterLink, TranslatePipe, FormsModule, TimezonePickerComponent, LanguagePickerComponent],
   template: `
     <sn-shell [title]="'profile.title' | snT:'Profile'">
       <section class="profile-layout">
@@ -89,14 +90,7 @@ import { TimezonePickerComponent } from '../shared/timezone-picker.component';
 
             <div class="select-preference">
               <label for="profile-language">{{ 'profile.interface_language' | snT:'Interface language' }}</label>
-              <div class="select-control">
-                <span>{{ i18n.currentLanguage()?.icon }}</span>
-                <select id="profile-language" [value]="i18n.locale()" (change)="changeLanguage($any($event.target).value)">
-                  @for (language of i18n.languages(); track language.code) {
-                    <option [value]="language.code" [selected]="language.code === i18n.locale()">{{ language.name }} — {{ language.code.toUpperCase() }}</option>
-                  }
-                </select>
-              </div>
+              <sn-language-picker id="profile-language" [value]="i18n.locale()" [options]="i18n.languages()" (valueChange)="changeLanguage($event)" />
             </div>
 
             <div class="preference-row">
@@ -129,11 +123,10 @@ import { TimezonePickerComponent } from '../shared/timezone-picker.component';
     .settings-stack{display:grid;gap:1rem}.settings-panel{padding:1.2rem}.section-heading{display:flex;justify-content:space-between;gap:1rem;align-items:flex-start;padding-bottom:1rem;border-bottom:1px solid var(--line)}.active-label,.soon{padding:.42rem .58rem;border-radius:999px;font-size:.54rem;font-weight:900;letter-spacing:.09em}.active-label{color:var(--primary);background:var(--primary-soft);border:1px solid var(--line-strong)}.soon{color:var(--muted);background:var(--surface-2);border:1px solid var(--line)}
     .theme-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.65rem;margin-top:1rem}.theme-option{display:grid;grid-template-columns:64px 1fr 22px;align-items:center;gap:.75rem;padding:.75rem;text-align:left;color:var(--text);background:var(--surface-2);border:1px solid var(--line);border-radius:12px;transition:.18s}.theme-option:hover{transform:translateY(-1px);border-color:var(--line-strong)}.theme-option.active{background:var(--primary-soft);border-color:var(--primary)}
     .theme-preview{height:44px;display:grid;grid-template-columns:1.5fr 1fr .55fr;overflow:hidden;border-radius:8px;border:1px solid rgba(255,255,255,.12)}.theme-preview i{display:block}.theme-copy{display:grid;gap:.25rem;min-width:0}.theme-copy strong{display:flex;align-items:center;gap:.45rem;font-size:.75rem}.theme-copy small{color:var(--muted);font-size:.59rem;line-height:1.35}.check{color:var(--primary);font-weight:900;text-align:center}
-    .select-preference{display:grid;gap:.45rem;margin-top:1rem}.select-preference>label{color:var(--muted);font-size:.65rem;font-weight:750}.select-control{display:grid;grid-template-columns:34px 1fr;align-items:center;gap:.5rem;padding:0 .75rem;background:var(--surface-2);border:1px solid var(--line);border-radius:11px}.select-control:focus-within{border-color:var(--primary)}.select-control>span{font-size:1.2rem}.select-control select{width:100%;min-height:48px;color:var(--text);background:transparent;border:0;outline:0;font-weight:750}.select-control option,.preference-row option{color:#101820;background:#fff}
+    .select-preference{display:grid;gap:.45rem;margin-top:1rem}.select-preference>label{color:var(--muted);font-size:.65rem;font-weight:750}
     .preference-row{display:grid;grid-template-columns:1fr auto;align-items:center;gap:1rem;padding:.9rem 0;border-bottom:1px solid var(--line)}.preference-row div{display:grid;gap:.25rem}.preference-row strong{font-size:.74rem}.preference-row small{color:var(--muted);font-size:.62rem}.preference-row select{min-width:220px;padding:.65rem .75rem;color:var(--text);background:var(--surface-2);border:1px solid var(--line);border-radius:9px}
     .regional-actions{display:flex;align-items:center;justify-content:flex-end;gap:.75rem;padding-top:1rem}.save-regional{min-height:44px;padding:.7rem 1rem;border:0;border-radius:10px;background:var(--primary);color:#04130f;font-weight:900;cursor:pointer}.save-regional:disabled{opacity:.55;cursor:wait}.save-message{margin-right:auto;font-size:.7rem;font-weight:750}.save-message.success{color:var(--success)}.save-message.error{color:#ff8290}
     @media(max-width:950px){.profile-layout{grid-template-columns:1fr}.identity-card{position:static}.theme-grid{grid-template-columns:1fr}}
-    @media(max-width:700px){.select-control{grid-template-columns:30px 1fr}}
     @media(max-width:600px){.theme-option{grid-template-columns:54px 1fr 18px}.section-heading,.preference-row{grid-template-columns:1fr;display:grid}.preference-row select{width:100%}}
   `],
 })
