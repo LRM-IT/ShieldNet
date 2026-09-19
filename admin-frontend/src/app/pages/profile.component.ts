@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, effect, signal } from '@angular/core';
+import { Component, OnInit, computed, effect, signal, untracked } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { TranslatePipe } from '../core/translate.pipe';
@@ -170,7 +170,7 @@ export class ProfileComponent implements OnInit {
   ) {
     effect(() => {
       const savedZone = this.auth.profile()?.preferred_timezone;
-      if (!savedZone || !this.timezones.includes(savedZone) || this.timezone() === savedZone) return;
+      if (!savedZone || !this.timezones.includes(savedZone) || untracked(() => this.timezone()) === savedZone) return;
       this.timezone.set(savedZone);
       localStorage.setItem(this.timezoneStorageKey, savedZone);
       document.documentElement.dataset['timezone'] = savedZone;
