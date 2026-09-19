@@ -1,7 +1,7 @@
 import {Component,OnInit,signal} from '@angular/core';
 import {FormsModule} from '@angular/forms';
 import {DatePipe,DecimalPipe} from '@angular/common';
-import {BillingEmailSettings,BillingPayment,BillingPlan,BillingProviders,BillingService,BillingSubscription,BillingWallet} from '../core/billing.service';
+import {BillingPayment,BillingPlan,BillingProviders,BillingService,BillingSubscription,BillingWallet} from '../core/billing.service';
 import {ShellComponent} from '../shared/shell.component';
 import {TranslationService} from '../core/translation.service';
 
@@ -24,7 +24,7 @@ type BillingTab='merchant'|'modules'|'pricing'|'discounts'|'balances'|'payments'
 <div class="grid"><article class="card"><div class="gateway-head"><h3>WayForPay</h3><button type="button" class="gateway-toggle" [class.on]="providerForm.wayforpay_enabled" (click)="providerForm.wayforpay_enabled=!providerForm.wayforpay_enabled">{{providerForm.wayforpay_enabled?'Enabled':'Disabled'}}</button></div><label>Merchant account<input [(ngModel)]="providerForm.wayforpay_merchant_account"></label><label>Merchant domain<input [(ngModel)]="providerForm.wayforpay_merchant_domain"></label><label>Secret key<input type="password" [(ngModel)]="providerForm.wayforpay_secret_key" [placeholder]="providers()?.wayforpay?.secret_saved?'Saved · enter only to replace':''"></label><span class="status" [class.ready]="providers()?.wayforpay?.active">{{providers()?.wayforpay?.active?'Ready':providers()?.wayforpay?.configured?'Disabled':'Configuration required'}}</span></article>
 <article class="card"><div class="gateway-head"><h3>LiqPay</h3><button type="button" class="gateway-toggle" [class.on]="providerForm.liqpay_enabled" (click)="providerForm.liqpay_enabled=!providerForm.liqpay_enabled">{{providerForm.liqpay_enabled?'Enabled':'Disabled'}}</button></div><label>Public key<input [(ngModel)]="providerForm.liqpay_public_key"></label><label>Private key<input type="password" [(ngModel)]="providerForm.liqpay_private_key" [placeholder]="providers()?.liqpay?.secret_saved?'Saved · enter only to replace':''"></label><span class="status" [class.ready]="providers()?.liqpay?.active">{{providers()?.liqpay?.active?'Ready':providers()?.liqpay?.configured?'Disabled':'Configuration required'}}</span></article></div>
 <button class="primary save-wide" (click)="saveProviderSettings()">Save merchant settings</button>
-<article class="card smtp"><div class="gateway-head"><div><h3>SMTP email</h3><p>Email delivery for balance and server subscription reminders.</p></div><button type="button" class="gateway-toggle" [class.on]="emailForm.enabled" (click)="emailForm.enabled=!emailForm.enabled">{{emailForm.enabled?'Enabled':'Disabled'}}</button></div><div class="smtp-grid"><label>SMTP host<input [(ngModel)]="emailForm.host" placeholder="smtp.example.com"></label><label>Port<input type="number" min="1" max="65535" [(ngModel)]="emailForm.port"></label><label>Username<input [(ngModel)]="emailForm.username"></label><label>Password<input type="password" [(ngModel)]="emailForm.password" [placeholder]="emailSettings()?.password_saved?'Saved · enter only to replace':''"></label><label>Sender email<input type="email" [(ngModel)]="emailForm.from_email"></label><label>Sender name<input [(ngModel)]="emailForm.from_name"></label></div><div class="form-actions"><label class="check"><input type="checkbox" [(ngModel)]="emailForm.use_tls"> STARTTLS</label><label class="check"><input type="checkbox" [(ngModel)]="emailForm.use_ssl"> SSL/TLS</label></div><div class="smtp-test"><input type="email" [(ngModel)]="testEmailAddress" placeholder="Test recipient email"><button class="secondary" (click)="sendTestEmail()" [disabled]="!testEmailAddress">Send test</button><button class="primary" (click)="saveEmailSettings()">Save SMTP</button></div><span class="status" [class.ready]="emailSettings()?.enabled&&emailSettings()?.configured">{{emailSettings()?.enabled&&emailSettings()?.configured?'Ready':emailSettings()?.configured?'Disabled':'Configuration required'}}</span></article></section>}
+</section>}
 
 @if(tab()==='modules'){<section class="tab-page"><div class="section-head"><div><h3>Free and Paid modules</h3><p>One Paid Modules subscription unlocks every module assigned to the Paid group.</p></div></div>
 <article class="card plans"><div class="plan heading"><span>Module</span><span>Group</span><span></span></div>@for(plan of plans();track plan.plugin_key){<div class="plan"><div><b>{{plan.name||plan.plugin_key}}</b><small>{{plan.plugin_key}}</small></div><select [(ngModel)]="plan.is_free"><option [ngValue]="true">Free</option><option [ngValue]="false">Paid</option></select><button class="primary" (click)="save(plan)">Save</button></div>}</article></section>}
@@ -53,29 +53,27 @@ label{display:grid;gap:.35rem;color:var(--muted);font-size:.75rem}input,select{p
 @media(max-width:600px){.plan{min-width:0;grid-template-columns:1fr}.plan.heading{display:none}}
 `]})
 export class BillingComponent implements OnInit{
- tab=signal<BillingTab>('merchant');plans=signal<BillingPlan[]>([]);subscriptions=signal<BillingSubscription[]>([]);providers=signal<BillingProviders|null>(null);emailSettings=signal<BillingEmailSettings|null>(null);payments=signal<BillingPayment[]>([]);wallets=signal<BillingWallet[]>([]);discounts=signal<any>({cards:[],tenure:[],maximum_combined_percent:50});
+ tab=signal<BillingTab>('merchant');plans=signal<BillingPlan[]>([]);subscriptions=signal<BillingSubscription[]>([]);providers=signal<BillingProviders|null>(null);payments=signal<BillingPayment[]>([]);wallets=signal<BillingWallet[]>([]);discounts=signal<any>({cards:[],tenure:[],maximum_combined_percent:50});
  package:BillingPlan={plugin_key:'__paid_modules__',is_free:false,enabled:true,currency:'USD',monthly_price:1.10,quarterly_price:2.89,yearly_price:10.07,quarterly_discount_percent:10,yearly_discount_percent:23.5};error=signal('');success=signal('');
  grant={guild_id:'',plugin_key:'__paid_modules__',billing_period:'monthly',days:30};credit={discord_user_id:'',amount:0,comment:''};
  cardForm:any={code:'',amount_usd:null,active:true,valid_from:null,valid_until:null,max_redemptions:null};tenureForm:any={minimum_months:6,percent:5,active:true};
  providerForm={wayforpay_enabled:true,wayforpay_merchant_account:'',wayforpay_merchant_domain:'',wayforpay_secret_key:'',liqpay_enabled:true,liqpay_public_key:'',liqpay_private_key:''};
- emailForm={enabled:false,host:'',port:587,username:'',password:'',from_email:'',from_name:'GuildConsole',use_tls:true,use_ssl:false};testEmailAddress='';
  constructor(private api:BillingService,private i18n:TranslationService){}ngOnInit(){this.load()}
  async load(){
   this.error.set('');
-  const requests=[this.api.plans(),this.api.subscriptions(),this.api.providers(),this.api.payments(),this.api.wallets(),this.api.paidPackage(),this.api.discounts(),this.api.emailSettings()];
-  const [p,s,c,j,w,pkg,d,email]=await Promise.allSettled(requests);
+  const requests=[this.api.plans(),this.api.subscriptions(),this.api.providers(),this.api.payments(),this.api.wallets(),this.api.paidPackage(),this.api.discounts()];
+  const [p,s,c,j,w,pkg,d]=await Promise.allSettled(requests);
   if(p.status==='fulfilled')this.plans.set(p.value as BillingPlan[]);
   if(s.status==='fulfilled')this.subscriptions.set(s.value as BillingSubscription[]);
   if(j.status==='fulfilled')this.payments.set(j.value as BillingPayment[]);
   if(w.status==='fulfilled')this.wallets.set(w.value as BillingWallet[]);
   if(pkg.status==='fulfilled')this.package=pkg.value as BillingPlan;
   if(d.status==='fulfilled')this.discounts.set(d.value);
-  if(email.status==='fulfilled'){this.emailSettings.set(email.value);this.emailForm={...this.emailForm,...email.value,password:''}}
   if(c.status==='fulfilled'){
    const providers=c.value as BillingProviders;this.providers.set(providers);
    this.providerForm.wayforpay_enabled=providers.wayforpay.enabled;this.providerForm.wayforpay_merchant_account=providers.wayforpay.merchant_account;this.providerForm.wayforpay_merchant_domain=providers.wayforpay.merchant_domain;this.providerForm.liqpay_enabled=providers.liqpay.enabled;this.providerForm.liqpay_public_key=providers.liqpay.public_key;
   }
-  const failed=[p,s,c,j,w,pkg,d,email].find(x=>x.status==='rejected') as PromiseRejectedResult|undefined;
+  const failed=[p,s,c,j,w,pkg,d].find(x=>x.status==='rejected') as PromiseRejectedResult|undefined;
   if(failed){const e:any=failed.reason;this.error.set(e?.error?.detail||this.t('load_error','Some billing data could not be loaded.'))}
  }
  async saveCard(){try{const{id,...values}=this.cardForm;const payload={...values,valid_until:values.valid_until?new Date(values.valid_until).toISOString():null};if(id)await this.api.updateDiscountCard(id,payload);else await this.api.saveDiscountCard(payload);this.resetCard();this.done(this.t('card_saved','Discount card saved.'));await this.load()}catch(e:any){this.fail(e,this.t('card_save_error','Unable to save discount card.'))}}
@@ -90,8 +88,6 @@ export class BillingComponent implements OnInit{
  async savePackage(){try{this.package=await this.api.savePackage(this.package);this.done(this.t('pricing_saved','Server activation pricing saved.'))}catch(e:any){this.fail(e,this.t('pricing_save_error','Unable to save pricing.'))}}
  async topUp(){try{await this.api.creditWallet(this.credit);this.credit.amount=0;this.credit.comment='';this.done(this.t('balance_updated','Owner balance updated.'));await this.load()}catch(e:any){this.fail(e,this.t('funds_error','Unable to add funds.'))}}
  async saveProviderSettings(){try{await this.api.saveProviders(this.providerForm);this.providerForm.wayforpay_secret_key='';this.providerForm.liqpay_private_key='';this.done(this.t('merchant_saved','Merchant settings saved.'));await this.load()}catch(e:any){this.fail(e,this.t('merchant_save_error','Unable to save merchant settings.'))}}
- async saveEmailSettings(){try{const saved=await this.api.saveEmailSettings(this.emailForm);this.emailSettings.set(saved);this.emailForm.password='';this.done('SMTP settings saved.')}catch(e:any){this.fail(e,'Unable to save SMTP settings.')}}
- async sendTestEmail(){try{await this.api.testEmail(this.testEmailAddress);this.done('Test email delivered.')}catch(e:any){this.fail(e,'Unable to deliver test email.')}}
  async save(x:BillingPlan){try{await this.api.savePlan(x);this.done(this.t('group_saved','Module group saved.'))}catch(e:any){this.fail(e,this.t('group_save_error','Unable to save module group.'))}}
  async grantAccess(){try{await this.api.grant(this.grant);this.done(this.t('subscription_granted','Paid Modules subscription granted.'));await this.load()}catch(e:any){this.fail(e,this.t('subscription_grant_error','Unable to grant subscription.'))}}
  async revoke(x:BillingSubscription){try{await this.api.revoke(x.id);this.done(this.t('subscription_revoked','Subscription revoked.'));await this.load()}catch(e:any){this.fail(e,this.t('subscription_revoke_error','Unable to revoke subscription.'))}}

@@ -67,6 +67,7 @@ import { DocumentationComponent } from './pages/documentation.component';
 import { SupportComponent } from './pages/support.component';
 import { MerchantInformationComponent } from './pages/merchant-information.component';
 import { SeoComponent } from './pages/seo.component';
+import { SystemSettingsComponent } from './pages/system-settings.component';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -89,6 +90,7 @@ export const routes: Routes = [
   { path: 'platform/users/:userId', component: PlatformUserProfileComponent, canActivate: [superadminGuard] },
   { path: 'platform/plugins', component: PluginsComponent, canActivate: [platformGuard] },
   { path: 'platform/billing', component: BillingComponent, canActivate: [superadminGuard] },
+  { path: 'platform/system-settings', component: SystemSettingsComponent, canActivate: [superadminGuard] },
   { path: 'platform/seo', component: SeoComponent, canActivate: [superadminGuard] },
   { path: 'platform/privacy-policy', component: MerchantInformationComponent, canActivate: [superadminGuard] },
   { path: 'platform/jobs', component: JobsCenterComponent, canActivate: [platformGuard] },
