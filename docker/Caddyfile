@@ -3,6 +3,12 @@
     handle /api/* {
         reverse_proxy backend:8000
     }
+    @publicDocs path /docs /docs/
+    handle @publicDocs {
+        root * /srv
+        rewrite * /index.html
+        file_server
+    }
     handle /docs* {
         reverse_proxy backend:8000
     }
