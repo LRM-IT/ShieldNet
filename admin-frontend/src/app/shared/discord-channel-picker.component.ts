@@ -90,7 +90,7 @@ interface ChannelOption {
     :host{display:block;position:relative;isolation:isolate}
     :host:has(.menu){z-index:1000}
     .picker{position:relative;z-index:1}
-    .trigger{width:100%;min-height:42px;display:flex;align-items:center;justify-content:space-between;gap:.8rem;text-align:left}
+    .trigger{box-sizing:border-box;width:100%;min-height:48px;display:flex;align-items:center;justify-content:space-between;gap:.8rem;text-align:left}
     .trigger-main,.clear{display:flex;align-items:center;gap:.6rem}
     .copy{display:grid;min-width:0}
     .copy strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
