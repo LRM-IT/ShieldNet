@@ -13,7 +13,7 @@
     "rtl": false,
     "version": 3
   },
-  "support": { "nav": "Vorschläge und Fehler" },
+  "support": {"nav":"Vorschläge und Fehler","title":"Vorschläge und Fehler","eyebrow":"FEEDBACK","subtitle":"Kontakt zum GuildConsole-Support.","submit_tab":"Anfrage senden","all_tickets":"Alle Tickets","my_tickets":"Meine Tickets","new_ticket":"Neues Ticket","bug":"Fehler","bug_help":"Wählen Sie dieses Thema, wenn etwas nicht funktioniert. Beschreiben Sie Problem, Schritte und Ergebnis.","suggestion":"Vorschlag","suggestion_help":"Wählen Sie dieses Thema für fehlende Funktionen, Verbesserungsideen oder ein persönliches Plugin.","topic":"Thema","subject":"Betreff","subject_placeholder":"Beschreiben Sie Ihr Anliegen kurz","description":"Ausführliche Beschreibung","description_placeholder":"Fügen Sie alle nötigen Details hinzu","send_ticket":"Anfrage senden","all_statuses":"Alle Status","status_open":"Offen","status_progress":"In Bearbeitung","status_resolved":"Gelöst","status_closed":"Geschlossen","no_tickets":"Noch keine Tickets.","select_ticket":"Wählen Sie ein Ticket aus.","priority_low":"Niedrig","priority_normal":"Normal","priority_high":"Hoch","priority_urgent":"Dringend","staff":"Support-Team","user":"Benutzer","reply_placeholder":"Antwort eingeben...","send_reply":"Antwort senden","load_error":"Unable to load tickets.","open_error":"Unable to open ticket.","created":"Ticket created.","create_error":"Unable to create ticket.","reply_error":"Unable to send reply.","update_error":"Unable to update ticket."},
   "shell": {
     "control_fabric": "STEUERZENTRALE",
     "control_plane": "STEUERUNGSEBENE",
