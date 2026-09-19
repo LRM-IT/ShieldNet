@@ -64,7 +64,7 @@ interface PluginDocumentation {
           <article class="store-card" [class.installed]="isInstalled(plugin)" [class.enabled]="isEnabled(plugin)">
             <div class="store-top">
               <div class="plugin-icon">{{ plugin.plugin_key.slice(0, 1).toUpperCase() }}</div>
-              <div class="plugin-title"><h3>{{ localizedName(plugin) }}</h3><small>{{ plugin.plugin_key }}</small></div>
+              <div class="plugin-title"><h3>{{ localizedName(plugin) }}</h3></div>
               <span class="state" [class.good]="isEnabled(plugin)">{{ isEnabled(plugin) ? ('plugins.enabled' | snT:'Enabled') : isInstalled(plugin) ? ('plugins.disabled' | snT:'Disabled') : ('runtime_usage.not_installed' | snT:'Not installed') }}</span>
             </div>
             <p class="summary">{{ localizedSummary(plugin) }}</p>
@@ -168,7 +168,8 @@ export class PluginRuntimeUsageComponent implements OnInit {
   runtime(pluginKey: string): PluginRuntimeInstance | null { return this.runtimes().find(item => item.plugin_key === pluginKey) || null; }
   busy(pluginKey: string): boolean { return this.busyKey() === pluginKey; }
   localizedName(plugin: GuildPluginMarketplaceItem): string {
-    return this.i18n.t(`plugin_names.${plugin.plugin_key}`, plugin.name);
+    const translationKey = plugin.plugin_key === 'verification_level1' ? 'verification' : plugin.plugin_key;
+    return this.i18n.t(`plugin_names.${translationKey}`, plugin.name);
   }
   localizedSummary(plugin: GuildPluginMarketplaceItem): string {
     return this.documentation().plugins?.[plugin.plugin_key]?.purpose
