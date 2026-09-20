@@ -95,14 +95,14 @@ interface ChannelOption {
     .copy{display:grid;min-width:0}
     .copy strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     small{color:var(--muted);font-size:.72rem}
-    .menu{position:fixed;z-index:10000;min-width:300px;max-height:430px;display:flex;flex-direction:column;overflow:hidden;padding:.6rem;border:1px solid var(--line);border-radius:12px;background:#071019;box-shadow:0 18px 50px rgba(0,0,0,.45)}
+    .menu{position:fixed;z-index:10000;min-width:300px;max-height:430px;display:flex;flex-direction:column;overflow:hidden;padding:.6rem;border:1px solid var(--line);border-radius:12px;background:var(--panel);box-shadow:var(--shadow)}
     .search{display:grid;grid-template-columns:1fr 42px;gap:.4rem;margin-bottom:.45rem}
-    input,button{font:inherit;border:1px solid var(--line);border-radius:8px;background:#08131d;color:var(--text);padding:.65rem}
+    input,button{font:inherit;border:1px solid var(--line);border-radius:8px;background:var(--panel-2);color:var(--text);padding:.65rem}
     button{cursor:pointer}
     .clear{width:100%;color:var(--muted);text-align:left}
     .options{flex:1;min-height:0;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable;padding-right:.2rem;touch-action:pan-y}
-    .options::-webkit-scrollbar{width:9px}.options::-webkit-scrollbar-track{background:#08131d;border-radius:9px}.options::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:9px}.options::-webkit-scrollbar-thumb:hover{background:var(--primary)}
-    section header{position:sticky;top:0;padding:.55rem .45rem;background:#071019;color:var(--muted);font-size:.69rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+    .options::-webkit-scrollbar{width:9px}.options::-webkit-scrollbar-track{background:var(--panel-2);border-radius:9px}.options::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:9px}.options::-webkit-scrollbar-thumb:hover{background:var(--primary)}
+    section header{position:sticky;top:0;padding:.55rem .45rem;background:var(--panel);color:var(--muted);font-size:.69rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
     .option{width:100%;display:grid;grid-template-columns:28px minmax(0,1fr) 22px;align-items:center;gap:.6rem;text-align:left;border-color:transparent;background:transparent}
     .option:hover,.option.selected{border-color:var(--primary);background:rgba(52,215,174,.08)}
     .empty,.error{padding:.8rem;color:var(--muted)}

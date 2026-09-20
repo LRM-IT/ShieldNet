@@ -244,6 +244,8 @@
     }
   },
   "themes": {
+    "dark": { "name": "Scuro", "description": "Un tema scuro equilibrato per lavorare comodamente." },
+    "light": { "name": "Chiaro", "description": "Un tema chiaro e pulito con ottima leggibilità." },
     "shieldnet": {
       "name": "GuildConsole",
       "description": "Signature teal theme with a technological grid."

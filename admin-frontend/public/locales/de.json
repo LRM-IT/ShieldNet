@@ -246,6 +246,8 @@
     }
   },
   "themes": {
+    "dark": { "name": "Dunkel", "description": "Ein ausgewogenes dunkles Design für komfortables Arbeiten." },
+    "light": { "name": "Hell", "description": "Ein klares helles Design mit hoher Lesbarkeit." },
     "shieldnet": {
       "name": "GuildConsole",
       "description": "Signature teal theme with a technological grid."

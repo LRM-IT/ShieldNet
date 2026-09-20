@@ -243,6 +243,8 @@
     }
   },
   "themes": {
+    "dark": { "name": "Темна", "description": "Збалансована темна тема для комфортної роботи." },
+    "light": { "name": "Світла", "description": "Чиста світла тема з високою читабельністю." },
     "shieldnet": {
       "name": "GuildConsole",
       "description": "Signature teal theme with a technological grid."

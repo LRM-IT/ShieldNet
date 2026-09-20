@@ -451,3 +451,102 @@ tbody tr:last-child td{border-bottom:0}tbody tr:hover td{background:rgba(45,212,
 .empty,.empty-state{padding:2.5rem!important;text-align:center;color:var(--muted);border:1px dashed rgba(148,163,184,.2)!important;background:rgba(255,255,255,.012)!important}
 
 @media(max-width:700px){body{font-size:13px}h2{font-size:1.45rem}.card,.panel{border-radius:14px!important}table{display:block;overflow-x:auto}}
+
+/* Canonical application themes. Keep these last so every page uses one palette. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg:#071018;
+  --bg-elevated:#0a141e;
+  --panel:#0d1823;
+  --panel-2:#111e2b;
+  --panel-3:#172635;
+  --surface-1:#0d1823;
+  --surface-2:#111e2b;
+  --panel-glow:rgba(45,212,191,.055);
+  --line:rgba(148,163,184,.14);
+  --line-strong:rgba(45,212,191,.34);
+  --text:#f1f5f9;
+  --muted:#8fa2b3;
+  --primary:#2dd4bf;
+  --primary-strong:#14b8a6;
+  --primary-soft:rgba(45,212,191,.11);
+  --accent:#60a5fa;
+  --success:#34d399;
+  --warning:#fbbf24;
+  --danger:#fb7185;
+  --shadow-sm:0 1px 2px rgba(0,0,0,.22),0 8px 22px rgba(0,0,0,.12);
+  --shadow:0 20px 55px rgba(0,0,0,.28);
+  --control-bg:#09141e;
+  --control-focus:#0b1722;
+  --hover-bg:rgba(255,255,255,.035);
+  --row-hover:rgba(45,212,191,.025);
+  --overlay:rgba(0,0,0,.62);
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg:#f3f7fa;
+  --bg-elevated:#eaf1f5;
+  --panel:#ffffff;
+  --panel-2:#f4f8fa;
+  --panel-3:#e8f0f4;
+  --surface-1:#ffffff;
+  --surface-2:#f4f8fa;
+  --panel-glow:rgba(15,143,131,.035);
+  --line:rgba(36,65,78,.14);
+  --line-strong:rgba(15,143,131,.34);
+  --text:#17262f;
+  --muted:#617783;
+  --primary:#0f8f83;
+  --primary-strong:#08766d;
+  --primary-soft:rgba(15,143,131,.1);
+  --accent:#2563a9;
+  --success:#17805c;
+  --warning:#a86408;
+  --danger:#c33d55;
+  --shadow-sm:0 1px 2px rgba(32,53,63,.08),0 8px 22px rgba(32,53,63,.07);
+  --shadow:0 20px 55px rgba(32,53,63,.12);
+  --control-bg:#ffffff;
+  --control-focus:#ffffff;
+  --hover-bg:rgba(15,143,131,.065);
+  --row-hover:rgba(15,143,131,.045);
+  --overlay:rgba(20,35,43,.42);
+}
+
+:root[data-theme="dark"] body {
+  background:radial-gradient(circle at 78% -12%,rgba(45,212,191,.09),transparent 30rem),linear-gradient(180deg,#071018 0%,#08111a 100%);
+}
+
+:root[data-theme="light"] body {
+  background:radial-gradient(circle at 78% -12%,rgba(15,143,131,.08),transparent 30rem),linear-gradient(180deg,#f7fafc 0%,#edf3f6 100%);
+}
+
+:root[data-theme] input,
+:root[data-theme] select,
+:root[data-theme] textarea {
+  color:var(--text);
+  background:var(--control-bg);
+  border-color:var(--line);
+}
+:root[data-theme] input:focus,
+:root[data-theme] select:focus,
+:root[data-theme] textarea:focus { background:var(--control-focus); }
+:root[data-theme] input::placeholder,
+:root[data-theme] textarea::placeholder { color:var(--muted);opacity:.78; }
+:root[data-theme] label { color:var(--text); }
+:root[data-theme] thead th { background:var(--panel-2); }
+:root[data-theme] tbody tr:hover td { background:var(--row-hover); }
+:root[data-theme] .badge,
+:root[data-theme] .chip,
+:root[data-theme] .status-pill { background:var(--panel-2); }
+:root[data-theme] .empty,
+:root[data-theme] .empty-state { background:var(--panel-2)!important; }
+
+:root[data-theme="light"] ::-webkit-scrollbar-track { background:#e6edf1; }
+:root[data-theme="light"] ::-webkit-scrollbar-thumb { background:#b7c7cf;border-color:#e6edf1; }
+
+@media(max-width:700px){
+  body{min-width:320px;overflow-x:hidden}
+  input,select,textarea,button{max-width:100%}
+  .page{min-width:0}
+}

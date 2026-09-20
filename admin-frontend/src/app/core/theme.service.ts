@@ -1,7 +1,7 @@
 import { Injectable, signal } from '@angular/core';
 
 export interface ThemeDefinition {
-  id: string;
+  id: 'dark' | 'light';
   name: string;
   description: string;
   icon: string;
@@ -12,117 +12,61 @@ export interface ThemeDefinition {
 @Injectable({ providedIn: 'root' })
 export class ThemeService {
   private readonly storageKey = 'shieldnet_theme';
-  private readonly appearanceKey = 'shieldnet_appearance';
-  private mediaQuery: MediaQueryList | null = null;
 
   readonly themes: ThemeDefinition[] = [
     {
-      id: 'shieldnet',
-      name: 'GuildConsole',
-      description: 'Фірмова бірюзова тема з технологічною сіткою.',
-      icon: '⬡',
-      preview: ['#05080d', '#0d141d', '#35e2b2'],
-      dark: true,
-    },
-    {
-      id: 'midnight',
-      name: 'Midnight',
-      description: 'Темно-синя тема для тривалої роботи ввечері.',
-      icon: '◐',
-      preview: ['#060914', '#10172a', '#6c8cff'],
-      dark: true,
-    },
-    {
-      id: 'carbon',
-      name: 'Carbon',
-      description: 'Стримана графітова тема без яскравих акцентів.',
-      icon: '◆',
-      preview: ['#090909', '#171717', '#c7c7c7'],
-      dark: true,
-    },
-    {
-      id: 'oled',
-      name: 'OLED',
-      description: 'Максимально чорний фон для OLED-дисплеїв.',
+      id: 'dark',
+      name: 'Dark',
+      description: 'Темна корпоративна тема для комфортної роботи.',
       icon: '●',
-      preview: ['#000000', '#090909', '#2df0ae'],
+      preview: ['#071018', '#0d1823', '#2dd4bf'],
       dark: true,
     },
     {
-      id: 'aurora',
-      name: 'Aurora',
-      description: 'Фіолетово-блакитний градієнтний стиль.',
-      icon: '✦',
-      preview: ['#090714', '#171126', '#aa78ff'],
-      dark: true,
-    },
-    {
-      id: 'arctic',
-      name: 'Arctic',
-      description: 'Світла корпоративна тема з холодними акцентами.',
-      icon: '❄',
-      preview: ['#eef4f8', '#ffffff', '#1976d2'],
+      id: 'light',
+      name: 'Light',
+      description: 'Світла корпоративна тема з високою читабельністю.',
+      icon: '○',
+      preview: ['#f3f7fa', '#ffffff', '#0f8f83'],
       dark: false,
     },
   ];
 
-  readonly activeTheme = signal(this.readStoredTheme());
+  readonly activeTheme = signal<'dark' | 'light'>(this.readStoredTheme());
   readonly theme = this.activeTheme;
-  readonly appearanceMode = signal<'auto' | 'dark' | 'light'>(this.readAppearanceMode());
+  readonly appearanceMode = signal<'dark' | 'light'>(this.activeTheme());
 
   constructor() {
-    this.mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    this.mediaQuery.addEventListener('change', () => {
-      if (this.appearanceMode() === 'auto') this.applyAppearance();
-    });
-    this.applyAppearance();
+    this.apply(this.activeTheme());
   }
 
   setTheme(themeId: string): void {
-    const valid = this.themes.some((item) => item.id === themeId)
-      ? themeId
-      : 'shieldnet';
-    this.activeTheme.set(valid);
-    localStorage.setItem(this.storageKey, valid);
-    this.applyAppearance();
+    const theme: 'dark' | 'light' = themeId === 'light' ? 'light' : 'dark';
+    this.activeTheme.set(theme);
+    this.appearanceMode.set(theme);
+    localStorage.setItem(this.storageKey, theme);
+    localStorage.removeItem('shieldnet_appearance');
+    this.apply(theme);
   }
 
   setAppearanceMode(mode: 'auto' | 'dark' | 'light'): void {
-    this.appearanceMode.set(mode);
-    localStorage.setItem(this.appearanceKey, mode);
-    this.applyAppearance();
+    this.setTheme(mode === 'light' ? 'light' : 'dark');
   }
 
   cycleAppearanceMode(): void {
-    const order: Array<'auto' | 'dark' | 'light'> = ['auto', 'dark', 'light'];
-    const index = order.indexOf(this.appearanceMode());
-    this.setAppearanceMode(order[(index + 1) % order.length]);
+    this.setTheme(this.activeTheme() === 'dark' ? 'light' : 'dark');
   }
 
-  private readAppearanceMode(): 'auto' | 'dark' | 'light' {
-    const stored = localStorage.getItem(this.appearanceKey);
-    return stored === 'dark' || stored === 'light' || stored === 'auto' ? stored : 'auto';
-  }
-
-  private applyAppearance(): void {
-    const mode = this.appearanceMode();
-    const wantsDark = mode === 'dark' || (mode === 'auto' && (this.mediaQuery?.matches ?? true));
-    const selected = this.themes.find((item) => item.id === this.activeTheme());
-    const themeId = wantsDark
-      ? (selected?.dark === false ? 'shieldnet' : this.activeTheme())
-      : 'arctic';
-    document.documentElement.dataset['appearance'] = mode;
-    this.apply(themeId);
-  }
-
-  private readStoredTheme(): string {
+  private readStoredTheme(): 'dark' | 'light' {
     const stored = localStorage.getItem(this.storageKey);
-    return this.themes.some((item) => item.id === stored) ? stored! : 'shieldnet';
+    if (stored === 'light' || stored === 'arctic') return 'light';
+    return 'dark';
   }
 
   apply(themeId: string): void {
-    document.documentElement.dataset['theme'] = themeId;
-    const definition = this.themes.find((item) => item.id === themeId);
-    document.documentElement.style.colorScheme = definition?.dark === false ? 'light' : 'dark';
+    const theme: 'dark' | 'light' = themeId === 'light' ? 'light' : 'dark';
+    document.documentElement.dataset['theme'] = theme;
+    document.documentElement.dataset['appearance'] = theme;
+    document.documentElement.style.colorScheme = theme;
   }
 }
