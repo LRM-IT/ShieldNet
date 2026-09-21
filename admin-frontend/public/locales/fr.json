@@ -2320,6 +2320,12 @@
     "refund_title": "Conditions et remboursements",
     "refund_text": "Les règles de paiement, d’annulation et de remboursement figurent dans les informations légales.",
     "read_terms": "Lire les conditions",
-    "unavailable": "Les tarifs publics sont temporairement indisponibles."
+    "unavailable": "Les tarifs publics sont temporairement indisponibles.",
+    "documentation": "Documentation",
+    "privacy": "Politique de confidentialité",
+    "home_label": "Accueil GuildConsole",
+    "language_label": "Choisir la langue",
+    "payment_provider_label": "Ouvrir le site du service de paiement LiqPay",
+    "copyright": "GuildConsole · LRM-IT"
   }
 }

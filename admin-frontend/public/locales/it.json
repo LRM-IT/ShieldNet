@@ -2319,6 +2319,12 @@
     "refund_title": "Condizioni e rimborsi",
     "refund_text": "Le regole di pagamento, cancellazione e rimborso sono nelle informazioni legali.",
     "read_terms": "Leggi le condizioni",
-    "unavailable": "I prezzi pubblici non sono temporaneamente disponibili."
+    "unavailable": "I prezzi pubblici non sono temporaneamente disponibili.",
+    "documentation": "Documentazione",
+    "privacy": "Informativa sulla privacy",
+    "home_label": "Pagina iniziale di GuildConsole",
+    "language_label": "Seleziona la lingua",
+    "payment_provider_label": "Apri il sito del servizio di pagamento LiqPay",
+    "copyright": "GuildConsole · LRM-IT"
   }
 }

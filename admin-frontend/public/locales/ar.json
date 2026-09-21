@@ -2321,6 +2321,12 @@
     "refund_title": "الشروط والاسترداد",
     "refund_text": "قواعد الدفع والإلغاء والاسترداد منشورة في القسم القانوني.",
     "read_terms": "قراءة الشروط",
-    "unavailable": "الأسعار العامة غير متاحة مؤقتًا."
+    "unavailable": "الأسعار العامة غير متاحة مؤقتًا.",
+    "documentation": "الوثائق",
+    "privacy": "سياسة الخصوصية",
+    "home_label": "الصفحة الرئيسية لـ GuildConsole",
+    "language_label": "اختيار اللغة",
+    "payment_provider_label": "فتح موقع خدمة الدفع LiqPay",
+    "copyright": "GuildConsole · LRM-IT"
   }
 }

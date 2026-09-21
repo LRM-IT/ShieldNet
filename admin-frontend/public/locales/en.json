@@ -2279,6 +2279,12 @@
     "refund_title": "Terms and refunds",
     "refund_text": "Payment, cancellation and refund rules are published in the legal information section.",
     "read_terms": "Read terms",
-    "unavailable": "Public pricing is temporarily unavailable."
+    "unavailable": "Public pricing is temporarily unavailable.",
+    "documentation": "Documentation",
+    "privacy": "Privacy policy",
+    "home_label": "GuildConsole home",
+    "language_label": "Select language",
+    "payment_provider_label": "Open the LiqPay payment service website",
+    "copyright": "GuildConsole · LRM-IT"
   }
 }

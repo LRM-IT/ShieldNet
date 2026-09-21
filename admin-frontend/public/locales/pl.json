@@ -2319,6 +2319,12 @@
     "refund_title": "Warunki i zwroty",
     "refund_text": "Zasady płatności, anulowania i zwrotów znajdują się w sekcji prawnej.",
     "read_terms": "Przeczytaj warunki",
-    "unavailable": "Publiczny cennik jest chwilowo niedostępny."
+    "unavailable": "Publiczny cennik jest chwilowo niedostępny.",
+    "documentation": "Dokumentacja",
+    "privacy": "Polityka prywatności",
+    "home_label": "Strona główna GuildConsole",
+    "language_label": "Wybierz język",
+    "payment_provider_label": "Otwórz stronę operatora płatności LiqPay",
+    "copyright": "GuildConsole · LRM-IT"
   }
 }

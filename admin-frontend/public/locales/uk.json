@@ -2212,6 +2212,12 @@
     "refund_title": "Умови та повернення",
     "refund_text": "Правила оплати, скасування й повернення опубліковані в розділі правової інформації.",
     "read_terms": "Прочитати умови",
-    "unavailable": "Публічні тарифи тимчасово недоступні."
+    "unavailable": "Публічні тарифи тимчасово недоступні.",
+    "documentation": "Документація",
+    "privacy": "Політика конфіденційності",
+    "home_label": "Головна сторінка GuildConsole",
+    "language_label": "Обрати мову",
+    "payment_provider_label": "Відкрити сайт платіжного сервісу LiqPay",
+    "copyright": "GuildConsole · LRM-IT"
   }
 }

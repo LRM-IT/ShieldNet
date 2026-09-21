@@ -2321,6 +2321,12 @@
     "refund_title": "Bedingungen und Erstattungen",
     "refund_text": "Zahlungs-, Stornierungs- und Erstattungsregeln stehen im Rechtsbereich.",
     "read_terms": "Bedingungen lesen",
-    "unavailable": "Öffentliche Preise sind vorübergehend nicht verfügbar."
+    "unavailable": "Öffentliche Preise sind vorübergehend nicht verfügbar.",
+    "documentation": "Dokumentation",
+    "privacy": "Datenschutzerklärung",
+    "home_label": "GuildConsole-Startseite",
+    "language_label": "Sprache auswählen",
+    "payment_provider_label": "Website des Zahlungsdienstes LiqPay öffnen",
+    "copyright": "GuildConsole · LRM-IT"
   }
 }
