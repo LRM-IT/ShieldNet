@@ -1,10 +1,10 @@
 from __future__ import annotations
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
-from sqlalchemy import delete, select
+from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.dependencies.internal import verify_internal_service_token
@@ -35,6 +35,17 @@ class FailIn(BaseModel):
 @router.get("/jobs")
 async def jobs(session: AsyncSession = Depends(get_db_session)):
     now = datetime.now(UTC)
+    # Jobs claimed by a worker that restarted or lost its backend connection
+    # must become available again instead of remaining in "processing" forever.
+    await session.execute(
+        update(VotingPublicationJob)
+        .where(
+            VotingPublicationJob.status == "processing",
+            VotingPublicationJob.processed_at.is_not(None),
+            VotingPublicationJob.processed_at <= now - timedelta(minutes=5),
+        )
+        .values(status="pending", processed_at=None)
+    )
     due = list((await session.execute(
         select(VotingPoll).where(
             VotingPoll.status == "active",
@@ -65,6 +76,7 @@ async def jobs(session: AsyncSession = Depends(get_db_session)):
             select(VotingPoll).where(VotingPoll.id == job.poll_id)
         )).scalar_one()
         job.status = "processing"
+        job.processed_at = now
         result.append({
             "id": job.id, "action": job.action,
             "poll": await serialize_poll(session, poll)
@@ -139,5 +151,10 @@ async def failed(job_id: int, payload: FailIn,
     job.status = "failed"
     job.error = payload.error
     job.processed_at = datetime.now(UTC)
+    if job.action == "publish":
+        poll = (await session.execute(select(VotingPoll).where(
+            VotingPoll.id == job.poll_id
+        ))).scalar_one()
+        poll.status = "draft"
     await session.commit()
     return {"status": "failed"}

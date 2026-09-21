@@ -118,21 +118,30 @@ class VotingWorker:
 
     @tasks.loop(seconds=5)
     async def loop(self):
-        async with httpx.AsyncClient(timeout=30) as client:
-            response = await client.get(
-                f"{self.base}/api/v1/internal/discord/plugins/voting/jobs",
-                headers=self.headers,
-            )
-            response.raise_for_status()
-            for job in response.json().get("items", []):
-                try:
-                    await self.process(job)
-                except Exception as exc:
-                    log.exception("Voting job failed: %s", job.get("id"))
-                    await client.post(
-                        f"{self.base}/api/v1/internal/discord/plugins/voting/jobs/{job['id']}/failed",
-                        headers=self.headers, json={"error": str(exc)[:2000]}
-                    )
+        try:
+            async with httpx.AsyncClient(timeout=30) as client:
+                response = await client.get(
+                    f"{self.base}/api/v1/internal/discord/plugins/voting/jobs",
+                    headers=self.headers,
+                )
+                response.raise_for_status()
+                for job in response.json().get("items", []):
+                    try:
+                        await self.process(job)
+                    except Exception as exc:
+                        log.exception("Voting job failed: %s", job.get("id"))
+                        try:
+                            failed = await client.post(
+                                f"{self.base}/api/v1/internal/discord/plugins/voting/jobs/{job['id']}/failed",
+                                headers=self.headers, json={"error": str(exc)[:2000]}
+                            )
+                            failed.raise_for_status()
+                        except Exception:
+                            log.exception("Unable to report failed voting job: %s", job.get("id"))
+        except Exception:
+            # A transient backend/DNS outage must not permanently stop the
+            # discord.ext.tasks loop. The next scheduled iteration retries it.
+            log.exception("Voting queue polling failed; retrying on the next tick")
 
     @loop.before_loop
     async def before_loop(self):
