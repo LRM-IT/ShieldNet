@@ -92,8 +92,8 @@ import {TranslationService} from '../core/translation.service';
   <section class="panel">
    <div class="head"><h3>{{'voting.polls'|snT:'Polls'}}</h3><span class="count">{{polls().length}}</span></div>
    <article class="poll" *ngFor="let poll of polls()">
-    <div class="poll-copy"><small>{{poll.status}}</small><h4>{{title(poll)}}</h4>
-      <span>{{poll.options.length}} options · {{total(poll)}} votes · {{languageCount(poll)}} languages</span></div>
+    <div class="poll-copy"><small>{{statusLabel(poll.status)}}</small><h4>{{title(poll)}}</h4>
+      <span>{{poll.options.length}} {{'voting.options_count'|snT:'options'}} · {{total(poll)}} {{'voting.votes_count'|snT:'votes'}} · {{languageCount(poll)}} {{'voting.languages_count'|snT:'languages'}}</span></div>
     <div class="poll-actions">
       <button (click)="edit(poll)" [disabled]="poll.status==='closed'">{{'voting.edit'|snT:'Edit'}}</button>
       <button (click)="publish(poll)" [disabled]="poll.status!=='draft'">{{'voting.publish'|snT:'Publish'}}</button>
@@ -139,9 +139,9 @@ export class PluginVotingComponent implements OnInit{
  guildId=this.route.snapshot.paramMap.get('guildId')||'';
  languages:any[]=[];options:any[]=[];form:any={};
 
- ngOnInit(){this.newPoll();this.reload();this.loadLanguages();this.api.templates(this.guildId).subscribe({next:r=>this.templates.set(r.items||[]),error:r=>this.error.set(r?.error?.detail||'Unable to load templates.')})}
- reload(){this.api.list(this.guildId).subscribe({next:v=>this.polls.set(v.items||[]),error:r=>this.error.set(r?.error?.detail||'Unable to load polls.')})}
- async loadLanguages(){try{const items=await this.languageApi.available(this.guildId);this.directoryLanguages.set(items);if(!this.languages.length)this.newPoll()}catch(e:any){this.error.set(e?.error?.detail||'Unable to load language directory.')}}
+ ngOnInit(){this.newPoll();this.reload();this.loadLanguages();this.api.templates(this.guildId).subscribe({next:r=>this.templates.set(r.items||[]),error:r=>this.error.set(r?.error?.detail||this.i18n.t('voting.load_templates_error','Unable to load templates.'))})}
+ reload(){this.api.list(this.guildId).subscribe({next:v=>this.polls.set(v.items||[]),error:r=>this.error.set(r?.error?.detail||this.i18n.t('voting.load_polls_error','Unable to load polls.'))})}
+ async loadLanguages(){try{const items=await this.languageApi.available(this.guildId);this.directoryLanguages.set(items);if(!this.languages.length)this.newPoll()}catch(e:any){this.error.set(e?.error?.detail||this.i18n.t('voting.load_languages_error','Unable to load language directory.'))}}
  newPoll(){const code=this.directoryLanguages()[0]?.code||'en';this.editingId='';this.activeLanguage=code;this.languages=[{code,title:'',description:''}];this.options=[{labels:{[code]:''}},{labels:{[code]:''}}];this.form={primary_language:code,fallback_language:code,language_selection_mode:'automatic_with_selector',channel_id:'',result_channel_id:null,selection_mode:'single',anonymous:true,allow_change_vote:true,show_live_results:true,min_choices:1,max_choices:1,allowed_role_ids:[],closes_at:'',result_template_id:null,publish_result_image:true,result_settings:{}}}
  availableLanguages(){return this.directoryLanguages().filter(x=>!this.languages.some(y=>y.code===x.code))}
  addSelectedLanguage(){const code=this.selectedLanguageCode;if(!code||this.languages.some(x=>x.code===code))return;this.languages.push({code,title:'',description:''});for(const o of this.options)o.labels[code]='';this.activeLanguage=code;this.selectedLanguageCode=''}
@@ -155,8 +155,8 @@ export class PluginVotingComponent implements OnInit{
   const language=this.currentLanguage()?.code||this.form.primary_language||'en';
   const source=this.languages.find(x=>x.code===language)||this.languages[0];
   const primary=this.languages.find(x=>x.code===this.form.primary_language)||source;
-  const title=String(source?.title||primary?.title||'Voting topic').trim();
-  const options=this.options.map((item,index)=>String(item.labels?.[language]||item.labels?.[this.form.primary_language]||`Option ${index+1}`).trim());
+  const title=String(source?.title||primary?.title||this.i18n.t('voting.preview_topic','Voting topic')).trim();
+  const options=this.options.map((item,index)=>String(item.labels?.[language]||item.labels?.[this.form.primary_language]||`${this.i18n.t('voting.option','Option')} ${index+1}`).trim());
   const request=++this.previewRequest;
   if(this.previewUrl())URL.revokeObjectURL(this.previewUrl());
   this.previewUrl.set('');this.previewError.set('');this.previewLoading.set(true);this.previewOpen.set(true);
@@ -168,13 +168,13 @@ export class PluginVotingComponent implements OnInit{
  closePreview(){this.previewRequest++;this.previewOpen.set(false);this.previewLoading.set(false);this.previewUrl.set('')}
  @HostListener('document:keydown.escape') onEscape(){if(this.previewOpen())this.closePreview()}
  payload(){const translations:any={};for(const l of this.languages)translations[l.code]={title:l.title,description:l.description};const resultChannel=this.form.result_channel_id?String(this.form.result_channel_id):null;return {...this.form,channel_id:this.form.channel_id?String(this.form.channel_id):null,closes_at:this.form.closes_at||null,result_settings:{...(this.form.result_settings||{}),result_channel_id:resultChannel},translations,options:this.options.map(o=>({emoji:null,translations:o.labels}))}}
- save(){this.error.set('');const req=this.editingId?this.api.update(this.guildId,this.editingId,this.payload()):this.api.create(this.guildId,this.payload());req.subscribe({next:()=>{this.success.set(this.editingId?'Poll updated.':'Poll saved.');this.newPoll();this.reload()},error:r=>this.error.set(r?.error?.detail||'Unable to save poll.')})}
+ save(){this.error.set('');const req=this.editingId?this.api.update(this.guildId,this.editingId,this.payload()):this.api.create(this.guildId,this.payload());req.subscribe({next:()=>{this.success.set(this.i18n.t(this.editingId?'voting.updated':'voting.saved',this.editingId?'Poll updated.':'Poll saved.'));this.newPoll();this.reload()},error:r=>this.error.set(r?.error?.detail||this.i18n.t('voting.save_error','Unable to save poll.'))})}
  edit(p:any){this.editingId=p.id;this.form={primary_language:p.primary_language,fallback_language:p.fallback_language,language_selection_mode:p.language_selection_mode,channel_id:p.channel_id||'',result_channel_id:p.result_settings?.result_channel_id||null,selection_mode:p.selection_mode,anonymous:p.anonymous,allow_change_vote:p.allow_change_vote,show_live_results:p.show_live_results,min_choices:p.min_choices,max_choices:p.max_choices,allowed_role_ids:p.allowed_role_ids||[],closes_at:p.closes_at?String(p.closes_at).slice(0,16):'',result_template_id:p.result_template_id||null,publish_result_image:p.publish_result_image,result_settings:p.result_settings||{}};this.languages=Object.entries(p.translations||{}).map(([code,v]:any)=>({code,title:v.title||'',description:v.description||''}));this.options=(p.options||[]).map((o:any)=>({labels:Object.fromEntries(Object.entries(o.translations||{}).map(([code,v]:any)=>[code,v.label||'']))}));this.activeLanguage=p.primary_language;window.scrollTo({top:0,behavior:'smooth'})}
  translateLanguage(code:string){
   const source=this.languages.find(x=>x.code===this.form.primary_language);
   const target=this.languages.find(x=>x.code===code);
   if(!source||!target||code===this.form.primary_language)return;
-  if(!String(source.title||'').trim()){this.error.set('Fill in the title in the primary language first.');this.activeLanguage=this.form.primary_language;return}
+  if(!String(source.title||'').trim()){this.error.set(this.i18n.t('voting.primary_title_required','Fill in the title in the primary language first.'));this.activeLanguage=this.form.primary_language;return}
   this.error.set('');this.translating=true;
   const apply=(r:any)=>{
     target.title=r.translation?.title||'';
@@ -183,9 +183,9 @@ export class PluginVotingComponent implements OnInit{
       const index=Number(item.position);
       if(Number.isInteger(index)&&this.options[index])this.options[index].labels[code]=item.label||'';
     }
-    this.success.set('AI translation completed.');this.translating=false;
+    this.success.set(this.i18n.t('voting.translation_complete','AI translation completed.'));this.translating=false;
   };
-  const fail=(e:any)=>{this.error.set(e?.error?.detail||'AI translation failed.');this.translating=false};
+  const fail=(e:any)=>{this.error.set(e?.error?.detail||this.i18n.t('voting.translation_error','AI translation failed.'));this.translating=false};
   if(this.editingId){
     this.api.generate(this.guildId,this.editingId,code,{source_language:this.form.primary_language,overwrite_existing:true})
       .subscribe({next:apply,error:fail});
@@ -199,11 +199,12 @@ export class PluginVotingComponent implements OnInit{
     }).subscribe({next:apply,error:fail});
   }
  }
- publish(p:any){this.api.publish(this.guildId,p.id).subscribe({next:()=>{this.success.set('Publication queued.');this.reload()},error:r=>this.error.set(r?.error?.detail||'Unable to publish.')})}
+ publish(p:any){this.api.publish(this.guildId,p.id).subscribe({next:()=>{this.success.set(this.i18n.t('voting.publish_queued','Publication queued.'));this.reload()},error:r=>this.error.set(r?.error?.detail||this.i18n.t('voting.publish_error','Unable to publish.'))})}
  close(p:any){if(!confirm(this.i18n.t('voting.close_confirm','Close this poll now and publish the final results?')))return;this.api.close(this.guildId,p.id).subscribe({next:()=>{this.success.set(this.i18n.t('voting.close_queued','Poll closed. Final results are being published.'));this.reload()},error:r=>this.error.set(r?.error?.detail||this.i18n.t('voting.close_error','Unable to close the poll.'))})}
- removePoll(p:any){if(!confirm(`Delete poll "${this.title(p)}"?`))return;this.api.remove(this.guildId,p.id).subscribe({next:()=>{if(this.editingId===p.id)this.newPoll();this.success.set('Poll deleted.');this.reload()},error:r=>this.error.set(r?.error?.detail||'Unable to delete poll.')})}
+ removePoll(p:any){if(!confirm(this.i18n.t('voting.delete_confirm','Delete poll “{title}”?').replace('{title}',this.title(p))))return;this.api.remove(this.guildId,p.id).subscribe({next:()=>{if(this.editingId===p.id)this.newPoll();this.success.set(this.i18n.t('voting.deleted','Poll deleted.'));this.reload()},error:r=>this.error.set(r?.error?.detail||this.i18n.t('voting.delete_error','Unable to delete poll.'))})}
  languageLabel(code:string){const language=this.directoryLanguages().find(item=>item.code===code);if(!language)return `🌐 ${code.toUpperCase()}`;const flag=(language.flag||'🌐').trim();const name=(language.name||language.native_name||code.toUpperCase()).trim();const nativeName=(language.native_name||'').trim();return nativeName&&nativeName.toLocaleLowerCase()!==name.toLocaleLowerCase()?`${flag} ${name} — ${nativeName}`:`${flag} ${name}`}
- title(p:any){return p.translations?.[p.primary_language]?.title||'Untitled poll'}
+ title(p:any){return p.translations?.[p.primary_language]?.title||this.i18n.t('voting.untitled','Untitled poll')}
+ statusLabel(status:string){return this.i18n.t(`voting.status_${status}`,status)}
  total(p:any){return (p.options||[]).reduce((n:number,x:any)=>n+(x.votes||0),0)}
  languageCount(p:any){return Object.keys(p.translations||{}).length}
 }

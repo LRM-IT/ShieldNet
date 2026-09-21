@@ -2245,7 +2245,30 @@
     "result_channel": "Canal des résultats",
     "close_confirm": "Fermer ce vote maintenant et publier les résultats définitifs ?",
     "close_queued": "Vote fermé. Les résultats définitifs sont en cours de publication.",
-    "close_error": "Impossible de fermer le vote."
+    "close_error": "Impossible de fermer le vote.",
+    "options_count": "options",
+    "votes_count": "votes",
+    "languages_count": "languages",
+    "load_templates_error": "Unable to load templates.",
+    "load_polls_error": "Unable to load polls.",
+    "load_languages_error": "Unable to load language directory.",
+    "preview_topic": "Voting topic",
+    "option": "Option",
+    "updated": "Poll updated.",
+    "saved": "Poll saved.",
+    "save_error": "Unable to save poll.",
+    "primary_title_required": "Fill in the title in the primary language first.",
+    "translation_complete": "AI translation completed.",
+    "translation_error": "AI translation failed.",
+    "status_draft": "Draft",
+    "status_active": "Active",
+    "status_closed": "Closed",
+    "publish_queued": "Publication queued.",
+    "publish_error": "Unable to publish.",
+    "delete_confirm": "Delete poll “{title}”?",
+    "deleted": "Poll deleted.",
+    "delete_error": "Unable to delete poll.",
+    "untitled": "Untitled poll"
   },
   "language_plugin": {
     "eyebrow": "PLUGIN DE SERVEUR",
@@ -2329,5 +2352,21 @@
     "language_label": "Choisir la langue",
     "payment_provider_label": "Ouvrir le site du service de paiement LiqPay",
     "copyright": "GuildConsole · LRM-IT"
+  },
+  "channel_picker": {
+    "search": "Search channel or category…",
+    "none": "No channel selected",
+    "choose_before_publish": "Choose before publishing",
+    "no_matches": "No matching text channels.",
+    "unknown": "Unknown or removed channel",
+    "select": "Select Discord channel",
+    "hint": "Search synchronized channels",
+    "thread": "Thread",
+    "forum": "Forum",
+    "announcement": "Announcement",
+    "text_channel": "Text channel",
+    "refresh_error": "Unable to refresh channels.",
+    "uncategorized": "Uncategorized",
+    "load_error": "Unable to load Discord channels."
   }
 }

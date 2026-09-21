@@ -3,6 +3,7 @@ import { Component, ElementRef, EventEmitter, HostListener, Input, OnChanges, On
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
+import { TranslationService } from '../core/translation.service';
 
 interface ExplorerChannel {
   id: string | number;
@@ -42,7 +43,7 @@ interface ChannelOption {
       @if (open()) {
         <div class="menu" [style.top.px]="menuPosition().top" [style.left.px]="menuPosition().left" [style.width.px]="menuPosition().width" [style.height.px]="menuPosition().height">
           <div class="search">
-            <input type="search" [(ngModel)]="query" placeholder="Search channel or category…" />
+            <input type="search" [(ngModel)]="query" [placeholder]="t('channel_picker.search','Search channel or category…')" />
             <button type="button" (click)="refreshFromDiscord()" [disabled]="refreshing()">
               {{ refreshing() ? '…' : '↻' }}
             </button>
@@ -53,8 +54,8 @@ interface ChannelOption {
           <button type="button" class="clear" (click)="choose(null)">
             <span>×</span>
             <span class="copy">
-              <strong>No channel selected</strong>
-              <small>Choose before publishing</small>
+              <strong>{{t('channel_picker.none','No channel selected')}}</strong>
+              <small>{{t('channel_picker.choose_before_publish','Choose before publishing')}}</small>
             </span>
           </button>
 
@@ -79,7 +80,7 @@ interface ChannelOption {
                 }
               </section>
             } @empty {
-              <div class="empty">No matching text channels.</div>
+              <div class="empty">{{t('channel_picker.no_matches','No matching text channels.')}}</div>
             }
           </div>
         </div>
@@ -112,6 +113,7 @@ interface ChannelOption {
 })
 export class DiscordChannelPickerComponent implements OnInit, OnChanges {
   private readonly http = inject(HttpClient);
+  private readonly i18n = inject(TranslationService);
   @ViewChild('trigger') trigger?: ElementRef<HTMLButtonElement>;
 
   @Input({ required: true }) guildId = '';
@@ -205,15 +207,15 @@ export class DiscordChannelPickerComponent implements OnInit, OnChanges {
   selectedLabel(): string {
     const item = this.selected();
     if (item) return `# ${item.name}`;
-    if (this.normalizedValue()) return 'Unknown or removed channel';
-    return 'Select Discord channel';
+    if (this.normalizedValue()) return this.t('channel_picker.unknown','Unknown or removed channel');
+    return this.t('channel_picker.select','Select Discord channel');
   }
 
   selectedHint(): string {
     const item = this.selected();
     if (item) return item.category;
     if (this.normalizedValue()) return `ID ${this.normalizedValue()}`;
-    return 'Search synchronized channels';
+    return this.t('channel_picker.hint','Search synchronized channels');
   }
 
   selectedIcon(): string {
@@ -230,10 +232,10 @@ export class DiscordChannelPickerComponent implements OnInit, OnChanges {
 
   typeLabel(type: string): string {
     const value = String(type).toLowerCase();
-    if (value.includes('thread') || ['10','11','12'].includes(value)) return 'Thread';
-    if (value.includes('forum') || value === '15') return 'Forum';
-    if (value.includes('news') || value.includes('announcement') || value === '5') return 'Announcement';
-    return 'Text channel';
+    if (value.includes('thread') || ['10','11','12'].includes(value)) return this.t('channel_picker.thread','Thread');
+    if (value.includes('forum') || value === '15') return this.t('channel_picker.forum','Forum');
+    if (value.includes('news') || value.includes('announcement') || value === '5') return this.t('channel_picker.announcement','Announcement');
+    return this.t('channel_picker.text_channel','Text channel');
   }
 
   async refreshFromDiscord(): Promise<void> {
@@ -248,7 +250,7 @@ export class DiscordChannelPickerComponent implements OnInit, OnChanges {
       await new Promise((resolve) => setTimeout(resolve, 1800));
       await this.load();
     } catch (error: any) {
-      this.error.set(error?.error?.detail || 'Unable to refresh channels.');
+      this.error.set(error?.error?.detail || this.t('channel_picker.refresh_error','Unable to refresh channels.'));
     } finally {
       this.refreshing.set(false);
     }
@@ -279,8 +281,8 @@ export class DiscordChannelPickerComponent implements OnInit, OnChanges {
             name: channel.name,
             type: String(channel.type),
             category: channel.parent_id
-              ? categories.get(String(channel.parent_id)) || 'Uncategorized'
-              : 'Uncategorized',
+              ? categories.get(String(channel.parent_id)) || this.t('channel_picker.uncategorized','Uncategorized')
+              : this.t('channel_picker.uncategorized','Uncategorized'),
             position: Number(channel.position || 0),
           }))
           .sort((a, b) =>
@@ -290,7 +292,7 @@ export class DiscordChannelPickerComponent implements OnInit, OnChanges {
           )
       );
     } catch (error: any) {
-      this.error.set(error?.error?.detail || 'Unable to load Discord channels.');
+      this.error.set(error?.error?.detail || this.t('channel_picker.load_error','Unable to load Discord channels.'));
       this.channels.set([]);
     } finally {
       this.loading.set(false);
@@ -310,4 +312,6 @@ export class DiscordChannelPickerComponent implements OnInit, OnChanges {
       'public_thread','private_thread','news_thread','10','11','12',
     ].includes(String(type).toLowerCase());
   }
+
+  t(key: string, fallback: string): string { return this.i18n.t(key, fallback); }
 }
