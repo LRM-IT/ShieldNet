@@ -67,7 +67,7 @@ import { DiscordChannelPickerComponent } from '../shared/discord-channel-picker.
         </label>
 
         <label>{{'verification.text_commands'|snT:'Text commands'}}
-          <input [(ngModel)]="textCommands" maxlength="255" placeholder="!verify, !верифікація">
+          <input [(ngModel)]="textCommands" maxlength="255" placeholder="!verify, !verification">
           <small class="muted">{{'verification.text_commands_help'|snT:'Up to 10 comma-separated commands. Prefixes !, . and ? are supported.'}}</small>
         </label>
 

@@ -559,6 +559,6 @@ class VerificationStartView(discord.ui.View):
         super().__init__(timeout=300)
         self.verification_client = verification_client
 
-    @discord.ui.button(label="Почати верифікацію", style=discord.ButtonStyle.primary)
+    @discord.ui.button(label="Start verification", style=discord.ButtonStyle.primary)
     async def start(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
         await interaction.response.send_modal(VerifyModal(self.verification_client))

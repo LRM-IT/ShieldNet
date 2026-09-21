@@ -614,7 +614,7 @@ class ShieldNetBot(discord.Client):
             commands = {item.strip().casefold() for item in (config.get("text_commands") or "").split(",") if item.strip()}
             if (config.get("enabled") and str(message.channel.id) == str(config.get("invocation_channel_id") or "")
                     and message.content.strip().casefold() in commands):
-                await message.reply("Натисніть кнопку, щоб відкрити форму верифікації.",
+                await message.reply("Select the button below to open the verification form.",
                                     view=VerificationStartView(self.verification), mention_author=False)
         except Exception:
             logger.exception("Verification text trigger failed guild=%s message=%s", message.guild.id, message.id)
