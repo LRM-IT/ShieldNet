@@ -5,6 +5,7 @@ import { firstValueFrom } from 'rxjs';
 import { TranslatePipe } from '../core/translate.pipe';
 import { TranslationService } from '../core/translation.service';
 import { PublicBrandComponent } from '../shared/public-brand.component';
+import { LanguagePickerComponent } from '../shared/language-picker.component';
 
 type PluginGuide={purpose:string;configuration:string;check:string};
 type PublicDocsFile={common:{configuration_title:string;check_title:string;troubleshooting_title:string;requirements:string[];steps:string[];troubleshooting:string[]};plugins:Record<string,PluginGuide>};
@@ -13,7 +14,7 @@ type PublicPricing={modules?:PublicModule[]};
 
 @Component({
   standalone: true,
-  imports: [RouterLink, TranslatePipe, PublicBrandComponent],
+  imports: [RouterLink, TranslatePipe, PublicBrandComponent, LanguagePickerComponent],
   template: `
     <main>
       <nav><sn-public-brand/><div><a routerLink="/pricing">{{'public_pricing.nav'|snT:'Pricing'}}</a><a class="login" routerLink="/login">{{'public_docs.login'|snT:'Open console'}}</a></div></nav>
@@ -40,7 +41,7 @@ type PublicPricing={modules?:PublicModule[]};
 
       <section id="help" class="block"><div class="number">06</div><div><span class="label">{{'public_docs.help_label'|snT:'SUPPORT'}}</span><h2>{{'public_docs.help_title'|snT:'When something does not work'}}</h2><p>{{'public_docs.help_text'|snT:'After signing in, open Feedback & issues to report a bug, attach screenshots or suggest a feature or custom plugin. Include the server, plugin, expected result and the steps that caused the problem.'}}</p><a class="cta" routerLink="/login">{{'public_docs.open_console'|snT:'Sign in to GuildConsole'}}</a></div></section>
 
-      <footer><div><b>GUILDCONSOLE</b><span>Керування Discord-серверами · LRM-IT</span></div><div><a routerLink="/pricing">Тарифи</a><a routerLink="/terms">Умови</a><a routerLink="/payment">Оплата</a><a routerLink="/refund">Повернення</a><a routerLink="/privacy-policy">Конфіденційність</a><a routerLink="/contacts">Контакти</a><a routerLink="/login">Відкрити консоль</a></div></footer>
+      <footer><div><b>GUILDCONSOLE</b><span>{{'public_docs.footer'|snT:'Discord server operations by LRM-IT'}}</span></div><div><sn-language-picker [value]="i18n.locale()" [options]="i18n.languages()" (valueChange)="changeLocale($event)"/><a routerLink="/pricing">{{'public_pricing.nav'|snT:'Pricing'}}</a>@if(i18n.locale()==='uk'){<a routerLink="/terms">Умови</a><a routerLink="/payment">Оплата</a><a routerLink="/refund">Повернення</a><a routerLink="/contacts">Контакти</a>}<a routerLink="/privacy-policy">{{'merchant.privacy'|snT:'Privacy policy'}}</a><a routerLink="/login">{{'public_docs.login'|snT:'Open console'}}</a></div></footer>
     </main>
   `,
   styles: [`
@@ -52,7 +53,8 @@ export class PublicDocumentationComponent implements OnInit {
   readonly moduleTiers=signal<Record<string,boolean>>({});
   readonly pluginKeys=['welcome','antiflood','translator_groups','first_introduction','verification_level1','voting','guild-dm-broadcast','role_menu','ai_automod','event_manager','war_planner','activity_ranking','audit_security','backup_restore','cross_guild_network','moderation'];
   constructor(readonly i18n:TranslationService,private http:HttpClient){}
-  async ngOnInit(){await this.i18n.setLocale('uk',false);await Promise.all([this.loadPluginDocs('uk'),this.loadModuleTiers()])}
+  async ngOnInit(){await Promise.all([this.loadPluginDocs(this.i18n.locale()),this.loadModuleTiers()])}
+  async changeLocale(locale:string){await this.i18n.setLocale(locale);await this.loadPluginDocs(locale)}
   async loadPluginDocs(locale:string){try{this.pluginDocs.set(await firstValueFrom(this.http.get<PublicDocsFile>(`/plugin-docs/${locale}.json?v=3`)))}catch{this.pluginDocs.set(await firstValueFrom(this.http.get<PublicDocsFile>('/plugin-docs/en.json?v=3')))}}
   async loadModuleTiers(){try{const pricing=await firstValueFrom(this.http.get<PublicPricing>('/api/v1/public/pricing'));this.moduleTiers.set(Object.fromEntries((pricing.modules??[]).map(item=>[item.plugin_key,item.is_free])))}catch{this.moduleTiers.set({})}}
   isFree(key:string){return this.moduleTiers()[key.replaceAll('-','_')]===true}
