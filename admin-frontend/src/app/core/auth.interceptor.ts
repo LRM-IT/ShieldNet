@@ -1,6 +1,6 @@
 import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { catchError, from, switchMap, throwError } from 'rxjs';
+import { catchError, from, retry, switchMap, throwError, timer } from 'rxjs';
 
 import { AuthService } from './auth.service';
 
@@ -16,7 +16,18 @@ export const authInterceptor: HttpInterceptorFn = (request, next) => {
     ? request.clone({ setHeaders: { Authorization: `Bearer ${token}` } })
     : request;
 
+  const transientStatuses = new Set([0, 502, 503, 504, 520, 521, 522, 523, 524]);
+
   return next(authorized).pipe(
+    retry({
+      count: 2,
+      delay: (error: HttpErrorResponse, retryCount) => {
+        if (authorized.method !== 'GET' || !transientStatuses.has(error.status)) {
+          return throwError(() => error);
+        }
+        return timer(350 * retryCount);
+      },
+    }),
     catchError((error: HttpErrorResponse) => {
       if (error.status !== 401 || isAuthRequest || !auth.refreshToken) {
         return throwError(() => error);
