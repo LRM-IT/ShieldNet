@@ -180,8 +180,8 @@ interface QuickAction {
       gap:2rem;
       padding:1.8rem;
       background:
-        radial-gradient(circle at 82% 30%,rgba(53,226,178,.1),transparent 17rem),
-        linear-gradient(145deg,#0c171f,#070d13);
+        radial-gradient(circle at 82% 30%,var(--primary-soft),transparent 17rem),
+        linear-gradient(145deg,var(--panel),var(--bg-elevated));
       border:1px solid var(--line);
       border-radius:17px
     }
@@ -200,7 +200,7 @@ interface QuickAction {
 
     .node-identity,.node-status{position:relative;z-index:2}
     .node-label{
-      color:#69857e;
+      color:var(--muted);
       font-size:.58rem;
       font-weight:900;
       letter-spacing:.16em
@@ -219,8 +219,8 @@ interface QuickAction {
       max-width:100%;
       margin-top:1.2rem;
       padding:.5rem .65rem;
-      color:#6f8f87;
-      background:rgba(53,226,178,.04);
+      color:var(--muted);
+      background:var(--primary-soft);
       border-left:2px solid var(--primary);
       font-family:ui-monospace,SFMono-Regular,Consolas,monospace;
       font-size:.59rem
@@ -233,11 +233,11 @@ interface QuickAction {
       grid-template-columns:1fr auto;
       gap:.25rem .75rem;
       padding:1rem;
-      background:#091018;
+      background:var(--panel-2);
       border:1px solid var(--line);
       border-radius:11px
     }
-    .status-box span{color:#5a737e;font-size:.55rem;letter-spacing:.14em}
+    .status-box span{color:var(--muted);font-size:.55rem;letter-spacing:.14em}
     .status-box strong{
       grid-row:2;
       color:var(--success);
@@ -263,8 +263,8 @@ interface QuickAction {
       align-items:center;
       justify-content:center;
       padding:.65rem .8rem;
-      color:#91a8a1;
-      background:#0b131b;
+      color:var(--text);
+      background:var(--panel-2);
       border:1px solid var(--line);
       border-radius:8px;
       font-size:.6rem;
@@ -288,14 +288,14 @@ interface QuickAction {
       gap:.35rem;
       padding:1rem;
       background:
-        linear-gradient(145deg,rgba(255,255,255,.02),transparent 45%),
-        #0a1119;
+        linear-gradient(145deg,var(--panel-glow),transparent 45%),
+        var(--panel);
       border:1px solid var(--line);
       border-radius:11px
     }
 
     .summary-grid span{
-      color:#5e7580;
+      color:var(--muted);
       font-size:.55rem;
       font-weight:850;
       letter-spacing:.13em
@@ -303,7 +303,7 @@ interface QuickAction {
     .summary-grid strong{font-size:2rem}
     .summary-grid strong.text-value{font-size:1.05rem;text-transform:uppercase}
     .summary-grid strong.state-value{color:var(--success);font-size:1.1rem}
-    .summary-grid a{margin-top:.2rem;color:#718d86;font-size:.63rem}
+    .summary-grid a{margin-top:.2rem;color:var(--primary-strong);font-size:.63rem}
 
     .section-title{
       display:flex;
@@ -313,13 +313,13 @@ interface QuickAction {
       margin:1.5rem 0 .75rem
     }
     .section-title span{
-      color:#607982;
+      color:var(--muted);
       font-size:.56rem;
       font-weight:900;
       letter-spacing:.15em
     }
     .section-title h3{margin:.24rem 0 0}
-    .section-title small{color:#49616c;font-size:.55rem;letter-spacing:.11em}
+    .section-title small{color:var(--muted);font-size:.55rem;letter-spacing:.11em}
 
     .quick-grid{
       display:grid;
@@ -334,14 +334,14 @@ interface QuickAction {
       align-items:center;
       gap:.7rem;
       padding:.75rem .85rem;
-      background:#0a1119;
+      background:var(--panel);
       border:1px solid var(--line);
       border-radius:9px
     }
 
     .quick-node:hover{
-      background:rgba(53,226,178,.025);
-      border-color:rgba(53,226,178,.18)
+      background:var(--primary-soft);
+      border-color:var(--line-strong)
     }
 
     .quick-code{display:none}
@@ -352,15 +352,15 @@ interface QuickAction {
       display:grid;
       place-items:center;
       color:var(--primary);
-      background:rgba(53,226,178,.045);
-      border:1px solid rgba(53,226,178,.12);
+      background:var(--primary-soft);
+      border:1px solid var(--line-strong);
       border-radius:8px
     }
 
     .quick-node>div:nth-child(3){display:grid;gap:.15rem}
     .quick-node strong{font-size:.76rem}
     .quick-node span{color:var(--muted);font-size:.61rem;line-height:1.25}
-    .quick-node b{color:#58756d;font-size:.72rem}
+    .quick-node b{color:var(--primary-strong);font-size:.72rem}
 
     .module-title{margin-top:1.4rem}
     .module-grid{display:grid;gap:.45rem}
@@ -371,14 +371,14 @@ interface QuickAction {
       gap:.75rem;
       align-items:center;
       padding:.7rem .8rem;
-      background:#0a1119;
+      background:var(--panel);
       border:1px solid var(--line);
       border-radius:9px
     }
 
     .module-row.enabled{
-      border-color:rgba(53,226,178,.16);
-      background:linear-gradient(90deg,rgba(53,226,178,.025),transparent 24%),#0a1119
+      border-color:var(--line-strong);
+      background:linear-gradient(90deg,var(--primary-soft),transparent 24%),var(--panel)
     }
 
     .module-icon{
@@ -386,8 +386,8 @@ interface QuickAction {
       height:38px;
       display:grid;
       place-items:center;
-      color:#6f9187;
-      background:#0d1720;
+      color:var(--muted);
+      background:var(--panel-2);
       border:1px solid var(--line);
       border-radius:8px;
       font-size:.95rem
@@ -401,7 +401,7 @@ interface QuickAction {
 
     .badge{
       padding:.18rem .36rem;
-      color:#738791;
+      color:var(--muted);
       border:1px solid var(--line);
       border-radius:999px;
       font-size:.46rem;
@@ -418,7 +418,7 @@ interface QuickAction {
       display:flex;
       align-items:center;
       padding:.42rem .58rem;
-      color:#9bb1ab;
+      color:var(--text);
       border:1px solid var(--line);
       border-radius:7px;
       font-size:.53rem;
@@ -430,7 +430,7 @@ interface QuickAction {
       display:flex;
       align-items:center;
       gap:.4rem;
-      color:#5e737d;
+      color:var(--muted);
       font-size:.49rem;
       font-weight:900;
       letter-spacing:.08em
@@ -440,7 +440,7 @@ interface QuickAction {
       width:2.7rem;
       height:1.45rem;
       padding:.16rem;
-      background:#23303a;
+      background:var(--panel-3);
       border-radius:999px
     }
     .toggle:disabled{opacity:.45}
@@ -448,7 +448,7 @@ interface QuickAction {
       display:block;
       width:1.12rem;
       height:1.12rem;
-      background:#7d8b94;
+      background:var(--muted);
       border-radius:50%;
       transition:.18s
     }
@@ -462,11 +462,11 @@ interface QuickAction {
     .error-panel,.loading-panel{
       padding:1rem;
       color:var(--muted);
-      background:#0a1119;
+      background:var(--panel);
       border:1px solid var(--line);
       border-radius:10px
     }
-    .error-panel{color:#ffd8dc;border-color:rgba(255,111,127,.24)}
+    .error-panel{color:var(--danger);border-color:color-mix(in srgb,var(--danger) 32%,transparent)}
 
     @media(max-width:1100px){
       .summary-grid{grid-template-columns:repeat(2,1fr)}
