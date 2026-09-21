@@ -1880,7 +1880,6 @@
     "enter_topup": "Geben Sie den Aufladebetrag ein.",
     "topup_error": "Aufladung konnte nicht erstellt werden.",
     "widget_load_error": "Zahlungs-Widget konnte nicht geladen werden",
-    "wfp_unavailable": "WayForPay-Widget nicht verfügbar",
     "liqpay_unavailable": "LiqPay-Widget nicht verfügbar",
     "payment_approved": "Zahlung genehmigt. Das Guthaben wird nach Bestätigung aktualisiert.",
     "payment_declined": "Zahlung wurde abgelehnt.",

@@ -3,7 +3,7 @@ from decimal import Decimal
 from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, Request
-from fastapi.responses import JSONResponse, PlainTextResponse
+from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel, EmailStr, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -56,10 +56,6 @@ class GrantRequest(BaseModel):
     days: int = Field(ge=1, le=3660)
 
 class ProviderUpdate(BaseModel):
-    wayforpay_enabled: bool = True
-    wayforpay_merchant_account: str = ""
-    wayforpay_merchant_domain: str = ""
-    wayforpay_secret_key: str = ""
     liqpay_enabled: bool = True
     liqpay_public_key: str = ""
     liqpay_private_key: str = ""
@@ -67,10 +63,10 @@ class ProviderUpdate(BaseModel):
 class CheckoutRequest(BaseModel):
     plugin_key: str
     billing_period: str = Field(pattern=r"^(monthly|quarterly|yearly)$")
-    provider: str = Field(pattern=r"^(wayforpay|liqpay|balance)$")
+    provider: str = Field(pattern=r"^(liqpay|balance)$")
 class WalletTopupRequest(BaseModel):
     amount: Decimal = Field(gt=0, le=1_000_000)
-    provider: str = Field(pattern=r"^(wayforpay|liqpay)$")
+    provider: str = Field(pattern=r"^liqpay$")
 class SubscriptionPurchaseRequest(BaseModel):
     guild_id: int
     billing_period: str = Field(pattern=r"^(monthly|quarterly|yearly)$")
@@ -355,10 +351,6 @@ async def providers(_: User = Depends(require_superadmin), session: AsyncSession
 @router.put("/platform/billing/providers")
 async def save_providers(payload: ProviderUpdate, user: User = Depends(require_superadmin), session: AsyncSession = Depends(get_db_session)):
     values = {
-        "wfp_enabled": "true" if payload.wayforpay_enabled else "false",
-        "wfp_merchant_account": payload.wayforpay_merchant_account,
-        "wfp_merchant_domain": payload.wayforpay_merchant_domain,
-        "wfp_secret_key": payload.wayforpay_secret_key,
         "liqpay_enabled": "true" if payload.liqpay_enabled else "false",
         "liqpay_public_key": payload.liqpay_public_key,
         "liqpay_private_key": payload.liqpay_private_key,
@@ -443,14 +435,6 @@ async def checkout(guild_id: int, payload: CheckoutRequest, request: Request, us
         return await BillingPaymentService(session).create_checkout(guild_id, payload.plugin_key, payload.billing_period, payload.provider, base_url)
     except PaymentError as exc:
         raise HTTPException(400, str(exc)) from exc
-
-@router.post("/billing/callback/wayforpay")
-async def wayforpay_callback(request: Request, session: AsyncSession = Depends(get_db_session)):
-    try:
-        payload = await request.json()
-        return await BillingPaymentService(session).confirm_wayforpay(payload)
-    except PaymentError as exc:
-        return JSONResponse({"detail":str(exc)}, status_code=400)
 
 @router.post("/billing/callback/liqpay")
 async def liqpay_callback(request: Request, session: AsyncSession = Depends(get_db_session)):

@@ -2,7 +2,6 @@ import base64
 import hashlib
 import hmac
 import json
-import time
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from uuid import uuid4
@@ -27,10 +26,6 @@ def _money(value: Decimal) -> str:
     return f"{value:.2f}"
 
 
-def _wfp_signature(secret: str, values: list[object]) -> str:
-    return hmac.new(secret.encode(), ";".join(str(v) for v in values).encode(), hashlib.md5).hexdigest()
-
-
 def _liqpay_signature(private_key: str, data: str) -> str:
     digest = hashlib.sha1(f"{private_key}{data}{private_key}".encode()).digest()
     return base64.b64encode(digest).decode()
@@ -43,19 +38,9 @@ class BillingPaymentService:
 
     async def provider_config(self) -> dict:
         names = {x.secret_name for x in await self.vault.list_secrets(BILLING_VAULT_KEY)}
-        wfp_enabled = (await self.vault.get_secret(BILLING_VAULT_KEY, "wfp_enabled") or "true").lower() == "true"
         liqpay_enabled = (await self.vault.get_secret(BILLING_VAULT_KEY, "liqpay_enabled") or "true").lower() == "true"
-        wfp_configured = {"wfp_merchant_account", "wfp_secret_key", "wfp_merchant_domain"} <= names
         liqpay_configured = {"liqpay_public_key", "liqpay_private_key"} <= names
         return {
-            "wayforpay": {
-                "enabled": wfp_enabled,
-                "configured": wfp_configured,
-                "active": wfp_enabled and wfp_configured,
-                "merchant_account": await self.vault.get_secret(BILLING_VAULT_KEY, "wfp_merchant_account") or "",
-                "merchant_domain": await self.vault.get_secret(BILLING_VAULT_KEY, "wfp_merchant_domain") or "",
-                "secret_saved": "wfp_secret_key" in names,
-            },
             "liqpay": {
                 "enabled": liqpay_enabled,
                 "configured": liqpay_configured,
@@ -92,11 +77,6 @@ class BillingPaymentService:
         payment=BillingPayment(id=uuid4(),order_reference=order,guild_id=None,plugin_key=None,billing_period=None,purpose="wallet_topup",owner_discord_id=discord_user_id,provider=provider,amount=amount,currency=charge_currency,base_amount_usd=amount_usd,original_amount_usd=amount_usd,quote_expires_at=datetime.now(timezone.utc)+timedelta(minutes=30))
         self.session.add(payment);await self.session.commit()
         product="GuildConsole software service account credit";callback=f"{base_url}/api/v1/billing/callback/{provider}";result=f"{base_url}/servers"
-        if provider=="wayforpay":
-            merchant=await self.secret("wfp_merchant_account");secret=await self.secret("wfp_secret_key");domain=await self.secret("wfp_merchant_domain");created=int(time.time())
-            values=[merchant,domain,order,created,_money(amount),charge_currency,product,"1",_money(amount)]
-            fields={"merchantAccount":merchant,"merchantAuthType":"SimpleSignature","merchantDomainName":domain,"orderReference":order,"orderDate":created,"amount":_money(amount),"currency":charge_currency,"productName":[product],"productPrice":[_money(amount)],"productCount":["1"],"merchantSignature":_wfp_signature(secret,values),"serviceUrl":callback,"returnUrl":result}
-            return {"provider":provider,"action":"https://secure.wayforpay.com/pay","fields":fields,"charge_amount":amount,"charge_currency":charge_currency}
         public=await self.secret("liqpay_public_key");private=await self.secret("liqpay_private_key")
         payload={"version":"3","public_key":public,"action":"pay","amount":_money(amount),"currency":charge_currency,"description":product,"order_id":order,"server_url":callback,"result_url":result}
         data=base64.b64encode(json.dumps(payload,separators=(",", ":")).encode()).decode()
@@ -149,7 +129,7 @@ class BillingPaymentService:
 
     async def create_checkout(self, guild_id: int, plugin_key: str, period: str, provider: str, base_url: str) -> dict:
         key = PAID_PACKAGE_KEY
-        if period not in PERIOD_DAYS or provider not in {"wayforpay", "liqpay"}:
+        if period not in PERIOD_DAYS or provider != "liqpay":
             raise PaymentError("Unsupported billing period or provider")
         config = await self.provider_config()
         if not config[provider]["active"]:
@@ -179,16 +159,6 @@ class BillingPaymentService:
         product = f"GuildConsole software modules access - {period}"
         callback = f"{base_url}/api/v1/billing/callback/{provider}"
         result = f"{base_url}/guild/{guild_id}/billing"
-        if provider == "wayforpay":
-            merchant = await self.secret("wfp_merchant_account"); secret = await self.secret("wfp_secret_key")
-            domain = await self.secret("wfp_merchant_domain"); created = int(time.time())
-            values = [merchant, domain, order, created, _money(amount), charge_currency, product, "1", _money(amount)]
-            fields = {"merchantAccount":merchant,"merchantAuthType":"SimpleSignature","merchantDomainName":domain,
-                      "orderReference":order,"orderDate":created,"amount":_money(amount),"currency":charge_currency,
-                      "productName":[product],"productPrice":[_money(amount)],"productCount":["1"],
-                      "merchantSignature":_wfp_signature(secret, values),"serviceUrl":callback,"returnUrl":result}
-            return {"provider":provider,"order_reference":order,"action":"https://secure.wayforpay.com/pay","method":"POST","fields":fields,
-                    "charge_amount":amount,"charge_currency":charge_currency,"quote_minutes":30,"discount":discount}
         public = await self.secret("liqpay_public_key"); private = await self.secret("liqpay_private_key")
         payload = {"version":"3","public_key":public,"action":"pay","amount":_money(amount),"currency":charge_currency,
                    "description":product,"order_id":order,"server_url":callback,"result_url":result}
@@ -220,26 +190,6 @@ class BillingPaymentService:
         payment.status = "paid"; payment.signature_verified = True; payment.provider_payment_id = provider_id
         payment.raw_status = raw; payment.paid_at = now
         await self.session.commit()
-
-    async def confirm_wayforpay(self, payload: dict) -> dict:
-        order = str(payload.get("orderReference", ""))
-        payment = (await self.session.execute(select(BillingPayment).where(BillingPayment.order_reference == order).with_for_update())).scalar_one_or_none()
-        if payment is None or payment.provider != "wayforpay":
-            raise PaymentError("Unknown payment")
-        secret = await self.secret("wfp_secret_key"); merchant = await self.secret("wfp_merchant_account")
-        callback_sig = _wfp_signature(secret, [payload.get(k, "") for k in ("merchantAccount","orderReference","amount","currency","authCode","cardPan","transactionStatus","reasonCode")])
-        if not hmac.compare_digest(callback_sig, str(payload.get("merchantSignature", ""))):
-            raise PaymentError("Invalid WayForPay signature")
-        check = {"transactionType":"CHECK_STATUS","merchantAccount":merchant,"orderReference":order}
-        check["merchantSignature"] = _wfp_signature(secret, [merchant, order])
-        async with httpx.AsyncClient(timeout=20) as client:
-            response = await client.post("https://api.wayforpay.com/api", json=check); response.raise_for_status(); verified = response.json()
-        if verified.get("transactionStatus") != "Approved" or Decimal(str(verified.get("amount", 0))) != payment.amount or verified.get("currency") != payment.currency:
-            payment.status = "rejected"; payment.raw_status = verified; await self.session.commit()
-            raise PaymentError("WayForPay did not confirm the payment")
-        await self._complete(payment, str(verified.get("authCode") or ""), verified)
-        stamp = int(time.time())
-        return {"orderReference":order,"status":"accept","time":stamp,"signature":_wfp_signature(secret,[order,"accept",stamp])}
 
     async def confirm_liqpay(self, data: str, signature: str) -> None:
         private = await self.secret("liqpay_private_key"); public = await self.secret("liqpay_public_key")

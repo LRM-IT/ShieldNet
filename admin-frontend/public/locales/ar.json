@@ -1880,7 +1880,6 @@
     "enter_topup": "أدخل مبلغ الشحن.",
     "topup_error": "تعذر إنشاء عملية الشحن.",
     "widget_load_error": "فشل تحميل أداة الدفع",
-    "wfp_unavailable": "أداة WayForPay غير متاحة",
     "liqpay_unavailable": "أداة LiqPay غير متاحة",
     "payment_approved": "تمت الموافقة على الدفع. سيُحدّث الرصيد بعد تأكيد المزود.",
     "payment_declined": "تم رفض الدفع.",

@@ -1878,7 +1878,6 @@
     "enter_topup": "Inserisci l'importo della ricarica.",
     "topup_error": "Impossibile creare la ricarica.",
     "widget_load_error": "Caricamento del widget di pagamento non riuscito",
-    "wfp_unavailable": "Widget WayForPay non disponibile",
     "liqpay_unavailable": "Widget LiqPay non disponibile",
     "payment_approved": "Pagamento approvato. Il saldo verrà aggiornato dopo la conferma.",
     "payment_declined": "Pagamento rifiutato.",
