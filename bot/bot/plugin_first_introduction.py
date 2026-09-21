@@ -79,7 +79,8 @@ class LanguageSelection:
             logger.exception("Default language backfill failed guild=%s group=%s", guild.id, group_id)
 
     async def ensure_default_roles(self, member: discord.Member, group_id: str | None = None,
-                                   config: dict | None = None) -> None:
+                                   config: dict | None = None,
+                                   changed_role_ids: set[int] | None = None) -> None:
         if member.bot:
             return
         config = config or await self.configuration(member.guild.id)
@@ -91,12 +92,18 @@ class LanguageSelection:
         for group in config["groups"]:
             if not group.get("enabled") or (group_id and group["id"] != group_id):
                 continue
+            access_role_id = group.get("access_role_id")
+            # Member updates must only react to the configured access role being
+            # added or removed. Rechecking on every role change restored a
+            # language role immediately after an administrator removed it.
+            if changed_role_ids is not None:
+                if not access_role_id or int(access_role_id) not in changed_role_ids:
+                    continue
             code = group.get("default_language_code")
             role_id = (group.get("language_roles") or {}).get(code) if code else None
             role = member.guild.get_role(int(role_id)) if role_id else None
             if role is None or role >= me.top_role:
                 continue
-            access_role_id = group.get("access_role_id")
             if access_role_id and not any(str(item.id) == access_role_id for item in member.roles):
                 if role in member.roles:
                     await member.remove_roles(role, reason="GuildConsole language group access removed")

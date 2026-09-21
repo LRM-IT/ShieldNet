@@ -513,8 +513,8 @@ class ShieldNetBot(discord.Client):
     async def on_member_update(self, before: discord.Member, after: discord.Member) -> None:
         try:
             if {role.id for role in before.roles} != {role.id for role in after.roles}:
-                await self.language_selection.ensure_default_roles(after)
                 before_ids={role.id for role in before.roles};after_ids={role.id for role in after.roles};added=[role.name for role in after.roles if role.id not in before_ids];removed=[role.name for role in before.roles if role.id not in after_ids]
+                await self.language_selection.ensure_default_roles(after, changed_role_ids=before_ids ^ after_ids)
                 details=[]
                 if added:details.append("Added: "+", ".join(added))
                 if removed:details.append("Removed: "+", ".join(removed))
