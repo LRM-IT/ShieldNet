@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, computed, signal } from '@angular/core';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, timeout } from 'rxjs';
 
 export interface LanguageEntity {
   code: string;
@@ -42,10 +42,7 @@ export class TranslationService {
     );
 
     const stored = localStorage.getItem(this.storageKey);
-    const selected =
-      preferred ||
-      stored ||
-      'en';
+    const selected = preferred || stored || await this.detectInitialLocale();
 
     await this.setLocale(selected, false);
     this.ready.set(true);
@@ -90,6 +87,24 @@ export class TranslationService {
     if (typeof value === 'string') return value;
     const english = lookup(this.englishDictionary);
     return typeof english === 'string' ? english : fallback || key;
+  }
+
+  private async detectInitialLocale(): Promise<string> {
+    const browserLanguages = [navigator.language, ...(navigator.languages ?? [])]
+      .filter(Boolean)
+      .map((value) => value.toLowerCase().replace('_', '-'));
+    if (browserLanguages.some((value) => value === 'uk' || value.startsWith('uk-'))) {
+      return 'uk';
+    }
+    try {
+      const detected = await firstValueFrom(
+        this.http.get<{ recommended_locale?: string }>('/api/v1/public/locale').pipe(timeout(1800)),
+      );
+      if (detected.recommended_locale === 'uk') return 'uk';
+    } catch {
+      // Locale detection must never prevent the application from opening.
+    }
+    return 'en';
   }
 
   hasPhrase(source: string): boolean {
