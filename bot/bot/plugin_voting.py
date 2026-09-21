@@ -160,14 +160,20 @@ class VotingWorker:
             message_id = message.id
 
         result_message_id = None
-        if closed and poll.get("publish_result_image", True):
-            card = await fetch_template_result_image(self, poll)
+        if closed:
+            result_channel_id = (poll.get("result_settings") or {}).get("result_channel_id")
+            result_channel = guild.get_channel_or_thread(int(result_channel_id)) if result_channel_id else channel
+            if result_channel is None:
+                raise RuntimeError("Voting results channel not found.")
+            card = await fetch_template_result_image(self, poll) if poll.get("publish_result_image", True) else None
+            kwargs: dict[str, Any] = {
+                "content": "🏁 **Voting closed — final results**",
+                "embed": embed,
+            }
             if card is not None:
-                result_message = await channel.send(
-                    content="🏁 **Voting closed — final results**",
-                    file=discord.File(card, filename=f"poll-{poll['id']}-results.png"),
-                )
-                result_message_id = result_message.id
+                kwargs["file"] = discord.File(card, filename=f"poll-{poll['id']}-results.png")
+            result_message = await result_channel.send(**kwargs)
+            result_message_id = result_message.id
 
         async with httpx.AsyncClient(timeout=20) as client:
             response = await client.post(

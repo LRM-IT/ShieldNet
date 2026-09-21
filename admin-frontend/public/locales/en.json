@@ -2195,7 +2195,11 @@
     "creating_preview": "Creating image…",
     "preview_alt": "Voting final result preview",
     "template_missing": "No active template was found. Select or configure a voting template.",
-    "preview_error": "Unable to create preview."
+    "preview_error": "Unable to create preview.",
+    "result_channel": "Results channel",
+    "close_confirm": "Close this poll now and publish the final results?",
+    "close_queued": "Poll closed. Final results are being published.",
+    "close_error": "Unable to close the poll."
   },
   "language_plugin": {
     "eyebrow": "GUILD PLUGIN",

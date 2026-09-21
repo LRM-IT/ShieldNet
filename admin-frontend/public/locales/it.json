@@ -2235,7 +2235,11 @@
     "creating_preview": "Creating image…",
     "preview_alt": "Voting final result preview",
     "template_missing": "No active template was found. Select or configure a voting template.",
-    "preview_error": "Unable to create preview."
+    "preview_error": "Unable to create preview.",
+    "result_channel": "Canale dei risultati",
+    "close_confirm": "Chiudere ora il sondaggio e pubblicare i risultati finali?",
+    "close_queued": "Sondaggio chiuso. Pubblicazione dei risultati finali in corso.",
+    "close_error": "Impossibile chiudere il sondaggio."
   },
   "language_plugin": {
     "eyebrow": "PLUGIN DEL SERVER",

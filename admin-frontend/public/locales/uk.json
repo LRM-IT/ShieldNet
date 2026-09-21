@@ -2128,7 +2128,11 @@
     "creating_preview": "Creating image…",
     "preview_alt": "Voting final result preview",
     "template_missing": "No active template was found. Select or configure a voting template.",
-    "preview_error": "Unable to create preview."
+    "preview_error": "Unable to create preview.",
+    "result_channel": "Канал результатів",
+    "close_confirm": "Закрити голосування зараз і опублікувати підсумкові результати?",
+    "close_queued": "Голосування закрито. Підсумкові результати публікуються.",
+    "close_error": "Не вдалося закрити голосування."
   },
   "language_plugin": {
     "eyebrow": "ПЛАГІН СЕРВЕРА",

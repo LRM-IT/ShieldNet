@@ -2237,7 +2237,11 @@
     "creating_preview": "Creating image…",
     "preview_alt": "Voting final result preview",
     "template_missing": "No active template was found. Select or configure a voting template.",
-    "preview_error": "Unable to create preview."
+    "preview_error": "Unable to create preview.",
+    "result_channel": "قناة النتائج",
+    "close_confirm": "هل تريد إغلاق التصويت الآن ونشر النتائج النهائية؟",
+    "close_queued": "تم إغلاق التصويت. جارٍ نشر النتائج النهائية.",
+    "close_error": "تعذر إغلاق التصويت."
   },
   "language_plugin": {
     "eyebrow": "إضافة الخادم",

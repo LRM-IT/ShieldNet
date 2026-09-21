@@ -2237,7 +2237,11 @@
     "creating_preview": "Creating image…",
     "preview_alt": "Voting final result preview",
     "template_missing": "No active template was found. Select or configure a voting template.",
-    "preview_error": "Unable to create preview."
+    "preview_error": "Unable to create preview.",
+    "result_channel": "Ergebniskanal",
+    "close_confirm": "Diese Abstimmung jetzt schließen und die Endergebnisse veröffentlichen?",
+    "close_queued": "Abstimmung geschlossen. Die Endergebnisse werden veröffentlicht.",
+    "close_error": "Die Abstimmung konnte nicht geschlossen werden."
   },
   "language_plugin": {
     "eyebrow": "SERVER-PLUGIN",

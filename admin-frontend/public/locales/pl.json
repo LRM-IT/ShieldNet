@@ -2235,7 +2235,11 @@
     "creating_preview": "Creating image…",
     "preview_alt": "Voting final result preview",
     "template_missing": "No active template was found. Select or configure a voting template.",
-    "preview_error": "Unable to create preview."
+    "preview_error": "Unable to create preview.",
+    "result_channel": "Kanał wyników",
+    "close_confirm": "Zamknąć głosowanie teraz i opublikować wyniki końcowe?",
+    "close_queued": "Głosowanie zamknięte. Wyniki końcowe są publikowane.",
+    "close_error": "Nie udało się zamknąć głosowania."
   },
   "language_plugin": {
     "eyebrow": "WTYCZKA SERWERA",
