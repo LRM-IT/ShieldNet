@@ -2156,6 +2156,9 @@
     "saved": "Ustawienia AI AutoMod zostały zapisane.",
     "save_error": "Nie można zapisać ustawień."
   },
+  "seo": {
+    "title": "SEO i analityka", "eyebrow": "SUPERADMIN", "help": "Metadane strony głównej i integracje analityczne.", "language": "Język SEO", "homepage": "SEO strony głównej", "site_name": "Nazwa witryny", "canonical_url": "Kanoniczny URL", "meta_title": "Tytuł", "description": "Opis", "keywords": "Słowa kluczowe", "og_image": "URL obrazu Open Graph", "og_title": "Tytuł Open Graph", "og_description": "Opis Open Graph", "search_preview": "PODGLĄD W WYSZUKIWARCE", "analytics": "Analityka", "analytics_help": "Wprowadź identyfikatory śledzenia. Uruchomią się dopiero po zgodzie użytkownika na pliki cookie.", "enabled": "Włączone", "yandex_metrika": "ID Yandex Metrica", "saving": "Zapisywanie…", "save": "Zapisz ustawienia", "saved": "Ustawienia zapisano.", "save_error": "Nie udało się zapisać ustawień."
+  },
   "voting": {
     "title": "Voting",
     "eyebrow": "GUILDCONSOLE PLUGIN",

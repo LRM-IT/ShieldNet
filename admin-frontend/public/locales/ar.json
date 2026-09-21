@@ -2158,6 +2158,9 @@
     "saved": "تم حفظ إعدادات AI AutoMod.",
     "save_error": "تعذر حفظ الإعدادات."
   },
+  "seo": {
+    "title": "تحسين محركات البحث والتحليلات", "eyebrow": "المشرف العام", "help": "بيانات الصفحة الرئيسية الوصفية وتكاملات التحليلات.", "language": "لغة SEO", "homepage": "SEO للصفحة الرئيسية", "site_name": "اسم الموقع", "canonical_url": "الرابط الأساسي", "meta_title": "العنوان", "description": "الوصف", "keywords": "الكلمات المفتاحية", "og_image": "رابط صورة Open Graph", "og_title": "عنوان Open Graph", "og_description": "وصف Open Graph", "search_preview": "معاينة البحث", "analytics": "التحليلات", "analytics_help": "أدخل معرفات التتبع. لن تعمل إلا بعد موافقة الزائر على ملفات تعريف الارتباط.", "enabled": "مفعّل", "yandex_metrika": "معرف Yandex Metrica", "saving": "جارٍ الحفظ…", "save": "حفظ الإعدادات", "saved": "تم حفظ الإعدادات.", "save_error": "تعذر حفظ الإعدادات."
+  },
   "voting": {
     "title": "Voting",
     "eyebrow": "GUILDCONSOLE PLUGIN",

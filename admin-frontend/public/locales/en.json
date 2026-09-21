@@ -2116,6 +2116,9 @@
     "saved": "AI AutoMod settings saved.",
     "save_error": "Could not save settings."
   },
+  "seo": {
+    "title": "SEO and analytics", "eyebrow": "SUPERADMIN", "help": "Homepage metadata and analytics integrations.", "language": "SEO language", "homepage": "Homepage SEO", "site_name": "Site name", "canonical_url": "Canonical URL", "meta_title": "Title", "description": "Description", "keywords": "Keywords", "og_image": "Open Graph image URL", "og_title": "Open Graph title", "og_description": "Open Graph description", "search_preview": "SEARCH PREVIEW", "analytics": "Analytics", "analytics_help": "Enter tracking identifiers. They run only after the visitor accepts cookies.", "enabled": "Enabled", "yandex_metrika": "Yandex Metrica ID", "saving": "Saving…", "save": "Save settings", "saved": "Settings saved.", "save_error": "Unable to save settings."
+  },
   "voting": {
     "title": "Voting",
     "eyebrow": "GUILDCONSOLE PLUGIN",

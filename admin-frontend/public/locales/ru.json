@@ -2049,6 +2049,9 @@
     "saved": "Настройки AI AutoMod сохранены.",
     "save_error": "Не удалось сохранить настройки."
   },
+  "seo": {
+    "title": "SEO и аналитика", "eyebrow": "СУПЕРАДМИНИСТРАТОР", "help": "Метаданные главной страницы и подключение систем аналитики.", "language": "Язык SEO", "homepage": "SEO главной страницы", "site_name": "Название сайта", "canonical_url": "Канонический URL", "meta_title": "Заголовок", "description": "Описание", "keywords": "Ключевые слова", "og_image": "URL изображения Open Graph", "og_title": "Заголовок Open Graph", "og_description": "Описание Open Graph", "search_preview": "ПРЕДПРОСМОТР В ПОИСКЕ", "analytics": "Аналитика", "analytics_help": "Укажите идентификаторы счётчиков. Они запускаются только после согласия посетителя на cookie.", "enabled": "Включено", "yandex_metrika": "ID Яндекс Метрики", "saving": "Сохранение…", "save": "Сохранить настройки", "saved": "Настройки сохранены.", "save_error": "Не удалось сохранить настройки."
+  },
   "voting": {
     "title": "Voting",
     "eyebrow": "GUILDCONSOLE PLUGIN",

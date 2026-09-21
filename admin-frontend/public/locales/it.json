@@ -2156,6 +2156,9 @@
     "saved": "Impostazioni AI AutoMod salvate.",
     "save_error": "Impossibile salvare le impostazioni."
   },
+  "seo": {
+    "title": "SEO e analisi", "eyebrow": "SUPERADMIN", "help": "Metadati della pagina iniziale e integrazioni di analisi.", "language": "Lingua SEO", "homepage": "SEO della pagina iniziale", "site_name": "Nome del sito", "canonical_url": "URL canonico", "meta_title": "Titolo", "description": "Descrizione", "keywords": "Parole chiave", "og_image": "URL immagine Open Graph", "og_title": "Titolo Open Graph", "og_description": "Descrizione Open Graph", "search_preview": "ANTEPRIMA DI RICERCA", "analytics": "Analisi", "analytics_help": "Inserisci gli identificatori di monitoraggio. Si attivano solo dopo il consenso ai cookie.", "enabled": "Attivo", "yandex_metrika": "ID Yandex Metrica", "saving": "Salvataggio…", "save": "Salva impostazioni", "saved": "Impostazioni salvate.", "save_error": "Impossibile salvare le impostazioni."
+  },
   "voting": {
     "title": "Voting",
     "eyebrow": "GUILDCONSOLE PLUGIN",

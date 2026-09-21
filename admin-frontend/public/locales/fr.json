@@ -2157,6 +2157,9 @@
     "saved": "Paramètres AI AutoMod enregistrés.",
     "save_error": "Impossible d’enregistrer les paramètres."
   },
+  "seo": {
+    "title": "SEO et analytique", "eyebrow": "SUPERADMIN", "help": "Métadonnées de la page d’accueil et intégrations analytiques.", "language": "Langue du SEO", "homepage": "SEO de la page d’accueil", "site_name": "Nom du site", "canonical_url": "URL canonique", "meta_title": "Titre", "description": "Description", "keywords": "Mots-clés", "og_image": "URL de l’image Open Graph", "og_title": "Titre Open Graph", "og_description": "Description Open Graph", "search_preview": "APERÇU DE RECHERCHE", "analytics": "Analytique", "analytics_help": "Saisissez les identifiants de suivi. Ils ne sont activés qu’après le consentement aux cookies.", "enabled": "Activé", "yandex_metrika": "ID Yandex Metrica", "saving": "Enregistrement…", "save": "Enregistrer les paramètres", "saved": "Paramètres enregistrés.", "save_error": "Impossible d’enregistrer les paramètres."
+  },
   "voting": {
     "title": "Voting",
     "eyebrow": "GUILDCONSOLE PLUGIN",
