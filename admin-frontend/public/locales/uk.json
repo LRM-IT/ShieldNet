@@ -70,7 +70,7 @@
     "cancel": "Скасувати",
     "payment_provider_label": "ПЛАТІЖНИЙ ПРОВАЙДЕР",
     "payment_provider_title": "Безпечні онлайн-платежі",
-    "payment_provider_text": "Онлайн-платежі обробляє LiqPay. Дані платіжної картки вводяться в захищеній формі провайдера та не зберігаються GuildConsole."
+    "payment_provider_text": "Онлайн-платежі обробляє захищений платіжний шлюз. Дані платіжної картки вводяться у формі провайдера та не зберігаються GuildConsole."
   },
   "timezone_picker": {
     "hint": "Пошук за містом або регіоном",
@@ -1771,7 +1771,7 @@
     "enter_topup": "Введіть суму поповнення.",
     "topup_error": "Не вдалося створити платіж.",
     "widget_load_error": "Не вдалося завантажити платіжний віджет",
-    "liqpay_unavailable": "Віджет LiqPay недоступний",
+    "liqpay_unavailable": "Платіжний шлюз недоступний",
     "payment_approved": "Платіж підтверджено. Баланс оновиться після підтвердження шлюзу.",
     "payment_declined": "Платіж відхилено.",
     "payment_processing": "Платіж обробляється.",
@@ -2241,7 +2241,7 @@
     "privacy": "Політика конфіденційності",
     "home_label": "Головна сторінка GuildConsole",
     "language_label": "Обрати мову",
-    "payment_provider_label": "Відкрити сайт платіжного сервісу LiqPay",
+    "payment_provider_label": "Захищений платіжний шлюз",
     "copyright": "GuildConsole · LRM-IT"
   },
   "channel_picker": {

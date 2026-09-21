@@ -73,7 +73,7 @@
     "cancel": "إلغاء",
     "payment_provider_label": "مزود الدفع",
     "payment_provider_title": "مدفوعات آمنة عبر الإنترنت",
-    "payment_provider_text": "تعالج LiqPay المدفوعات. تُدخل بيانات البطاقة في صفحة الدفع الآمنة ولا تخزنها GuildConsole."
+    "payment_provider_text": "تتم معالجة المدفوعات عبر بوابة دفع آمنة. تُدخل بيانات البطاقة في صفحة مزود الدفع ولا تخزنها GuildConsole."
   },
   "timezone_picker": {
     "hint": "البحث حسب المدينة أو المنطقة",
@@ -1880,7 +1880,7 @@
     "enter_topup": "أدخل مبلغ الشحن.",
     "topup_error": "تعذر إنشاء عملية الشحن.",
     "widget_load_error": "فشل تحميل أداة الدفع",
-    "liqpay_unavailable": "أداة LiqPay غير متاحة",
+    "liqpay_unavailable": "بوابة الدفع غير متاحة",
     "payment_approved": "تمت الموافقة على الدفع. سيُحدّث الرصيد بعد تأكيد المزود.",
     "payment_declined": "تم رفض الدفع.",
     "payment_processing": "تجري معالجة الدفع.",
@@ -2350,7 +2350,7 @@
     "privacy": "سياسة الخصوصية",
     "home_label": "الصفحة الرئيسية لـ GuildConsole",
     "language_label": "اختيار اللغة",
-    "payment_provider_label": "فتح موقع خدمة الدفع LiqPay",
+    "payment_provider_label": "بوابة دفع آمنة",
     "copyright": "GuildConsole · LRM-IT"
   },
   "channel_picker": {

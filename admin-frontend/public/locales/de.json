@@ -73,7 +73,7 @@
     "cancel": "Abbrechen",
     "payment_provider_label": "ZAHLUNGSANBIETER",
     "payment_provider_title": "Sichere Online-Zahlungen",
-    "payment_provider_text": "Online-Zahlungen werden von LiqPay verarbeitet. Kartendaten werden im sicheren Checkout eingegeben und nicht von GuildConsole gespeichert."
+    "payment_provider_text": "Online-Zahlungen werden über ein sicheres Zahlungsportal verarbeitet. Kartendaten werden im Checkout des Anbieters eingegeben und nicht von GuildConsole gespeichert."
   },
   "timezone_picker": {
     "hint": "Nach Stadt oder Region suchen",
@@ -1880,7 +1880,7 @@
     "enter_topup": "Geben Sie den Aufladebetrag ein.",
     "topup_error": "Aufladung konnte nicht erstellt werden.",
     "widget_load_error": "Zahlungs-Widget konnte nicht geladen werden",
-    "liqpay_unavailable": "LiqPay-Widget nicht verfügbar",
+    "liqpay_unavailable": "Zahlungsportal nicht verfügbar",
     "payment_approved": "Zahlung genehmigt. Das Guthaben wird nach Bestätigung aktualisiert.",
     "payment_declined": "Zahlung wurde abgelehnt.",
     "payment_processing": "Zahlung wird verarbeitet.",
@@ -2350,7 +2350,7 @@
     "privacy": "Datenschutzerklärung",
     "home_label": "GuildConsole-Startseite",
     "language_label": "Sprache auswählen",
-    "payment_provider_label": "Website des Zahlungsdienstes LiqPay öffnen",
+    "payment_provider_label": "Sicheres Zahlungsportal",
     "copyright": "GuildConsole · LRM-IT"
   },
   "channel_picker": {

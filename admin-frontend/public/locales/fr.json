@@ -72,7 +72,7 @@
     "cancel": "Annuler",
     "payment_provider_label": "PRESTATAIRE DE PAIEMENT",
     "payment_provider_title": "Paiements en ligne sécurisés",
-    "payment_provider_text": "Les paiements sont traités par LiqPay. Les données de carte sont saisies dans son interface sécurisée et ne sont pas stockées par GuildConsole."
+    "payment_provider_text": "Les paiements sont traités par une passerelle de paiement sécurisée. Les données de carte sont saisies dans l’interface du prestataire et ne sont pas stockées par GuildConsole."
   },
   "timezone_picker": {
     "hint": "Rechercher par ville ou région",
@@ -1879,7 +1879,7 @@
     "enter_topup": "Saisissez le montant à créditer.",
     "topup_error": "Impossible de créer le paiement.",
     "widget_load_error": "Échec du chargement du widget de paiement",
-    "liqpay_unavailable": "Widget LiqPay indisponible",
+    "liqpay_unavailable": "Passerelle de paiement indisponible",
     "payment_approved": "Paiement approuvé. Le solde sera actualisé après confirmation.",
     "payment_declined": "Le paiement a été refusé.",
     "payment_processing": "Le paiement est en cours de traitement.",
@@ -2349,7 +2349,7 @@
     "privacy": "Politique de confidentialité",
     "home_label": "Accueil GuildConsole",
     "language_label": "Choisir la langue",
-    "payment_provider_label": "Ouvrir le site du service de paiement LiqPay",
+    "payment_provider_label": "Passerelle de paiement sécurisée",
     "copyright": "GuildConsole · LRM-IT"
   },
   "channel_picker": {

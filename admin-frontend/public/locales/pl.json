@@ -71,7 +71,7 @@
     "cancel": "Anuluj",
     "payment_provider_label": "OPERATOR PŁATNOŚCI",
     "payment_provider_title": "Bezpieczne płatności online",
-    "payment_provider_text": "Płatności obsługuje LiqPay. Dane karty są wprowadzane w bezpiecznym formularzu i nie są przechowywane przez GuildConsole."
+    "payment_provider_text": "Płatności obsługuje bezpieczna bramka płatnicza. Dane karty są wprowadzane w formularzu operatora i nie są przechowywane przez GuildConsole."
   },
   "timezone_picker": {
     "hint": "Szukaj według miasta lub regionu",
@@ -1878,7 +1878,7 @@
     "enter_topup": "Wpisz kwotę doładowania.",
     "topup_error": "Nie udało się utworzyć płatności.",
     "widget_load_error": "Nie udało się załadować widżetu płatności",
-    "liqpay_unavailable": "Widżet LiqPay niedostępny",
+    "liqpay_unavailable": "Bramka płatnicza jest niedostępna",
     "payment_approved": "Płatność zatwierdzona. Saldo zaktualizuje się po potwierdzeniu.",
     "payment_declined": "Płatność została odrzucona.",
     "payment_processing": "Płatność jest przetwarzana.",
@@ -2348,7 +2348,7 @@
     "privacy": "Polityka prywatności",
     "home_label": "Strona główna GuildConsole",
     "language_label": "Wybierz język",
-    "payment_provider_label": "Otwórz stronę operatora płatności LiqPay",
+    "payment_provider_label": "Bezpieczna bramka płatnicza",
     "copyright": "GuildConsole · LRM-IT"
   },
   "channel_picker": {

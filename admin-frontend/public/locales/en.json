@@ -71,7 +71,7 @@
     "cancel": "Cancel",
     "payment_provider_label": "PAYMENT PROVIDER",
     "payment_provider_title": "Secure online payments",
-    "payment_provider_text": "Online payments are processed by LiqPay. Payment card details are entered on the provider’s secure checkout and are not stored by GuildConsole."
+    "payment_provider_text": "Online payments are processed through a secure payment gateway. Payment card details are entered on the provider’s checkout and are not stored by GuildConsole."
   },
   "timezone_picker": {
     "hint": "Search by city or region",
@@ -1838,7 +1838,7 @@
     "enter_topup": "Enter the top-up amount.",
     "topup_error": "Unable to create top-up.",
     "widget_load_error": "Payment widget failed to load",
-    "liqpay_unavailable": "LiqPay widget unavailable",
+    "liqpay_unavailable": "Payment gateway unavailable",
     "payment_approved": "Payment approved. Balance will update after provider confirmation.",
     "payment_declined": "Payment was declined.",
     "payment_processing": "Payment is being processed.",
@@ -2308,7 +2308,7 @@
     "privacy": "Privacy policy",
     "home_label": "GuildConsole home",
     "language_label": "Select language",
-    "payment_provider_label": "Open the LiqPay payment service website",
+    "payment_provider_label": "Secure payment gateway",
     "copyright": "GuildConsole · LRM-IT"
   },
   "channel_picker": {
