@@ -49,7 +49,7 @@ import { LanguagePickerComponent } from '../shared/language-picker.component';
 
           <div class="visual-footer">
             <span><i></i> {{ "login.online" | snT:"CONTROL PLANE ONLINE" }}</span>
-            <div class="footer-actions"><a routerLink="/docs">{{'login.documentation'|snT:'Read public documentation'}} <b>→</b></a><a routerLink="/pricing">{{'public_pricing.nav'|snT:'Pricing'}}</a>@if(i18n.locale()==='uk'){<a routerLink="/terms">Умови</a><a routerLink="/payment">Оплата</a><a routerLink="/refund">Повернення</a><a routerLink="/contacts">Контакти</a>}<a routerLink="/privacy-policy">{{'merchant.privacy'|snT:'Privacy policy'}}</a><sn-language-picker class="footer-language" [value]="i18n.locale()" [options]="i18n.languages()" (valueChange)="i18n.setLocale($event)"/><span>GUILDCONSOLE // LRM-IT</span></div>
+            <div class="footer-actions"><a routerLink="/docs">{{'login.documentation'|snT:'Read public documentation'}} <b>→</b></a><a routerLink="/pricing">{{'public_pricing.nav'|snT:'Pricing'}}</a>@if(i18n.locale()==='uk'){<a routerLink="/terms">Умови</a><a routerLink="/payment">Оплата</a><a routerLink="/refund">Повернення</a><a routerLink="/contacts">Контакти</a>}<a routerLink="/privacy-policy">{{'merchant.privacy'|snT:'Privacy policy'}}</a><sn-language-picker class="footer-language" [compact]="true" [value]="i18n.locale()" [options]="i18n.languages()" (valueChange)="i18n.setLocale($event)"/><span>GUILDCONSOLE // LRM-IT</span></div>
           </div>
         </div>
       </section>
@@ -283,16 +283,17 @@ import { LanguagePickerComponent } from '../shared/language-picker.component';
       line-height:1.45
     }
 
-    .footer-actions{display:flex;align-items:center;justify-content:flex-end;gap:1rem}
+    .footer-actions{min-width:0;flex:1;display:flex;align-items:center;justify-content:flex-end;gap:.65rem 1rem;flex-wrap:wrap}
     .footer-actions>a{color:#76938f;font-size:.62rem;font-weight:850;letter-spacing:.08em;white-space:nowrap}
     .footer-actions>a:hover{color:var(--primary)}
     .footer-actions>a b{margin-left:.25rem;color:var(--primary)}
-    .footer-language{width:190px;font-size:.68rem;letter-spacing:0}
+    .footer-language{flex:0 0 42px;width:42px;font-size:.68rem;letter-spacing:0}
     .footer-actions>span{white-space:nowrap}
 
     .visual-footer{
       display:flex;
       justify-content:space-between;
+      align-items:center;
       gap:1rem;
       color:#516572;
       font-size:.57rem;
@@ -300,7 +301,7 @@ import { LanguagePickerComponent } from '../shared/language-picker.component';
       letter-spacing:.13em
     }
 
-    .visual-footer>span:first-child{display:flex;align-items:center;gap:.5rem}
+    .visual-footer>span:first-child{flex:0 0 auto;display:flex;align-items:center;gap:.5rem}
     .visual-footer i{
       width:.45rem;
       height:.45rem;
