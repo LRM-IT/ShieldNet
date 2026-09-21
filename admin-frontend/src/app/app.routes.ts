@@ -69,6 +69,7 @@ import { MerchantInformationComponent } from './pages/merchant-information.compo
 import { SeoComponent } from './pages/seo.component';
 import { SystemSettingsComponent } from './pages/system-settings.component';
 import { PublicDocumentationComponent } from './pages/public-documentation.component';
+import { PublicPricingComponent } from './pages/public-pricing.component';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -80,6 +81,7 @@ export const routes: Routes = [
   { path: 'documentation', component: DocumentationComponent, canActivate: [authGuard] },
   { path: 'support', component: SupportComponent, canActivate: [authGuard] },
   { path: 'privacy-policy', component: MerchantInformationComponent },
+  { path: 'pricing', component: PublicPricingComponent },
   { path: 'docs', component: PublicDocumentationComponent },
   { path: 'merchant-information', redirectTo: 'privacy-policy', pathMatch: 'full' },
   { path: 'platform/languages', component: PlatformLanguagesComponent },

@@ -41,13 +41,10 @@ export class TranslationService {
       docs.map((doc) => doc['_language'] as LanguageEntity),
     );
 
-    const browser = navigator.language || 'en';
     const stored = localStorage.getItem(this.storageKey);
     const selected =
       preferred ||
       stored ||
-      this.languages().find((item) => item.discord_locale.includes(browser))?.code ||
-      this.languages().find((item) => browser.startsWith(item.code))?.code ||
       'en';
 
     await this.setLocale(selected, false);

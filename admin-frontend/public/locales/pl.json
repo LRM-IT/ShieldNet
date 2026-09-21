@@ -68,7 +68,10 @@
     "edit": "Edytuj stronę",
     "close_editor": "Zamknij edytor",
     "locale_hint": "Edytujesz treść dla wybranego języka.",
-    "cancel": "Anuluj"
+    "cancel": "Anuluj",
+    "payment_provider_label": "OPERATOR PŁATNOŚCI",
+    "payment_provider_title": "Bezpieczne płatności online",
+    "payment_provider_text": "Płatności obsługuje LiqPay. Dane karty są wprowadzane w bezpiecznym formularzu i nie są przechowywane przez GuildConsole."
   },
   "timezone_picker": {
     "hint": "Szukaj według miasta lub regionu",
@@ -2286,5 +2289,36 @@
     "discord_timeout": "Upłynął limit czasu Discorda. Odśwież stronę.",
     "roles_ready": "Role językowe grupy {group} są gotowe.",
     "roles_error": "Nie udało się utworzyć ról."
+  },
+  "public_pricing": {
+    "nav": "Cennik",
+    "open": "Zobacz aktualny cennik",
+    "login": "Zaloguj się",
+    "eyebrow": "CENNIK GUILDCONSOLE",
+    "title": "Proste subskrypcje serwerowe",
+    "subtitle": "Jedna subskrypcja aktywuje płatne moduły GuildConsole dla jednego serwera Discord. Ceny są pobierane bezpośrednio z systemu rozliczeń.",
+    "loading": "Ładowanie cen…",
+    "error": "Nie udało się pobrać aktualnych cen.",
+    "plan_label": "PLAN SERWERA",
+    "plan_title": "Subskrypcja płatnych modułów",
+    "plan_text": "Aktywuj moduły automatyzacji, bezpieczeństwa, AI i zarządzania społecznością.",
+    "per_server": "NA SERWER",
+    "days_30": "30 dni dostępu",
+    "days_90": "90 dni dostępu",
+    "days_365": "365 dni dostępu",
+    "choose": "Wybierz plan",
+    "included": "W każdym płatnym okresie",
+    "item_modules": "Dostęp do aktywnych płatnych modułów",
+    "item_updates": "Aktualizacje podczas subskrypcji",
+    "item_control": "Centralna konfiguracja, bezpieczeństwo i automatyzacja",
+    "item_support": "Wsparcie przez system zgłoszeń GuildConsole",
+    "free_title": "Bezpłatne moduły",
+    "free_text": "Bezpłatne moduły pozostają dostępne bez tej subskrypcji.",
+    "payment_title": "Płatność i aktywacja",
+    "payment_text": "Płatność odbywa się elektronicznie. Dostęp jest aktywowany po jej potwierdzeniu.",
+    "refund_title": "Warunki i zwroty",
+    "refund_text": "Zasady płatności, anulowania i zwrotów znajdują się w sekcji prawnej.",
+    "read_terms": "Przeczytaj warunki",
+    "unavailable": "Publiczny cennik jest chwilowo niedostępny."
   }
 }

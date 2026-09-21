@@ -121,6 +121,13 @@ def subscription_dict(row):
             "starts_at":row.starts_at,"expires_at":row.expires_at,"provider":row.provider,"external_order_id":row.external_order_id,"auto_renew":row.auto_renew,
             "expiry_notice_enabled":row.expiry_notice_enabled,"expiry_notice_days":row.expiry_notice_days,"expiry_notice_discord_dm":row.expiry_notice_discord_dm,"expiry_notice_email":row.expiry_notice_email}
 
+@router.get("/public/pricing")
+async def public_pricing(session: AsyncSession = Depends(get_db_session)):
+    row = await session.scalar(select(BillingPluginPlan).where(BillingPluginPlan.plugin_key == PAID_PACKAGE_KEY))
+    if row is None or not row.enabled or row.is_free:
+        return {"currency": "USD", "plan": None}
+    return {"currency": row.currency, "plan": plan_dict(row)}
+
 @router.get("/platform/billing/plans")
 async def plans(_: User = Depends(require_superadmin), session: AsyncSession = Depends(get_db_session)):
     configured = {x.plugin_key: x for x in await BillingService(session).list_plans()}

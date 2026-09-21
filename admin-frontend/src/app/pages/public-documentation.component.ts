@@ -15,7 +15,7 @@ type PublicDocsFile={common:{configuration_title:string;check_title:string;troub
   imports: [RouterLink, TranslatePipe, LanguagePickerComponent, PublicBrandComponent],
   template: `
     <main>
-      <nav><sn-public-brand/><div><a class="login" routerLink="/login">{{'public_docs.login'|snT:'Open console'}}</a></div></nav>
+      <nav><sn-public-brand/><div><a routerLink="/pricing">{{'public_pricing.nav'|snT:'Pricing'}}</a><a class="login" routerLink="/login">{{'public_docs.login'|snT:'Open console'}}</a></div></nav>
       <header><span>{{'public_docs.eyebrow'|snT:'PUBLIC DOCUMENTATION'}}</span><h1>{{'public_docs.title'|snT:'GuildConsole documentation'}}</h1><p>{{'public_docs.intro'|snT:'A practical guide to connecting a Discord server, managing access, installing plugins and operating GuildConsole safely.'}}</p><div class="actions"><a routerLink="/docs" fragment="start">{{'public_docs.start'|snT:'Get started'}}</a><a class="secondary" routerLink="/docs" fragment="modules">{{'public_docs.explore'|snT:'Explore features'}}</a></div></header>
 
       <section class="toc"><strong>{{'public_docs.on_page'|snT:'On this page'}}</strong><a routerLink="/docs" fragment="about">{{'public_docs.about_nav'|snT:'About GuildConsole'}}</a><a routerLink="/docs" fragment="start">{{'public_docs.start_nav'|snT:'First connection'}}</a><a routerLink="/docs" fragment="modules">{{'public_docs.modules_nav'|snT:'Platform features'}}</a><a routerLink="/docs" fragment="plugins">{{'public_docs.plugins_nav'|snT:'Plugins'}}</a><a routerLink="/docs" fragment="security">{{'public_docs.security_nav'|snT:'Security and billing'}}</a><a routerLink="/docs" fragment="help">{{'public_docs.help_nav'|snT:'Help'}}</a></section>
@@ -39,7 +39,7 @@ type PublicDocsFile={common:{configuration_title:string;check_title:string;troub
 
       <section id="help" class="block"><div class="number">06</div><div><span class="label">{{'public_docs.help_label'|snT:'SUPPORT'}}</span><h2>{{'public_docs.help_title'|snT:'When something does not work'}}</h2><p>{{'public_docs.help_text'|snT:'After signing in, open Feedback & issues to report a bug, attach screenshots or suggest a feature or custom plugin. Include the server, plugin, expected result and the steps that caused the problem.'}}</p><a class="cta" routerLink="/login">{{'public_docs.open_console'|snT:'Sign in to GuildConsole'}}</a></div></section>
 
-      <footer><div><b>GUILDCONSOLE</b><span>{{'public_docs.footer'|snT:'Discord server operations by LRM-IT'}}</span></div><div><sn-language-picker [value]="i18n.locale()" [options]="i18n.languages()" (valueChange)="changeLocale($event)"/><a routerLink="/privacy-policy">{{'merchant.privacy'|snT:'Privacy policy'}}</a><a routerLink="/login">{{'public_docs.login'|snT:'Open console'}}</a></div></footer>
+      <footer><div><b>GUILDCONSOLE</b><span>{{'public_docs.footer'|snT:'Discord server operations by LRM-IT'}}</span></div><div><sn-language-picker [value]="i18n.locale()" [options]="i18n.languages()" (valueChange)="changeLocale($event)"/><a routerLink="/pricing">{{'public_pricing.nav'|snT:'Pricing'}}</a><a routerLink="/privacy-policy">{{'merchant.privacy'|snT:'Privacy policy'}}</a><a routerLink="/login">{{'public_docs.login'|snT:'Open console'}}</a></div></footer>
     </main>
   `,
   styles: [`

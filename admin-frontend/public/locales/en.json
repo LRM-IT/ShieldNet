@@ -68,7 +68,10 @@
     "edit": "Edit page",
     "close_editor": "Close editor",
     "locale_hint": "You are editing content for the selected language.",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "payment_provider_label": "PAYMENT PROVIDER",
+    "payment_provider_title": "Secure online payments",
+    "payment_provider_text": "Online payments are processed by LiqPay. Payment card details are entered on the provider’s secure checkout and are not stored by GuildConsole."
   },
   "timezone_picker": {
     "hint": "Search by city or region",
@@ -2246,5 +2249,36 @@
     "discord_timeout": "Discord timed out. Refresh the page.",
     "roles_ready": "Language roles for {group} are ready.",
     "roles_error": "Could not create the roles."
+  },
+  "public_pricing": {
+    "nav": "Pricing",
+    "open": "View current pricing",
+    "login": "Sign in",
+    "eyebrow": "GUILDCONSOLE PRICING",
+    "title": "Simple server subscriptions",
+    "subtitle": "One subscription activates the paid GuildConsole modules for one Discord server. Prices below are loaded directly from the billing system.",
+    "loading": "Loading current prices…",
+    "error": "Unable to load current pricing.",
+    "plan_label": "SERVER PLAN",
+    "plan_title": "Paid modules subscription",
+    "plan_text": "Activate automation, security, AI and community management modules for a selected Discord server.",
+    "per_server": "PER SERVER",
+    "days_30": "30 days of access",
+    "days_90": "90 days of access",
+    "days_365": "365 days of access",
+    "choose": "Choose plan",
+    "included": "Included with every paid period",
+    "item_modules": "Access to paid modules enabled for the server",
+    "item_updates": "Product updates during the active subscription",
+    "item_control": "Centralized configuration, security and automation tools",
+    "item_support": "Support through the GuildConsole ticket system",
+    "free_title": "Free modules",
+    "free_text": "Modules marked as free remain available without purchasing this subscription.",
+    "payment_title": "Payment and activation",
+    "payment_text": "Payment is completed electronically. Access is activated for the selected Discord server after the payment is confirmed.",
+    "refund_title": "Terms and refunds",
+    "refund_text": "Payment, cancellation and refund rules are published in the legal information section.",
+    "read_terms": "Read terms",
+    "unavailable": "Public pricing is temporarily unavailable."
   }
 }

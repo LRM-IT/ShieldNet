@@ -68,7 +68,10 @@
     "edit": "Modifica pagina",
     "close_editor": "Chiudi editor",
     "locale_hint": "Stai modificando il contenuto per la lingua selezionata.",
-    "cancel": "Annulla"
+    "cancel": "Annulla",
+    "payment_provider_label": "FORNITORE DI PAGAMENTO",
+    "payment_provider_title": "Pagamenti online sicuri",
+    "payment_provider_text": "I pagamenti sono elaborati da LiqPay. I dati della carta vengono inseriti nel checkout sicuro e non sono conservati da GuildConsole."
   },
   "timezone_picker": {
     "hint": "Cerca per città o regione",
@@ -2286,5 +2289,36 @@
     "discord_timeout": "Discord non ha risposto in tempo. Aggiorna la pagina.",
     "roles_ready": "I ruoli linguistici di {group} sono pronti.",
     "roles_error": "Impossibile creare i ruoli."
+  },
+  "public_pricing": {
+    "nav": "Prezzi",
+    "open": "Vedi i prezzi attuali",
+    "login": "Accedi",
+    "eyebrow": "PREZZI GUILDCONSOLE",
+    "title": "Abbonamenti semplici per server",
+    "subtitle": "Un abbonamento attiva i moduli a pagamento di GuildConsole per un server Discord. I prezzi sono caricati direttamente dalla fatturazione.",
+    "loading": "Caricamento prezzi…",
+    "error": "Impossibile caricare i prezzi attuali.",
+    "plan_label": "PIANO SERVER",
+    "plan_title": "Abbonamento ai moduli a pagamento",
+    "plan_text": "Attiva moduli di automazione, sicurezza, IA e gestione della community.",
+    "per_server": "PER SERVER",
+    "days_30": "30 giorni di accesso",
+    "days_90": "90 giorni di accesso",
+    "days_365": "365 giorni di accesso",
+    "choose": "Scegli piano",
+    "included": "Incluso in ogni periodo pagato",
+    "item_modules": "Accesso ai moduli a pagamento attivati",
+    "item_updates": "Aggiornamenti durante l’abbonamento",
+    "item_control": "Configurazione, sicurezza e automazione centralizzate",
+    "item_support": "Supporto tramite i ticket GuildConsole",
+    "free_title": "Moduli gratuiti",
+    "free_text": "I moduli gratuiti restano disponibili senza questo abbonamento.",
+    "payment_title": "Pagamento e attivazione",
+    "payment_text": "Il pagamento avviene online. L’accesso viene attivato dopo la conferma.",
+    "refund_title": "Condizioni e rimborsi",
+    "refund_text": "Le regole di pagamento, cancellazione e rimborso sono nelle informazioni legali.",
+    "read_terms": "Leggi le condizioni",
+    "unavailable": "I prezzi pubblici non sono temporaneamente disponibili."
   }
 }

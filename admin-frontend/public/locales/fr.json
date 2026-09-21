@@ -69,7 +69,10 @@
     "edit": "Modifier la page",
     "close_editor": "Fermer l’éditeur",
     "locale_hint": "Vous modifiez le contenu de la langue sélectionnée.",
-    "cancel": "Annuler"
+    "cancel": "Annuler",
+    "payment_provider_label": "PRESTATAIRE DE PAIEMENT",
+    "payment_provider_title": "Paiements en ligne sécurisés",
+    "payment_provider_text": "Les paiements sont traités par LiqPay. Les données de carte sont saisies dans son interface sécurisée et ne sont pas stockées par GuildConsole."
   },
   "timezone_picker": {
     "hint": "Rechercher par ville ou région",
@@ -2287,5 +2290,36 @@
     "discord_timeout": "Discord n’a pas répondu à temps. Actualisez la page.",
     "roles_ready": "Les rôles linguistiques de {group} sont prêts.",
     "roles_error": "Impossible de créer les rôles."
+  },
+  "public_pricing": {
+    "nav": "Tarifs",
+    "open": "Voir les tarifs actuels",
+    "login": "Se connecter",
+    "eyebrow": "TARIFS GUILDCONSOLE",
+    "title": "Des abonnements simples par serveur",
+    "subtitle": "Un abonnement active les modules payants de GuildConsole pour un serveur Discord. Les tarifs sont chargés directement depuis la facturation.",
+    "loading": "Chargement des tarifs…",
+    "error": "Impossible de charger les tarifs actuels.",
+    "plan_label": "OFFRE SERVEUR",
+    "plan_title": "Abonnement aux modules payants",
+    "plan_text": "Activez les modules d’automatisation, de sécurité, d’IA et de gestion de communauté.",
+    "per_server": "PAR SERVEUR",
+    "days_30": "30 jours d’accès",
+    "days_90": "90 jours d’accès",
+    "days_365": "365 jours d’accès",
+    "choose": "Choisir l’offre",
+    "included": "Inclus dans chaque période payée",
+    "item_modules": "Accès aux modules payants activés",
+    "item_updates": "Mises à jour pendant l’abonnement",
+    "item_control": "Configuration, sécurité et automatisation centralisées",
+    "item_support": "Assistance via le système de tickets GuildConsole",
+    "free_title": "Modules gratuits",
+    "free_text": "Les modules gratuits restent accessibles sans cet abonnement.",
+    "payment_title": "Paiement et activation",
+    "payment_text": "Le paiement est électronique. L’accès est activé après confirmation du paiement.",
+    "refund_title": "Conditions et remboursements",
+    "refund_text": "Les règles de paiement, d’annulation et de remboursement figurent dans les informations légales.",
+    "read_terms": "Lire les conditions",
+    "unavailable": "Les tarifs publics sont temporairement indisponibles."
   }
 }

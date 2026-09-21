@@ -49,7 +49,7 @@ import { PublicBrandComponent } from '../shared/public-brand.component';
 
           <div class="visual-footer">
             <span><i></i> {{ "login.online" | snT:"CONTROL PLANE ONLINE" }}</span>
-            <div class="footer-actions"><a routerLink="/docs">{{'login.documentation'|snT:'Read public documentation'}} <b>→</b></a><sn-language-picker class="footer-language" [value]="i18n.locale()" [options]="i18n.languages()" (valueChange)="i18n.setLocale($event)" /><span>GUILDCONSOLE // LRM-IT</span></div>
+            <div class="footer-actions"><a routerLink="/docs">{{'login.documentation'|snT:'Read public documentation'}} <b>→</b></a><a routerLink="/pricing">{{'public_pricing.nav'|snT:'Pricing'}} <b>→</b></a><sn-language-picker class="footer-language" [value]="i18n.locale()" [options]="i18n.languages()" (valueChange)="i18n.setLocale($event)" /><span>GUILDCONSOLE // LRM-IT</span></div>
           </div>
         </div>
       </section>

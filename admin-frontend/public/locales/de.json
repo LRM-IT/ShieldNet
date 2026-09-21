@@ -70,7 +70,10 @@
     "edit": "Seite bearbeiten",
     "close_editor": "Editor schließen",
     "locale_hint": "Sie bearbeiten Inhalte für die ausgewählte Sprache.",
-    "cancel": "Abbrechen"
+    "cancel": "Abbrechen",
+    "payment_provider_label": "ZAHLUNGSANBIETER",
+    "payment_provider_title": "Sichere Online-Zahlungen",
+    "payment_provider_text": "Online-Zahlungen werden von LiqPay verarbeitet. Kartendaten werden im sicheren Checkout eingegeben und nicht von GuildConsole gespeichert."
   },
   "timezone_picker": {
     "hint": "Nach Stadt oder Region suchen",
@@ -2288,5 +2291,36 @@
     "discord_timeout": "Discord-Zeitüberschreitung. Aktualisieren Sie die Seite.",
     "roles_ready": "Sprachrollen für {group} sind bereit.",
     "roles_error": "Rollen konnten nicht erstellt werden."
+  },
+  "public_pricing": {
+    "nav": "Preise",
+    "open": "Aktuelle Preise ansehen",
+    "login": "Anmelden",
+    "eyebrow": "GUILDCONSOLE PREISE",
+    "title": "Einfache Server-Abonnements",
+    "subtitle": "Ein Abonnement aktiviert die kostenpflichtigen GuildConsole-Module für einen Discord-Server. Die Preise werden direkt aus dem Abrechnungssystem geladen.",
+    "loading": "Aktuelle Preise werden geladen…",
+    "error": "Die aktuellen Preise konnten nicht geladen werden.",
+    "plan_label": "SERVER-TARIF",
+    "plan_title": "Abonnement für kostenpflichtige Module",
+    "plan_text": "Aktivieren Sie Automatisierungs-, Sicherheits-, KI- und Community-Module für einen Discord-Server.",
+    "per_server": "PRO SERVER",
+    "days_30": "30 Tage Zugriff",
+    "days_90": "90 Tage Zugriff",
+    "days_365": "365 Tage Zugriff",
+    "choose": "Tarif wählen",
+    "included": "In jedem bezahlten Zeitraum enthalten",
+    "item_modules": "Zugriff auf aktivierte kostenpflichtige Module",
+    "item_updates": "Produktaktualisierungen während des Abonnements",
+    "item_control": "Zentrale Konfiguration, Sicherheit und Automatisierung",
+    "item_support": "Support über das GuildConsole-Ticketsystem",
+    "free_title": "Kostenlose Module",
+    "free_text": "Als kostenlos markierte Module bleiben ohne dieses Abonnement verfügbar.",
+    "payment_title": "Zahlung und Aktivierung",
+    "payment_text": "Die Zahlung erfolgt elektronisch. Der Zugriff wird nach Zahlungsbestätigung aktiviert.",
+    "refund_title": "Bedingungen und Erstattungen",
+    "refund_text": "Zahlungs-, Stornierungs- und Erstattungsregeln stehen im Rechtsbereich.",
+    "read_terms": "Bedingungen lesen",
+    "unavailable": "Öffentliche Preise sind vorübergehend nicht verfügbar."
   }
 }
