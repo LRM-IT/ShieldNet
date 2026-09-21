@@ -91,7 +91,7 @@ class BillingPaymentService:
         order=f"wallet-{discord_user_id}-{uuid4().hex}"
         payment=BillingPayment(id=uuid4(),order_reference=order,guild_id=None,plugin_key=None,billing_period=None,purpose="wallet_topup",owner_discord_id=discord_user_id,provider=provider,amount=amount,currency=charge_currency,base_amount_usd=amount_usd,original_amount_usd=amount_usd,quote_expires_at=datetime.now(timezone.utc)+timedelta(minutes=30))
         self.session.add(payment);await self.session.commit()
-        product="GuildConsole balance top-up";callback=f"{base_url}/api/v1/billing/callback/{provider}";result=f"{base_url}/servers"
+        product="GuildConsole software service account credit";callback=f"{base_url}/api/v1/billing/callback/{provider}";result=f"{base_url}/servers"
         if provider=="wayforpay":
             merchant=await self.secret("wfp_merchant_account");secret=await self.secret("wfp_secret_key");domain=await self.secret("wfp_merchant_domain");created=int(time.time())
             values=[merchant,domain,order,created,_money(amount),charge_currency,product,"1",_money(amount)]
@@ -176,7 +176,7 @@ class BillingPaymentService:
                                  original_amount_usd=original_amount,base_amount_usd=base_amount,discount_percent=discount["total_percent"],discount_code=discount["card_code"],quote_expires_at=datetime.now(timezone.utc)+timedelta(minutes=30))
         self.session.add(payment)
         await self.session.commit()
-        product = f"GuildConsole Paid Modules {period}"
+        product = f"GuildConsole software modules access - {period}"
         callback = f"{base_url}/api/v1/billing/callback/{provider}"
         result = f"{base_url}/guild/{guild_id}/billing"
         if provider == "wayforpay":
