@@ -92,6 +92,7 @@ interface PluginNavDefinition {
                     @if (auth.profile()?.is_superadmin) {
                       <a routerLink="/platform/system-email" routerLinkActive="active"><span class="nav-icon">✉</span><span>{{'system_nav.email'|snT:'Email / SMTP'}}</span></a>
                       <a routerLink="/platform/translation-cache" routerLinkActive="active"><span class="nav-icon">◎</span><span>{{'system_nav.translation_cache'|snT:'Translation cache'}}</span></a>
+                      <a routerLink="/platform/maintenance" routerLinkActive="active"><span class="nav-icon">⚠</span><span>Maintenance</span></a>
                       <a routerLink="/platform/seo" routerLinkActive="active"><span class="nav-icon">⌕</span><span>SEO</span></a>
                     }
                     <a routerLink="/platform/access" routerLinkActive="active"><span class="nav-icon">⚿</span><span>{{'system_nav.platform_access'|snT:'Platform access'}}</span></a>
@@ -475,7 +476,7 @@ export class ShellComponent implements OnInit, OnDestroy {
     const url = this.router.url;
     let section = '';
     if (url.startsWith('/platform/system-settings') || url.startsWith('/platform/system-email') ||
-        url.startsWith('/platform/translation-cache') || url.startsWith('/platform/seo') ||
+        url.startsWith('/platform/translation-cache') || url.startsWith('/platform/maintenance') || url.startsWith('/platform/seo') ||
         url.startsWith('/platform/access')) section = 'system';
     else if (url.startsWith('/platform/jobs') || url.startsWith('/platform/operations') ||
         url.startsWith('/platform/health') || url.startsWith('/platform/logs') ||

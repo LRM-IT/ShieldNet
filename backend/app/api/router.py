@@ -19,6 +19,7 @@ from app.api.routes.support import router as support_router
 from app.api.routes.merchant_page import router as merchant_page_router
 from app.api.routes.public_locale import router as public_locale_router
 from app.api.routes.seo import router as seo_router
+from app.api.routes.maintenance import router as maintenance_router
 from app.api.routes.audit import router as audit_router
 from app.api.routes.auth import router as auth_router
 from app.api.routes.backups import router as backups_router
@@ -100,6 +101,7 @@ api_router.include_router(support_router)
 api_router.include_router(merchant_page_router)
 api_router.include_router(public_locale_router)
 api_router.include_router(seo_router)
+api_router.include_router(maintenance_router)
 api_router.include_router(auth_router)
 api_router.include_router(backups_router)
 api_router.include_router(automations_router)

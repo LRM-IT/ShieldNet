@@ -68,6 +68,7 @@ import { SupportComponent } from './pages/support.component';
 import { MerchantInformationComponent } from './pages/merchant-information.component';
 import { SeoComponent } from './pages/seo.component';
 import { SystemSettingsComponent } from './pages/system-settings.component';
+import { MaintenanceComponent } from './pages/maintenance.component';
 import { PublicDocumentationComponent } from './pages/public-documentation.component';
 import { PublicPricingComponent } from './pages/public-pricing.component';
 
@@ -97,6 +98,7 @@ export const routes: Routes = [
   { path: 'platform/system-settings', redirectTo: 'platform/system-email', pathMatch: 'full' },
   { path: 'platform/system-email', component: SystemSettingsComponent, canActivate: [superadminGuard], data: { systemSection: 'email' } },
   { path: 'platform/translation-cache', component: SystemSettingsComponent, canActivate: [superadminGuard], data: { systemSection: 'translations' } },
+  { path: 'platform/maintenance', component: MaintenanceComponent, canActivate: [superadminGuard] },
   { path: 'platform/seo', component: SeoComponent, canActivate: [superadminGuard] },
   { path: 'platform/privacy-policy', component: MerchantInformationComponent, canActivate: [superadminGuard] },
   { path: 'platform/jobs', component: JobsCenterComponent, canActivate: [platformGuard] },
