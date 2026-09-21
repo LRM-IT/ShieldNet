@@ -7,9 +7,9 @@ import { ShellComponent } from '../shared/shell.component';
 import { GuildPluginService } from '../core/guild-plugin.service';
 import { TranslatePipe } from '../core/translate.pipe';
 import { TranslationService } from '../core/translation.service';
+import { DiscordChannelPickerComponent } from '../shared/discord-channel-picker.component';
 
 interface Language { code: string; name: string; }
-interface Channel { id: string; name: string; type: string; }
 interface Binding { channel_id: string; language: string; }
 interface Group { name: string; enabled: boolean; channels: Binding[]; expanded?: boolean; }
 interface Settings { installed:boolean;enabled:boolean;groups:Group[];include_source_link:boolean;languages:Language[];cache_enabled:boolean;cache_ttl_hours:number;cache_max_entries:number;cache_min_characters:number;max_source_characters:number;fallback_to_original:boolean;forward_attachments:boolean;forward_stickers:boolean;protected_terms:string[];detect_source_language:boolean;detection_min_characters:number; }
@@ -17,7 +17,7 @@ interface CacheStats { entries:number;hits:number;misses:number; }
 
 @Component({
   standalone: true,
-  imports: [FormsModule, ShellComponent, TranslatePipe],
+  imports: [FormsModule, ShellComponent, TranslatePipe, DiscordChannelPickerComponent],
   template: `
     <sn-shell [title]="'translator_groups.title'|snT:'Translator Groups'"><main class="page">
       <header><span>{{'translator_groups.eyebrow'|snT:'GUILD PLUGIN'}}</span><h2>{{'translator_groups.title'|snT:'Translator Groups'}}</h2>
@@ -54,10 +54,9 @@ interface CacheStats { entries:number;hits:number;misses:number; }
                     <div class="actions"><label class="check"><input type="checkbox" [(ngModel)]="group.enabled"> {{'translator_groups.enabled'|snT:'Enabled'}}</label>
                       <button class="secondary" (click)="settings.groups.splice(gi, 1)">{{'translator_groups.delete_group'|snT:'Delete group'}}</button></div></div>
                   @for (binding of group.channels; track $index; let bi = $index) {
-                    <div class="binding"><label>{{'translator_groups.channel'|snT:'Channel'}}<select [(ngModel)]="binding.channel_id">
-                        <option value="">{{'translator_groups.select_channel'|snT:'Select channel'}}</option>
-                        @for (channel of channels(); track channel.id) { <option [value]="channel.id">#{{ channel.name }}</option> }
-                      </select></label>
+                    <div class="binding"><label>{{'translator_groups.channel'|snT:'Channel'}}
+                        <sn-discord-channel-picker [guildId]="guildId" [value]="binding.channel_id" (valueChange)="binding.channel_id=$event || ''" />
+                      </label>
                       <label>{{'translator_groups.language'|snT:'Language'}}<select [(ngModel)]="binding.language"><option value="">{{'translator_groups.select_language'|snT:'Select language'}}</option>
                         @for (language of settings.languages; track language.code) { <option [value]="language.code">{{ language.name }} ({{ language.code }})</option> }
                       </select></label>
@@ -97,7 +96,6 @@ export class PluginTranslatorGroupsComponent implements OnInit {
   private readonly plugins = inject(GuildPluginService);
   private readonly i18n = inject(TranslationService);
   readonly guildId = this.route.snapshot.paramMap.get('guildId') || '';
-  readonly channels = signal<Channel[]>([]);
   readonly busy = signal(false);
   readonly error = signal('');
   readonly success = signal('');
@@ -108,15 +106,13 @@ export class PluginTranslatorGroupsComponent implements OnInit {
 
   async ngOnInit(): Promise<void> {
     try {
-      const [settings, structure, cache] = await Promise.all([
+      const [settings, cache] = await Promise.all([
         firstValueFrom(this.http.get<Settings>(this.url)),
-        firstValueFrom(this.http.get<{channels: Channel[]}>(`/api/v1/discord/guilds/${this.guildId}/structure`)),
         firstValueFrom(this.http.get<CacheStats>(`${this.url.replace('/settings','')}/cache`)),
       ]);
       this.settings = {...settings, groups:(settings.groups || []).map(group => ({...group, expanded:false}))};
       this.protectedTermsText=(settings.protected_terms||[]).join('\n');
       this.cacheStats.set(cache);
-      this.channels.set((structure.channels || []).filter(item => ['text', '0', 'guild_text'].includes(String(item.type).toLowerCase())));
     } catch { this.error.set(this.i18n.t('translator_groups.load_error','Could not load translation settings.')); }
   }
 
