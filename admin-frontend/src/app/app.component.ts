@@ -41,5 +41,14 @@ export class AppComponent {
     this.themes.apply(this.themes.theme());
     void this.initialize();
   }
-  private async initialize():Promise<void>{void this.maintenance.load();let profile=this.auth.profile();if(!profile&&this.auth.accessToken){try{profile=await this.auth.loadProfile()}catch{}}await this.i18n.initialize(profile?.preferred_locale);await this.seo.apply(this.i18n.locale());this.domTranslation.start()}
+  private async initialize():Promise<void>{
+    void this.maintenance.load();
+    const publicPaths=new Set(['/','/login','/docs','/pricing','/privacy','/privacy-policy','/merchant-information','/terms','/refund','/payment','/contacts']);
+    const publicLocale=publicPaths.has(window.location.pathname.replace(/\/$/,'')||'/')?'uk':null;
+    let profile=this.auth.profile();
+    if(!profile&&!publicLocale&&this.auth.accessToken){try{profile=await this.auth.loadProfile()}catch{}}
+    await this.i18n.initialize(publicLocale||profile?.preferred_locale);
+    await this.seo.apply(this.i18n.locale());
+    this.domTranslation.start()
+  }
 }
