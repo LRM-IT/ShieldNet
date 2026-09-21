@@ -59,6 +59,33 @@ class ProviderUpdate(BaseModel):
     liqpay_enabled: bool = True
     liqpay_public_key: str = ""
     liqpay_private_key: str = ""
+    hutko_enabled: bool = False
+    hutko_merchant_id: str = ""
+    hutko_secret_key: str = ""
+    tranzzo_enabled: bool = False
+    tranzzo_pos_id: str = ""
+    tranzzo_api_key: str = ""
+    tranzzo_endpoints_key: str = ""
+    tranzzo_api_secret: str = ""
+    payproglobal_enabled: bool = False
+    payproglobal_product_id: str = ""
+    payproglobal_api_key: str = ""
+    payproglobal_webhook_secret: str = ""
+    paddle_enabled: bool = False
+    paddle_client_token: str = ""
+    paddle_api_key: str = ""
+    paddle_webhook_secret: str = ""
+    paddle_monthly_price_id: str = ""
+    paddle_quarterly_price_id: str = ""
+    paddle_yearly_price_id: str = ""
+    fastspring_enabled: bool = False
+    fastspring_store_id: str = ""
+    fastspring_api_username: str = ""
+    fastspring_api_password: str = ""
+    fastspring_webhook_secret: str = ""
+    fastspring_monthly_product: str = ""
+    fastspring_quarterly_product: str = ""
+    fastspring_yearly_product: str = ""
 
 class CheckoutRequest(BaseModel):
     plugin_key: str
@@ -350,15 +377,15 @@ async def providers(_: User = Depends(require_superadmin), session: AsyncSession
 
 @router.put("/platform/billing/providers")
 async def save_providers(payload: ProviderUpdate, user: User = Depends(require_superadmin), session: AsyncSession = Depends(get_db_session)):
-    values = {
-        "liqpay_enabled": "true" if payload.liqpay_enabled else "false",
-        "liqpay_public_key": payload.liqpay_public_key,
-        "liqpay_private_key": payload.liqpay_private_key,
-    }
+    values = payload.model_dump()
+    for name in tuple(values):
+        if name.endswith("_enabled"):
+            values[name] = "true" if values[name] else "false"
     vault = PluginControlService(session)
     for name, value in values.items():
-        if value.strip():
-            await vault.put_secret(BILLING_VAULT_KEY, name, value.strip(), "platform", "global", user.id)
+        text = str(value).strip()
+        if text:
+            await vault.put_secret(BILLING_VAULT_KEY, name, text, "platform", "global", user.id)
     return await BillingPaymentService(session).provider_config()
 
 @router.get("/platform/billing/email")

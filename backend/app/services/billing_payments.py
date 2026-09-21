@@ -18,6 +18,14 @@ from app.services.billing_discounts import BillingDiscountService
 
 BILLING_VAULT_KEY = "core_billing"
 PERIOD_DAYS = {"monthly": 30, "quarterly": 90, "yearly": 365}
+PAYMENT_PROVIDER_FIELDS = {
+    "liqpay": {"public": ("public_key",), "secret": ("private_key",)},
+    "hutko": {"public": ("merchant_id",), "secret": ("secret_key",)},
+    "tranzzo": {"public": ("pos_id",), "secret": ("api_key", "endpoints_key", "api_secret")},
+    "payproglobal": {"public": ("product_id",), "secret": ("api_key", "webhook_secret")},
+    "paddle": {"public": ("client_token", "monthly_price_id", "quarterly_price_id", "yearly_price_id"), "secret": ("api_key", "webhook_secret")},
+    "fastspring": {"public": ("store_id", "monthly_product", "quarterly_product", "yearly_product"), "secret": ("api_username", "api_password", "webhook_secret")},
+}
 class PaymentError(ValueError):
     pass
 
@@ -38,17 +46,24 @@ class BillingPaymentService:
 
     async def provider_config(self) -> dict:
         names = {x.secret_name for x in await self.vault.list_secrets(BILLING_VAULT_KEY)}
-        liqpay_enabled = (await self.vault.get_secret(BILLING_VAULT_KEY, "liqpay_enabled") or "true").lower() == "true"
-        liqpay_configured = {"liqpay_public_key", "liqpay_private_key"} <= names
-        return {
-            "liqpay": {
-                "enabled": liqpay_enabled,
-                "configured": liqpay_configured,
-                "active": liqpay_enabled and liqpay_configured,
-                "public_key": await self.vault.get_secret(BILLING_VAULT_KEY, "liqpay_public_key") or "",
-                "secret_saved": "liqpay_private_key" in names,
-            },
-        }
+        result = {}
+        for provider, fields in PAYMENT_PROVIDER_FIELDS.items():
+            enabled_default = "true" if provider == "liqpay" else "false"
+            enabled = (await self.vault.get_secret(BILLING_VAULT_KEY, f"{provider}_enabled") or enabled_default).lower() == "true"
+            required = {f"{provider}_{name}" for name in (*fields["public"], *fields["secret"])}
+            configured = required <= names
+            item = {
+                "enabled": enabled,
+                "configured": configured,
+                "active": enabled and configured,
+                "secret_saved": {name: f"{provider}_{name}" in names for name in fields["secret"]},
+            }
+            for name in fields["public"]:
+                item[name] = await self.vault.get_secret(BILLING_VAULT_KEY, f"{provider}_{name}") or ""
+            result[provider] = item
+        # Backwards-compatible flag used by the existing LiqPay form.
+        result["liqpay"]["secret_saved"] = result["liqpay"]["secret_saved"]["private_key"]
+        return result
 
     async def secret(self, name: str) -> str:
         value = await self.vault.get_secret(BILLING_VAULT_KEY, name)
