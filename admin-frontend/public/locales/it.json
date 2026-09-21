@@ -1914,7 +1914,9 @@
     "title": "Documentazione",
     "store": "Negozio plugin",
     "features": "Funzioni principali",
-    "purpose": "Scopo"
+    "purpose": "Scopo",
+    "free_badge": "Gratuito",
+    "paid_badge": "A pagamento"
   },
   "server_cards": {
     "not_paid": "Accesso a pagamento non attivo",

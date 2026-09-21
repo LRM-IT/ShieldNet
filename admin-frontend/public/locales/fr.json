@@ -1915,7 +1915,9 @@
     "title": "Documentation",
     "store": "Boutique de plugins",
     "features": "Fonctions principales",
-    "purpose": "Objectif"
+    "purpose": "Objectif",
+    "free_badge": "Gratuit",
+    "paid_badge": "Payant"
   },
   "server_cards": {
     "not_paid": "Accès payant non actif",

@@ -124,9 +124,21 @@ def subscription_dict(row):
 @router.get("/public/pricing")
 async def public_pricing(session: AsyncSession = Depends(get_db_session)):
     row = await session.scalar(select(BillingPluginPlan).where(BillingPluginPlan.plugin_key == PAID_PACKAGE_KEY))
-    if row is None or not row.enabled or row.is_free:
-        return {"currency": "USD", "plan": None}
-    return {"currency": row.currency, "plan": plan_dict(row)}
+    configured = {x.plugin_key: x for x in await BillingService(session).list_plans()}
+    plugins = list((await session.execute(select(PluginRegistry).order_by(PluginRegistry.name))).scalars())
+    modules = []
+    for plugin in plugins:
+        key = normalize_plugin_key(plugin.plugin_key)
+        module_plan = configured.get(key)
+        modules.append({
+            "plugin_key": key,
+            "name": plugin.name,
+            "description": plugin.description or "",
+            "is_free": bool(module_plan.is_free) if module_plan else False,
+            "enabled": bool(module_plan.enabled) if module_plan else True,
+        })
+    plan = None if row is None or not row.enabled or row.is_free else plan_dict(row)
+    return {"currency": row.currency if row else "USD", "plan": plan, "modules": modules}
 
 @router.get("/platform/billing/plans")
 async def plans(_: User = Depends(require_superadmin), session: AsyncSession = Depends(get_db_session)):

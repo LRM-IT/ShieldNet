@@ -1874,7 +1874,9 @@
     "title": "Documentation",
     "store": "Plugin store",
     "features": "Main features",
-    "purpose": "Purpose"
+    "purpose": "Purpose",
+    "free_badge": "Free",
+    "paid_badge": "Paid"
   },
   "server_cards": {
     "not_paid": "Paid access is not active",

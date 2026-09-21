@@ -1916,7 +1916,9 @@
     "title": "Dokumentation",
     "store": "Plugin-Shop",
     "features": "Hauptfunktionen",
-    "purpose": "Zweck"
+    "purpose": "Zweck",
+    "free_badge": "Kostenlos",
+    "paid_badge": "Kostenpflichtig"
   },
   "server_cards": {
     "not_paid": "Bezahlter Zugang ist nicht aktiv",

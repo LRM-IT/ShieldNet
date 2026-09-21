@@ -1916,7 +1916,9 @@
     "title": "التوثيق",
     "store": "متجر الإضافات",
     "features": "الميزات الرئيسية",
-    "purpose": "الغرض"
+    "purpose": "الغرض",
+    "free_badge": "مجاني",
+    "paid_badge": "مدفوع"
   },
   "server_cards": {
     "not_paid": "الوصول المدفوع غير نشط",

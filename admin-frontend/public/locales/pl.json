@@ -1914,7 +1914,9 @@
     "title": "Dokumentacja",
     "store": "Sklep z wtyczkami",
     "features": "Główne funkcje",
-    "purpose": "Przeznaczenie"
+    "purpose": "Przeznaczenie",
+    "free_badge": "Bezpłatny",
+    "paid_badge": "Płatny"
   },
   "server_cards": {
     "not_paid": "Płatny dostęp nie jest aktywny",
