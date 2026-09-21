@@ -246,8 +246,14 @@
     }
   },
   "themes": {
-    "dark": { "name": "Dunkel", "description": "Ein ausgewogenes dunkles Design für komfortables Arbeiten." },
-    "light": { "name": "Hell", "description": "Ein klares helles Design mit hoher Lesbarkeit." },
+    "dark": {
+      "name": "Dunkel",
+      "description": "Ein ausgewogenes dunkles Design für komfortables Arbeiten."
+    },
+    "light": {
+      "name": "Hell",
+      "description": "Ein klares helles Design mit hoher Lesbarkeit."
+    },
     "shieldnet": {
       "name": "GuildConsole",
       "description": "Signature teal theme with a technological grid."
@@ -2159,7 +2165,28 @@
     "save_error": "Einstellungen konnten nicht gespeichert werden."
   },
   "seo": {
-    "title": "SEO und Analysen", "eyebrow": "SUPERADMIN", "help": "Metadaten der Startseite und Analyse-Integrationen.", "language": "SEO-Sprache", "homepage": "SEO der Startseite", "site_name": "Websitename", "canonical_url": "Kanonische URL", "meta_title": "Titel", "description": "Beschreibung", "keywords": "Schlüsselwörter", "og_image": "Open-Graph-Bild-URL", "og_title": "Open-Graph-Titel", "og_description": "Open-Graph-Beschreibung", "search_preview": "SUCHVORSCHAU", "analytics": "Analysen", "analytics_help": "Geben Sie Tracking-IDs ein. Sie werden erst nach der Cookie-Zustimmung des Besuchers aktiviert.", "enabled": "Aktiviert", "yandex_metrika": "Yandex-Metrica-ID", "saving": "Wird gespeichert…", "save": "Einstellungen speichern", "saved": "Einstellungen gespeichert.", "save_error": "Einstellungen konnten nicht gespeichert werden."
+    "title": "SEO und Analysen",
+    "eyebrow": "SUPERADMIN",
+    "help": "Metadaten der Startseite und Analyse-Integrationen.",
+    "language": "SEO-Sprache",
+    "homepage": "SEO der Startseite",
+    "site_name": "Websitename",
+    "canonical_url": "Kanonische URL",
+    "meta_title": "Titel",
+    "description": "Beschreibung",
+    "keywords": "Schlüsselwörter",
+    "og_image": "Open-Graph-Bild-URL",
+    "og_title": "Open-Graph-Titel",
+    "og_description": "Open-Graph-Beschreibung",
+    "search_preview": "SUCHVORSCHAU",
+    "analytics": "Analysen",
+    "analytics_help": "Geben Sie Tracking-IDs ein. Sie werden erst nach der Cookie-Zustimmung des Besuchers aktiviert.",
+    "enabled": "Aktiviert",
+    "yandex_metrika": "Yandex-Metrica-ID",
+    "saving": "Wird gespeichert…",
+    "save": "Einstellungen speichern",
+    "saved": "Einstellungen gespeichert.",
+    "save_error": "Einstellungen konnten nicht gespeichert werden."
   },
   "voting": {
     "title": "Voting",
@@ -2211,5 +2238,51 @@
     "preview_alt": "Voting final result preview",
     "template_missing": "No active template was found. Select or configure a voting template.",
     "preview_error": "Unable to create preview."
+  },
+  "language_plugin": {
+    "eyebrow": "SERVER-PLUGIN",
+    "title": "Sprachauswahl",
+    "description": "Eigene Sprachbereiche und Rollen für jede Zugriffsebene.",
+    "install": "Plugin installieren",
+    "groups": "Sprachgruppen",
+    "groups_help": "Benennen Sie Gruppen passend zur Serverstruktur. Jede Gruppe hat einen eigenen Kanal und Reaktionsbereich.",
+    "group_enabled": "Aktive Gruppe",
+    "group_name": "Gruppenname",
+    "channel": "Discord-Thread oder Textkanal",
+    "access_role": "Zugriffsrolle der Gruppe",
+    "select_access_role": "Zugriffsrolle auswählen",
+    "access_role_help": "Nur Mitglieder mit dieser Rolle können eine Sprache wählen.",
+    "default_language": "Standardsprache",
+    "no_default_language": "Keine Standardsprache",
+    "default_language_help": "Diese Sprachrolle bleibt auch nach Auswahl einer anderen Flagge erhalten.",
+    "language_roles": "Sprachrollen",
+    "mask_variables": "Variablen: {group}, {flag}, {name}, {code}.",
+    "name_mask": "Namensvorlage der Rolle",
+    "creating_roles": "Rollen werden erstellt…",
+    "ensure_roles": "Rollen finden oder erstellen",
+    "no_flag": "Keine Flagge",
+    "select_role": "Rolle auswählen",
+    "configure_languages_first": "Konfigurieren Sie zuerst die Serversprachen.",
+    "published_panel": "Veröffentlichter Bereich",
+    "publish": "Im ausgewählten Kanal veröffentlichen",
+    "delete_group": "Gruppe löschen",
+    "add_group": "Gruppe hinzufügen",
+    "save": "Einstellungen speichern",
+    "workflow_help": "Gruppen speichern, Sprachrollen erstellen, Plugin aktivieren und jeden aktiven Bereich mit /language_panel veröffentlichen.",
+    "permissions_help": "Der Bot benötigt Kanal ansehen, Nachrichten senden, Reaktionen hinzufügen, Verlauf lesen und Nachrichten verwalten; seine Rolle muss über den Sprachrollen stehen.",
+    "load_error": "Einstellungen oder Discord-Rollen konnten nicht geladen werden.",
+    "install_error": "Plugin konnte nicht installiert werden.",
+    "toggle_error": "Pluginstatus konnte nicht geändert werden. Prüfen Sie die Gruppen.",
+    "saved": "Einstellungen gespeichert. Veröffentlichen Sie aktive Bereiche.",
+    "save_error": "Einstellungen konnten nicht gespeichert werden.",
+    "new_group": "Neue Gruppe",
+    "publish_failed": "Nachricht konnte nicht veröffentlicht werden.",
+    "published": "Der Bereich für {group} wurde in Discord veröffentlicht.",
+    "publish_pending": "Veröffentlichung läuft noch. Aktualisieren Sie die Seite später.",
+    "publish_error": "Bereich konnte nicht veröffentlicht werden.",
+    "role_creation_error": "Rolle konnte nicht erstellt werden",
+    "discord_timeout": "Discord-Zeitüberschreitung. Aktualisieren Sie die Seite.",
+    "roles_ready": "Sprachrollen für {group} sind bereit.",
+    "roles_error": "Rollen konnten nicht erstellt werden."
   }
 }

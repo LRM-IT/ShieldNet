@@ -243,8 +243,14 @@
     }
   },
   "themes": {
-    "dark": { "name": "Темна", "description": "Збалансована темна тема для комфортної роботи." },
-    "light": { "name": "Світла", "description": "Чиста світла тема з високою читабельністю." },
+    "dark": {
+      "name": "Темна",
+      "description": "Збалансована темна тема для комфортної роботи."
+    },
+    "light": {
+      "name": "Світла",
+      "description": "Чиста світла тема з високою читабельністю."
+    },
     "shieldnet": {
       "name": "GuildConsole",
       "description": "Signature teal theme with a technological grid."
@@ -2050,7 +2056,28 @@
     "save_error": "Не вдалося зберегти налаштування."
   },
   "seo": {
-    "title": "SEO та аналітика", "eyebrow": "СУПЕРАДМІНІСТРАТОР", "help": "Метадані головної сторінки та підключення систем аналітики.", "language": "Мова SEO", "homepage": "SEO головної сторінки", "site_name": "Назва сайту", "canonical_url": "Канонічна URL-адреса", "meta_title": "Заголовок", "description": "Опис", "keywords": "Ключові слова", "og_image": "URL зображення Open Graph", "og_title": "Заголовок Open Graph", "og_description": "Опис Open Graph", "search_preview": "ПОПЕРЕДНІЙ ПЕРЕГЛЯД У ПОШУКУ", "analytics": "Аналітика", "analytics_help": "Вкажіть ідентифікатори лічильників. Вони запускаються лише після згоди відвідувача на cookie.", "enabled": "Увімкнено", "yandex_metrika": "ID Яндекс Метрики", "saving": "Збереження…", "save": "Зберегти налаштування", "saved": "Налаштування збережено.", "save_error": "Не вдалося зберегти налаштування."
+    "title": "SEO та аналітика",
+    "eyebrow": "СУПЕРАДМІНІСТРАТОР",
+    "help": "Метадані головної сторінки та підключення систем аналітики.",
+    "language": "Мова SEO",
+    "homepage": "SEO головної сторінки",
+    "site_name": "Назва сайту",
+    "canonical_url": "Канонічна URL-адреса",
+    "meta_title": "Заголовок",
+    "description": "Опис",
+    "keywords": "Ключові слова",
+    "og_image": "URL зображення Open Graph",
+    "og_title": "Заголовок Open Graph",
+    "og_description": "Опис Open Graph",
+    "search_preview": "ПОПЕРЕДНІЙ ПЕРЕГЛЯД У ПОШУКУ",
+    "analytics": "Аналітика",
+    "analytics_help": "Вкажіть ідентифікатори лічильників. Вони запускаються лише після згоди відвідувача на cookie.",
+    "enabled": "Увімкнено",
+    "yandex_metrika": "ID Яндекс Метрики",
+    "saving": "Збереження…",
+    "save": "Зберегти налаштування",
+    "saved": "Налаштування збережено.",
+    "save_error": "Не вдалося зберегти налаштування."
   },
   "voting": {
     "title": "Voting",
@@ -2102,5 +2129,51 @@
     "preview_alt": "Voting final result preview",
     "template_missing": "No active template was found. Select or configure a voting template.",
     "preview_error": "Unable to create preview."
+  },
+  "language_plugin": {
+    "eyebrow": "ПЛАГІН СЕРВЕРА",
+    "title": "Вибір мови",
+    "description": "Окремі мовні панелі та ролі для кожного рівня доступу.",
+    "install": "Установити плагін",
+    "groups": "Мовні групи",
+    "groups_help": "Назвіть групи за структурою сервера. Кожна група має власний канал і панель реакцій.",
+    "group_enabled": "Активна група",
+    "group_name": "Назва групи",
+    "channel": "Гілка або текстовий канал Discord",
+    "access_role": "Роль доступу до групи",
+    "select_access_role": "Виберіть роль доступу",
+    "access_role_help": "Лише учасники з цією роллю можуть вибрати мову в групі.",
+    "default_language": "Мова за замовчуванням",
+    "no_default_language": "Без мови за замовчуванням",
+    "default_language_help": "Ця мовна роль зберігається після вибору іншого прапора.",
+    "language_roles": "Мовні ролі",
+    "mask_variables": "Змінні: {group}, {flag}, {name}, {code}.",
+    "name_mask": "Маска назви ролі",
+    "creating_roles": "Створення ролей…",
+    "ensure_roles": "Знайти або створити ролі",
+    "no_flag": "Без прапора",
+    "select_role": "Виберіть роль",
+    "configure_languages_first": "Спочатку налаштуйте мови сервера.",
+    "published_panel": "Опублікована панель",
+    "publish": "Опублікувати у вибраному каналі",
+    "delete_group": "Видалити групу",
+    "add_group": "Додати групу",
+    "save": "Зберегти налаштування",
+    "workflow_help": "Збережіть групи, створіть мовні ролі, увімкніть плагін і опублікуйте кожну активну панель командою /language_panel.",
+    "permissions_help": "Боту потрібні права перегляду каналу, надсилання повідомлень, додавання реакцій, читання історії та керування повідомленнями; його роль має бути вище мовних ролей.",
+    "load_error": "Не вдалося завантажити налаштування або ролі Discord.",
+    "install_error": "Не вдалося встановити плагін.",
+    "toggle_error": "Не вдалося змінити стан плагіна. Перевірте групи.",
+    "saved": "Налаштування збережено. Опублікуйте панелі активних груп.",
+    "save_error": "Не вдалося зберегти налаштування.",
+    "new_group": "Нова група",
+    "publish_failed": "Не вдалося опублікувати повідомлення.",
+    "published": "Панель групи {group} опубліковано в Discord.",
+    "publish_pending": "Публікація ще триває. Оновіть сторінку пізніше.",
+    "publish_error": "Не вдалося опублікувати панель.",
+    "role_creation_error": "Не вдалося створити роль",
+    "discord_timeout": "Час очікування Discord вичерпано. Оновіть сторінку.",
+    "roles_ready": "Мовні ролі групи {group} готові.",
+    "roles_error": "Не вдалося створити ролі."
   }
 }

@@ -244,8 +244,14 @@
     }
   },
   "themes": {
-    "dark": { "name": "Scuro", "description": "Un tema scuro equilibrato per lavorare comodamente." },
-    "light": { "name": "Chiaro", "description": "Un tema chiaro e pulito con ottima leggibilità." },
+    "dark": {
+      "name": "Scuro",
+      "description": "Un tema scuro equilibrato per lavorare comodamente."
+    },
+    "light": {
+      "name": "Chiaro",
+      "description": "Un tema chiaro e pulito con ottima leggibilità."
+    },
     "shieldnet": {
       "name": "GuildConsole",
       "description": "Signature teal theme with a technological grid."
@@ -2157,7 +2163,28 @@
     "save_error": "Impossibile salvare le impostazioni."
   },
   "seo": {
-    "title": "SEO e analisi", "eyebrow": "SUPERADMIN", "help": "Metadati della pagina iniziale e integrazioni di analisi.", "language": "Lingua SEO", "homepage": "SEO della pagina iniziale", "site_name": "Nome del sito", "canonical_url": "URL canonico", "meta_title": "Titolo", "description": "Descrizione", "keywords": "Parole chiave", "og_image": "URL immagine Open Graph", "og_title": "Titolo Open Graph", "og_description": "Descrizione Open Graph", "search_preview": "ANTEPRIMA DI RICERCA", "analytics": "Analisi", "analytics_help": "Inserisci gli identificatori di monitoraggio. Si attivano solo dopo il consenso ai cookie.", "enabled": "Attivo", "yandex_metrika": "ID Yandex Metrica", "saving": "Salvataggio…", "save": "Salva impostazioni", "saved": "Impostazioni salvate.", "save_error": "Impossibile salvare le impostazioni."
+    "title": "SEO e analisi",
+    "eyebrow": "SUPERADMIN",
+    "help": "Metadati della pagina iniziale e integrazioni di analisi.",
+    "language": "Lingua SEO",
+    "homepage": "SEO della pagina iniziale",
+    "site_name": "Nome del sito",
+    "canonical_url": "URL canonico",
+    "meta_title": "Titolo",
+    "description": "Descrizione",
+    "keywords": "Parole chiave",
+    "og_image": "URL immagine Open Graph",
+    "og_title": "Titolo Open Graph",
+    "og_description": "Descrizione Open Graph",
+    "search_preview": "ANTEPRIMA DI RICERCA",
+    "analytics": "Analisi",
+    "analytics_help": "Inserisci gli identificatori di monitoraggio. Si attivano solo dopo il consenso ai cookie.",
+    "enabled": "Attivo",
+    "yandex_metrika": "ID Yandex Metrica",
+    "saving": "Salvataggio…",
+    "save": "Salva impostazioni",
+    "saved": "Impostazioni salvate.",
+    "save_error": "Impossibile salvare le impostazioni."
   },
   "voting": {
     "title": "Voting",
@@ -2209,5 +2236,51 @@
     "preview_alt": "Voting final result preview",
     "template_missing": "No active template was found. Select or configure a voting template.",
     "preview_error": "Unable to create preview."
+  },
+  "language_plugin": {
+    "eyebrow": "PLUGIN DEL SERVER",
+    "title": "Selezione lingua",
+    "description": "Pannelli e ruoli linguistici separati per ogni livello di accesso.",
+    "install": "Installa plugin",
+    "groups": "Gruppi linguistici",
+    "groups_help": "Assegna i nomi secondo la struttura del server. Ogni gruppo ha un proprio canale e pannello reazioni.",
+    "group_enabled": "Gruppo attivo",
+    "group_name": "Nome del gruppo",
+    "channel": "Discussione o canale di testo Discord",
+    "access_role": "Ruolo di accesso al gruppo",
+    "select_access_role": "Seleziona un ruolo di accesso",
+    "access_role_help": "Solo i membri con questo ruolo possono scegliere una lingua.",
+    "default_language": "Lingua predefinita",
+    "no_default_language": "Nessuna lingua predefinita",
+    "default_language_help": "Questo ruolo linguistico resta assegnato dopo la scelta di un’altra bandiera.",
+    "language_roles": "Ruoli linguistici",
+    "mask_variables": "Variabili: {group}, {flag}, {name}, {code}.",
+    "name_mask": "Modello nome ruolo",
+    "creating_roles": "Creazione ruoli…",
+    "ensure_roles": "Trova o crea ruoli",
+    "no_flag": "Nessuna bandiera",
+    "select_role": "Seleziona un ruolo",
+    "configure_languages_first": "Configura prima le lingue del server.",
+    "published_panel": "Pannello pubblicato",
+    "publish": "Pubblica nel canale selezionato",
+    "delete_group": "Elimina gruppo",
+    "add_group": "Aggiungi gruppo",
+    "save": "Salva impostazioni",
+    "workflow_help": "Salva i gruppi, crea i ruoli, abilita il plugin e pubblica ogni pannello attivo con /language_panel.",
+    "permissions_help": "Il bot deve visualizzare il canale, inviare messaggi, aggiungere reazioni, leggere la cronologia e gestire i messaggi; il suo ruolo deve essere sopra i ruoli linguistici.",
+    "load_error": "Impossibile caricare impostazioni o ruoli Discord.",
+    "install_error": "Impossibile installare il plugin.",
+    "toggle_error": "Impossibile modificare lo stato del plugin. Controlla i gruppi.",
+    "saved": "Impostazioni salvate. Pubblica i pannelli attivi.",
+    "save_error": "Impossibile salvare le impostazioni.",
+    "new_group": "Nuovo gruppo",
+    "publish_failed": "Impossibile pubblicare il messaggio.",
+    "published": "Il pannello di {group} è stato pubblicato su Discord.",
+    "publish_pending": "La pubblicazione è in corso. Aggiorna più tardi.",
+    "publish_error": "Impossibile pubblicare il pannello.",
+    "role_creation_error": "Creazione del ruolo non riuscita",
+    "discord_timeout": "Discord non ha risposto in tempo. Aggiorna la pagina.",
+    "roles_ready": "I ruoli linguistici di {group} sono pronti.",
+    "roles_error": "Impossibile creare i ruoli."
   }
 }

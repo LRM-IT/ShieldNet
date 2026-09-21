@@ -246,8 +246,14 @@
     }
   },
   "themes": {
-    "dark": { "name": "داكن", "description": "سمة داكنة متوازنة للعمل المريح." },
-    "light": { "name": "فاتح", "description": "سمة فاتحة واضحة وسهلة القراءة." },
+    "dark": {
+      "name": "داكن",
+      "description": "سمة داكنة متوازنة للعمل المريح."
+    },
+    "light": {
+      "name": "فاتح",
+      "description": "سمة فاتحة واضحة وسهلة القراءة."
+    },
     "shieldnet": {
       "name": "GuildConsole",
       "description": "Signature teal theme with a technological grid."
@@ -2159,7 +2165,28 @@
     "save_error": "تعذر حفظ الإعدادات."
   },
   "seo": {
-    "title": "تحسين محركات البحث والتحليلات", "eyebrow": "المشرف العام", "help": "بيانات الصفحة الرئيسية الوصفية وتكاملات التحليلات.", "language": "لغة SEO", "homepage": "SEO للصفحة الرئيسية", "site_name": "اسم الموقع", "canonical_url": "الرابط الأساسي", "meta_title": "العنوان", "description": "الوصف", "keywords": "الكلمات المفتاحية", "og_image": "رابط صورة Open Graph", "og_title": "عنوان Open Graph", "og_description": "وصف Open Graph", "search_preview": "معاينة البحث", "analytics": "التحليلات", "analytics_help": "أدخل معرفات التتبع. لن تعمل إلا بعد موافقة الزائر على ملفات تعريف الارتباط.", "enabled": "مفعّل", "yandex_metrika": "معرف Yandex Metrica", "saving": "جارٍ الحفظ…", "save": "حفظ الإعدادات", "saved": "تم حفظ الإعدادات.", "save_error": "تعذر حفظ الإعدادات."
+    "title": "تحسين محركات البحث والتحليلات",
+    "eyebrow": "المشرف العام",
+    "help": "بيانات الصفحة الرئيسية الوصفية وتكاملات التحليلات.",
+    "language": "لغة SEO",
+    "homepage": "SEO للصفحة الرئيسية",
+    "site_name": "اسم الموقع",
+    "canonical_url": "الرابط الأساسي",
+    "meta_title": "العنوان",
+    "description": "الوصف",
+    "keywords": "الكلمات المفتاحية",
+    "og_image": "رابط صورة Open Graph",
+    "og_title": "عنوان Open Graph",
+    "og_description": "وصف Open Graph",
+    "search_preview": "معاينة البحث",
+    "analytics": "التحليلات",
+    "analytics_help": "أدخل معرفات التتبع. لن تعمل إلا بعد موافقة الزائر على ملفات تعريف الارتباط.",
+    "enabled": "مفعّل",
+    "yandex_metrika": "معرف Yandex Metrica",
+    "saving": "جارٍ الحفظ…",
+    "save": "حفظ الإعدادات",
+    "saved": "تم حفظ الإعدادات.",
+    "save_error": "تعذر حفظ الإعدادات."
   },
   "voting": {
     "title": "Voting",
@@ -2211,5 +2238,51 @@
     "preview_alt": "Voting final result preview",
     "template_missing": "No active template was found. Select or configure a voting template.",
     "preview_error": "Unable to create preview."
+  },
+  "language_plugin": {
+    "eyebrow": "إضافة الخادم",
+    "title": "اختيار اللغة",
+    "description": "لوحات وأدوار لغوية مستقلة لكل مستوى وصول.",
+    "install": "تثبيت الإضافة",
+    "groups": "مجموعات اللغات",
+    "groups_help": "سمّ المجموعات وفق بنية الخادم. لكل مجموعة قناة ولوحة تفاعلات خاصة بها.",
+    "group_enabled": "مجموعة نشطة",
+    "group_name": "اسم المجموعة",
+    "channel": "موضوع أو قناة نصية في Discord",
+    "access_role": "دور الوصول إلى المجموعة",
+    "select_access_role": "اختر دور الوصول",
+    "access_role_help": "يمكن فقط للأعضاء بهذا الدور اختيار لغة.",
+    "default_language": "اللغة الافتراضية",
+    "no_default_language": "بلا لغة افتراضية",
+    "default_language_help": "يبقى دور اللغة بعد اختيار علم آخر.",
+    "language_roles": "أدوار اللغات",
+    "mask_variables": "المتغيرات: {group}، {flag}، {name}، {code}.",
+    "name_mask": "قالب اسم الدور",
+    "creating_roles": "جارٍ إنشاء الأدوار…",
+    "ensure_roles": "العثور على الأدوار أو إنشاؤها",
+    "no_flag": "بلا علم",
+    "select_role": "اختر دورًا",
+    "configure_languages_first": "اضبط لغات الخادم أولًا.",
+    "published_panel": "اللوحة المنشورة",
+    "publish": "النشر في القناة المحددة",
+    "delete_group": "حذف المجموعة",
+    "add_group": "إضافة مجموعة",
+    "save": "حفظ الإعدادات",
+    "workflow_help": "احفظ المجموعات وأنشئ الأدوار وفعّل الإضافة وانشر كل لوحة نشطة باستخدام /language_panel.",
+    "permissions_help": "يحتاج البوت إلى عرض القناة وإرسال الرسائل وإضافة التفاعلات وقراءة السجل وإدارة الرسائل، ويجب أن يكون دوره أعلى من أدوار اللغات.",
+    "load_error": "تعذر تحميل الإعدادات أو أدوار Discord.",
+    "install_error": "تعذر تثبيت الإضافة.",
+    "toggle_error": "تعذر تغيير حالة الإضافة. تحقق من المجموعات.",
+    "saved": "تم حفظ الإعدادات. انشر اللوحات النشطة.",
+    "save_error": "تعذر حفظ الإعدادات.",
+    "new_group": "مجموعة جديدة",
+    "publish_failed": "تعذر نشر الرسالة.",
+    "published": "تم نشر لوحة {group} في Discord.",
+    "publish_pending": "لا يزال النشر جاريًا. حدّث الصفحة لاحقًا.",
+    "publish_error": "تعذر نشر اللوحة.",
+    "role_creation_error": "فشل إنشاء الدور",
+    "discord_timeout": "انتهت مهلة Discord. حدّث الصفحة.",
+    "roles_ready": "أدوار اللغة للمجموعة {group} جاهزة.",
+    "roles_error": "تعذر إنشاء الأدوار."
   }
 }

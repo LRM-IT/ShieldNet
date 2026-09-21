@@ -244,8 +244,14 @@
     }
   },
   "themes": {
-    "dark": { "name": "Dark", "description": "A balanced dark theme for comfortable work." },
-    "light": { "name": "Light", "description": "A clear light theme with strong readability." },
+    "dark": {
+      "name": "Dark",
+      "description": "A balanced dark theme for comfortable work."
+    },
+    "light": {
+      "name": "Light",
+      "description": "A clear light theme with strong readability."
+    },
     "shieldnet": {
       "name": "GuildConsole",
       "description": "Signature teal theme with a technological grid."
@@ -2117,7 +2123,28 @@
     "save_error": "Could not save settings."
   },
   "seo": {
-    "title": "SEO and analytics", "eyebrow": "SUPERADMIN", "help": "Homepage metadata and analytics integrations.", "language": "SEO language", "homepage": "Homepage SEO", "site_name": "Site name", "canonical_url": "Canonical URL", "meta_title": "Title", "description": "Description", "keywords": "Keywords", "og_image": "Open Graph image URL", "og_title": "Open Graph title", "og_description": "Open Graph description", "search_preview": "SEARCH PREVIEW", "analytics": "Analytics", "analytics_help": "Enter tracking identifiers. They run only after the visitor accepts cookies.", "enabled": "Enabled", "yandex_metrika": "Yandex Metrica ID", "saving": "Saving…", "save": "Save settings", "saved": "Settings saved.", "save_error": "Unable to save settings."
+    "title": "SEO and analytics",
+    "eyebrow": "SUPERADMIN",
+    "help": "Homepage metadata and analytics integrations.",
+    "language": "SEO language",
+    "homepage": "Homepage SEO",
+    "site_name": "Site name",
+    "canonical_url": "Canonical URL",
+    "meta_title": "Title",
+    "description": "Description",
+    "keywords": "Keywords",
+    "og_image": "Open Graph image URL",
+    "og_title": "Open Graph title",
+    "og_description": "Open Graph description",
+    "search_preview": "SEARCH PREVIEW",
+    "analytics": "Analytics",
+    "analytics_help": "Enter tracking identifiers. They run only after the visitor accepts cookies.",
+    "enabled": "Enabled",
+    "yandex_metrika": "Yandex Metrica ID",
+    "saving": "Saving…",
+    "save": "Save settings",
+    "saved": "Settings saved.",
+    "save_error": "Unable to save settings."
   },
   "voting": {
     "title": "Voting",
@@ -2169,5 +2196,51 @@
     "preview_alt": "Voting final result preview",
     "template_missing": "No active template was found. Select or configure a voting template.",
     "preview_error": "Unable to create preview."
+  },
+  "language_plugin": {
+    "eyebrow": "GUILD PLUGIN",
+    "title": "Language Selection",
+    "description": "Independent language panels and roles for each access level.",
+    "install": "Install plugin",
+    "groups": "Language groups",
+    "groups_help": "Name groups according to your server structure. Each group has its own channel and reaction panel.",
+    "group_enabled": "Active group",
+    "group_name": "Group name",
+    "channel": "Discord thread or text channel",
+    "access_role": "Group access role",
+    "select_access_role": "Select an access role",
+    "access_role_help": "Only members with this access role can select a language in the group.",
+    "default_language": "Default language",
+    "no_default_language": "No default language",
+    "default_language_help": "This language role remains assigned to members with the access role even after another flag is selected.",
+    "language_roles": "Language roles",
+    "mask_variables": "Variables: {group}, {flag}, {name}, {code}.",
+    "name_mask": "Role name mask",
+    "creating_roles": "Creating roles…",
+    "ensure_roles": "Find or create roles",
+    "no_flag": "No flag",
+    "select_role": "Select a role",
+    "configure_languages_first": "Configure the server languages first.",
+    "published_panel": "Published panel",
+    "publish": "Publish in the selected channel",
+    "delete_group": "Delete group",
+    "add_group": "Add group",
+    "save": "Save settings",
+    "workflow_help": "Save groups, create language roles, enable the plugin and publish every active group panel with /language_panel.",
+    "permissions_help": "The bot needs View Channel, Send Messages, Add Reactions, Read Message History and Manage Messages, with its role above the language roles.",
+    "load_error": "Could not load settings or Discord roles.",
+    "install_error": "Could not install the plugin.",
+    "toggle_error": "Could not change the plugin state. Check the group settings.",
+    "saved": "Settings saved. Publish the panels for active groups.",
+    "save_error": "Could not save settings.",
+    "new_group": "New group",
+    "publish_failed": "Could not publish the message.",
+    "published": "The panel for {group} was published in Discord.",
+    "publish_pending": "Publishing is still in progress. Refresh the page later.",
+    "publish_error": "Could not publish the panel.",
+    "role_creation_error": "Role creation failed",
+    "discord_timeout": "Discord timed out. Refresh the page.",
+    "roles_ready": "Language roles for {group} are ready.",
+    "roles_error": "Could not create the roles."
   }
 }

@@ -244,8 +244,14 @@
     }
   },
   "themes": {
-    "dark": { "name": "Ciemny", "description": "Zrównoważony ciemny motyw do wygodnej pracy." },
-    "light": { "name": "Jasny", "description": "Przejrzysty jasny motyw o wysokiej czytelności." },
+    "dark": {
+      "name": "Ciemny",
+      "description": "Zrównoważony ciemny motyw do wygodnej pracy."
+    },
+    "light": {
+      "name": "Jasny",
+      "description": "Przejrzysty jasny motyw o wysokiej czytelności."
+    },
     "shieldnet": {
       "name": "GuildConsole",
       "description": "Signature teal theme with a technological grid."
@@ -2157,7 +2163,28 @@
     "save_error": "Nie można zapisać ustawień."
   },
   "seo": {
-    "title": "SEO i analityka", "eyebrow": "SUPERADMIN", "help": "Metadane strony głównej i integracje analityczne.", "language": "Język SEO", "homepage": "SEO strony głównej", "site_name": "Nazwa witryny", "canonical_url": "Kanoniczny URL", "meta_title": "Tytuł", "description": "Opis", "keywords": "Słowa kluczowe", "og_image": "URL obrazu Open Graph", "og_title": "Tytuł Open Graph", "og_description": "Opis Open Graph", "search_preview": "PODGLĄD W WYSZUKIWARCE", "analytics": "Analityka", "analytics_help": "Wprowadź identyfikatory śledzenia. Uruchomią się dopiero po zgodzie użytkownika na pliki cookie.", "enabled": "Włączone", "yandex_metrika": "ID Yandex Metrica", "saving": "Zapisywanie…", "save": "Zapisz ustawienia", "saved": "Ustawienia zapisano.", "save_error": "Nie udało się zapisać ustawień."
+    "title": "SEO i analityka",
+    "eyebrow": "SUPERADMIN",
+    "help": "Metadane strony głównej i integracje analityczne.",
+    "language": "Język SEO",
+    "homepage": "SEO strony głównej",
+    "site_name": "Nazwa witryny",
+    "canonical_url": "Kanoniczny URL",
+    "meta_title": "Tytuł",
+    "description": "Opis",
+    "keywords": "Słowa kluczowe",
+    "og_image": "URL obrazu Open Graph",
+    "og_title": "Tytuł Open Graph",
+    "og_description": "Opis Open Graph",
+    "search_preview": "PODGLĄD W WYSZUKIWARCE",
+    "analytics": "Analityka",
+    "analytics_help": "Wprowadź identyfikatory śledzenia. Uruchomią się dopiero po zgodzie użytkownika na pliki cookie.",
+    "enabled": "Włączone",
+    "yandex_metrika": "ID Yandex Metrica",
+    "saving": "Zapisywanie…",
+    "save": "Zapisz ustawienia",
+    "saved": "Ustawienia zapisano.",
+    "save_error": "Nie udało się zapisać ustawień."
   },
   "voting": {
     "title": "Voting",
@@ -2209,5 +2236,51 @@
     "preview_alt": "Voting final result preview",
     "template_missing": "No active template was found. Select or configure a voting template.",
     "preview_error": "Unable to create preview."
+  },
+  "language_plugin": {
+    "eyebrow": "WTYCZKA SERWERA",
+    "title": "Wybór języka",
+    "description": "Oddzielne panele językowe i role dla każdego poziomu dostępu.",
+    "install": "Zainstaluj wtyczkę",
+    "groups": "Grupy językowe",
+    "groups_help": "Nazwij grupy zgodnie ze strukturą serwera. Każda ma własny kanał i panel reakcji.",
+    "group_enabled": "Aktywna grupa",
+    "group_name": "Nazwa grupy",
+    "channel": "Wątek lub kanał tekstowy Discord",
+    "access_role": "Rola dostępu do grupy",
+    "select_access_role": "Wybierz rolę dostępu",
+    "access_role_help": "Tylko członkowie z tą rolą mogą wybrać język.",
+    "default_language": "Język domyślny",
+    "no_default_language": "Bez języka domyślnego",
+    "default_language_help": "Ta rola językowa pozostaje po wybraniu innej flagi.",
+    "language_roles": "Role językowe",
+    "mask_variables": "Zmienne: {group}, {flag}, {name}, {code}.",
+    "name_mask": "Szablon nazwy roli",
+    "creating_roles": "Tworzenie ról…",
+    "ensure_roles": "Znajdź lub utwórz role",
+    "no_flag": "Bez flagi",
+    "select_role": "Wybierz rolę",
+    "configure_languages_first": "Najpierw skonfiguruj języki serwera.",
+    "published_panel": "Opublikowany panel",
+    "publish": "Opublikuj na wybranym kanale",
+    "delete_group": "Usuń grupę",
+    "add_group": "Dodaj grupę",
+    "save": "Zapisz ustawienia",
+    "workflow_help": "Zapisz grupy, utwórz role, włącz wtyczkę i opublikuj każdy aktywny panel przez /language_panel.",
+    "permissions_help": "Bot potrzebuje wyświetlania kanału, wysyłania wiadomości, dodawania reakcji, czytania historii i zarządzania wiadomościami; jego rola musi być nad rolami językowymi.",
+    "load_error": "Nie udało się wczytać ustawień lub ról Discord.",
+    "install_error": "Nie udało się zainstalować wtyczki.",
+    "toggle_error": "Nie udało się zmienić stanu wtyczki. Sprawdź grupy.",
+    "saved": "Ustawienia zapisano. Opublikuj aktywne panele.",
+    "save_error": "Nie udało się zapisać ustawień.",
+    "new_group": "Nowa grupa",
+    "publish_failed": "Nie udało się opublikować wiadomości.",
+    "published": "Panel grupy {group} opublikowano na Discordzie.",
+    "publish_pending": "Publikowanie nadal trwa. Odśwież stronę później.",
+    "publish_error": "Nie udało się opublikować panelu.",
+    "role_creation_error": "Nie udało się utworzyć roli",
+    "discord_timeout": "Upłynął limit czasu Discorda. Odśwież stronę.",
+    "roles_ready": "Role językowe grupy {group} są gotowe.",
+    "roles_error": "Nie udało się utworzyć ról."
   }
 }

@@ -243,8 +243,14 @@
     }
   },
   "themes": {
-    "dark": { "name": "Тёмная", "description": "Сбалансированная тёмная тема для комфортной работы." },
-    "light": { "name": "Светлая", "description": "Чистая светлая тема с высокой читаемостью." },
+    "dark": {
+      "name": "Тёмная",
+      "description": "Сбалансированная тёмная тема для комфортной работы."
+    },
+    "light": {
+      "name": "Светлая",
+      "description": "Чистая светлая тема с высокой читаемостью."
+    },
     "shieldnet": {
       "name": "GuildConsole",
       "description": "Signature teal theme with a technological grid."
@@ -2050,7 +2056,28 @@
     "save_error": "Не удалось сохранить настройки."
   },
   "seo": {
-    "title": "SEO и аналитика", "eyebrow": "СУПЕРАДМИНИСТРАТОР", "help": "Метаданные главной страницы и подключение систем аналитики.", "language": "Язык SEO", "homepage": "SEO главной страницы", "site_name": "Название сайта", "canonical_url": "Канонический URL", "meta_title": "Заголовок", "description": "Описание", "keywords": "Ключевые слова", "og_image": "URL изображения Open Graph", "og_title": "Заголовок Open Graph", "og_description": "Описание Open Graph", "search_preview": "ПРЕДПРОСМОТР В ПОИСКЕ", "analytics": "Аналитика", "analytics_help": "Укажите идентификаторы счётчиков. Они запускаются только после согласия посетителя на cookie.", "enabled": "Включено", "yandex_metrika": "ID Яндекс Метрики", "saving": "Сохранение…", "save": "Сохранить настройки", "saved": "Настройки сохранены.", "save_error": "Не удалось сохранить настройки."
+    "title": "SEO и аналитика",
+    "eyebrow": "СУПЕРАДМИНИСТРАТОР",
+    "help": "Метаданные главной страницы и подключение систем аналитики.",
+    "language": "Язык SEO",
+    "homepage": "SEO главной страницы",
+    "site_name": "Название сайта",
+    "canonical_url": "Канонический URL",
+    "meta_title": "Заголовок",
+    "description": "Описание",
+    "keywords": "Ключевые слова",
+    "og_image": "URL изображения Open Graph",
+    "og_title": "Заголовок Open Graph",
+    "og_description": "Описание Open Graph",
+    "search_preview": "ПРЕДПРОСМОТР В ПОИСКЕ",
+    "analytics": "Аналитика",
+    "analytics_help": "Укажите идентификаторы счётчиков. Они запускаются только после согласия посетителя на cookie.",
+    "enabled": "Включено",
+    "yandex_metrika": "ID Яндекс Метрики",
+    "saving": "Сохранение…",
+    "save": "Сохранить настройки",
+    "saved": "Настройки сохранены.",
+    "save_error": "Не удалось сохранить настройки."
   },
   "voting": {
     "title": "Voting",
@@ -2102,5 +2129,51 @@
     "preview_alt": "Voting final result preview",
     "template_missing": "No active template was found. Select or configure a voting template.",
     "preview_error": "Unable to create preview."
+  },
+  "language_plugin": {
+    "eyebrow": "ПЛАГИН СЕРВЕРА",
+    "title": "Выбор языка",
+    "description": "Отдельные языковые панели и роли для каждого уровня доступа.",
+    "install": "Установить плагин",
+    "groups": "Языковые группы",
+    "groups_help": "Назовите группы по структуре сервера. У каждой группы свой канал и панель реакций.",
+    "group_enabled": "Активная группа",
+    "group_name": "Название группы",
+    "channel": "Ветка или текстовый канал Discord",
+    "access_role": "Роль доступа к группе",
+    "select_access_role": "Выберите роль доступа",
+    "access_role_help": "Только участники с этой ролью могут выбрать язык в группе.",
+    "default_language": "Язык по умолчанию",
+    "no_default_language": "Без языка по умолчанию",
+    "default_language_help": "Эта языковая роль сохраняется после выбора другого флага.",
+    "language_roles": "Языковые роли",
+    "mask_variables": "Переменные: {group}, {flag}, {name}, {code}.",
+    "name_mask": "Шаблон названия роли",
+    "creating_roles": "Создание ролей…",
+    "ensure_roles": "Найти или создать роли",
+    "no_flag": "Без флага",
+    "select_role": "Выберите роль",
+    "configure_languages_first": "Сначала настройте языки сервера.",
+    "published_panel": "Опубликованная панель",
+    "publish": "Опубликовать в выбранном канале",
+    "delete_group": "Удалить группу",
+    "add_group": "Добавить группу",
+    "save": "Сохранить настройки",
+    "workflow_help": "Сохраните группы, создайте языковые роли, включите плагин и опубликуйте каждую активную панель командой /language_panel.",
+    "permissions_help": "Боту нужны права просмотра канала, отправки сообщений, добавления реакций, чтения истории и управления сообщениями; его роль должна быть выше языковых ролей.",
+    "load_error": "Не удалось загрузить настройки или роли Discord.",
+    "install_error": "Не удалось установить плагин.",
+    "toggle_error": "Не удалось изменить состояние плагина. Проверьте группы.",
+    "saved": "Настройки сохранены. Опубликуйте панели активных групп.",
+    "save_error": "Не удалось сохранить настройки.",
+    "new_group": "Новая группа",
+    "publish_failed": "Не удалось опубликовать сообщение.",
+    "published": "Панель группы {group} опубликована в Discord.",
+    "publish_pending": "Публикация ещё выполняется. Обновите страницу позже.",
+    "publish_error": "Не удалось опубликовать панель.",
+    "role_creation_error": "Не удалось создать роль",
+    "discord_timeout": "Время ожидания Discord истекло. Обновите страницу.",
+    "roles_ready": "Языковые роли группы {group} готовы.",
+    "roles_error": "Не удалось создать роли."
   }
 }
