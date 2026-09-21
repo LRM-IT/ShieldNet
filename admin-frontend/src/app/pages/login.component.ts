@@ -1,15 +1,14 @@
-import { Component, signal } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 
 import { AuthService } from '../core/auth.service';
 import { TranslatePipe } from '../core/translate.pipe';
 import { TranslationService } from '../core/translation.service';
 import { RouterLink } from '@angular/router';
-import { LanguagePickerComponent } from '../shared/language-picker.component';
 import { PublicBrandComponent } from '../shared/public-brand.component';
 
 @Component({
   standalone: true,
-  imports: [TranslatePipe,RouterLink,LanguagePickerComponent,PublicBrandComponent],
+  imports: [TranslatePipe,RouterLink,PublicBrandComponent],
   template: `
     <main class="access-page">
       <section class="visual-zone">
@@ -49,7 +48,7 @@ import { PublicBrandComponent } from '../shared/public-brand.component';
 
           <div class="visual-footer">
             <span><i></i> {{ "login.online" | snT:"CONTROL PLANE ONLINE" }}</span>
-            <div class="footer-actions"><a routerLink="/docs">{{'login.documentation'|snT:'Read public documentation'}} <b>→</b></a><a routerLink="/pricing">{{'public_pricing.nav'|snT:'Pricing'}} <b>→</b></a><sn-language-picker class="footer-language" [value]="i18n.locale()" [options]="i18n.languages()" (valueChange)="i18n.setLocale($event)" /><span>GUILDCONSOLE // LRM-IT</span></div>
+            <div class="footer-actions"><a routerLink="/docs">Документація <b>→</b></a><a routerLink="/pricing">Тарифи</a><a routerLink="/terms">Умови</a><a routerLink="/payment">Оплата</a><a routerLink="/refund">Повернення</a><a routerLink="/privacy-policy">Конфіденційність</a><a routerLink="/contacts">Контакти</a><span>GUILDCONSOLE // LRM-IT</span></div>
           </div>
         </div>
       </section>
@@ -491,11 +490,13 @@ import { PublicBrandComponent } from '../shared/public-brand.component';
     }
   `],
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
   readonly loading = signal(false);
   readonly error = signal('');
 
   constructor(private readonly auth: AuthService, readonly i18n: TranslationService) {}
+
+  async ngOnInit():Promise<void>{await this.i18n.setLocale('uk',false)}
 
   async login(): Promise<void> {
     this.loading.set(true);

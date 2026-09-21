@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://guildconsole.lrm-it.com/sitemap.xml

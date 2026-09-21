@@ -71,6 +71,7 @@ import { SystemSettingsComponent } from './pages/system-settings.component';
 import { MaintenanceComponent } from './pages/maintenance.component';
 import { PublicDocumentationComponent } from './pages/public-documentation.component';
 import { PublicPricingComponent } from './pages/public-pricing.component';
+import { PublicLegalComponent } from './pages/public-legal.component';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -84,6 +85,11 @@ export const routes: Routes = [
   { path: 'privacy-policy', component: MerchantInformationComponent },
   { path: 'pricing', component: PublicPricingComponent },
   { path: 'docs', component: PublicDocumentationComponent },
+  { path: 'terms', component: PublicLegalComponent, data: { legalPage: 'terms' } },
+  { path: 'refund', component: PublicLegalComponent, data: { legalPage: 'refund' } },
+  { path: 'payment', component: PublicLegalComponent, data: { legalPage: 'payment' } },
+  { path: 'contacts', component: PublicLegalComponent, data: { legalPage: 'contacts' } },
+  { path: 'privacy', redirectTo: 'privacy-policy', pathMatch: 'full' },
   { path: 'merchant-information', redirectTo: 'privacy-policy', pathMatch: 'full' },
   { path: 'platform/languages', component: PlatformLanguagesComponent },
   { path: 'platform/template-bank', component: TemplateBankComponent, canActivate: [platformGuard] },
