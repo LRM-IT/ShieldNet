@@ -1855,7 +1855,8 @@
     "to_selected_server": "to the selected server.",
     "redeem_server_voucher": "Activate with voucher",
     "voucher_error": "Unable to check or use voucher.",
-    "voucher_activated": "Server subscription activated with voucher."
+    "voucher_activated": "Server subscription activated with voucher.",
+    "payment_gateway": "Payment gateway"
   },
   "documentation": {
     "open_store": "Open plugin store",

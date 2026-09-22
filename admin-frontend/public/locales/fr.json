@@ -1896,7 +1896,8 @@
     "to_selected_server": "au serveur choisi.",
     "redeem_server_voucher": "Activer avec un bon",
     "voucher_error": "Impossible de vérifier ou d’utiliser le bon.",
-    "voucher_activated": "Abonnement du serveur activé avec un bon."
+    "voucher_activated": "Abonnement du serveur activé avec un bon.",
+    "payment_gateway": "Passerelle de paiement"
   },
   "documentation": {
     "open_store": "Ouvrir la boutique",

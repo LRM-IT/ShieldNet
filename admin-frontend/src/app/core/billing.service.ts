@@ -4,7 +4,7 @@ import {firstValueFrom} from 'rxjs';
 export interface BillingPlan{plugin_key:string;name?:string;is_free:boolean;enabled:boolean;currency:string;monthly_price:number|null;quarterly_price:number|null;yearly_price:number|null;quarterly_discount_percent?:number;yearly_discount_percent?:number}
 export interface BillingSubscription{id:string;guild_id:string;plugin_key:string;status:string;billing_period:string;starts_at:string;expires_at:string;provider?:string|null;auto_renew?:boolean}
 export interface BillingProvider{enabled:boolean;configured:boolean;active:boolean;secret_saved:boolean|Record<string,boolean>;[key:string]:any}
-export interface BillingProviders{liqpay:BillingProvider;hutko:BillingProvider;tranzzo:BillingProvider;payproglobal:BillingProvider;paddle:BillingProvider;fastspring:BillingProvider}
+export interface BillingProviders{liqpay:BillingProvider;monobank:BillingProvider;hutko:BillingProvider;tranzzo:BillingProvider;payproglobal:BillingProvider;paddle:BillingProvider;fastspring:BillingProvider}
 export interface BillingPayment{id:string;order_reference:string;guild_id:string;guild_name?:string|null;plugin_key:string;billing_period:string;provider:string;amount:number;currency:string;status:string;signature_verified:boolean;created_at:string;paid_at?:string|null}
 export interface BillingWallet{discord_user_id:string;display_name?:string|null;email?:string|null;balance:number;currency:string}
 export interface BillingEmailSettings{enabled:boolean;host:string;port:number;username:string;from_email:string;from_name:string;use_tls:boolean;use_ssl:boolean;password_saved:boolean;configured:boolean}
@@ -30,6 +30,7 @@ export interface BillingEmailSettings{enabled:boolean;host:string;port:number;us
  previewServerVoucher(guildId:string,code:string){return firstValueFrom(this.http.post<any>('/api/v1/billing/server-voucher/preview',{guild_id:guildId,code}))}
  redeemServerVoucher(guildId:string,code:string){return firstValueFrom(this.http.post<any>('/api/v1/billing/server-voucher/redeem',{guild_id:guildId,code}))}
  checkout(guildId:string,x:{plugin_key:string;billing_period:string;provider:string;days?:number}){return firstValueFrom(this.http.post<any>(`/api/v1/discord/guilds/${guildId}/billing/checkout`,x))}
+ refreshPayment(orderReference:string){return firstValueFrom(this.http.get<{status:string;order_reference:string}>(`/api/v1/billing/payments/${encodeURIComponent(orderReference)}/refresh`))}
  walletTopup(x:any){return firstValueFrom(this.http.post<any>('/api/v1/billing/wallet/checkout',x))}
  purchaseSubscription(x:any){return firstValueFrom(this.http.post<any>('/api/v1/billing/subscriptions/purchase',x))}
  saveWalletSettings(x:any){return firstValueFrom(this.http.put<any>('/api/v1/billing/wallet/settings',x))}

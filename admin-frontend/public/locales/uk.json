@@ -1788,7 +1788,8 @@
     "to_selected_server": "вибраному серверу.",
     "redeem_server_voucher": "Активувати ваучером",
     "voucher_error": "Не вдалося перевірити або застосувати ваучер.",
-    "voucher_activated": "Підписку сервера активовано ваучером."
+    "voucher_activated": "Підписку сервера активовано ваучером.",
+    "payment_gateway": "Платіжний шлюз"
   },
   "documentation": {
     "open_store": "Відкрити магазин плагінів",

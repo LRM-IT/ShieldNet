@@ -1895,7 +1895,8 @@
     "to_selected_server": "wybranemu serwerowi.",
     "redeem_server_voucher": "Aktywuj voucherem",
     "voucher_error": "Nie udało się sprawdzić lub użyć vouchera.",
-    "voucher_activated": "Subskrypcja serwera aktywowana voucherem."
+    "voucher_activated": "Subskrypcja serwera aktywowana voucherem.",
+    "payment_gateway": "Bramka płatnicza"
   },
   "documentation": {
     "open_store": "Otwórz sklep z wtyczkami",

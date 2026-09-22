@@ -1895,7 +1895,8 @@
     "to_selected_server": "al server scelto.",
     "redeem_server_voucher": "Attiva con voucher",
     "voucher_error": "Impossibile verificare o usare il voucher.",
-    "voucher_activated": "Abbonamento del server attivato con voucher."
+    "voucher_activated": "Abbonamento del server attivato con voucher.",
+    "payment_gateway": "Gateway di pagamento"
   },
   "documentation": {
     "open_store": "Apri il negozio plugin",

@@ -2,6 +2,7 @@ from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from uuid import UUID, uuid4
 
+import httpx
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel, EmailStr, Field, model_validator
@@ -19,7 +20,7 @@ from app.models.discord import Guild
 from app.models.member_actions import MemberAction, MemberActionStatus, MemberActionType
 from app.models.plugins import PluginRegistry
 from app.services.billing_service import BillingService, PAID_PACKAGE_KEY, normalize_plugin_key
-from app.services.billing_payments import BILLING_VAULT_KEY, BillingPaymentService, PaymentError
+from app.services.billing_payments import BILLING_VAULT_KEY, BillingPaymentService, PaymentError, PaymentVerificationPending
 from app.services.plugin_control_service import PluginControlService
 from app.services.guild_plugin_service import GuildPluginService
 from app.services.billing_discounts import BillingDiscountService, DiscountError
@@ -59,6 +60,8 @@ class ProviderUpdate(BaseModel):
     liqpay_enabled: bool = True
     liqpay_public_key: str = ""
     liqpay_private_key: str = ""
+    monobank_enabled: bool = False
+    monobank_token: str = ""
     hutko_enabled: bool = False
     hutko_merchant_id: str = ""
     hutko_secret_key: str = ""
@@ -90,7 +93,7 @@ class ProviderUpdate(BaseModel):
 class CheckoutRequest(BaseModel):
     plugin_key: str
     billing_period: str = Field(pattern=r"^(monthly|quarterly|yearly|custom)$")
-    provider: str = Field(pattern=r"^liqpay$")
+    provider: str = Field(pattern=r"^(liqpay|monobank)$")
     days: int | None = Field(default=None, ge=1, le=3660)
 class WalletTopupRequest(BaseModel):
     amount: Decimal = Field(gt=0, le=1_000_000)
@@ -510,6 +513,38 @@ async def liqpay_callback(request: Request, session: AsyncSession = Depends(get_
         return PlainTextResponse("OK")
     except (PaymentError, ValueError) as exc:
         return PlainTextResponse(str(exc), status_code=400)
+
+@router.post("/billing/callback/monobank")
+async def monobank_callback(request: Request, session: AsyncSession = Depends(get_db_session)):
+    body = await request.body()
+    if len(body) > 65536:
+        raise HTTPException(413, "Webhook body is too large")
+    try:
+        await BillingPaymentService(session).confirm_monobank(body, request.headers.get("x-sign", ""))
+    except PaymentError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    except PaymentVerificationPending as exc:
+        raise HTTPException(503, "Bank status is still updating") from exc
+    except httpx.HTTPError as exc:
+        raise HTTPException(503, "Payment confirmation temporarily unavailable") from exc
+    return PlainTextResponse("OK")
+
+@router.get("/billing/payments/{order_reference}/refresh")
+async def refresh_checkout_payment(order_reference: str, user: User = Depends(get_current_user), session: AsyncSession = Depends(get_db_session)):
+    payment = (await session.execute(select(BillingPayment).where(
+        BillingPayment.order_reference == order_reference,
+        BillingPayment.owner_discord_id == user.discord_user_id,
+        BillingPayment.provider == "monobank",
+    ).with_for_update())).scalar_one_or_none()
+    if payment is None or not user.discord_user_id:
+        raise HTTPException(404, "Payment not found")
+    try:
+        status = await BillingPaymentService(session).refresh_monobank(payment)
+    except PaymentError as exc:
+        raise HTTPException(409, str(exc)) from exc
+    except httpx.HTTPError as exc:
+        raise HTTPException(503, "Payment confirmation temporarily unavailable") from exc
+    return {"status": status, "order_reference": payment.order_reference}
 
 @router.post("/internal/billing/reconcile", dependencies=[Depends(verify_internal_service_token)])
 async def reconcile_billing(session: AsyncSession = Depends(get_db_session)):

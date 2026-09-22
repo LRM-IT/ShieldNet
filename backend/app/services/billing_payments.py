@@ -1,12 +1,17 @@
 import base64
+import binascii
 import hashlib
 import hmac
 import json
+from urllib.parse import urlparse
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal, ROUND_HALF_UP
 from uuid import uuid4
 
 import httpx
+from cryptography.exceptions import InvalidSignature
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.asymmetric import ec
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -14,12 +19,14 @@ from app.models.billing import BillingPayment, BillingPluginPlan, BillingSubscri
 from app.services.billing_service import PAID_PACKAGE_KEY, normalize_plugin_key
 from app.services.plugin_control_service import PluginControlService
 from app.services.billing_discounts import BillingDiscountService
+from app.services.public_exchange_rate import public_usd_uah_rate
 
 
 BILLING_VAULT_KEY = "core_billing"
 PERIOD_DAYS = {"monthly": 30, "quarterly": 90, "yearly": 365}
 PAYMENT_PROVIDER_FIELDS = {
     "liqpay": {"public": ("public_key",), "secret": ("private_key",)},
+    "monobank": {"public": (), "secret": ("token",)},
     "hutko": {"public": ("merchant_id",), "secret": ("secret_key",)},
     "tranzzo": {"public": ("pos_id",), "secret": ("api_key", "endpoints_key", "api_secret")},
     "payproglobal": {"public": ("product_id",), "secret": ("api_key", "webhook_secret")},
@@ -28,6 +35,29 @@ PAYMENT_PROVIDER_FIELDS = {
 }
 class PaymentError(ValueError):
     pass
+
+
+class PaymentVerificationPending(RuntimeError):
+    pass
+
+
+_monobank_pubkeys: dict[str, tuple[object, datetime]] = {}
+
+
+def _monobank_amount(amount_usd: Decimal, rate: float) -> Decimal:
+    amount = (amount_usd * Decimal(str(rate))).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    if amount < Decimal("0.01") or amount > Decimal("100000000.00"):
+        raise PaymentError("Converted payment amount is invalid")
+    return amount
+
+
+def _monobank_confirmed(status: dict, payment: BillingPayment) -> bool:
+    expected_kopecks = int((payment.amount * 100).to_integral_exact())
+    return (status.get("status") == "success"
+            and status.get("invoiceId") == payment.provider_payment_id
+            and status.get("reference") == payment.order_reference
+            and status.get("ccy") == 980
+            and status.get("amount") == expected_kopecks)
 
 
 def _money(value: Decimal) -> str:
@@ -160,7 +190,7 @@ class BillingPaymentService:
 
     async def create_checkout(self, guild_id: int, plugin_key: str, period: str, provider: str, base_url: str, owner_discord_id: int, days: int | None = None) -> dict:
         key = PAID_PACKAGE_KEY
-        if (period not in PERIOD_DAYS and period != "custom") or provider != "liqpay" or (period == "custom" and days is None) or (period != "custom" and days is not None):
+        if (period not in PERIOD_DAYS and period != "custom") or provider not in {"liqpay", "monobank"} or (period == "custom" and days is None) or (period != "custom" and days is not None):
             raise PaymentError("Unsupported billing period or provider")
         config = await self.provider_config()
         if not config[provider]["active"]:
@@ -187,6 +217,13 @@ class BillingPaymentService:
             await self._activate(payment, str(payment.id), {"source":"voucher","confirmed":True})
             return {"provider":"voucher","order_reference":payment.order_reference,"status":"paid","discount":discount}
         charge_currency="USD";amount=base_amount
+        if provider == "monobank":
+            try:
+                quote = await public_usd_uah_rate()
+            except (httpx.HTTPError, ValueError, TypeError) as exc:
+                raise PaymentError("USD/UAH rate is temporarily unavailable") from exc
+            amount = _monobank_amount(base_amount, quote["rate"])
+            charge_currency = "UAH"
         order = f"gc-{guild_id}-{uuid4().hex}"
         payment = BillingPayment(id=uuid4(), order_reference=order, guild_id=guild_id, plugin_key=key, owner_discord_id=owner_discord_id, purpose="subscription", access_days=days if period == "custom" else PERIOD_DAYS[period],
                                  billing_period=period, provider=provider, amount=amount, currency=charge_currency,
@@ -195,7 +232,41 @@ class BillingPaymentService:
         await self.session.commit()
         product = f"GuildConsole software modules for Discord server {guild_id} - {payment.access_days} days"
         callback = f"{base_url}/api/v1/billing/callback/{provider}"
-        result = f"{base_url}/guild/{guild_id}/billing"
+        result = f"{base_url}/guild/{guild_id}/billing?payment={order}"
+        if provider == "monobank":
+            token = await self.secret("monobank_token")
+            amount_minor = int((amount * 100).to_integral_exact())
+            invoice = {
+                "amount": amount_minor, "ccy": 980,
+                "merchantPaymInfo": {
+                    "reference": order,
+                    "destination": f"GuildConsole: доступ до модулів сервера {guild_id} на {payment.access_days} днів",
+                    "basketOrder": [{"name": "Підписка GuildConsole", "qty": 1, "sum": amount_minor, "total": amount_minor, "unit": "послуга"}],
+                },
+                "redirectUrl": result, "webHookUrl": callback,
+                "validity": 1800, "paymentType": "debit",
+            }
+            try:
+                async with httpx.AsyncClient(timeout=20) as client:
+                    response = await client.post("https://api.monobank.ua/api/merchant/invoice/create", headers={"X-Token": token}, json=invoice)
+                    response.raise_for_status()
+                    created = response.json()
+                if not isinstance(created, dict):
+                    raise PaymentError("Invalid monobank invoice response")
+                invoice_id, page_url = created.get("invoiceId"), created.get("pageUrl")
+                parsed = urlparse(page_url or "")
+                if not invoice_id or parsed.scheme != "https" or parsed.hostname != "pay.mbnk.biz":
+                    raise PaymentError("Invalid monobank invoice response")
+            except (httpx.HTTPError, ValueError, TypeError) as exc:
+                payment.status = "failed"
+                await self.session.commit()
+                raise PaymentError("Unable to create monobank invoice") from exc
+            payment.provider_payment_id = str(invoice_id)
+            payment.checkout_url = page_url
+            await self.session.commit()
+            return {"provider": provider, "order_reference": order, "checkout_url": page_url,
+                    "charge_amount": amount, "charge_currency": "UAH", "base_amount_usd": base_amount,
+                    "quote_minutes": 30, "discount": discount}
         public = await self.secret("liqpay_public_key"); private = await self.secret("liqpay_private_key")
         payload = {"version":"3","public_key":public,"action":"pay","amount":_money(amount),"currency":charge_currency,
                    "description":product,"product_name":product,"product_category":"Software subscription","product_url":f"{base_url}/pricing","order_id":order,"server_url":callback,"result_url":result}
@@ -245,3 +316,82 @@ class BillingPaymentService:
             payment.status = str(verified.get("status") or "rejected")[:32]; payment.raw_status = verified; await self.session.commit()
             raise PaymentError("LiqPay did not confirm the payment")
         await self._complete(payment, str(verified.get("payment_id") or ""), verified)
+
+    async def _monobank_pubkey(self, token: str, refresh: bool = False):
+        cache_key = hashlib.sha256(token.encode()).hexdigest()
+        cached = _monobank_pubkeys.get(cache_key)
+        if not refresh and cached and cached[1] > datetime.now(timezone.utc):
+            return cached[0]
+        async with httpx.AsyncClient(timeout=20) as client:
+            response = await client.get("https://api.monobank.ua/api/merchant/pubkey", headers={"X-Token": token})
+            response.raise_for_status()
+        try:
+            public_key = serialization.load_pem_public_key(base64.b64decode(response.json()["key"], validate=True))
+        except (ValueError, KeyError, TypeError, binascii.Error) as exc:
+            raise PaymentError("Invalid monobank public key") from exc
+        if not isinstance(public_key, ec.EllipticCurvePublicKey):
+            raise PaymentError("Invalid monobank public key type")
+        _monobank_pubkeys[cache_key] = (public_key, datetime.now(timezone.utc) + timedelta(hours=24))
+        return public_key
+
+    async def confirm_monobank(self, body: bytes, signature: str) -> None:
+        if not signature:
+            raise PaymentError("Missing monobank signature")
+        token = await self.secret("monobank_token")
+        try:
+            signature_bytes = base64.b64decode(signature, validate=True)
+        except (ValueError, TypeError, binascii.Error) as exc:
+            raise PaymentError("Invalid monobank signature") from exc
+        for refresh in (False, True):
+            key = await self._monobank_pubkey(token, refresh=refresh)
+            try:
+                key.verify(signature_bytes, body, ec.ECDSA(hashes.SHA256()))
+                break
+            except (InvalidSignature, ValueError):
+                if refresh:
+                    raise PaymentError("Invalid monobank signature")
+        try:
+            notification = json.loads(body)
+        except (ValueError, TypeError) as exc:
+            raise PaymentError("Invalid monobank webhook body") from exc
+        if not isinstance(notification, dict):
+            raise PaymentError("Invalid monobank webhook body")
+        invoice_id = str(notification.get("invoiceId") or "")
+        if not invoice_id:
+            raise PaymentError("Missing monobank invoice ID")
+        payment = (await self.session.execute(select(BillingPayment).where(
+            BillingPayment.provider == "monobank", BillingPayment.provider_payment_id == invoice_id,
+        ).with_for_update())).scalar_one_or_none()
+        if payment is None:
+            raise PaymentError("Unknown monobank invoice")
+        if payment.status == "paid":
+            return
+        return await self.refresh_monobank(payment, notification.get("status"))
+
+    async def refresh_monobank(self, payment: BillingPayment, notified_status: str | None = None) -> str:
+        if payment.provider != "monobank" or not payment.provider_payment_id:
+            raise PaymentError("Unknown monobank invoice")
+        if payment.status == "paid":
+            return "paid"
+        token = await self.secret("monobank_token")
+        invoice_id = payment.provider_payment_id
+        async with httpx.AsyncClient(timeout=20) as client:
+            response = await client.get("https://api.monobank.ua/api/merchant/invoice/status", headers={"X-Token": token}, params={"invoiceId": invoice_id})
+            response.raise_for_status()
+            verified = response.json()
+        if not isinstance(verified, dict):
+            raise PaymentError("Invalid monobank status response")
+        if _monobank_confirmed(verified, payment):
+            await self._activate(payment, invoice_id, verified)
+            return "paid"
+        provider_status = str(verified.get("status") or "")
+        if provider_status in {"failure", "expired", "reversed"}:
+            payment.status = "failed"
+            payment.raw_status = verified
+            await self.session.commit()
+            return "failed"
+        if provider_status in {"created", "processing", "hold"}:
+            if notified_status == "success":
+                raise PaymentVerificationPending("Bank status is still updating")
+            return "pending"
+        raise PaymentError("Monobank invoice status does not match the order")
