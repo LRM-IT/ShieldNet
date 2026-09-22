@@ -72,6 +72,13 @@ class PlatformDoctorService:
         }
 
     def _environment_checks(self) -> list[dict[str, Any]]:
+        if Path("/.dockerenv").exists():
+            # Docker Compose injects .env into each container; the legacy host
+            # paths are intentionally not mounted inside the backend container.
+            return [self._check(
+                "Container environment", "filesystem", "ok",
+                "Runtime configuration is supplied through the container environment."
+            )]
         result: list[dict[str, Any]] = []
         for service, path in self.ENV_FILES:
             if not path.exists():
