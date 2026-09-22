@@ -1,10 +1,12 @@
 import { CommonModule } from '@angular/common';
-import { Component, HostListener, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, HostListener, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DiscordChannelPickerComponent } from '../shared/discord-channel-picker.component';
 import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute } from '@angular/router';
 import { ShellComponent } from '../shared/shell.component';
+import { TranslatePipe } from '../core/translate.pipe';
+import { TranslationService } from '../core/translation.service';
 
 interface ChannelItem { id:string; parent_id:string|null; name:string; type:string; }
 interface RoleItem { id:string; name:string; managed:boolean; color:number; }
@@ -23,18 +25,18 @@ interface Settings {
 
 @Component({
  selector:'sn-plugin-antiflood', standalone:true,
- imports:[CommonModule,FormsModule,ShellComponent,DiscordChannelPickerComponent],
+ imports:[CommonModule,FormsModule,ShellComponent,DiscordChannelPickerComponent,TranslatePipe],
  template:`
- <sn-shell title="AntiFlood"><section class="page">
+ <sn-shell [title]="'antiflood.title'|snT:'AntiFlood'"><section class="page">
   @if(error()){<div class="notice error">{{error()}}</div>}
   @if(success()){<div class="notice success">{{success()}}</div>}
   <form class="panel" (ngSubmit)="save()">
-   <div class="panel-head"><div><small>GENERAL</small><h3>Plugin settings</h3></div>
-    <label class="switch"><input type="checkbox" [(ngModel)]="settings.enabled" name="enabled">Enabled</label>
+   <div class="panel-head"><div><small>{{'antiflood.general'|snT:'GENERAL'}}</small><h3>{{'antiflood.plugin_settings'|snT:'Plugin settings'}}</h3></div>
+    <label class="switch"><input type="checkbox" [(ngModel)]="settings.enabled" name="enabled">{{'antiflood.enabled'|snT:'Enabled'}}</label>
    </div>
    <section class="box">
-    <div class="panel-head"><div><small>RULES</small><h3>Protected channels</h3></div>
-     <button type="button" (click)="addRule()">Add rule</button></div>
+    <div class="panel-head"><div><small>{{'antiflood.rules'|snT:'RULES'}}</small><h3>{{'antiflood.protected_channels'|snT:'Protected channels'}}</h3></div>
+     <button type="button" (click)="addRule()">{{'antiflood.add_rule'|snT:'Add rule'}}</button></div>
     @for(rule of settings.rules;track $index){
      <div class="rule">
       <sn-discord-channel-picker
@@ -42,45 +44,45 @@ interface Settings {
         [value]="rule.channel_id"
         (valueChange)="rule.channel_id = $event || ''"
        />
-       <label>Cooldown, seconds
+       <label>{{'antiflood.cooldown'|snT:'Cooldown, seconds'}}
        <input type="number" min="1" [max]="rule.use_slowmode?21600:604800"
         [(ngModel)]="rule.cooldown_seconds" [name]="'cooldown'+$index">
       </label>
-      <label class="switch"><input type="checkbox" [(ngModel)]="rule.enabled" [name]="'enabled'+$index">Enabled</label>
-      <label class="switch"><input type="checkbox" [(ngModel)]="rule.use_slowmode" [name]="'slowmode'+$index">Discord Slow Mode</label>
-      <button type="button" class="danger" (click)="removeRule($index)">Remove</button>
+      <label class="switch"><input type="checkbox" [(ngModel)]="rule.enabled" [name]="'enabled'+$index">{{'antiflood.enabled'|snT:'Enabled'}}</label>
+      <label class="switch"><input type="checkbox" [(ngModel)]="rule.use_slowmode" [name]="'slowmode'+$index">{{'antiflood.slowmode'|snT:'Discord Slow Mode'}}</label>
+      <button type="button" class="danger" (click)="removeRule($index)">{{'antiflood.remove'|snT:'Remove'}}</button>
      </div>
-    } @empty {<div class="empty">No AntiFlood rules configured.</div>}
+    } @empty {<div class="empty">{{'antiflood.no_rules'|snT:'No AntiFlood rules configured.'}}</div>}
    </section>
 
    <section class="box">
-    <div><small>MESSAGE</small><h3>Blocked message text</h3></div>
+    <div><small>{{'antiflood.message_section'|snT:'MESSAGE'}}</small><h3>{{'antiflood.blocked_message'|snT:'Blocked message text'}}</h3></div>
     <textarea [(ngModel)]="settings.warning_text" name="warning_text" maxlength="1800" rows="5"
-     placeholder="Leave empty to delete without a warning"></textarea>
-    <div class="variables" [textContent]="variableHelp"></div>
+     [placeholder]="'antiflood.warning_placeholder'|snT:'Leave empty to delete without a warning'"></textarea>
+    <div class="variables">{{'antiflood.variables'|snT:'Variables'}}: {{'{user} {username} {remaining} {cooldown} {channel} {channel_id} {guild}'}}</div>
    </section>
 
    <section class="box">
-    <div><small>EXCEPTIONS</small><h3>Required exceptions</h3></div>
-    <label class="switch"><input type="checkbox" [(ngModel)]="settings.ignore_bots" name="ignore_bots">Ignore bots</label>
-    <label class="switch"><input type="checkbox" [(ngModel)]="settings.ignore_administrators" name="ignore_administrators">Ignore administrators</label>
-    <label class="switch"><input type="checkbox" [(ngModel)]="settings.ignore_moderators" name="ignore_moderators">Ignore moderators with Manage Messages</label>
-    <label class="field">Excluded roles<div class="combo">
-     <input [(ngModel)]="roleSearch" name="roleSearch" (focus)="openSelector('roles')" (input)="openSelector('roles')" placeholder="Search role">
+    <div><small>{{'antiflood.exceptions'|snT:'EXCEPTIONS'}}</small><h3>{{'antiflood.required_exceptions'|snT:'Required exceptions'}}</h3></div>
+    <label class="switch"><input type="checkbox" [(ngModel)]="settings.ignore_bots" name="ignore_bots">{{'antiflood.ignore_bots'|snT:'Ignore bots'}}</label>
+    <label class="switch"><input type="checkbox" [(ngModel)]="settings.ignore_administrators" name="ignore_administrators">{{'antiflood.ignore_admins'|snT:'Ignore administrators'}}</label>
+    <label class="switch"><input type="checkbox" [(ngModel)]="settings.ignore_moderators" name="ignore_moderators">{{'antiflood.ignore_moderators'|snT:'Ignore moderators with Manage Messages'}}</label>
+    <label class="field">{{'antiflood.excluded_roles'|snT:'Excluded roles'}}<div class="combo">
+     <input [(ngModel)]="roleSearch" name="roleSearch" (focus)="openSelector('roles')" (input)="openSelector('roles')" [placeholder]="'antiflood.search_role'|snT:'Search role'">
      @if(roleOpen()){<div class="options">@for(role of filteredRoles();track role.id){
       <button type="button" (click)="toggleRole(role)"><strong>{{selectedRole(role)?'✓ ':''}}{{role.name}}</strong><small>{{role.id}}</small></button>
      }</div>}
     </div></label>
     <div class="chips">@for(id of settings.excluded_role_ids;track id){<button type="button" (click)="removeRole(id)">{{roleName(id)}} ×</button>}</div>
-    <label class="field">Excluded users<div class="combo">
-     <input [(ngModel)]="userSearch" name="userSearch" (focus)="openSelector('users')" (input)="loadMembers()" placeholder="Search member">
+    <label class="field">{{'antiflood.excluded_users'|snT:'Excluded users'}}<div class="combo">
+     <input [(ngModel)]="userSearch" name="userSearch" (focus)="openSelector('users')" (input)="loadMembers()" [placeholder]="'antiflood.search_member'|snT:'Search member'">
      @if(userOpen()){<div class="options">@for(member of members();track member.discord_user_id){
       <button type="button" (click)="toggleUser(member)"><strong>{{selectedUser(member)?'✓ ':''}}{{member.display_name||member.username}}</strong><small>{{member.username}} · {{member.discord_user_id}}</small></button>
      }</div>}
     </div></label>
     <div class="chips">@for(id of settings.excluded_user_ids;track id){<button type="button" (click)="removeUser(id)">{{userName(id)}} ×</button>}</div>
    </section>
-   <button class="primary" type="submit" [disabled]="saving()">{{saving()?'Saving…':'Save settings'}}</button>
+   <button class="primary" type="submit" [disabled]="saving()">{{saving()?('antiflood.saving'|snT:'Saving…'):('antiflood.save'|snT:'Save settings')}}</button>
   </form>
  </section></sn-shell>`,
  styles:[`
@@ -100,28 +102,28 @@ interface Settings {
  `]
 })
 export class PluginAntiFloodComponent implements OnInit{
- private http=inject(HttpClient); private route=inject(ActivatedRoute);
+ private http=inject(HttpClient); private route=inject(ActivatedRoute); private i18n=inject(TranslationService);
+ private readonly defaultWarning='⏳ {user}, please wait {remaining} seconds before sending another message in {channel}.';
  channels=signal<ChannelItem[]>([]); roles=signal<RoleItem[]>([]); members=signal<MemberItem[]>([]);
  error=signal(''); success=signal(''); saving=signal(false);
  openRuleIndex=signal<number|null>(null); roleOpen=signal(false); userOpen=signal(false);
  ruleSearch:string[]=[]; roleSearch=''; userSearch='';
- readonly variableHelp='Variables: {user} {username} {remaining} {cooldown} {channel} {channel_id} {guild}';
  settings:Settings={enabled:true,ignore_bots:true,ignore_administrators:true,ignore_moderators:true,
  warning_text:'⏳ {user}, please wait {remaining} seconds before sending another message in {channel}.',
  rules:[],excluded_role_ids:[],excluded_user_ids:[]};
  get guildId(){return this.route.snapshot.paramMap.get('guildId')||''}
  private get base(){return `/api/v1/discord/guilds/${this.guildId}/plugins/antiflood`}
- filteredRoles=computed(()=>{const q=this.roleSearch.trim().toLowerCase();return this.roles().filter(r=>r.name!=='@everyone'&&!r.managed&&(!q||r.name.toLowerCase().includes(q)||r.id.includes(q))).slice(0,50)});
+ filteredRoles(){const q=this.roleSearch.trim().toLowerCase();return this.roles().filter(r=>r.name!=='@everyone'&&!r.managed&&(!q||r.name.toLowerCase().includes(q)||r.id.includes(q))).slice(0,50)}
  ngOnInit(){this.reload()}
  reload(){
   this.error.set('');this.channels.set([]);this.roles.set([]);this.members.set([]);this.ruleSearch=[];
   this.http.get<any>(`/api/v1/discord/guilds/${this.guildId}/structure`).subscribe({
    next:v=>{this.channels.set((v.channels||[]).filter((x:ChannelItem)=>['text','0','guild_text'].includes(String(x.type).toLowerCase())));this.roles.set(v.roles||[]);this.syncRuleLabels()},
-   error:()=>this.error.set('Unable to load Discord channels and roles.')
+   error:()=>this.error.set(this.i18n.t('antiflood.error_structure'))
   });
   this.http.get<Settings>(`${this.base}/settings`).subscribe({
-   next:v=>{this.settings=v;this.syncRuleLabels()},
-   error:()=>this.error.set('Unable to load AntiFlood settings.')
+   next:v=>{this.settings=v;if(this.settings.warning_text===this.defaultWarning){this.settings.warning_text=this.i18n.t('antiflood.default_warning',this.defaultWarning)}this.syncRuleLabels()},
+   error:()=>this.error.set(this.i18n.t('antiflood.error_load'))
   });
  }
  addRule(){this.settings.rules.push({channel_id:'',cooldown_seconds:60,enabled:true,use_slowmode:false});this.ruleSearch.push('');this.openRuleIndex.set(this.settings.rules.length-1)}
@@ -148,16 +150,16 @@ export class PluginAntiFloodComponent implements OnInit{
  removeUser(id:string){this.settings.excluded_user_ids=this.settings.excluded_user_ids.filter(x=>x!==id)}
  userName(id:string){const m=this.members().find(x=>String(x.discord_user_id)===id);return m?.display_name||m?.username||id}
  save(){
-  if(this.settings.rules.some(r=>!r.channel_id)){this.error.set('Select a channel for every rule.');return}
+  if(this.settings.rules.some(r=>!r.channel_id)){this.error.set(this.i18n.t('antiflood.error_rule_channel'));return}
   const ids=this.settings.rules.map(r=>r.channel_id);
-  if(new Set(ids).size!==ids.length){this.error.set('Each channel may be used only once.');return}
+  if(new Set(ids).size!==ids.length){this.error.set(this.i18n.t('antiflood.error_duplicate_channel'));return}
   const available=new Set(this.channels().map(c=>c.id));
-  if(ids.some(id=>!available.has(id))){this.error.set('A selected channel does not belong to this Discord server.');return}
-  if(this.settings.rules.some(r=>r.use_slowmode&&r.cooldown_seconds>21600)){this.error.set('Discord Slow Mode supports a maximum of 21600 seconds.');return}
+  if(ids.some(id=>!available.has(id))){this.error.set(this.i18n.t('antiflood.error_foreign_channel'));return}
+  if(this.settings.rules.some(r=>r.use_slowmode&&r.cooldown_seconds>21600)){this.error.set(this.i18n.t('antiflood.error_slowmode'));return}
   this.saving.set(true);this.error.set('');this.success.set('');
   this.http.put<Settings>(`${this.base}/settings`,this.settings).subscribe({
-   next:v=>{this.settings=v;this.syncRuleLabels();this.saving.set(false);this.success.set('AntiFlood settings saved.')},
-   error:r=>{this.saving.set(false);this.error.set(r?.error?.detail?.message||r?.error?.detail||'Unable to save AntiFlood settings.')}
+   next:v=>{this.settings=v;this.syncRuleLabels();this.saving.set(false);this.success.set(this.i18n.t('antiflood.saved'))},
+   error:r=>{this.saving.set(false);this.error.set(r?.error?.detail?.message||r?.error?.detail||this.i18n.t('antiflood.error_save'))}
   });
  }
 }
