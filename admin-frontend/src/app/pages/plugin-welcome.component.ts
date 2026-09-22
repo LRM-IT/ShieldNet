@@ -1,10 +1,12 @@
 import { CommonModule } from '@angular/common';
-import { Component, HostListener, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, HostListener, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DiscordChannelPickerComponent } from '../shared/discord-channel-picker.component';
 import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute } from '@angular/router';
 import { ShellComponent } from '../shared/shell.component';
+import { TranslatePipe } from '../core/translate.pipe';
+import { TranslationService } from '../core/translation.service';
 
 interface ChannelItem {
   id:string; parent_id:string|null; name:string; type:string;
@@ -30,17 +32,17 @@ interface Settings {
 @Component({
   selector:'sn-plugin-welcome',
   standalone:true,
-  imports:[CommonModule,FormsModule,ShellComponent,DiscordChannelPickerComponent],
+  imports:[CommonModule,FormsModule,ShellComponent,DiscordChannelPickerComponent,TranslatePipe],
   template:`
-  <sn-shell title="Welcome">
+  <sn-shell [title]="'welcome.title'|snT:'Welcome'">
     <section class="page">
       <header class="topline">
         <div>
-          <div class="eyebrow">GUILDCONSOLE PLUGIN</div>
-          <h2>Welcome</h2>
-          <p>Welcome new members and redirect them to verification.</p>
+          <div class="eyebrow">{{'welcome.eyebrow'|snT:'GUILDCONSOLE PLUGIN'}}</div>
+          <h2>{{'welcome.title'|snT:'Welcome'}}</h2>
+          <p>{{'welcome.description'|snT:'Welcome new members and redirect them to verification.'}}</p>
         </div>
-        <button class="btn" type="button" (click)="reload()">Refresh</button>
+        <button class="btn" type="button" (click)="reload()">{{'welcome.refresh'|snT:'Refresh'}}</button>
       </header>
 
       @if(error()){<div class="notice error">{{error()}}</div>}
@@ -49,49 +51,49 @@ interface Settings {
       <div class="layout">
         <form class="panel form" (ngSubmit)="save()">
           <div class="panel-head">
-            <div><small>SETTINGS</small><h3>Welcome flow</h3></div>
+            <div><small>{{'welcome.settings'|snT:'SETTINGS'}}</small><h3>{{'welcome.flow'|snT:'Welcome flow'}}</h3></div>
             <label class="switch">
               <input type="checkbox" [(ngModel)]="settings.enabled" name="enabled">
-              Enabled
+              {{'welcome.enabled'|snT:'Enabled'}}
             </label>
           </div>
 
-          <label class="field">General channel<sn-discord-channel-picker [guildId]="guildId" [value]="settings.welcome_channel_id" (valueChange)="settings.welcome_channel_id = $event" /></label>
+          <label class="field">{{'welcome.general_channel'|snT:'General channel'}}<sn-discord-channel-picker [guildId]="guildId" [value]="settings.welcome_channel_id" (valueChange)="settings.welcome_channel_id = $event" /></label>
 
-          <label class="field">Verification channel<sn-discord-channel-picker [guildId]="guildId" [value]="settings.verification_channel_id" (valueChange)="settings.verification_channel_id = $event" /></label>
+          <label class="field">{{'welcome.verification_channel'|snT:'Verification channel'}}<sn-discord-channel-picker [guildId]="guildId" [value]="settings.verification_channel_id" (valueChange)="settings.verification_channel_id = $event" /></label>
 
           <label class="field">
-            Stop when member receives role
+            {{'welcome.stop_role'|snT:'Stop when member receives role'}}
             <div class="combo">
               <input [(ngModel)]="roleSearch" name="roleSearch"
                      (focus)="openSelector('role')"
                      (input)="openSelector('role')"
-                     placeholder="Search role">
+                     [placeholder]="'welcome.search_role'|snT:'Search role'">
               @if(selectedRole()){<button type="button" class="clear" (click)="clearRole()">×</button>}
               @if(roleOpen()){
                 <div class="options">
                   @for(role of filteredRoles();track role.id){
                     <button type="button" [disabled]="role.managed" (click)="selectRole(role)">
                       <strong><i class="role-dot" [style.background]="roleColor(role)"></i>{{role.name}}</strong>
-                      <small>{{role.managed?'Managed role · ':''}}{{role.id}}</small>
+                      <small>{{role.managed?('welcome.managed_role'|snT:'Managed role')+' · ':''}}{{role.id}}</small>
                     </button>
-                  } @empty {<div class="empty">No roles found.</div>}
+                  } @empty {<div class="empty">{{'welcome.no_roles'|snT:'No roles found.'}}</div>}
                 </div>
               }
             </div>
             @if(selectedRole();as role){
-              <span class="selected">Selected: {{role.name}}</span>
+              <span class="selected">{{'welcome.selected'|snT:'Selected'}}: {{role.name}}</span>
             }
           </label>
 
           <label class="field">
-            Welcome message
+            {{'welcome.message'|snT:'Welcome message'}}
             <textarea [(ngModel)]="settings.message_template"
                       name="message_template" rows="9" maxlength="2000"></textarea>
           </label>
 
           <p class="hint">
-            Variables:
+            {{'welcome.variables'|snT:'Variables'}}:
             <code>{{'{mention}'}}</code>,
             <code>{{'{username}'}}</code>,
             <code>{{'{display_name}'}}</code>,
@@ -102,14 +104,14 @@ interface Settings {
           <section class="repeat-box">
             <label class="switch">
               <input type="checkbox" [(ngModel)]="settings.repeat_enabled" name="repeat_enabled">
-              Repeat until the required role is received
+              {{'welcome.repeat_until_role'|snT:'Repeat until the required role is received'}}
             </label>
             <div class="grid">
-              <label>Repeat every, minutes
+              <label>{{'welcome.repeat_minutes'|snT:'Repeat every, minutes'}}
                 <input type="number" min="1" max="1440"
                        [(ngModel)]="settings.repeat_minutes" name="repeat_minutes">
               </label>
-              <label>Maximum messages (0 = unlimited)
+              <label>{{'welcome.max_messages'|snT:'Maximum messages (0 = unlimited)'}}
                 <input type="number" min="0" max="1000"
                        [(ngModel)]="settings.max_reminders" name="max_reminders">
               </label>
@@ -118,40 +120,40 @@ interface Settings {
               <input type="checkbox"
                      [(ngModel)]="settings.delete_after_verified"
                      name="delete_after_verified">
-              Delete all welcome messages after verification
+              {{'welcome.delete_after_verified'|snT:'Delete all welcome messages after verification'}}
             </label>
             <label class="switch">
               <input type="checkbox" [(ngModel)]="settings.ignore_bots" name="ignore_bots">
-              Ignore bots
+              {{'welcome.ignore_bots'|snT:'Ignore bots'}}
             </label>
           </section>
 
           <button class="primary" type="submit" [disabled]="saving()">
-            {{saving()?'Saving…':'Save settings'}}
+            {{saving()?('welcome.saving'|snT:'Saving…'):('welcome.save'|snT:'Save settings')}}
           </button>
         </form>
 
         <aside class="right">
           <section class="panel preview">
-            <div class="panel-head"><div><small>PREVIEW</small><h3>Discord message</h3></div></div>
+            <div class="panel-head"><div><small>{{'welcome.preview'|snT:'PREVIEW'}}</small><h3>{{'welcome.discord_message'|snT:'Discord message'}}</h3></div></div>
             <div class="discord">
               <div class="avatar">S</div>
               <div>
-                <div class="author"><strong>GuildConsole</strong><span>BOT</span><small>Today at 12:00</small></div>
+                <div class="author"><strong>GuildConsole</strong><span>BOT</span><small>{{'welcome.preview_time'|snT:'Today at 12:00'}}</small></div>
                 <div class="message">{{preview()}}</div>
               </div>
             </div>
           </section>
 
           <section class="panel tasks">
-            <div class="panel-head"><div><small>ACTIVE FLOW</small><h3>Recent members</h3></div></div>
+            <div class="panel-head"><div><small>{{'welcome.active_flow'|snT:'ACTIVE FLOW'}}</small><h3>{{'welcome.recent_members'|snT:'Recent members'}}</h3></div></div>
             @for(task of tasks();track task.id){
               <article>
-                <div><strong>{{task.username}}</strong><span [attr.data-status]="task.status">{{task.status}}</span></div>
-                <small>Messages: {{task.sent_count}} · Next: {{date(task.next_send_at)}}</small>
+                <div><strong>{{task.username}}</strong><span [attr.data-status]="task.status">{{statusLabel(task.status)}}</span></div>
+                <small>{{'welcome.messages_count'|snT:'Messages'}}: {{task.sent_count}} · {{'welcome.next'|snT:'Next'}}: {{date(task.next_send_at)}}</small>
                 @if(task.last_error){<p>{{task.last_error}}</p>}
               </article>
-            } @empty {<div class="empty">No welcome tasks yet.</div>}
+            } @empty {<div class="empty">{{'welcome.no_tasks'|snT:'No welcome tasks yet.'}}</div>}
           </section>
         </aside>
       </div>
@@ -188,6 +190,8 @@ interface Settings {
 export class PluginWelcomeComponent implements OnInit{
   private http=inject(HttpClient);
   private route=inject(ActivatedRoute);
+  private i18n=inject(TranslationService);
+  private readonly defaultMessage='👋 Welcome, {mention}!\n\nWelcome to **{guild}**.\n\nPlease continue to {verification_channel} and complete verification.';
 
   channels=signal<ChannelItem[]>([]);
   roles=signal<RoleItem[]>([]);
@@ -199,7 +203,7 @@ export class PluginWelcomeComponent implements OnInit{
   settings:Settings={
     enabled:true,welcome_channel_id:null,verification_channel_id:null,
     required_role_id:null,
-    message_template:'👋 Welcome, {mention}!\\n\\nWelcome to **{guild}**.\\n\\nPlease continue to {verification_channel} and complete verification.',
+    message_template:'👋 Welcome, {mention}!\n\nWelcome to **{guild}**.\n\nPlease continue to {verification_channel} and complete verification.',
     repeat_enabled:true,repeat_minutes:5,max_reminders:12,
     delete_after_verified:true,ignore_bots:true
   };
@@ -207,25 +211,23 @@ export class PluginWelcomeComponent implements OnInit{
   get guildId(){return this.route.snapshot.paramMap.get('guildId')||''}
   private get base(){return `/api/v1/discord/guilds/${this.guildId}/plugins/welcome`}
 
-  selectedWelcome=computed(()=>this.channels().find(x=>x.id===this.settings.welcome_channel_id)||null);
-  selectedVerification=computed(()=>this.channels().find(x=>x.id===this.settings.verification_channel_id)||null);
-  selectedRole=computed(()=>this.roles().find(x=>x.id===this.settings.required_role_id)||null);
+  selectedWelcome(){return this.channels().find(x=>x.id===this.settings.welcome_channel_id)||null}
+  selectedVerification(){return this.channels().find(x=>x.id===this.settings.verification_channel_id)||null}
+  selectedRole(){return this.roles().find(x=>x.id===this.settings.required_role_id)||null}
 
-  filteredWelcome=computed(()=>this.filterChannels(this.welcomeSearch));
-  filteredVerification=computed(()=>this.filterChannels(this.verificationSearch));
-  filteredRoles=computed(()=>{
+  filteredRoles(){
     const q=this.roleSearch.trim().toLowerCase();
     return this.roles().filter(r=>r.name!=='@everyone'&&(!q||r.name.toLowerCase().includes(q)||r.id.includes(q))).slice(0,50);
-  });
-  preview=computed(()=>{
-    const wc=this.selectedVerification();
+  }
+  preview(){
+    const wc=this.channels().find(x=>x.id===this.settings.verification_channel_id);
     return this.settings.message_template
       .replaceAll('{mention}','@NewMember')
       .replaceAll('{username}','newmember')
       .replaceAll('{display_name}','New Member')
       .replaceAll('{guild}','Example Server')
       .replaceAll('{verification_channel}',wc?`#${wc.name}`:'#verification');
-  });
+  }
 
   @HostListener('document:mousedown', ['$event'])
   closeSelectorsOnOutsideClick(event: MouseEvent): void {
@@ -267,11 +269,11 @@ export class PluginWelcomeComponent implements OnInit{
         this.roles.set(v.roles||[]);
         this.syncSelectionLabels();
       },
-      error:()=>this.error.set('Unable to load Discord channels and roles.')
+      error:()=>this.error.set(this.i18n.t('welcome.error_structure'))
     });
     this.http.get<Settings>(`${this.base}/settings`).subscribe({
-      next:v=>{this.settings={...this.settings,...v};this.syncSelectionLabels()},
-      error:()=>this.error.set('Unable to load Welcome settings.')
+      next:v=>{this.settings={...this.settings,...v};if(this.settings.message_template===this.defaultMessage){this.settings.message_template=this.i18n.t('welcome.default_message',this.defaultMessage)}this.syncSelectionLabels()},
+      error:()=>this.error.set(this.i18n.t('welcome.error_load'))
     });
     this.http.get<any>(`${this.base}/tasks`).subscribe({next:v=>this.tasks.set(v.items||[])});
   }
@@ -292,30 +294,31 @@ export class PluginWelcomeComponent implements OnInit{
   clearVerification(){this.settings.verification_channel_id=null;this.verificationSearch=''}
   clearRole(){this.settings.required_role_id=null;this.roleSearch=''}
   roleColor(role:RoleItem){return role.color?`#${role.color.toString(16).padStart(6,'0')}`:'#7289da'}
-  date(v:string|null){return v?new Date(v).toLocaleString():'—'}
+  date(v:string|null){return v?new Date(v).toLocaleString(this.i18n.locale()):'—'}
+  statusLabel(status:string){return this.i18n.t(`welcome.status_${status.toLowerCase()}`,status.replaceAll('_',' '))}
   save(){
     const channelIds=new Set(this.channels().map(channel=>channel.id));
     const roleIds=new Set(this.roles().map(role=>role.id));
     if(this.settings.enabled&&(!this.settings.welcome_channel_id||!this.settings.verification_channel_id||!this.settings.required_role_id)){
-      this.error.set('Welcome channel, verification channel and required role are required.');
+      this.error.set(this.i18n.t('welcome.error_required'));
       return;
     }
     if(this.settings.welcome_channel_id&&!channelIds.has(this.settings.welcome_channel_id)){
-      this.error.set('The selected welcome channel does not belong to this Discord server.');
+      this.error.set(this.i18n.t('welcome.error_welcome_channel'));
       return;
     }
     if(this.settings.verification_channel_id&&!channelIds.has(this.settings.verification_channel_id)){
-      this.error.set('The selected verification channel does not belong to this Discord server.');
+      this.error.set(this.i18n.t('welcome.error_verification_channel'));
       return;
     }
     if(this.settings.required_role_id&&!roleIds.has(this.settings.required_role_id)){
-      this.error.set('The selected role does not belong to this Discord server.');
+      this.error.set(this.i18n.t('welcome.error_role'));
       return;
     }
     this.saving.set(true);this.error.set('');this.success.set('');
     this.http.put<Settings>(`${this.base}/settings`,this.settings).subscribe({
-      next:v=>{this.settings=v;this.saving.set(false);this.success.set('Welcome settings saved.')},
-      error:r=>{this.saving.set(false);this.error.set(r?.error?.detail?.message||r?.error?.detail||'Unable to save settings.')}
+      next:v=>{this.settings=v;this.saving.set(false);this.success.set(this.i18n.t('welcome.saved'))},
+      error:r=>{this.saving.set(false);this.error.set(r?.error?.detail?.message||r?.error?.detail||this.i18n.t('welcome.error_save'))}
     });
   }
 }
