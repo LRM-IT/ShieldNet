@@ -147,7 +147,7 @@ class PlatformDoctorService:
                 remediation=None if permitted else f"Grant the ShieldNet backend role required privileges on {qualified}."
             ))
 
-        version = await session.scalar(text("SELECT version_num FROM alembic_version LIMIT 1"))
+        version = await session.scalar(text("SELECT version_num FROM system.alembic_version LIMIT 1"))
         result.append(self._check(
             "Alembic revision", "database", "ok" if version else "failed",
             f"Current revision: {version}" if version else "Alembic revision is unavailable.",
