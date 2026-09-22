@@ -61,8 +61,6 @@ import { AccessDeniedComponent } from './pages/access-denied.component';
 import { GuildAccessComponent } from './pages/guild-access.component';
 
 import { GuildAccessOverviewComponent } from './pages/guild-access-overview.component';
-import { BillingComponent } from './pages/billing.component';
-import { GuildBillingComponent } from './pages/guild-billing.component';
 import { DocumentationComponent } from './pages/documentation.component';
 import { SupportComponent } from './pages/support.component';
 import { MerchantInformationComponent } from './pages/merchant-information.component';
@@ -78,7 +76,7 @@ export const routes: Routes = [
   { path: 'profile', component: ProfileComponent, canActivate: [authGuard] },
   { path: 'access-denied', component: AccessDeniedComponent },
   { path: 'servers', component: ServerSelectorComponent, canActivate: [authGuard] },
-  { path: 'billing', component: GuildBillingComponent, canActivate: [authGuard] },
+  { path: 'billing', loadComponent: () => import('./pages/guild-billing.component').then(m => m.GuildBillingComponent), canActivate: [authGuard] },
   { path: 'documentation', component: DocumentationComponent, canActivate: [authGuard] },
   { path: 'support', component: SupportComponent, canActivate: [authGuard] },
   { path: 'privacy-policy', component: MerchantInformationComponent },
@@ -99,7 +97,7 @@ export const routes: Routes = [
   { path: 'platform/users', component: PlatformUsersComponent, canActivate: [superadminGuard] },
   { path: 'platform/users/:userId', component: PlatformUserProfileComponent, canActivate: [superadminGuard] },
   { path: 'platform/plugins', component: PluginsComponent, canActivate: [platformGuard] },
-  { path: 'platform/billing', component: BillingComponent, canActivate: [superadminGuard] },
+  { path: 'platform/billing', loadComponent: () => import('./pages/billing.component').then(m => m.BillingComponent), canActivate: [superadminGuard] },
   { path: 'platform/system-settings', redirectTo: 'platform/system-email', pathMatch: 'full' },
   { path: 'platform/system-email', component: SystemSettingsComponent, canActivate: [superadminGuard], data: { systemSection: 'email' } },
   { path: 'platform/translation-cache', component: SystemSettingsComponent, canActivate: [superadminGuard], data: { systemSection: 'translations' } },

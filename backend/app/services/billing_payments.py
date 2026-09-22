@@ -232,7 +232,7 @@ class BillingPaymentService:
         await self.session.commit()
         product = f"GuildConsole software modules for Discord server {guild_id} - {payment.access_days} days"
         callback = f"{base_url}/api/v1/billing/callback/{provider}"
-        result = f"{base_url}/guild/{guild_id}/billing?payment={order}"
+        result = f"{base_url}/billing?payment={order}&guild_id={guild_id}"
         if provider == "monobank":
             token = await self.secret("monobank_token")
             amount_minor = int((amount * 100).to_integral_exact())
