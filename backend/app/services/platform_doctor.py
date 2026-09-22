@@ -162,21 +162,27 @@ class PlatformDoctorService:
         ))).all()
         cutoff = datetime.now(UTC) - timedelta(seconds=90)
         result: list[dict[str, Any]] = []
-        seen_types: set[str] = set()
+        by_type: dict[str, list[tuple[str, str, Any]]] = {}
         for name, worker_type, reported_status, last_seen_at in rows:
-            seen_types.add(worker_type)
-            online = last_seen_at >= cutoff
-            result.append(self._check(
-                f"Runtime {name}", "runtime", "ok" if online else "failed",
-                "Heartbeat is current." if online else "Heartbeat is stale.",
-                details={"worker_type": worker_type, "reported_status": reported_status, "last_seen_at": last_seen_at.isoformat()},
-                remediation=None if online else f"Check systemctl status shieldnet-{worker_type}."
-            ))
-        for required in ("backend", "bot", "scheduler"):
-            if required not in seen_types:
+            by_type.setdefault(worker_type, []).append((name, reported_status, last_seen_at))
+        for worker_type, workers in by_type.items():
+            # Container hostnames change on every recreation. Keep live instances;
+            # when none is live, show one latest stale instance for the service.
+            current = [worker for worker in workers if worker[2] >= cutoff]
+            selected = current or [max(workers, key=lambda worker: worker[2])]
+            for name, reported_status, last_seen_at in selected:
+                online = last_seen_at >= cutoff and reported_status == "online"
+                result.append(self._check(
+                    f"Runtime {name}", "runtime", "ok" if online else "failed",
+                    "Heartbeat is current." if online else "Heartbeat is stale or reports a failure.",
+                    details={"worker_type": worker_type, "reported_status": reported_status, "last_seen_at": last_seen_at.isoformat()},
+                    remediation=None if online else f"Inspect the current {worker_type} container and its logs."
+                ))
+        for required in ("discord_worker", "scheduler"):
+            if required not in by_type:
                 result.append(self._check(
                     f"Runtime {required}", "runtime", "failed", "No heartbeat registered.",
-                    remediation=f"Restart shieldnet-{required} and inspect its journal."
+                    remediation=f"Inspect the {required} container and its logs."
                 ))
         return result
 
