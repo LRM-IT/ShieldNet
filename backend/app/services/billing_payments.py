@@ -3,7 +3,7 @@ import hashlib
 import hmac
 import json
 from datetime import datetime, timedelta, timezone
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 from uuid import uuid4
 
 import httpx
@@ -142,9 +142,25 @@ class BillingPaymentService:
         await self._activate(payment, str(payment.id), {"source":"wallet","confirmed":True,"auto_renew":auto_renew})
         return {"provider":"balance","order_reference":payment.order_reference,"status":"paid","balance":wallet.balance,"currency":wallet.currency}
 
-    async def create_checkout(self, guild_id: int, plugin_key: str, period: str, provider: str, base_url: str, owner_discord_id: int) -> dict:
+    async def quote_days(self, guild_id: int, days: int) -> dict:
+        if not 1 <= days <= 3660:
+            raise PaymentError("Days must be between 1 and 3660")
+        plan = (await self.session.execute(select(BillingPluginPlan).where(BillingPluginPlan.plugin_key == PAID_PACKAGE_KEY))).scalar_one_or_none()
+        if plan is None or not plan.enabled or plan.is_free or plan.monthly_price is None or plan.monthly_price <= 0:
+            raise PaymentError("Paid plan is unavailable")
+        tier = "yearly" if days >= 365 and plan.yearly_price else "quarterly" if days >= 90 and plan.quarterly_price else "monthly"
+        tier_price = getattr(plan, f"{tier}_price")
+        original = max(Decimal("0.01"), (plan.monthly_price * Decimal(days) / Decimal(30)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
+        base = (tier_price * Decimal(days) / Decimal(PERIOD_DAYS[tier])).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        base = max(base, Decimal("0.01"))
+        discount = await BillingDiscountService(self.session).quote(guild_id, base)
+        return {"days": days, "currency": "USD", "tier": tier, "original_amount": original,
+                "period_discount_amount": max(Decimal("0.00"), original - base), "tenure_discount_percent": discount["tenure_percent"],
+                "tenure_discount_amount": base - discount["final"], "total_amount": max(Decimal("0.01"), discount["final"])}
+
+    async def create_checkout(self, guild_id: int, plugin_key: str, period: str, provider: str, base_url: str, owner_discord_id: int, days: int | None = None) -> dict:
         key = PAID_PACKAGE_KEY
-        if period not in PERIOD_DAYS or provider != "liqpay":
+        if (period not in PERIOD_DAYS and period != "custom") or provider != "liqpay" or (period == "custom" and days is None) or (period != "custom" and days is not None):
             raise PaymentError("Unsupported billing period or provider")
         config = await self.provider_config()
         if not config[provider]["active"]:
@@ -152,10 +168,16 @@ class BillingPaymentService:
         plan = (await self.session.execute(select(BillingPluginPlan).where(BillingPluginPlan.plugin_key == key))).scalar_one_or_none()
         if plan is None or not plan.enabled or plan.is_free:
             raise PaymentError("Paid plan is unavailable")
-        original_amount = getattr(plan, f"{period}_price")
-        if original_amount is None or original_amount <= 0:
-            raise PaymentError("Price is not configured for this period")
-        discount=await BillingDiscountService(self.session).quote(guild_id,original_amount);base_amount=discount["final"]
+        if period == "custom":
+            custom_quote = await self.quote_days(guild_id, days)
+            original_amount = custom_quote["original_amount"]
+            base_amount = custom_quote["total_amount"]
+            discount = {"total_percent": custom_quote["tenure_discount_percent"], "card_code": None}
+        else:
+            original_amount = getattr(plan, f"{period}_price")
+            if original_amount is None or original_amount <= 0:
+                raise PaymentError("Price is not configured for this period")
+            discount=await BillingDiscountService(self.session).quote(guild_id,original_amount);base_amount=discount["final"]
         if base_amount <= 0:
             payment = BillingPayment(id=uuid4(), order_reference=f"voucher-{guild_id}-{uuid4().hex}", guild_id=guild_id,
                 plugin_key=key, billing_period=period, provider="voucher", owner_discord_id=owner_discord_id, purpose="subscription", amount=Decimal("0.00"), currency="USD",
@@ -166,12 +188,12 @@ class BillingPaymentService:
             return {"provider":"voucher","order_reference":payment.order_reference,"status":"paid","discount":discount}
         charge_currency="USD";amount=base_amount
         order = f"gc-{guild_id}-{uuid4().hex}"
-        payment = BillingPayment(id=uuid4(), order_reference=order, guild_id=guild_id, plugin_key=key, owner_discord_id=owner_discord_id, purpose="subscription",
+        payment = BillingPayment(id=uuid4(), order_reference=order, guild_id=guild_id, plugin_key=key, owner_discord_id=owner_discord_id, purpose="subscription", access_days=days if period == "custom" else PERIOD_DAYS[period],
                                  billing_period=period, provider=provider, amount=amount, currency=charge_currency,
                                  original_amount_usd=original_amount,base_amount_usd=base_amount,discount_percent=discount["total_percent"],discount_code=discount["card_code"],quote_expires_at=datetime.now(timezone.utc)+timedelta(minutes=30))
         self.session.add(payment)
         await self.session.commit()
-        product = f"GuildConsole software modules for Discord server {guild_id} - {PERIOD_DAYS[period]} days"
+        product = f"GuildConsole software modules for Discord server {guild_id} - {payment.access_days} days"
         callback = f"{base_url}/api/v1/billing/callback/{provider}"
         result = f"{base_url}/guild/{guild_id}/billing"
         public = await self.secret("liqpay_public_key"); private = await self.secret("liqpay_private_key")
@@ -190,7 +212,7 @@ class BillingPaymentService:
             BillingSubscription.guild_id == payment.guild_id,
             BillingSubscription.plugin_key == payment.plugin_key,
         ).with_for_update())).scalar_one_or_none()
-        days = PERIOD_DAYS[payment.billing_period]
+        days = payment.access_days or PERIOD_DAYS[payment.billing_period]
         if subscription is None:
             subscription = BillingSubscription(id=uuid4(), guild_id=payment.guild_id, plugin_key=payment.plugin_key,
                 status="active", billing_period=payment.billing_period, starts_at=now, expires_at=now + timedelta(days=days),

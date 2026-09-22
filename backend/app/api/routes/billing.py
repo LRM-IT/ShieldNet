@@ -2,7 +2,7 @@ from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from uuid import UUID, uuid4
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel, EmailStr, Field
 from sqlalchemy import select
@@ -89,8 +89,9 @@ class ProviderUpdate(BaseModel):
 
 class CheckoutRequest(BaseModel):
     plugin_key: str
-    billing_period: str = Field(pattern=r"^(monthly|quarterly|yearly)$")
+    billing_period: str = Field(pattern=r"^(monthly|quarterly|yearly|custom)$")
     provider: str = Field(pattern=r"^liqpay$")
+    days: int | None = Field(default=None, ge=1, le=3660)
 class WalletTopupRequest(BaseModel):
     amount: Decimal = Field(gt=0, le=1_000_000)
     provider: str = Field(pattern=r"^liqpay$")
@@ -448,6 +449,17 @@ async def wallet_transactions(discord_user_id: int, _: User = Depends(require_su
     return [{"id":x.id,"amount":x.amount,"balance_after":x.balance_after,"operation":x.operation,"comment":x.comment,
              "actor_user_id":x.actor_user_id,"created_at":x.created_at} for x in rows]
 
+@router.get("/discord/guilds/{guild_id}/billing/quote")
+async def custom_days_quote(guild_id: int, days: int = Query(ge=1, le=3660), user: User = Depends(get_current_user), session: AsyncSession = Depends(get_db_session)):
+    await require_guild_management(session, user, guild_id)
+    guild = await session.get(Guild, guild_id)
+    if user.discord_user_id is None or guild is None or guild.owner_discord_id != user.discord_user_id:
+        raise HTTPException(403, "Only the Discord server owner can purchase a subscription")
+    try:
+        return await BillingPaymentService(session).quote_days(guild_id, days)
+    except PaymentError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
 @router.post("/discord/guilds/{guild_id}/billing/checkout")
 async def checkout(guild_id: int, payload: CheckoutRequest, request: Request, user: User = Depends(get_current_user), session: AsyncSession = Depends(get_db_session)):
     await require_guild_management(session, user, guild_id)
@@ -456,7 +468,7 @@ async def checkout(guild_id: int, payload: CheckoutRequest, request: Request, us
         raise HTTPException(403, "Only the Discord server owner can purchase a subscription")
     base_url = str(request.base_url).rstrip("/")
     try:
-        return await BillingPaymentService(session).create_checkout(guild_id, payload.plugin_key, payload.billing_period, payload.provider, base_url, user.discord_user_id)
+        return await BillingPaymentService(session).create_checkout(guild_id, payload.plugin_key, payload.billing_period, payload.provider, base_url, user.discord_user_id, payload.days)
     except PaymentError as exc:
         raise HTTPException(400, str(exc)) from exc
 

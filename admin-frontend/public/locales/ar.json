@@ -1902,9 +1902,19 @@
     "paid_plan_unavailable": "الخطة المدفوعة غير متاحة حاليًا.",
     "owner_required": "يمكن لمالك خادم Discord فقط شراء الاشتراك.",
     "server_subscription_title": "اشتراك الخادم",
-    "direct_payment_help": "ادفع مباشرة مقابل الوصول لمدة 30 أو 90 أو 365 يومًا. لا يتم تجديد الاشتراك تلقائيًا.",
+    "direct_payment_help": "ادفع مباشرة مقابل فترة الوصول المختارة. لا يتجدد الاشتراك تلقائيًا.",
     "pay_subscription": "دفع الاشتراك",
-    "active_until": "الوصول حتى"
+    "active_until": "الوصول حتى",
+    "custom_days_title": "اختر عدد الأيام",
+    "custom_days_help": "يشمل السعر تعرفة المدة وأي خصم ولاء متاح.",
+    "days_count": "عدد الأيام",
+    "calculate_price": "احسب",
+    "base_price": "السعر قبل الخصومات",
+    "period_discount": "خصم المدة",
+    "loyalty_discount": "خصم الولاء",
+    "amount_due": "المبلغ المستحق",
+    "quote_error": "تعذر حساب السعر.",
+    "price_changed": "تغير السعر. أعد الحساب قبل الدفع."
   },
   "documentation": {
     "open_store": "فتح متجر الإضافات",

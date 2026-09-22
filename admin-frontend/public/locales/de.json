@@ -1902,9 +1902,19 @@
     "paid_plan_unavailable": "Der kostenpflichtige Tarif ist derzeit nicht verfügbar.",
     "owner_required": "Nur der Besitzer des Discord-Servers kann ein Abonnement kaufen.",
     "server_subscription_title": "Server-Abonnement",
-    "direct_payment_help": "Bezahlen Sie direkt für 30, 90 oder 365 Tage Zugang. Das Abonnement verlängert sich nicht automatisch.",
+    "direct_payment_help": "Bezahle den gewünschten Zugangszeitraum direkt. Das Abonnement verlängert sich nicht automatisch.",
     "pay_subscription": "Abonnement bezahlen",
-    "active_until": "Zugang bis"
+    "active_until": "Zugang bis",
+    "custom_days_title": "Anzahl der Tage wählen",
+    "custom_days_help": "Der Preis enthält den Zeitraumtarif und verfügbare Treuerabatte.",
+    "days_count": "Anzahl der Tage",
+    "calculate_price": "Berechnen",
+    "base_price": "Preis vor Rabatten",
+    "period_discount": "Zeitraumrabatt",
+    "loyalty_discount": "Treuerabatt",
+    "amount_due": "Zu zahlen",
+    "quote_error": "Der Preis konnte nicht berechnet werden.",
+    "price_changed": "Der Preis hat sich geändert. Bitte vor der Zahlung erneut berechnen."
   },
   "documentation": {
     "open_store": "Plugin-Shop öffnen",

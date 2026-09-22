@@ -1901,9 +1901,19 @@
     "paid_plan_unavailable": "L’offre payante est actuellement indisponible.",
     "owner_required": "Seul le propriétaire du serveur Discord peut acheter un abonnement.",
     "server_subscription_title": "Abonnement du serveur",
-    "direct_payment_help": "Payez directement pour 30, 90 ou 365 jours d’accès. Le renouvellement n’est pas automatique.",
+    "direct_payment_help": "Payez directement la durée d’accès choisie. L’abonnement ne se renouvelle pas automatiquement.",
     "pay_subscription": "Payer l’abonnement",
-    "active_until": "Accès jusqu’au"
+    "active_until": "Accès jusqu’au",
+    "custom_days_title": "Choisissez le nombre de jours",
+    "custom_days_help": "Le prix inclut le tarif de la période et toute remise de fidélité disponible.",
+    "days_count": "Nombre de jours",
+    "calculate_price": "Calculer",
+    "base_price": "Prix avant remises",
+    "period_discount": "Remise de période",
+    "loyalty_discount": "Remise de fidélité",
+    "amount_due": "Montant à payer",
+    "quote_error": "Impossible de calculer le prix.",
+    "price_changed": "Le prix a changé. Recalculez-le avant de payer."
   },
   "documentation": {
     "open_store": "Ouvrir la boutique",

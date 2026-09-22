@@ -60,6 +60,7 @@ class BillingPayment(Base, TimestampMixin):
     guild_id: Mapped[int | None] = mapped_column(BigInteger, ForeignKey("discord.guilds.guild_id", ondelete="CASCADE"))
     plugin_key: Mapped[str | None] = mapped_column(String(96))
     billing_period: Mapped[str | None] = mapped_column(String(16))
+    access_days: Mapped[int | None] = mapped_column()
     purpose: Mapped[str] = mapped_column(String(24), nullable=False, default="subscription", server_default="subscription")
     owner_discord_id: Mapped[int | None] = mapped_column(BigInteger)
     provider: Mapped[str] = mapped_column(String(24), nullable=False)

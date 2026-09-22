@@ -26,7 +26,8 @@ export interface BillingEmailSettings{enabled:boolean;host:string;port:number;us
  wallets(){return firstValueFrom(this.http.get<BillingWallet[]>('/api/v1/platform/billing/wallets'))}
  creditWallet(x:{discord_user_id:string;amount:number;comment:string}){return firstValueFrom(this.http.post('/api/v1/platform/billing/wallets/credit',x))}
  guildBilling(guildId:string){return firstValueFrom(this.http.get<any>(`/api/v1/discord/guilds/${guildId}/billing`))}
- checkout(guildId:string,x:{plugin_key:string;billing_period:string;provider:string}){return firstValueFrom(this.http.post<any>(`/api/v1/discord/guilds/${guildId}/billing/checkout`,x))}
+ quoteDays(guildId:string,days:number){return firstValueFrom(this.http.get<any>(`/api/v1/discord/guilds/${guildId}/billing/quote`,{params:{days}}))}
+ checkout(guildId:string,x:{plugin_key:string;billing_period:string;provider:string;days?:number}){return firstValueFrom(this.http.post<any>(`/api/v1/discord/guilds/${guildId}/billing/checkout`,x))}
  walletTopup(x:any){return firstValueFrom(this.http.post<any>('/api/v1/billing/wallet/checkout',x))}
  purchaseSubscription(x:any){return firstValueFrom(this.http.post<any>('/api/v1/billing/subscriptions/purchase',x))}
  saveWalletSettings(x:any){return firstValueFrom(this.http.put<any>('/api/v1/billing/wallet/settings',x))}

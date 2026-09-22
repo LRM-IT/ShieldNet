@@ -1860,9 +1860,19 @@
     "paid_plan_unavailable": "The paid plan is currently unavailable.",
     "owner_required": "Only the Discord server owner can purchase a subscription.",
     "server_subscription_title": "Server subscription",
-    "direct_payment_help": "Pay directly for 30, 90 or 365 days of access. The subscription does not renew automatically.",
+    "direct_payment_help": "Pay directly for a selected access period. The subscription does not renew automatically.",
     "pay_subscription": "Pay for subscription",
-    "active_until": "Access until"
+    "active_until": "Access until",
+    "custom_days_title": "Choose your number of days",
+    "custom_days_help": "The price includes the period rate and any available loyalty discount.",
+    "days_count": "Number of days",
+    "calculate_price": "Calculate",
+    "base_price": "Price before discounts",
+    "period_discount": "Period discount",
+    "loyalty_discount": "Loyalty discount",
+    "amount_due": "Amount due",
+    "quote_error": "Unable to calculate the price.",
+    "price_changed": "The price changed. Calculate again before paying."
   },
   "documentation": {
     "open_store": "Open plugin store",

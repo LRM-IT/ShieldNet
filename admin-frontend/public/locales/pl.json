@@ -1900,9 +1900,19 @@
     "paid_plan_unavailable": "Płatny plan jest obecnie niedostępny.",
     "owner_required": "Subskrypcję może kupić tylko właściciel serwera Discord.",
     "server_subscription_title": "Subskrypcja serwera",
-    "direct_payment_help": "Zapłać bezpośrednio za 30, 90 lub 365 dni dostępu. Subskrypcja nie odnawia się automatycznie.",
+    "direct_payment_help": "Zapłać bezpośrednio za wybrany okres dostępu. Subskrypcja nie odnawia się automatycznie.",
     "pay_subscription": "Opłać subskrypcję",
-    "active_until": "Dostęp do"
+    "active_until": "Dostęp do",
+    "custom_days_title": "Wybierz liczbę dni",
+    "custom_days_help": "Cena obejmuje stawkę za okres i dostępny rabat lojalnościowy.",
+    "days_count": "Liczba dni",
+    "calculate_price": "Oblicz",
+    "base_price": "Cena przed rabatami",
+    "period_discount": "Rabat za okres",
+    "loyalty_discount": "Rabat lojalnościowy",
+    "amount_due": "Do zapłaty",
+    "quote_error": "Nie udało się obliczyć ceny.",
+    "price_changed": "Cena się zmieniła. Oblicz ją ponownie przed płatnością."
   },
   "documentation": {
     "open_store": "Otwórz sklep z wtyczkami",
