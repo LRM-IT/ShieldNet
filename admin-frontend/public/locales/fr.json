@@ -1887,7 +1887,16 @@
     "loyalty_discount": "Remise de fidélité",
     "amount_due": "Montant à payer",
     "quote_error": "Impossible de calculer le prix.",
-    "price_changed": "Le prix a changé. Recalculez-le avant de payer."
+    "price_changed": "Le prix a changé. Recalculez-le avant de payer.",
+    "server_voucher_title": "Bon d’abonnement",
+    "server_voucher_help": "Appliquez le code directement au serveur choisi. Vérifiez d’abord le nombre de jours.",
+    "preview_voucher": "Vérifier le bon",
+    "voucher_grants": "Ce bon accorde",
+    "days_unit": "jours",
+    "to_selected_server": "au serveur choisi.",
+    "redeem_server_voucher": "Activer avec un bon",
+    "voucher_error": "Impossible de vérifier ou d’utiliser le bon.",
+    "voucher_activated": "Abonnement du serveur activé avec un bon."
   },
   "documentation": {
     "open_store": "Ouvrir la boutique",

@@ -1888,7 +1888,16 @@
     "loyalty_discount": "Treuerabatt",
     "amount_due": "Zu zahlen",
     "quote_error": "Der Preis konnte nicht berechnet werden.",
-    "price_changed": "Der Preis hat sich geändert. Bitte vor der Zahlung erneut berechnen."
+    "price_changed": "Der Preis hat sich geändert. Bitte vor der Zahlung erneut berechnen.",
+    "server_voucher_title": "Abonnement-Gutschein",
+    "server_voucher_help": "Wende den Code direkt auf den gewählten Server an. Prüfe vorher die Anzahl der Tage.",
+    "preview_voucher": "Gutschein prüfen",
+    "voucher_grants": "Dieser Gutschein gewährt",
+    "days_unit": "Tage",
+    "to_selected_server": "für den gewählten Server.",
+    "redeem_server_voucher": "Mit Gutschein aktivieren",
+    "voucher_error": "Gutschein konnte nicht geprüft oder eingelöst werden.",
+    "voucher_activated": "Server-Abonnement mit Gutschein aktiviert."
   },
   "documentation": {
     "open_store": "Plugin-Shop öffnen",

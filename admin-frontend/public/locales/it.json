@@ -1886,7 +1886,16 @@
     "loyalty_discount": "Sconto fedeltà",
     "amount_due": "Importo da pagare",
     "quote_error": "Impossibile calcolare il prezzo.",
-    "price_changed": "Il prezzo è cambiato. Ricalcolalo prima di pagare."
+    "price_changed": "Il prezzo è cambiato. Ricalcolalo prima di pagare.",
+    "server_voucher_title": "Voucher abbonamento",
+    "server_voucher_help": "Applica il codice direttamente al server scelto. Controlla prima il numero di giorni.",
+    "preview_voucher": "Verifica voucher",
+    "voucher_grants": "Questo voucher offre",
+    "days_unit": "giorni",
+    "to_selected_server": "al server scelto.",
+    "redeem_server_voucher": "Attiva con voucher",
+    "voucher_error": "Impossibile verificare o usare il voucher.",
+    "voucher_activated": "Abbonamento del server attivato con voucher."
   },
   "documentation": {
     "open_store": "Apri il negozio plugin",

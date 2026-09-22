@@ -1886,7 +1886,16 @@
     "loyalty_discount": "Rabat lojalnościowy",
     "amount_due": "Do zapłaty",
     "quote_error": "Nie udało się obliczyć ceny.",
-    "price_changed": "Cena się zmieniła. Oblicz ją ponownie przed płatnością."
+    "price_changed": "Cena się zmieniła. Oblicz ją ponownie przed płatnością.",
+    "server_voucher_title": "Voucher subskrypcji",
+    "server_voucher_help": "Zastosuj kod bezpośrednio do wybranego serwera. Przed aktywacją sprawdź liczbę dni.",
+    "preview_voucher": "Sprawdź voucher",
+    "voucher_grants": "Ten voucher zapewnia",
+    "days_unit": "dni",
+    "to_selected_server": "wybranemu serwerowi.",
+    "redeem_server_voucher": "Aktywuj voucherem",
+    "voucher_error": "Nie udało się sprawdzić lub użyć vouchera.",
+    "voucher_activated": "Subskrypcja serwera aktywowana voucherem."
   },
   "documentation": {
     "open_store": "Otwórz sklep z wtyczkami",

@@ -1846,7 +1846,16 @@
     "loyalty_discount": "Loyalty discount",
     "amount_due": "Amount due",
     "quote_error": "Unable to calculate the price.",
-    "price_changed": "The price changed. Calculate again before paying."
+    "price_changed": "The price changed. Calculate again before paying.",
+    "server_voucher_title": "Subscription voucher",
+    "server_voucher_help": "Apply a code directly to the selected server. Preview the access days before redeeming.",
+    "preview_voucher": "Check voucher",
+    "voucher_grants": "This voucher grants",
+    "days_unit": "days",
+    "to_selected_server": "to the selected server.",
+    "redeem_server_voucher": "Activate with voucher",
+    "voucher_error": "Unable to check or use voucher.",
+    "voucher_activated": "Server subscription activated with voucher."
   },
   "documentation": {
     "open_store": "Open plugin store",
