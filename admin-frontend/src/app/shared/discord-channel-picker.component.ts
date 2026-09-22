@@ -43,7 +43,7 @@ interface ChannelOption {
       @if (open()) {
         <div class="menu" [style.top.px]="menuPosition().top" [style.left.px]="menuPosition().left" [style.width.px]="menuPosition().width" [style.height.px]="menuPosition().height">
           <div class="search">
-            <input type="search" [(ngModel)]="query" [placeholder]="t('channel_picker.search','Search channel or category…')" />
+            <input type="search" [ngModel]="query()" (ngModelChange)="query.set($event)" [placeholder]="t('channel_picker.search','Search channel or category…')" />
             <button type="button" (click)="refreshFromDiscord()" [disabled]="refreshing()">
               {{ refreshing() ? '…' : '↻' }}
             </button>
@@ -114,6 +114,7 @@ interface ChannelOption {
 export class DiscordChannelPickerComponent implements OnInit, OnChanges {
   private readonly http = inject(HttpClient);
   private readonly i18n = inject(TranslationService);
+  private readonly host = inject(ElementRef<HTMLElement>);
   @ViewChild('trigger') trigger?: ElementRef<HTMLButtonElement>;
 
   @Input({ required: true }) guildId = '';
@@ -126,7 +127,7 @@ export class DiscordChannelPickerComponent implements OnInit, OnChanges {
   readonly error = signal('');
   readonly channels = signal<ChannelOption[]>([]);
   readonly menuPosition = signal({ top: 0, left: 0, width: 340, height: 430 });
-  query = '';
+  readonly query = signal('');
 
   normalizedValue(): string {
     return this.value === null || this.value === undefined || this.value === ''
@@ -139,7 +140,7 @@ export class DiscordChannelPickerComponent implements OnInit, OnChanges {
   }
 
   readonly groupedOptions = computed(() => {
-    const query = this.query.trim().toLowerCase();
+    const query = this.query().trim().toLowerCase();
     const filtered = this.channels().filter((item) =>
       !query ||
       item.name.toLowerCase().includes(query) ||
@@ -180,6 +181,23 @@ export class DiscordChannelPickerComponent implements OnInit, OnChanges {
     if (this.open()) this.updateMenuPosition();
   }
 
+  @HostListener('document:mousedown', ['$event'])
+  closeOnOutsideClick(event: MouseEvent): void {
+    const target = event.target;
+    if (this.open() && target instanceof Node && !this.host.nativeElement.contains(target)) {
+      this.open.set(false);
+      this.query.set('');
+    }
+  }
+
+  @HostListener('document:keydown.escape')
+  closeOnEscape(): void {
+    if (this.open()) {
+      this.open.set(false);
+      this.query.set('');
+    }
+  }
+
   private updateMenuPosition(): void {
     const rect = this.trigger?.nativeElement.getBoundingClientRect();
     if (!rect) return;
@@ -201,7 +219,7 @@ export class DiscordChannelPickerComponent implements OnInit, OnChanges {
     this.value = selectedId;
     this.valueChange.emit(selectedId);
     this.open.set(false);
-    this.query = '';
+    this.query.set('');
   }
 
   selectedLabel(): string {
