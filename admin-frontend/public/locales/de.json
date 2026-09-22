@@ -1900,7 +1900,11 @@
     "price_not_configured": "Der Preis für diesen Zeitraum ist nicht konfiguriert.",
     "provider_unavailable": "Der Zahlungsanbieter ist nicht verfügbar.",
     "paid_plan_unavailable": "Der kostenpflichtige Tarif ist derzeit nicht verfügbar.",
-    "owner_required": "Nur der Besitzer des Discord-Servers kann ein Abonnement kaufen."
+    "owner_required": "Nur der Besitzer des Discord-Servers kann ein Abonnement kaufen.",
+    "server_subscription_title": "Server-Abonnement",
+    "direct_payment_help": "Bezahlen Sie direkt für 30, 90 oder 365 Tage Zugang. Das Abonnement verlängert sich nicht automatisch.",
+    "pay_subscription": "Abonnement bezahlen",
+    "active_until": "Zugang bis"
   },
   "documentation": {
     "open_store": "Plugin-Shop öffnen",
@@ -2039,8 +2043,8 @@
     "security_billing_title": "Zugang, Abonnements und Daten",
     "access_title": "Begrenzter Zugriff",
     "access_text": "Discord-Authentifizierung und Serverrollen bestimmen, welche Kontrollzentren und Vorgänge ein Benutzer öffnen darf.",
-    "billing_title": "USD-Waage",
-    "billing_text": "Der interne Kontostand wird in USD gespeichert. Serverabonnements zeigen ihr Abzahlungsdatum an und können eine einzelne Voraberinnerung senden.",
+    "billing_title": "Server-Abonnement",
+    "billing_text": "Bezahle den gewählten Server und Zeitraum direkt. Keine automatische Verlängerung; eine einmalige Erinnerung vor Ablauf ist verfügbar.",
     "data_title": "Getrennte Daten",
     "data_text": "Servereinstellungen und Plugin-Daten werden nach Discord-Server getrennt. Sensible Plattformvorgänge bleiben autorisierten Administratoren vorbehalten.",
     "help_label": "UNTERSTÜTZUNG",

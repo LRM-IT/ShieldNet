@@ -142,7 +142,7 @@ class BillingPaymentService:
         await self._activate(payment, str(payment.id), {"source":"wallet","confirmed":True,"auto_renew":auto_renew})
         return {"provider":"balance","order_reference":payment.order_reference,"status":"paid","balance":wallet.balance,"currency":wallet.currency}
 
-    async def create_checkout(self, guild_id: int, plugin_key: str, period: str, provider: str, base_url: str) -> dict:
+    async def create_checkout(self, guild_id: int, plugin_key: str, period: str, provider: str, base_url: str, owner_discord_id: int) -> dict:
         key = PAID_PACKAGE_KEY
         if period not in PERIOD_DAYS or provider != "liqpay":
             raise PaymentError("Unsupported billing period or provider")
@@ -158,7 +158,7 @@ class BillingPaymentService:
         discount=await BillingDiscountService(self.session).quote(guild_id,original_amount);base_amount=discount["final"]
         if base_amount <= 0:
             payment = BillingPayment(id=uuid4(), order_reference=f"voucher-{guild_id}-{uuid4().hex}", guild_id=guild_id,
-                plugin_key=key, billing_period=period, provider="voucher", amount=Decimal("0.00"), currency="USD",
+                plugin_key=key, billing_period=period, provider="voucher", owner_discord_id=owner_discord_id, purpose="subscription", amount=Decimal("0.00"), currency="USD",
                 status="created", signature_verified=True, original_amount_usd=original_amount, base_amount_usd=Decimal("0.00"),
                 discount_percent=discount["total_percent"], discount_code=discount["card_code"])
             self.session.add(payment); await self.session.flush()
@@ -166,17 +166,17 @@ class BillingPaymentService:
             return {"provider":"voucher","order_reference":payment.order_reference,"status":"paid","discount":discount}
         charge_currency="USD";amount=base_amount
         order = f"gc-{guild_id}-{uuid4().hex}"
-        payment = BillingPayment(id=uuid4(), order_reference=order, guild_id=guild_id, plugin_key=key,
+        payment = BillingPayment(id=uuid4(), order_reference=order, guild_id=guild_id, plugin_key=key, owner_discord_id=owner_discord_id, purpose="subscription",
                                  billing_period=period, provider=provider, amount=amount, currency=charge_currency,
                                  original_amount_usd=original_amount,base_amount_usd=base_amount,discount_percent=discount["total_percent"],discount_code=discount["card_code"],quote_expires_at=datetime.now(timezone.utc)+timedelta(minutes=30))
         self.session.add(payment)
         await self.session.commit()
-        product = f"GuildConsole software modules access - {period}"
+        product = f"GuildConsole software modules for Discord server {guild_id} - {PERIOD_DAYS[period]} days"
         callback = f"{base_url}/api/v1/billing/callback/{provider}"
         result = f"{base_url}/guild/{guild_id}/billing"
         public = await self.secret("liqpay_public_key"); private = await self.secret("liqpay_private_key")
         payload = {"version":"3","public_key":public,"action":"pay","amount":_money(amount),"currency":charge_currency,
-                   "description":product,"order_id":order,"server_url":callback,"result_url":result}
+                   "description":product,"product_name":product,"product_category":"Software subscription","product_url":f"{base_url}/pricing","order_id":order,"server_url":callback,"result_url":result}
         data = base64.b64encode(json.dumps(payload, separators=(",", ":")).encode()).decode()
         return {"provider":provider,"order_reference":order,"action":"https://www.liqpay.ua/api/3/checkout","method":"POST",
                 "fields":{"data":data,"signature":_liqpay_signature(private, data)},"charge_amount":amount,"charge_currency":charge_currency,
@@ -194,14 +194,14 @@ class BillingPaymentService:
         if subscription is None:
             subscription = BillingSubscription(id=uuid4(), guild_id=payment.guild_id, plugin_key=payment.plugin_key,
                 status="active", billing_period=payment.billing_period, starts_at=now, expires_at=now + timedelta(days=days),
-                provider=payment.provider, external_order_id=payment.order_reference,owner_discord_id=payment.owner_discord_id,auto_renew=bool(raw.get("auto_renew",False)))
+                provider=payment.provider, external_order_id=payment.order_reference,owner_discord_id=payment.owner_discord_id,auto_renew=False)
             self.session.add(subscription)
         else:
             subscription.status = "active"; subscription.billing_period = payment.billing_period
             subscription.expires_at = max(subscription.expires_at, now) + timedelta(days=days)
             subscription.provider = payment.provider; subscription.external_order_id = payment.order_reference
             if payment.owner_discord_id: subscription.owner_discord_id=payment.owner_discord_id
-            if "auto_renew" in raw: subscription.auto_renew=bool(raw["auto_renew"])
+            subscription.auto_renew=False
         payment.status = "paid"; payment.signature_verified = True; payment.provider_payment_id = provider_id
         payment.raw_status = raw; payment.paid_at = now
         await self.session.commit()

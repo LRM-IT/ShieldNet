@@ -1858,7 +1858,11 @@
     "price_not_configured": "The price for this period is not configured.",
     "provider_unavailable": "The payment provider is unavailable.",
     "paid_plan_unavailable": "The paid plan is currently unavailable.",
-    "owner_required": "Only the Discord server owner can purchase a subscription."
+    "owner_required": "Only the Discord server owner can purchase a subscription.",
+    "server_subscription_title": "Server subscription",
+    "direct_payment_help": "Pay directly for 30, 90 or 365 days of access. The subscription does not renew automatically.",
+    "pay_subscription": "Pay for subscription",
+    "active_until": "Access until"
   },
   "documentation": {
     "open_store": "Open plugin store",
@@ -2061,8 +2065,8 @@
     "security_billing_title": "Access, subscriptions and data",
     "access_title": "Scoped access",
     "access_text": "Discord authentication and server roles determine which control centers and operations a user may open.",
-    "billing_title": "USD balance",
-    "billing_text": "The internal balance is stored in USD. Server subscriptions show their paid-through date and can send a single advance reminder.",
+    "billing_title": "Server subscription",
+    "billing_text": "Pay directly for the selected server and period. Access does not renew automatically; a single advance expiry reminder is available.",
     "data_title": "Separated data",
     "data_text": "Server settings and plugin data are separated by Discord server. Sensitive platform operations remain restricted to authorized administrators.",
     "help_label": "SUPPORT",

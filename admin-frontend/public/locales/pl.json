@@ -1898,7 +1898,11 @@
     "price_not_configured": "Cena dla tego okresu nie została skonfigurowana.",
     "provider_unavailable": "Operator płatności jest niedostępny.",
     "paid_plan_unavailable": "Płatny plan jest obecnie niedostępny.",
-    "owner_required": "Subskrypcję może kupić tylko właściciel serwera Discord."
+    "owner_required": "Subskrypcję może kupić tylko właściciel serwera Discord.",
+    "server_subscription_title": "Subskrypcja serwera",
+    "direct_payment_help": "Zapłać bezpośrednio za 30, 90 lub 365 dni dostępu. Subskrypcja nie odnawia się automatycznie.",
+    "pay_subscription": "Opłać subskrypcję",
+    "active_until": "Dostęp do"
   },
   "documentation": {
     "open_store": "Otwórz sklep z wtyczkami",
@@ -2037,8 +2041,8 @@
     "security_billing_title": "Dostęp, subskrypcje i dane",
     "access_title": "Dostęp ograniczony",
     "access_text": "Uwierzytelnianie i role serwera Discord określają, które centra kontroli i operacje może otworzyć użytkownik.",
-    "billing_title": "Bilans USD",
-    "billing_text": "Saldo wewnętrzne zapisane jest w USD. Subskrypcje serwerów pokazują datę ich opłacenia i mogą wysyłać pojedyncze przypomnienia z wyprzedzeniem.",
+    "billing_title": "Subskrypcja serwera",
+    "billing_text": "Zapłać bezpośrednio za wybrany serwer i okres. Brak automatycznego odnowienia; dostępne jest jednorazowe przypomnienie przed wygaśnięciem.",
     "data_title": "Oddzielone dane",
     "data_text": "Ustawienia serwera i dane wtyczki są oddzielone serwerem Discord. Wrażliwe operacje na platformie pozostają ograniczone do autoryzowanych administratorów.",
     "help_label": "WSPARCIE",

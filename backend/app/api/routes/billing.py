@@ -90,7 +90,7 @@ class ProviderUpdate(BaseModel):
 class CheckoutRequest(BaseModel):
     plugin_key: str
     billing_period: str = Field(pattern=r"^(monthly|quarterly|yearly)$")
-    provider: str = Field(pattern=r"^(liqpay|balance)$")
+    provider: str = Field(pattern=r"^liqpay$")
 class WalletTopupRequest(BaseModel):
     amount: Decimal = Field(gt=0, le=1_000_000)
     provider: str = Field(pattern=r"^liqpay$")
@@ -242,7 +242,6 @@ async def revoke(subscription_id: UUID, _: User = Depends(require_superadmin), s
 async def guild_billing(guild_id: int, user: User = Depends(get_current_user), session: AsyncSession = Depends(get_db_session)):
     await require_guild_management(session, user, guild_id)
     plans = await BillingService(session).list_plans(); subscriptions = await BillingService(session).list_subscriptions(guild_id)
-    wallet = await session.scalar(select(BillingWallet).where(BillingWallet.discord_user_id == user.discord_user_id)) if user.discord_user_id else None
     package = next((x for x in plans if x.plugin_key == PAID_PACKAGE_KEY), None)
     visible_plans = []
     if package and package.enabled:
@@ -256,10 +255,11 @@ async def guild_billing(guild_id: int, user: User = Depends(get_current_user), s
     provider_config=await BillingPaymentService(session).provider_config();email_config=await EmailDeliveryService(session).public_config()
     return {"free_plugin_keys":sorted(x.plugin_key for x in plans if x.plugin_key != PAID_PACKAGE_KEY and x.is_free),"plans":visible_plans,"module_tiers":tiers,"subscriptions":[subscription_dict(x) for x in subscriptions if x.plugin_key == PAID_PACKAGE_KEY],
             "providers":{key:{"active":value["active"]} for key,value in provider_config.items()},
-            "wallet":{"balance":wallet.balance,"currency":wallet.currency,"low_balance_enabled":wallet.low_balance_enabled,"low_balance_threshold":wallet.low_balance_threshold,"low_balance_discord_dm":wallet.low_balance_discord_dm,"low_balance_email":wallet.low_balance_email} if wallet else {"balance":Decimal("0.00"),"currency":"USD","low_balance_enabled":False,"low_balance_threshold":Decimal("0.00"),"low_balance_discord_dm":True,"low_balance_email":False},"email_available":bool(real_email(user)),"smtp_available":bool(email_config["enabled"] and email_config["configured"])}
+            "email_available":bool(real_email(user)),"smtp_available":bool(email_config["enabled"] and email_config["configured"])}
 
 @router.post("/billing/wallet/voucher")
 async def redeem_voucher(payload:RedeemDiscountIn,user:User=Depends(get_current_user),session:AsyncSession=Depends(get_db_session)):
+    raise HTTPException(410,"Balance vouchers are no longer available")
     if not user.discord_user_id: raise HTTPException(400,"Discord account is required")
     try: card,wallet=await BillingDiscountService(session).redeem_wallet(payload.code,user.id,user.discord_user_id)
     except DiscountError as exc: raise HTTPException(400,str(exc)) from exc
@@ -267,12 +267,14 @@ async def redeem_voucher(payload:RedeemDiscountIn,user:User=Depends(get_current_
 
 @router.post("/billing/wallet/checkout")
 async def wallet_checkout(payload:WalletTopupRequest,request:Request,user:User=Depends(get_current_user),session:AsyncSession=Depends(get_db_session)):
+    raise HTTPException(410,"Balance top-ups are no longer available")
     if not user.discord_user_id: raise HTTPException(400,"Discord account is required")
     try:return await BillingPaymentService(session).create_wallet_topup(user.discord_user_id,payload.amount,payload.provider,str(request.base_url).rstrip("/"))
     except PaymentError as exc:raise HTTPException(400,str(exc)) from exc
 
 @router.post("/billing/subscriptions/purchase")
 async def purchase_subscription(payload:SubscriptionPurchaseRequest,user:User=Depends(get_current_user),session:AsyncSession=Depends(get_db_session)):
+    raise HTTPException(410,"Pay for the server subscription directly")
     guild=await session.get(Guild,payload.guild_id)
     if not user.discord_user_id or guild is None or guild.owner_discord_id!=user.discord_user_id:raise HTTPException(403,"Only the Discord server owner can purchase a subscription")
     try:return await BillingPaymentService(session).pay_from_wallet(payload.guild_id,user.discord_user_id,PAID_PACKAGE_KEY,payload.billing_period,payload.auto_renew)
@@ -280,6 +282,7 @@ async def purchase_subscription(payload:SubscriptionPurchaseRequest,user:User=De
 
 @router.put("/billing/wallet/settings")
 async def wallet_settings(payload:WalletSettingsRequest,user:User=Depends(get_current_user),session:AsyncSession=Depends(get_db_session)):
+    raise HTTPException(410,"Balance notifications are no longer available")
     if not user.discord_user_id:raise HTTPException(400,"Discord account is required")
     wallet=await session.scalar(select(BillingWallet).where(BillingWallet.discord_user_id==user.discord_user_id,BillingWallet.currency=="USD"))
     if wallet is None:wallet=BillingWallet(id=uuid4(),discord_user_id=user.discord_user_id,balance=Decimal("0.00"),currency="USD");session.add(wallet)
@@ -428,6 +431,7 @@ async def wallets(_: User = Depends(require_superadmin), session: AsyncSession =
 
 @router.post("/platform/billing/wallets/credit")
 async def credit_wallet(payload: WalletCreditRequest, user: User = Depends(require_superadmin), session: AsyncSession = Depends(get_db_session)):
+    raise HTTPException(410,"Balance credits are no longer available")
     if payload.discord_user_id <= 0:
         raise HTTPException(400, "A real Discord owner is required")
     owns_guild = await session.scalar(select(Guild.guild_id).where(Guild.owner_discord_id == payload.discord_user_id).limit(1))
@@ -447,19 +451,12 @@ async def wallet_transactions(discord_user_id: int, _: User = Depends(require_su
 @router.post("/discord/guilds/{guild_id}/billing/checkout")
 async def checkout(guild_id: int, payload: CheckoutRequest, request: Request, user: User = Depends(get_current_user), session: AsyncSession = Depends(get_db_session)):
     await require_guild_management(session, user, guild_id)
-    if payload.provider != "balance":
-        raise HTTPException(410, "Direct subscription checkout is disabled; top up the personal balance first")
-    if payload.provider == "balance":
-        guild = await session.get(Guild, guild_id)
-        if user.discord_user_id is None or guild is None or guild.owner_discord_id != user.discord_user_id:
-            raise HTTPException(403, "Only the Discord server owner can spend the owner balance")
-        try:
-            return await BillingPaymentService(session).pay_from_wallet(guild_id, user.discord_user_id, payload.plugin_key, payload.billing_period)
-        except PaymentError as exc:
-            raise HTTPException(400, str(exc)) from exc
+    guild = await session.get(Guild, guild_id)
+    if user.discord_user_id is None or guild is None or guild.owner_discord_id != user.discord_user_id:
+        raise HTTPException(403, "Only the Discord server owner can purchase a subscription")
     base_url = str(request.base_url).rstrip("/")
     try:
-        return await BillingPaymentService(session).create_checkout(guild_id, payload.plugin_key, payload.billing_period, payload.provider, base_url)
+        return await BillingPaymentService(session).create_checkout(guild_id, payload.plugin_key, payload.billing_period, payload.provider, base_url, user.discord_user_id)
     except PaymentError as exc:
         raise HTTPException(400, str(exc)) from exc
 
@@ -476,14 +473,6 @@ async def liqpay_callback(request: Request, session: AsyncSession = Depends(get_
 @router.post("/internal/billing/reconcile", dependencies=[Depends(verify_internal_service_token)])
 async def reconcile_billing(session: AsyncSession = Depends(get_db_session)):
     now=datetime.now(timezone.utc)
-    renewals=list((await session.execute(select(BillingSubscription).where(BillingSubscription.auto_renew.is_(True),BillingSubscription.expires_at<=now,BillingSubscription.status=="active"))).scalars())
-    renewed=[]
-    for item in renewals:
-        if not item.owner_discord_id: continue
-        try:
-            await BillingPaymentService(session).pay_from_wallet(item.guild_id,item.owner_discord_id,item.plugin_key,item.billing_period,True);renewed.append(str(item.guild_id))
-        except PaymentError:
-            await session.rollback()
     expired = await BillingService(session).expired_enabled_plugins()
     disabled = []
     for guild_id, plugin_key in expired:
@@ -493,21 +482,6 @@ async def reconcile_billing(session: AsyncSession = Depends(get_db_session)):
         except LookupError:
             continue
     queued=[]
-    wallets=list((await session.execute(select(BillingWallet).where(BillingWallet.low_balance_enabled.is_(True)))).scalars())
-    for wallet in wallets:
-        if wallet.balance>wallet.low_balance_threshold:
-            wallet.low_balance_notice_sent_at=None;wallet.low_balance_dm_notice_sent_at=None;wallet.low_balance_email_notice_sent_at=None
-            continue
-        owner=await session.scalar(select(User).where(User.discord_user_id==wallet.discord_user_id))
-        message=billing_message(owner.preferred_locale if owner else None,"low_balance",balance=wallet.balance,threshold=wallet.low_balance_threshold)
-        if wallet.low_balance_discord_dm and wallet.low_balance_dm_notice_sent_at is None:
-            guild=await session.scalar(select(Guild).where(Guild.owner_discord_id==wallet.discord_user_id,Guild.last_sync_at.is_not(None)).order_by(Guild.bot_status.desc()).limit(1))
-            if guild is not None:
-                session.add(MemberAction(guild_id=guild.guild_id,discord_user_id=wallet.discord_user_id,action_type=MemberActionType.SEND_DM,payload={"message":message,"source":"low_balance_reminder"},requested_by=None));wallet.low_balance_dm_notice_sent_at=now;queued.append({"type":"low_balance_dm","guild_id":str(guild.guild_id)})
-        email=real_email(owner)
-        if wallet.low_balance_email and email and wallet.low_balance_email_notice_sent_at is None:
-            try:await EmailDeliveryService(session).send(email,"GuildConsole: low balance",message);wallet.low_balance_email_notice_sent_at=now;queued.append({"type":"low_balance_email","user_id":str(owner.id)})
-            except Exception:pass
     reminders=list((await session.execute(select(BillingSubscription).where(BillingSubscription.status=="active",BillingSubscription.expiry_notice_enabled.is_(True),BillingSubscription.expires_at>now,BillingSubscription.expires_at<=now+timedelta(days=30)))).scalars())
     for item in reminders:
         if item.expires_at>now+timedelta(days=item.expiry_notice_days):continue
@@ -523,4 +497,4 @@ async def reconcile_billing(session: AsyncSession = Depends(get_db_session)):
             except Exception:pass
         if item.expiry_dm_notice_for_expires_at==item.expires_at or item.expiry_email_notice_for_expires_at==item.expires_at:item.expiry_notice_sent_at=now;item.expiry_notice_for_expires_at=item.expires_at
     await session.commit()
-    return {"count":len(disabled),"disabled":disabled,"renewed":renewed,"notifications":queued}
+    return {"count":len(disabled),"disabled":disabled,"renewed":[],"notifications":queued}

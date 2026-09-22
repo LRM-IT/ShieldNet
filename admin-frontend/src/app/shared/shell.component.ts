@@ -122,7 +122,7 @@ interface PluginNavDefinition {
             <section class="accordion-section open">
               <div class="accordion-items standalone">
                 <a routerLink="/servers" routerLinkActive="active"><span class="nav-icon">⌂</span><span>{{ 'shell.servers' | snT:'Servers' }}</span></a>
-                <a routerLink="/billing" routerLinkActive="active"><span class="nav-icon">₴</span><span>Balance and subscriptions</span></a>
+                <a routerLink="/billing" routerLinkActive="active"><span class="nav-icon">₴</span><span>{{ 'billing.server_subscription_title' | snT:'Server subscription' }}</span></a>
                 <a routerLink="/documentation" routerLinkActive="active"><span class="nav-icon">?</span><span>{{ 'documentation.title' | snT:'Documentation' }}</span></a>
               </div>
             </section>

@@ -5,17 +5,15 @@ import {BillingPayment,BillingPlan,BillingProviders,BillingService,BillingSubscr
 import {ShellComponent} from '../shared/shell.component';
 import {TranslationService} from '../core/translation.service';
 
-type BillingTab='merchant'|'modules'|'pricing'|'discounts'|'balances'|'payments';
+type BillingTab='merchant'|'modules'|'pricing'|'payments';
 
 @Component({standalone:true,imports:[FormsModule,DatePipe,DecimalPipe,NgTemplateOutlet,ShellComponent],template:`
 <sn-shell title="Billing"><main class="page">
-<header><span>SUPERADMIN</span><h2>Billing</h2><p>Server activation, merchant providers, balances and payment operations.</p></header>
+<header><span>SUPERADMIN</span><h2>Billing</h2><p>Server subscriptions, merchant providers and payment operations.</p></header>
 <nav class="tabs" aria-label="Billing sections">
   <button [class.active]="tab()==='merchant'" (click)="tab.set('merchant')">Merchant</button>
   <button [class.active]="tab()==='modules'" (click)="tab.set('modules')">Module groups</button>
   <button [class.active]="tab()==='pricing'" (click)="tab.set('pricing')">Pricing</button>
-  <button [class.active]="tab()==='discounts'" (click)="tab.set('discounts')">Discounts</button>
-  <button [class.active]="tab()==='balances'" (click)="tab.set('balances')">Balance top-up</button>
   <button [class.active]="tab()==='payments'" (click)="tab.set('payments')">Processed payments</button>
 </nav>
 @if(error()){<div class="notice error">{{error()}}</div>}@if(success()){<div class="notice success">{{success()}}</div>}
@@ -41,12 +39,6 @@ type BillingTab='merchant'|'modules'|'pricing'|'discounts'|'balances'|'payments'
 <div class="grid"><article class="card"><h3>Grant subscription manually</h3><label>Discord server ID<input type="text" inputmode="numeric" pattern="[0-9]*" [(ngModel)]="grant.guild_id"></label><label>Period<select [(ngModel)]="grant.billing_period"><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="yearly">Yearly</option><option value="manual">Manual</option></select></label><label>Access days<input type="number" min="1" max="3660" [(ngModel)]="grant.days"></label><button class="primary" (click)="grantAccess()">Grant Paid Modules</button></article>
 <article class="card"><div class="title"><div><h3>Subscriptions</h3><p>Active and historical access.</p></div><button class="secondary" (click)="load()">Refresh</button></div><div class="subscriptions">@for(x of subscriptions();track x.id){<div class="subscription"><div><b>Guild {{x.guild_id}}</b><small>{{x.billing_period}}</small></div><span [class.ready]="x.status==='active'">{{x.status}}</span><time>{{x.expires_at|date:'mediumDate'}}</time>@if(x.status==='active'){<button class="danger" (click)="revoke(x)">Revoke</button>}</div>}@empty{<p>No subscriptions yet.</p>}</div></article></div></section>}
 
-@if(tab()==='balances'){<section class="tab-page"><div class="section-head"><div><h3>Owner balances</h3><p>Top up the internal USD balance of any registered Discord server owner.</p></div></div>
-<div class="grid"><article class="card"><h3>Add funds</h3><label>Server owner<select [(ngModel)]="credit.discord_user_id"><option value="">Select owner</option>@for(x of wallets();track x.discord_user_id){<option [value]="x.discord_user_id">{{x.display_name||x.discord_user_id}} · {{x.balance}} {{x.currency}}</option>}</select></label><label>Amount, USD<input type="number" min="0.01" step="0.01" [(ngModel)]="credit.amount"></label><label>Comment<input maxlength="500" [(ngModel)]="credit.comment" placeholder="Reason or invoice reference"></label><button class="primary" (click)="topUp()" [disabled]="!credit.discord_user_id||credit.amount<=0">Add funds</button></article>
-<article class="card"><h3>Current balances</h3><div class="wallets">@for(x of wallets();track x.discord_user_id){<div class="wallet"><div><b>{{x.display_name||'Discord owner'}}</b><small>{{x.discord_user_id}} @if(x.email){ · {{x.email}}}</small></div><strong>{{x.balance}} {{x.currency}}</strong></div>}@empty{<p>No registered server owners.</p>}</div></article></div></section>}
-
-@if(tab()==='discounts'){<section class="tab-page"><div class="section-head"><div><h3>Balance vouchers and loyalty</h3><p>Voucher codes add a fixed USD amount to the user's personal balance. Usage-time discounts are calculated separately.</p></div></div><div class="grid"><article class="card"><h3>Create or update voucher</h3><label>Code<input [(ngModel)]="cardForm.code" maxlength="64" placeholder="BALANCE25"></label><label>Voucher amount, USD<input type="number" min="0.01" max="1000000" step="0.01" [(ngModel)]="cardForm.amount_usd"></label><label>Maximum redemptions<input type="number" min="1" [(ngModel)]="cardForm.max_redemptions" placeholder="Unlimited"></label><label>Valid until<input type="datetime-local" [(ngModel)]="cardForm.valid_until"></label><label class="check"><input type="checkbox" [(ngModel)]="cardForm.active"> Active</label><div class="form-actions"><button class="primary" (click)="saveCard()">Save voucher</button>@if(cardForm.id){<button class="secondary" (click)="resetCard()">Cancel</button>}</div></article><article class="card"><h3>Usage-time discount</h3><label>Minimum full months<input type="number" min="1" max="240" [(ngModel)]="tenureForm.minimum_months"></label><label>Discount, %<input type="number" min="0.01" max="50" step="0.01" [(ngModel)]="tenureForm.percent"></label><label class="check"><input type="checkbox" [(ngModel)]="tenureForm.active"> Active</label><div class="form-actions"><button class="primary" (click)="saveTenure()">Save loyalty rule</button>@if(tenureForm.id){<button class="secondary" (click)="resetTenure()">Cancel</button>}</div><div class="rules">@for(x of discounts().tenure||[];track x.id){<div class="rule-row"><button class="rule-main" (click)="editTenure(x)"><b>{{x.minimum_months}} months</b><strong>{{x.percent}}%</strong><span [class.ready]="x.active">{{x.active?'ACTIVE':'INACTIVE'}}</span></button><button class="danger" (click)="deleteTenure(x)">Delete</button></div>}</div></article></div><article class="card"><h3>Balance vouchers</h3><div class="cards">@for(x of discounts().cards||[];track x.id){<div class="card-entry"><button class="card-row" (click)="editCard(x)"><code>{{x.code}}</code><strong>{{x.amount_usd}} USD</strong><span>{{x.redemptions}} / {{x.max_redemptions||'∞'}}</span><span [class.ready]="x.active">{{x.active?'ACTIVE':'INACTIVE'}}</span></button><button class="danger" (click)="deleteCard(x)">Delete</button></div>}@empty{<p>No vouchers yet.</p>}</div></article></section>}
-
 @if(tab()==='payments'){<section class="tab-page"><div class="section-head"><div><h3>Processed payments</h3><p>Latest 250 payment attempts with provider and verification status.</p></div><button class="secondary" (click)="load()">Refresh</button></div>
 <article class="card payments"><div class="payment heading"><span>Order</span><span>Server</span><span>Package</span><span>Amount</span><span>Provider</span><span>Status</span><span>Date</span></div>@for(x of payments();track x.id){<div class="payment"><code [title]="x.order_reference">{{x.order_reference}}</code><span class="payment-server"><b>{{x.guild_name||'Discord server'}}</b><small>{{x.guild_id}}</small></span><span>Paid Modules</span><span>{{x.amount}} {{x.currency}}</span><span>{{providerLabel(x.provider)}}</span><b [class.ready]="x.status==='paid'">{{paymentStatus(x.status)}}</b><time>{{x.created_at|date:'short'}}</time></div>}@empty{<p>No payment attempts yet.</p>}</article></section>}
 </main></sn-shell>`,styles:[`
@@ -69,23 +61,21 @@ export class BillingComponent implements OnInit{
  constructor(private api:BillingService,private i18n:TranslationService){}ngOnInit(){this.load()}
  async load(){
   this.error.set('');
-  const requests=[this.api.plans(),this.api.subscriptions(),this.api.providers(),this.api.payments(),this.api.wallets(),this.api.paidPackage(),this.api.discounts()];
-  const [p,s,c,j,w,pkg,d]=await Promise.allSettled(requests);
+  const requests=[this.api.plans(),this.api.subscriptions(),this.api.providers(),this.api.payments(),this.api.paidPackage()];
+  const [p,s,c,j,pkg]=await Promise.allSettled(requests);
   if(p.status==='fulfilled')this.plans.set(p.value as BillingPlan[]);
   if(s.status==='fulfilled')this.subscriptions.set(s.value as BillingSubscription[]);
   if(j.status==='fulfilled')this.payments.set(j.value as BillingPayment[]);
-  if(w.status==='fulfilled')this.wallets.set(w.value as BillingWallet[]);
   if(pkg.status==='fulfilled')this.package=pkg.value as BillingPlan;
-  if(d.status==='fulfilled')this.discounts.set(d.value);
   if(c.status==='fulfilled'){
    const providers=c.value as BillingProviders;this.providers.set(providers);
    for(const provider of ['liqpay','hutko','tranzzo','payproglobal','paddle','fastspring']){const config:any=(providers as any)[provider]||{};this.providerForm[provider+'_enabled']=!!config.enabled;for(const [key,value] of Object.entries(config)){if(!['enabled','configured','active','secret_saved'].includes(key))this.providerForm[provider+'_'+key]=value||''}}
   }
-  const failed=[p,s,c,j,w,pkg,d].find(x=>x.status==='rejected') as PromiseRejectedResult|undefined;
+  const failed=[p,s,c,j,pkg].find(x=>x.status==='rejected') as PromiseRejectedResult|undefined;
   if(failed){const e:any=failed.reason;this.error.set(e?.error?.detail||this.t('load_error','Some billing data could not be loaded.'))}
  }
  async saveCard(){try{const{id,...values}=this.cardForm;const payload={...values,valid_until:values.valid_until?new Date(values.valid_until).toISOString():null};if(id)await this.api.updateDiscountCard(id,payload);else await this.api.saveDiscountCard(payload);this.resetCard();this.done(this.t('card_saved','Discount card saved.'));await this.load()}catch(e:any){this.fail(e,this.t('card_save_error','Unable to save discount card.'))}}
- editCard(x:any){this.cardForm={...x,valid_until:x.valid_until?String(x.valid_until).slice(0,16):null};this.tab.set('discounts')}
+ editCard(x:any){this.cardForm={...x,valid_until:x.valid_until?String(x.valid_until).slice(0,16):null}}
  resetCard(){this.cardForm={code:'',amount_usd:null,active:true,valid_from:null,valid_until:null,max_redemptions:null}}
  async deleteCard(x:any){try{await this.api.deleteDiscountCard(x.id);if(this.cardForm.id===x.id)this.resetCard();this.done(this.t('card_deleted','Discount card deleted.'));await this.load()}catch(e:any){this.fail(e,this.t('card_delete_error','Unable to delete discount card.'))}}
  async saveTenure(){try{const{id,...payload}=this.tenureForm;if(id)await this.api.updateTenureDiscount(id,payload);else await this.api.saveTenureDiscount(payload);this.resetTenure();this.done(this.t('loyalty_saved','Loyalty rule saved.'));await this.load()}catch(e:any){this.fail(e,this.t('loyalty_save_error','Unable to save loyalty rule.'))}}
