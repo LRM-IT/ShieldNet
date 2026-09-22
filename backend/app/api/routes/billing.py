@@ -30,7 +30,7 @@ router = APIRouter(tags=["Billing"])
 def billing_message(locale:str|None,key:str,**values)->str:
     language=locale if locale in {"uk","ru"} else "en"
     messages={
-        "dm_check":{"uk":"✅ GuildConsole: особисті повідомлення доступні. Сповіщення про баланс і підписку можуть надходити сюди.","ru":"✅ GuildConsole: личные сообщения доступны. Уведомления о балансе и подписке могут приходить сюда.","en":"✅ GuildConsole: direct messages are available. Balance and subscription alerts can be delivered here."},
+        "dm_check":{"uk":"✅ GuildConsole: особисті повідомлення доступні. Нагадування про завершення підписки можуть надходити сюди.","ru":"✅ GuildConsole: личные сообщения доступны. Напоминания об окончании подписки могут приходить сюда.","en":"✅ GuildConsole: direct messages are available. Subscription expiry reminders can be delivered here."},
         "low_balance":{"uk":"⚠️ GuildConsole: ваш баланс становить {balance:.2f} USD і досяг установленого порога {threshold:.2f} USD.","ru":"⚠️ GuildConsole: ваш баланс составляет {balance:.2f} USD и достиг установленного порога {threshold:.2f} USD.","en":"⚠️ GuildConsole: your balance is {balance:.2f} USD and has reached the configured threshold of {threshold:.2f} USD."},
         "expiry":{"uk":"⏳ GuildConsole: підписка сервера «{name}» завершується {expires} UTC (залишилось приблизно {days} дн.).","ru":"⏳ GuildConsole: подписка сервера «{name}» заканчивается {expires} UTC (осталось примерно {days} дн.).","en":"⏳ GuildConsole: the subscription for “{name}” expires at {expires} UTC (approximately {days} days remaining)."},
     }
