@@ -14,6 +14,7 @@ from app.api.routes.moderation import router as moderation_router
 from app.api.routes.events import router as events_router
 from fastapi import APIRouter
 from app.api.routes.platform_ai import router as platform_ai_router
+from app.api.routes.ai_diagnostics import router as ai_diagnostics_router
 from app.api.routes.billing import router as billing_router
 from app.api.routes.support import router as support_router
 from app.api.routes.merchant_page import router as merchant_page_router
@@ -190,6 +191,7 @@ api_router.include_router(moderation_router)
 api_router.include_router(events_router)
 
 api_router.include_router(platform_ai_router)
+api_router.include_router(ai_diagnostics_router)
 # ShieldNet Plugin Runtime Gateway
 api_router.include_router(
     plugin_runtime_gateway_router

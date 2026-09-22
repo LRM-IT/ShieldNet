@@ -2363,5 +2363,26 @@
     "refresh_error": "Unable to refresh channels.",
     "uncategorized": "Uncategorized",
     "load_error": "Unable to load Discord channels."
+  },
+  "ai_diagnostics": {
+    "title": "Diagnostic IA",
+    "intro": "Analysez les vérifications et tâches échouées avec OpenAI. Seules les métadonnées d’état sont transmises ; chaque action exige votre confirmation.",
+    "settings": "Connexion OpenAI globale",
+    "model": "Modèle",
+    "key": "Clé API",
+    "enabled": "Activer l’analyse",
+    "key_saved": "Clé enregistrée en sécurité",
+    "key_missing": "Clé API requise",
+    "save": "Enregistrer",
+    "snapshot": "État du système",
+    "refresh": "Actualiser les vérifications",
+    "analysis": "Analyser les problèmes",
+    "hint": "Interrogez les échecs ou tâches inachevées. L’assistant recommande des actions sans exécuter de commandes arbitraires.",
+    "question": "Que faut-il examiner ?",
+    "working": "Traitement…",
+    "run": "Analyser avec l’IA",
+    "repair": "Relancer les tâches sûres échouées",
+    "repair_hint": "Chaque action relance un instantané en lecture seule et est consignée dans le journal d’audit.",
+    "retry": "Relancer"
   }
 }

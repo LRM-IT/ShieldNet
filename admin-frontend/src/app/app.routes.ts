@@ -37,6 +37,7 @@ import { NotificationsComponent } from './pages/notifications.component';
 import { OperationsComponent } from './pages/operations.component';
 import { SecurityComponent } from './pages/security.component';
 import { JobsCenterComponent } from './pages/jobs-center.component';
+import { AiDiagnosticsComponent } from './pages/ai-diagnostics.component';
 import { PlatformAccessComponent } from './pages/platform-access.component';
 import { PlatformUsersComponent } from './pages/platform-users.component';
 import { PlatformUserProfileComponent } from './pages/platform-user-profile.component';
@@ -107,6 +108,7 @@ export const routes: Routes = [
   { path: 'platform/seo', component: SeoComponent, canActivate: [superadminGuard] },
   { path: 'platform/privacy-policy', component: MerchantInformationComponent, canActivate: [superadminGuard] },
   { path: 'platform/jobs', component: JobsCenterComponent, canActivate: [platformGuard] },
+  { path: 'platform/ai-diagnostics', component: AiDiagnosticsComponent, canActivate: [superadminGuard] },
   { path: 'platform/operations', component: OperationsComponent, canActivate: [platformGuard] },
   { path: 'platform/health', component: HealthMonitorComponent, canActivate: [platformGuard] },
   { path: 'platform/logs', component: LiveLogsComponent, canActivate: [platformGuard] },

@@ -2322,5 +2322,26 @@
     "refresh_error": "Unable to refresh channels.",
     "uncategorized": "Uncategorized",
     "load_error": "Unable to load Discord channels."
+  },
+  "ai_diagnostics": {
+    "title": "AI diagnostics",
+    "intro": "Review platform checks and failed jobs with OpenAI. Only status metadata is sent; actions require your confirmation.",
+    "settings": "Global OpenAI connection",
+    "model": "Model",
+    "key": "API key",
+    "enabled": "Enable analysis",
+    "key_saved": "Key saved securely",
+    "key_missing": "API key required",
+    "save": "Save settings",
+    "snapshot": "System status",
+    "refresh": "Refresh checks",
+    "analysis": "Analyze problems",
+    "hint": "Ask about failed checks or incomplete jobs. The assistant provides recommendations and cannot run arbitrary commands.",
+    "question": "What needs attention?",
+    "working": "Working…",
+    "run": "Analyze with AI",
+    "repair": "Retry failed safe jobs",
+    "repair_hint": "Each action reruns one read-only snapshot job and is recorded in the audit trail.",
+    "retry": "Retry"
   }
 }

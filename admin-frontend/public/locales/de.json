@@ -2364,5 +2364,26 @@
     "refresh_error": "Unable to refresh channels.",
     "uncategorized": "Uncategorized",
     "load_error": "Unable to load Discord channels."
+  },
+  "ai_diagnostics": {
+    "title": "KI-Diagnose",
+    "intro": "Analysieren Sie Systemprüfungen und fehlgeschlagene Aufgaben mit OpenAI. Nur Statusdaten werden übertragen; Aktionen müssen bestätigt werden.",
+    "settings": "Globale OpenAI-Verbindung",
+    "model": "Modell",
+    "key": "API-Schlüssel",
+    "enabled": "Analyse aktivieren",
+    "key_saved": "Schlüssel sicher gespeichert",
+    "key_missing": "API-Schlüssel erforderlich",
+    "save": "Einstellungen speichern",
+    "snapshot": "Systemstatus",
+    "refresh": "Prüfungen aktualisieren",
+    "analysis": "Probleme analysieren",
+    "hint": "Fragen Sie nach Fehlern oder unerledigten Aufgaben. Der Assistent empfiehlt Schritte, führt aber keine beliebigen Befehle aus.",
+    "question": "Was benötigt Aufmerksamkeit?",
+    "working": "Verarbeitung…",
+    "run": "Mit KI analysieren",
+    "repair": "Fehlgeschlagene sichere Aufgaben erneut ausführen",
+    "repair_hint": "Jede Aktion wiederholt eine schreibgeschützte Bestandsaufnahme und wird protokolliert.",
+    "retry": "Erneut ausführen"
   }
 }

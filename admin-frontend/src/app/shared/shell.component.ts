@@ -93,6 +93,7 @@ interface PluginNavDefinition {
                       <a routerLink="/platform/system-email" routerLinkActive="active"><span class="nav-icon">✉</span><span>{{'system_nav.email'|snT:'Email / SMTP'}}</span></a>
                       <a routerLink="/platform/translation-cache" routerLinkActive="active"><span class="nav-icon">◎</span><span>{{'system_nav.translation_cache'|snT:'Translation cache'}}</span></a>
                       <a routerLink="/platform/maintenance" routerLinkActive="active"><span class="nav-icon">⚠</span><span>Maintenance</span></a>
+                      <a routerLink="/platform/ai-diagnostics" routerLinkActive="active"><span class="nav-icon">✦</span><span>{{'ai_diagnostics.title'|snT:'AI diagnostics'}}</span></a>
                       <a routerLink="/platform/seo" routerLinkActive="active"><span class="nav-icon">⌕</span><span>SEO</span></a>
                     }
                     <a routerLink="/platform/access" routerLinkActive="active"><span class="nav-icon">⚿</span><span>{{'system_nav.platform_access'|snT:'Platform access'}}</span></a>
