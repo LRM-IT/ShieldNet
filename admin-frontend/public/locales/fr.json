@@ -2484,5 +2484,6 @@
     "error_foreign_channel": "Un salon sélectionné n’appartient pas à ce serveur Discord.",
     "error_slowmode": "Le mode lent de Discord accepte au maximum 21600 secondes.",
     "saved": "Paramètres AntiFlood enregistrés.",
-    "error_save": "Impossible d’enregistrer les paramètres AntiFlood.",  }
+    "error_save": "Impossible d’enregistrer les paramètres AntiFlood."
+  }
 }

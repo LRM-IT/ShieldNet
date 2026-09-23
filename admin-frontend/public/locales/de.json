@@ -2485,5 +2485,6 @@
     "error_foreign_channel": "Ein ausgewählter Kanal gehört nicht zu diesem Discord-Server.",
     "error_slowmode": "Der Discord-Slowmode unterstützt höchstens 21600 Sekunden.",
     "saved": "AntiFlood-Einstellungen gespeichert.",
-    "error_save": "AntiFlood-Einstellungen konnten nicht gespeichert werden.",  }
+    "error_save": "AntiFlood-Einstellungen konnten nicht gespeichert werden."
+  }
 }
