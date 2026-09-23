@@ -1823,7 +1823,7 @@
     "monobank_invoice_rejected": "Monobank rejected the payment parameters. Check the amount and try again.",
     "monobank_rate_limited": "Too many requests to the payment gateway. Try again in a minute.",
     "monobank_unavailable": "The Monobank payment gateway is temporarily unavailable. Try again later.",
-    "monobank_uah_notice": "The final amount is calculated and sent to Monobank in Ukrainian hryvnias.",
+    "monobank_uah_notice": "Prices are displayed in US dollars, but the Monobank invoice and actual charge will be processed in Ukrainian hryvnias.",
     "code_applied": "Code applied.",
     "code_error": "Unable to apply code.",
     "server_activation": "Server activation",

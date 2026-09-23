@@ -1863,7 +1863,7 @@
     "monobank_invoice_rejected": "Monobank odrzucił parametry płatności. Sprawdź kwotę i spróbuj ponownie.",
     "monobank_rate_limited": "Zbyt wiele żądań do bramki płatniczej. Spróbuj ponownie za minutę.",
     "monobank_unavailable": "Bramka płatnicza Monobank jest tymczasowo niedostępna. Spróbuj ponownie później.",
-    "monobank_uah_notice": "Końcowa kwota jest obliczana i przekazywana do Monobank w hrywnach ukraińskich.",
+    "monobank_uah_notice": "Ceny są wyświetlane w dolarach amerykańskich, ale faktura Monobank i faktyczne obciążenie zostaną zrealizowane w hrywnach ukraińskich.",
     "code_applied": "Kod zastosowany.",
     "code_error": "Nie udało się zastosować kodu.",
     "server_activation": "Aktywacja serwera",

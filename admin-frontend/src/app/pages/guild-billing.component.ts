@@ -49,7 +49,7 @@ export class GuildBillingComponent implements OnInit{
  private async openCheckout(r:any){if(r.provider==='monobank'){window.location.assign(r.checkout_url);return}await this.openWidget(r)}
  availableProviders(){return(['monobank','liqpay'] as const).filter(p=>this.data()?.providers?.[p]?.active)}
  providerActive(){return !!this.data()?.providers?.[this.selectedProvider]?.active}
- displayCurrency(){return this.selectedProvider==='monobank'&&this.data()?.uah_quote?'UAH':'USD'}
+ displayCurrency(){return this.selectedProvider==='monobank'&&this.data()?.uah_quote&&this.i18n.locale()==='uk'?'UAH':'USD'}
  displayAmount(amount:any){const value=Number(amount||0);return this.displayCurrency()==='UAH'?Math.round(value*Number(this.data().uah_quote.rate)*100)/100:value}
  async purchase(period:string){if(this.busy())return;this.busy.set(true);this.error.set('');try{const checkout=await this.api.checkout(this.guildId,{plugin_key:'__paid_modules__',billing_period:period,provider:this.selectedProvider});await this.openCheckout(checkout)}catch(e:any){this.error.set(this.err(e,this.i18n.t('billing.purchase_error','Unable to purchase subscription.')))}finally{this.busy.set(false)}}
  validDays(){return this.customDays!==null&&Number.isInteger(Number(this.customDays))&&Number(this.customDays)>=1&&Number(this.customDays)<=3660}
