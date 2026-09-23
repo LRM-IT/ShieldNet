@@ -47,7 +47,8 @@ export class DomTranslationService {
 
   private translateText(node: Text): void {
     const parent = node.parentElement;
-    if (!parent || ['SCRIPT', 'STYLE', 'CODE', 'PRE'].includes(parent.tagName)) return;
+    if (!parent || ['SCRIPT', 'STYLE', 'CODE', 'PRE', 'TEXTAREA'].includes(parent.tagName)) return;
+    if (parent.closest('[data-no-auto-translate]')) return;
     const visible = node.data.trim();
     if (!visible) return;
     const saved = this.textSources.get(node);
@@ -61,6 +62,7 @@ export class DomTranslationService {
   }
 
   private translateAttributes(element: Element): void {
+    if (element.closest('[data-no-auto-translate]')) return;
     for (const name of ['placeholder', 'title', 'aria-label']) {
       const visible = element.getAttribute(name);
       if (!visible) continue;

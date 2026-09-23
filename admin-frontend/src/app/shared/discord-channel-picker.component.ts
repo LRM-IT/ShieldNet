@@ -28,7 +28,7 @@ interface ChannelOption {
   standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
-    <div class="picker">
+    <div class="picker" data-no-auto-translate>
       <button #trigger type="button" class="trigger" (click)="toggle()" [disabled]="loading()">
         <span class="trigger-main">
           <b>{{ selectedIcon() }}</b>

@@ -89,7 +89,8 @@ interface Settings {
           <label class="field">
             {{'welcome.message'|snT:'Welcome message'}}
             <textarea [(ngModel)]="settings.message_template"
-                      name="message_template" rows="9" maxlength="2000"></textarea>
+                      name="message_template" rows="9" maxlength="2000"
+                      data-no-auto-translate></textarea>
           </label>
 
           <p class="hint">
@@ -140,7 +141,7 @@ interface Settings {
               <div class="avatar">S</div>
               <div>
                 <div class="author"><strong>GuildConsole</strong><span>BOT</span><small>{{'welcome.preview_time'|snT:'Today at 12:00'}}</small></div>
-                <div class="message">{{preview()}}</div>
+                <div class="message" data-no-auto-translate>{{preview()}}</div>
               </div>
             </div>
           </section>
