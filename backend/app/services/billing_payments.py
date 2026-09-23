@@ -3,6 +3,7 @@ import binascii
 import hashlib
 import hmac
 import json
+import logging
 from urllib.parse import urlparse
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal, ROUND_HALF_UP
@@ -21,6 +22,7 @@ from app.services.plugin_control_service import PluginControlService
 from app.services.billing_discounts import BillingDiscountService
 from app.services.public_exchange_rate import public_usd_uah_rate
 
+logger = logging.getLogger(__name__)
 
 BILLING_VAULT_KEY = "core_billing"
 PERIOD_DAYS = {"monthly": 30, "quarterly": 90, "yearly": 365}
@@ -241,14 +243,18 @@ class BillingPaymentService:
                 "merchantPaymInfo": {
                     "reference": order,
                     "destination": f"GuildConsole: доступ до модулів сервера {guild_id} на {payment.access_days} днів",
-                    "basketOrder": [{"name": "Підписка GuildConsole", "qty": 1, "sum": amount_minor, "total": amount_minor, "unit": "послуга"}],
+                    "basketOrder": [{"name": "Доступ до GuildConsole", "qty": 1, "sum": amount_minor, "total": amount_minor, "unit": "шт."}],
                 },
                 "redirectUrl": result, "webHookUrl": callback,
                 "validity": 1800, "paymentType": "debit",
             }
             try:
                 async with httpx.AsyncClient(timeout=20) as client:
-                    response = await client.post("https://api.monobank.ua/api/merchant/invoice/create", headers={"X-Token": token}, json=invoice)
+                    response = await client.post(
+                        "https://api.monobank.ua/api/merchant/invoice/create",
+                        headers={"X-Token": token, "X-Cms": "GuildConsole"},
+                        json=invoice,
+                    )
                     response.raise_for_status()
                     created = response.json()
                 if not isinstance(created, dict):
@@ -257,10 +263,35 @@ class BillingPaymentService:
                 parsed = urlparse(page_url or "")
                 if not invoice_id or parsed.scheme != "https" or parsed.hostname != "pay.mbnk.biz":
                     raise PaymentError("Invalid monobank invoice response")
-            except (httpx.HTTPError, ValueError, TypeError) as exc:
+            except httpx.HTTPStatusError as exc:
+                try:
+                    provider_error = exc.response.json()
+                except ValueError:
+                    provider_error = {"message": exc.response.text[:300]}
+                logger.warning(
+                    "Monobank invoice rejected: order=%s status=%s response=%s",
+                    order,
+                    exc.response.status_code,
+                    provider_error,
+                )
                 payment.status = "failed"
+                payment.raw_status = {
+                    "stage": "invoice_create",
+                    "http_status": exc.response.status_code,
+                    "provider_error": provider_error,
+                }
                 await self.session.commit()
-                raise PaymentError("Unable to create monobank invoice") from exc
+                if exc.response.status_code == 429:
+                    raise PaymentError("monobank_rate_limited") from exc
+                if exc.response.status_code >= 500:
+                    raise PaymentError("monobank_unavailable") from exc
+                raise PaymentError("monobank_invoice_rejected") from exc
+            except (httpx.HTTPError, ValueError, TypeError) as exc:
+                logger.exception("Monobank invoice creation failed: order=%s", order)
+                payment.status = "failed"
+                payment.raw_status = {"stage": "invoice_create", "error": type(exc).__name__}
+                await self.session.commit()
+                raise PaymentError("monobank_unavailable") from exc
             payment.provider_payment_id = str(invoice_id)
             payment.checkout_url = page_url
             await self.session.commit()
