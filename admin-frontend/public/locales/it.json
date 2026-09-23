@@ -2483,7 +2483,5 @@
     "error_foreign_channel": "Un canale selezionato non appartiene a questo server Discord.",
     "error_slowmode": "La modalità lenta di Discord supporta al massimo 21600 secondi.",
     "saved": "Impostazioni AntiFlood salvate.",
-    "error_save": "Impossibile salvare le impostazioni AntiFlood.",
-    "default_warning": "⏳ {user}, attendi {remaining} secondi prima di inviare un altro messaggio in {channel}."
-  }
+    "error_save": "Impossibile salvare le impostazioni AntiFlood.",  }
 }

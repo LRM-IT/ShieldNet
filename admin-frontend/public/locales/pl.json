@@ -2483,7 +2483,5 @@
     "error_foreign_channel": "Wybrany kanał nie należy do tego serwera Discord.",
     "error_slowmode": "Tryb spowolniony Discorda obsługuje maksymalnie 21600 sekund.",
     "saved": "Ustawienia AntiFlood zapisano.",
-    "error_save": "Nie udało się zapisać ustawień AntiFlood.",
-    "default_warning": "⏳ {user}, odczekaj {remaining} sekund przed wysłaniem kolejnej wiadomości na {channel}."
-  }
+    "error_save": "Nie udało się zapisać ustawień AntiFlood.",  }
 }

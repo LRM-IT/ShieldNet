@@ -40,8 +40,10 @@ interface Settings {
     @for(rule of settings.rules;track $index){
      <div class="rule">
       <sn-discord-channel-picker
+        class="rule-channel"
         [guildId]="guildId"
         [value]="rule.channel_id"
+        [showHint]="false"
         (valueChange)="rule.channel_id = $event || ''"
        />
        <label>{{'antiflood.cooldown'|snT:'Cooldown, seconds'}}
@@ -58,7 +60,7 @@ interface Settings {
    <section class="box">
     <div><small>{{'antiflood.message_section'|snT:'MESSAGE'}}</small><h3>{{'antiflood.blocked_message'|snT:'Blocked message text'}}</h3></div>
     <textarea [(ngModel)]="settings.warning_text" name="warning_text" maxlength="1800" rows="5"
-     [placeholder]="'antiflood.warning_placeholder'|snT:'Leave empty to delete without a warning'"></textarea>
+     data-no-auto-translate [placeholder]="'antiflood.warning_placeholder'|snT:'Leave empty to delete without a warning'"></textarea>
     <div class="variables">{{'antiflood.variables'|snT:'Variables'}}: {{'{user} {username} {remaining} {cooldown} {channel} {channel_id} {guild}'}}</div>
    </section>
 
@@ -92,7 +94,8 @@ interface Settings {
  button,input,textarea{font:inherit}button{padding:.7rem .9rem;border:1px solid var(--line);border-radius:9px;background:var(--surface);color:var(--text);cursor:pointer}
  input,textarea{width:100%;box-sizing:border-box;padding:.76rem;border:1px solid var(--line);border-radius:8px;background:#080d14;color:var(--text)}
  textarea{resize:vertical}.switch{display:flex;align-items:center;gap:.55rem;color:var(--text);font-size:.8rem}.switch input{width:auto}
- .rule{display:grid;grid-template-columns:minmax(260px,1fr) 170px 90px 150px auto;gap:.75rem;align-items:end;padding:.8rem;border:1px solid var(--line);border-radius:10px}
+ .rule{display:grid;grid-template-columns:minmax(260px,1fr) 170px minmax(110px,auto) minmax(160px,auto) auto;gap:.75rem;align-items:end;padding:.8rem;border:1px solid var(--line);border-radius:10px}
+ .rule-channel{align-self:end}.rule>button{min-height:50px;align-self:end}.rule label.switch{display:flex;align-items:center;align-self:end;min-height:50px;white-space:nowrap}
  .rule label,.field{display:grid;gap:.35rem;font-size:.78rem}.combo{position:relative}.options{position:absolute;z-index:30;left:0;right:0;top:calc(100% + .3rem);max-height:280px;overflow:auto;border:1px solid var(--line);border-radius:9px;background:#0b1119}
  .options button{width:100%;display:grid;text-align:left;border:0;border-bottom:1px solid rgba(126,160,166,.08);border-radius:0;background:transparent}
  .chips{display:flex;flex-wrap:wrap;gap:.45rem}.chips button{padding:.35rem .55rem}.variables{color:var(--muted);font-size:.78rem}.variables code{margin-right:.35rem}
@@ -103,7 +106,6 @@ interface Settings {
 })
 export class PluginAntiFloodComponent implements OnInit{
  private http=inject(HttpClient); private route=inject(ActivatedRoute); private i18n=inject(TranslationService);
- private readonly defaultWarning='⏳ {user}, please wait {remaining} seconds before sending another message in {channel}.';
  channels=signal<ChannelItem[]>([]); roles=signal<RoleItem[]>([]); members=signal<MemberItem[]>([]);
  error=signal(''); success=signal(''); saving=signal(false);
  openRuleIndex=signal<number|null>(null); roleOpen=signal(false); userOpen=signal(false);
@@ -122,7 +124,7 @@ export class PluginAntiFloodComponent implements OnInit{
    error:()=>this.error.set(this.i18n.t('antiflood.error_structure'))
   });
   this.http.get<Settings>(`${this.base}/settings`).subscribe({
-   next:v=>{this.settings=v;if(this.settings.warning_text===this.defaultWarning){this.settings.warning_text=this.i18n.t('antiflood.default_warning',this.defaultWarning)}this.syncRuleLabels()},
+   next:v=>{this.settings=v;this.syncRuleLabels()},
    error:()=>this.error.set(this.i18n.t('antiflood.error_load'))
   });
  }

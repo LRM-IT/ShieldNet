@@ -2443,7 +2443,5 @@
     "error_foreign_channel": "A selected channel does not belong to this Discord server.",
     "error_slowmode": "Discord Slow Mode supports a maximum of 21600 seconds.",
     "saved": "AntiFlood settings saved.",
-    "error_save": "Unable to save AntiFlood settings.",
-    "default_warning": "⏳ {user}, please wait {remaining} seconds before sending another message in {channel}."
-  }
+    "error_save": "Unable to save AntiFlood settings.",  }
 }

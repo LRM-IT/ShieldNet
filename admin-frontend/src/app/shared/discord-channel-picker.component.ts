@@ -50,7 +50,7 @@ interface ChannelOption {
           {{ refreshing() ? '…' : '↻' }}
         </button>
       </div>
-      <small>{{ selectedHint() }}</small>
+      @if (showHint) { <small>{{ selectedHint() }}</small> }
       @if (error()) { <div class="error">{{ error() }}</div> }
     </div>
   `,
@@ -77,6 +77,7 @@ export class DiscordChannelPickerComponent implements OnInit, OnChanges {
 
   @Input({ required: true }) guildId = '';
   @Input() value: string | number | null = null;
+  @Input() showHint = true;
   @Output() valueChange = new EventEmitter<string | null>();
 
   readonly loading = signal(false);
