@@ -2367,20 +2367,20 @@
     "copyright": "GuildConsole · LRM-IT"
   },
   "channel_picker": {
-    "search": "Search channel or category…",
-    "none": "No channel selected",
-    "choose_before_publish": "Choose before publishing",
-    "no_matches": "No matching text channels.",
-    "unknown": "Unknown or removed channel",
-    "select": "Select Discord channel",
-    "hint": "Search synchronized channels",
-    "thread": "Thread",
+    "search": "Rechercher un salon ou une catégorie…",
+    "none": "Aucun salon sélectionné",
+    "choose_before_publish": "Choisissez un salon avant de publier",
+    "no_matches": "Aucun salon textuel correspondant.",
+    "unknown": "Salon inconnu ou supprimé",
+    "select": "Sélectionner un salon Discord",
+    "hint": "Rechercher dans les salons synchronisés",
+    "thread": "Fil",
     "forum": "Forum",
-    "announcement": "Announcement",
-    "text_channel": "Text channel",
-    "refresh_error": "Unable to refresh channels.",
-    "uncategorized": "Uncategorized",
-    "load_error": "Unable to load Discord channels."
+    "announcement": "Annonce",
+    "text_channel": "Salon textuel",
+    "refresh_error": "Impossible d’actualiser les salons.",
+    "uncategorized": "Sans catégorie",
+    "load_error": "Impossible de charger les salons Discord."
   },
   "ai_diagnostics": {
     "title": "Diagnostic IA",
@@ -2447,7 +2447,6 @@
     "status_active": "Actif",
     "status_verified": "Vérifié",
     "status_completed": "Terminé",
-    "default_message": "👋 Bienvenue, {mention} !\n\nBienvenue sur **{guild}**.\n\nRends-toi dans {verification_channel} et termine la vérification.",
     "status_waiting": "En attente"
   },
   "antiflood": {

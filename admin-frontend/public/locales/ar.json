@@ -2368,20 +2368,20 @@
     "copyright": "GuildConsole · LRM-IT"
   },
   "channel_picker": {
-    "search": "Search channel or category…",
-    "none": "No channel selected",
-    "choose_before_publish": "Choose before publishing",
-    "no_matches": "No matching text channels.",
-    "unknown": "Unknown or removed channel",
-    "select": "Select Discord channel",
-    "hint": "Search synchronized channels",
-    "thread": "Thread",
-    "forum": "Forum",
-    "announcement": "Announcement",
-    "text_channel": "Text channel",
-    "refresh_error": "Unable to refresh channels.",
-    "uncategorized": "Uncategorized",
-    "load_error": "Unable to load Discord channels."
+    "search": "ابحث عن قناة أو فئة…",
+    "none": "لم يتم تحديد قناة",
+    "choose_before_publish": "اختر قناة قبل النشر",
+    "no_matches": "لم يتم العثور على قنوات نصية مطابقة.",
+    "unknown": "قناة غير معروفة أو محذوفة",
+    "select": "اختر قناة Discord",
+    "hint": "ابحث في القنوات المتزامنة",
+    "thread": "محادثة فرعية",
+    "forum": "منتدى",
+    "announcement": "إعلان",
+    "text_channel": "قناة نصية",
+    "refresh_error": "تعذر تحديث القنوات.",
+    "uncategorized": "بدون فئة",
+    "load_error": "تعذر تحميل قنوات Discord."
   },
   "ai_diagnostics": {
     "title": "تشخيص الذكاء الاصطناعي",
@@ -2448,7 +2448,6 @@
     "status_active": "نشط",
     "status_verified": "تم التحقق",
     "status_completed": "مكتمل",
-    "default_message": "👋 أهلًا بك، {mention}!\n\nمرحبًا بك في **{guild}**.\n\nيرجى الانتقال إلى {verification_channel} وإكمال التحقق.",
     "status_waiting": "قيد الانتظار"
   },
   "antiflood": {

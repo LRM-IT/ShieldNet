@@ -2366,20 +2366,20 @@
     "copyright": "GuildConsole · LRM-IT"
   },
   "channel_picker": {
-    "search": "Search channel or category…",
-    "none": "No channel selected",
-    "choose_before_publish": "Choose before publishing",
-    "no_matches": "No matching text channels.",
-    "unknown": "Unknown or removed channel",
-    "select": "Select Discord channel",
-    "hint": "Search synchronized channels",
-    "thread": "Thread",
+    "search": "Cerca un canale o una categoria…",
+    "none": "Nessun canale selezionato",
+    "choose_before_publish": "Scegli un canale prima della pubblicazione",
+    "no_matches": "Nessun canale testuale corrispondente.",
+    "unknown": "Canale sconosciuto o rimosso",
+    "select": "Seleziona un canale Discord",
+    "hint": "Cerca nei canali sincronizzati",
+    "thread": "Discussione",
     "forum": "Forum",
-    "announcement": "Announcement",
-    "text_channel": "Text channel",
-    "refresh_error": "Unable to refresh channels.",
-    "uncategorized": "Uncategorized",
-    "load_error": "Unable to load Discord channels."
+    "announcement": "Annuncio",
+    "text_channel": "Canale di testo",
+    "refresh_error": "Impossibile aggiornare i canali.",
+    "uncategorized": "Senza categoria",
+    "load_error": "Impossibile caricare i canali Discord."
   },
   "ai_diagnostics": {
     "title": "Diagnostica IA",
@@ -2446,7 +2446,6 @@
     "status_active": "Attivo",
     "status_verified": "Verificato",
     "status_completed": "Completato",
-    "default_message": "👋 Benvenuto, {mention}!\n\nBenvenuto su **{guild}**.\n\nVai a {verification_channel} e completa la verifica.",
     "status_waiting": "In attesa"
   },
   "antiflood": {

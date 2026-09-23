@@ -19,7 +19,7 @@ interface ChannelOption {
   id: string;
   name: string;
   type: string;
-  category: string;
+  category: string | null;
   position: number;
 }
 
@@ -91,20 +91,20 @@ interface ChannelOption {
     :host{display:block;position:relative;isolation:isolate}
     :host:has(.menu){z-index:1000}
     .picker{position:relative;z-index:1}
-    .trigger{box-sizing:border-box;width:100%;min-height:48px;display:flex;align-items:center;justify-content:space-between;gap:.8rem;text-align:left}
+    .trigger{box-sizing:border-box;width:100%;min-height:48px;display:flex;align-items:center;justify-content:space-between;gap:.8rem;text-align:start}
     .trigger-main,.clear{display:flex;align-items:center;gap:.6rem}
     .copy{display:grid;min-width:0}
     .copy strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     small{color:var(--muted);font-size:.72rem}
-    .menu{position:fixed;z-index:10000;min-width:300px;max-height:430px;display:flex;flex-direction:column;overflow:hidden;padding:.6rem;border:1px solid var(--line);border-radius:12px;background:var(--panel);box-shadow:var(--shadow)}
+    .menu{box-sizing:border-box;position:fixed;z-index:10000;min-width:0;max-height:430px;display:flex;flex-direction:column;overflow:hidden;padding:.6rem;border:1px solid var(--line);border-radius:12px;background:var(--panel);box-shadow:var(--shadow)}
     .search{display:grid;grid-template-columns:1fr 42px;gap:.4rem;margin-bottom:.45rem}
     input,button{font:inherit;border:1px solid var(--line);border-radius:8px;background:var(--panel-2);color:var(--text);padding:.65rem}
     button{cursor:pointer}
-    .clear{width:100%;color:var(--muted);text-align:left}
+    .clear{width:100%;color:var(--muted);text-align:start}
     .options{flex:1;min-height:0;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable;padding-right:.2rem;touch-action:pan-y}
     .options::-webkit-scrollbar{width:9px}.options::-webkit-scrollbar-track{background:var(--panel-2);border-radius:9px}.options::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:9px}.options::-webkit-scrollbar-thumb:hover{background:var(--primary)}
     section header{position:sticky;top:0;padding:.55rem .45rem;background:var(--panel);color:var(--muted);font-size:.69rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
-    .option{width:100%;display:grid;grid-template-columns:28px minmax(0,1fr) 22px;align-items:center;gap:.6rem;text-align:left;border-color:transparent;background:transparent}
+    .option{width:100%;display:grid;grid-template-columns:28px minmax(0,1fr) 22px;align-items:center;gap:.6rem;text-align:start;border-color:transparent;background:transparent}
     .option:hover,.option.selected{border-color:var(--primary);background:rgba(52,215,174,.08)}
     .empty,.error{padding:.8rem;color:var(--muted)}
     .error{color:#ff8290}
@@ -112,6 +112,7 @@ interface ChannelOption {
   `],
 })
 export class DiscordChannelPickerComponent implements OnInit, OnChanges {
+  private static readonly cache = new Map<string, { expires: number; data: ExplorerResponse }>();
   private readonly http = inject(HttpClient);
   private readonly i18n = inject(TranslationService);
   private readonly host = inject(ElementRef<HTMLElement>);
@@ -128,6 +129,7 @@ export class DiscordChannelPickerComponent implements OnInit, OnChanges {
   readonly channels = signal<ChannelOption[]>([]);
   readonly menuPosition = signal({ top: 0, left: 0, width: 340, height: 430 });
   readonly query = signal('');
+  readonly localeRevision = signal(0);
 
   normalizedValue(): string {
     return this.value === null || this.value === undefined || this.value === ''
@@ -140,24 +142,27 @@ export class DiscordChannelPickerComponent implements OnInit, OnChanges {
   }
 
   readonly groupedOptions = computed(() => {
+    this.localeRevision();
     const query = this.query().trim().toLowerCase();
     const filtered = this.channels().filter((item) =>
       !query ||
       item.name.toLowerCase().includes(query) ||
-      item.category.toLowerCase().includes(query) ||
+      this.categoryLabel(item).toLowerCase().includes(query) ||
       item.type.toLowerCase().includes(query)
     );
 
     const groups = new Map<string, ChannelOption[]>();
     for (const channel of filtered) {
-      const items = groups.get(channel.category) || [];
+      const category = this.categoryLabel(channel);
+      const items = groups.get(category) || [];
       items.push(channel);
-      groups.set(channel.category, items);
+      groups.set(category, items);
     }
 
-    return [...groups.entries()].map(([category, items]) => ({
+    const collator = new Intl.Collator(this.i18n.locale(), { sensitivity: 'base', numeric: true });
+    return [...groups.entries()].sort(([a], [b]) => collator.compare(a, b)).map(([category, items]) => ({
       category,
-      items: items.sort((a, b) => a.position - b.position),
+      items: items.sort((a, b) => a.position - b.position || collator.compare(a.name, b.name)),
     }));
   });
 
@@ -178,6 +183,12 @@ export class DiscordChannelPickerComponent implements OnInit, OnChanges {
 
   @HostListener('window:resize')
   onViewportResize(): void {
+    if (this.open()) this.updateMenuPosition();
+  }
+
+  @HostListener('window:guildconsole-locale-changed')
+  onLocaleChanged(): void {
+    this.localeRevision.update((value) => value + 1);
     if (this.open()) this.updateMenuPosition();
   }
 
@@ -203,11 +214,14 @@ export class DiscordChannelPickerComponent implements OnInit, OnChanges {
     if (!rect) return;
     const margin = 16;
     const gap = 7;
-    const width = Math.min(Math.max(rect.width, 300), window.innerWidth - margin * 2);
-    const left = Math.min(Math.max(rect.left, margin), window.innerWidth - width - margin);
+    const availableWidth = Math.max(0, window.innerWidth - margin * 2);
+    const width = Math.min(Math.max(rect.width, Math.min(300, availableWidth)), availableWidth);
+    const preferredLeft = document.documentElement.dir === 'rtl' ? rect.right - width : rect.left;
+    const left = Math.min(Math.max(preferredLeft, margin), Math.max(margin, window.innerWidth - width - margin));
     const roomBelow = window.innerHeight - rect.bottom - gap - margin;
     const roomAbove = rect.top - gap - margin;
-    const height = Math.min(430, Math.max(220, roomBelow >= 220 ? roomBelow : roomAbove));
+    const availableHeight = Math.max(120, Math.max(roomBelow, roomAbove));
+    const height = Math.min(430, availableHeight);
     const top = roomBelow >= 220
       ? rect.bottom + gap
       : Math.max(margin, rect.top - gap - height);
@@ -231,7 +245,7 @@ export class DiscordChannelPickerComponent implements OnInit, OnChanges {
 
   selectedHint(): string {
     const item = this.selected();
-    if (item) return item.category;
+    if (item) return this.categoryLabel(item);
     if (this.normalizedValue()) return `ID ${this.normalizedValue()}`;
     return this.t('channel_picker.hint','Search synchronized channels');
   }
@@ -242,14 +256,14 @@ export class DiscordChannelPickerComponent implements OnInit, OnChanges {
   }
 
   iconFor(type: string): string {
-    const value = String(type).toLowerCase();
+    const value = this.normalizeType(type);
     if (value.includes('forum') || value === '15') return '▤';
     if (value.includes('news') || value.includes('announcement') || value === '5') return '◉';
     return '#';
   }
 
   typeLabel(type: string): string {
-    const value = String(type).toLowerCase();
+    const value = this.normalizeType(type);
     if (value.includes('thread') || ['10','11','12'].includes(value)) return this.t('channel_picker.thread','Thread');
     if (value.includes('forum') || value === '15') return this.t('channel_picker.forum','Forum');
     if (value.includes('news') || value.includes('announcement') || value === '5') return this.t('channel_picker.announcement','Announcement');
@@ -266,7 +280,8 @@ export class DiscordChannelPickerComponent implements OnInit, OnChanges {
         this.http.post(`/api/v1/discord/guilds/${this.guildId}/structure/refresh`, {})
       );
       await new Promise((resolve) => setTimeout(resolve, 1800));
-      await this.load();
+      DiscordChannelPickerComponent.cache.delete(this.guildId);
+      await this.load(true);
     } catch (error: any) {
       this.error.set(error?.error?.detail || this.t('channel_picker.refresh_error','Unable to refresh channels.'));
     } finally {
@@ -274,18 +289,21 @@ export class DiscordChannelPickerComponent implements OnInit, OnChanges {
     }
   }
 
-  private async load(): Promise<void> {
+  private async load(force = false): Promise<void> {
     if (!this.guildId) return;
     this.loading.set(true);
     this.error.set('');
 
     try {
-      const data = await firstValueFrom(
-        this.http.get<ExplorerResponse>(`/api/v1/discord/guilds/${this.guildId}/explorer`)
-      );
+      const cached = DiscordChannelPickerComponent.cache.get(this.guildId);
+      const data = !force && cached && cached.expires > Date.now()
+        ? cached.data
+        : await firstValueFrom(this.http.get<ExplorerResponse>(`/api/v1/discord/guilds/${this.guildId}/explorer`));
+      DiscordChannelPickerComponent.cache.set(this.guildId, { expires: Date.now() + 30_000, data });
 
       const raw = data.channels || [];
       const categories = new Map<string, string>();
+      const byId = new Map(raw.map((channel) => [String(channel.id), channel]));
 
       for (const channel of raw) {
         if (this.isCategory(channel.type)) categories.set(String(channel.id), channel.name);
@@ -298,16 +316,10 @@ export class DiscordChannelPickerComponent implements OnInit, OnChanges {
             id: String(channel.id),
             name: channel.name,
             type: String(channel.type),
-            category: channel.parent_id
-              ? categories.get(String(channel.parent_id)) || this.t('channel_picker.uncategorized','Uncategorized')
-              : this.t('channel_picker.uncategorized','Uncategorized'),
+            category: this.resolveCategory(channel, byId, categories),
             position: Number(channel.position || 0),
           }))
-          .sort((a, b) =>
-            a.category.localeCompare(b.category) ||
-            a.position - b.position ||
-            a.name.localeCompare(b.name)
-          )
+          .sort((a, b) => a.position - b.position)
       );
     } catch (error: any) {
       this.error.set(error?.error?.detail || this.t('channel_picker.load_error','Unable to load Discord channels.'));
@@ -318,7 +330,7 @@ export class DiscordChannelPickerComponent implements OnInit, OnChanges {
   }
 
   private isCategory(type: string): boolean {
-    const value = String(type).toLowerCase();
+    const value = this.normalizeType(type);
     return value === 'category' || value === '4';
   }
 
@@ -328,7 +340,28 @@ export class DiscordChannelPickerComponent implements OnInit, OnChanges {
       'news','announcement','guild_announcement','5',
       'forum','guild_forum','15',
       'public_thread','private_thread','news_thread','10','11','12',
-    ].includes(String(type).toLowerCase());
+    ].includes(this.normalizeType(type));
+  }
+
+  private normalizeType(type: string): string {
+    return String(type ?? '').trim().toLowerCase().replace(/^channeltype\./, '').replace(/[\s-]+/g, '_');
+  }
+
+  private resolveCategory(channel: ExplorerChannel, byId: Map<string, ExplorerChannel>, categories: Map<string, string>): string | null {
+    let parentId = channel.parent_id == null ? '' : String(channel.parent_id);
+    const visited = new Set<string>();
+    while (parentId && !visited.has(parentId)) {
+      visited.add(parentId);
+      const category = categories.get(parentId);
+      if (category) return category;
+      const parent = byId.get(parentId);
+      parentId = parent?.parent_id == null ? '' : String(parent.parent_id);
+    }
+    return null;
+  }
+
+  private categoryLabel(channel: ChannelOption): string {
+    return channel.category || this.t('channel_picker.uncategorized', 'Uncategorized');
   }
 
   t(key: string, fallback: string): string { return this.i18n.t(key, fallback); }

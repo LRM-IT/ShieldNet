@@ -2259,20 +2259,20 @@
     "copyright": "GuildConsole · LRM-IT"
   },
   "channel_picker": {
-    "search": "Search channel or category…",
-    "none": "No channel selected",
-    "choose_before_publish": "Choose before publishing",
-    "no_matches": "No matching text channels.",
-    "unknown": "Unknown or removed channel",
-    "select": "Select Discord channel",
-    "hint": "Search synchronized channels",
-    "thread": "Thread",
-    "forum": "Forum",
-    "announcement": "Announcement",
-    "text_channel": "Text channel",
-    "refresh_error": "Unable to refresh channels.",
-    "uncategorized": "Uncategorized",
-    "load_error": "Unable to load Discord channels."
+    "search": "Поиск канала или категории…",
+    "none": "Канал не выбран",
+    "choose_before_publish": "Выберите канал перед публикацией",
+    "no_matches": "Подходящие текстовые каналы не найдены.",
+    "unknown": "Неизвестный или удалённый канал",
+    "select": "Выберите канал Discord",
+    "hint": "Поиск среди синхронизированных каналов",
+    "thread": "Ветка",
+    "forum": "Форум",
+    "announcement": "Объявления",
+    "text_channel": "Текстовый канал",
+    "refresh_error": "Не удалось обновить каналы.",
+    "uncategorized": "Без категории",
+    "load_error": "Не удалось загрузить каналы Discord."
   },
   "ai_diagnostics": {
     "title": "AI-диагностика",
@@ -2339,7 +2339,6 @@
     "status_active": "Активно",
     "status_verified": "Верифицировано",
     "status_completed": "Завершено",
-    "default_message": "👋 Приветствуем, {mention}!\n\nДобро пожаловать на **{guild}**.\n\nПерейдите в {verification_channel} и пройдите верификацию.",
     "status_waiting": "Ожидает"
   },
   "antiflood": {

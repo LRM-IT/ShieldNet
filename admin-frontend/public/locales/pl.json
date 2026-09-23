@@ -2366,20 +2366,20 @@
     "copyright": "GuildConsole · LRM-IT"
   },
   "channel_picker": {
-    "search": "Search channel or category…",
-    "none": "No channel selected",
-    "choose_before_publish": "Choose before publishing",
-    "no_matches": "No matching text channels.",
-    "unknown": "Unknown or removed channel",
-    "select": "Select Discord channel",
-    "hint": "Search synchronized channels",
-    "thread": "Thread",
+    "search": "Szukaj kanału lub kategorii…",
+    "none": "Nie wybrano kanału",
+    "choose_before_publish": "Wybierz kanał przed publikacją",
+    "no_matches": "Nie znaleziono pasujących kanałów tekstowych.",
+    "unknown": "Nieznany lub usunięty kanał",
+    "select": "Wybierz kanał Discord",
+    "hint": "Przeszukaj zsynchronizowane kanały",
+    "thread": "Wątek",
     "forum": "Forum",
-    "announcement": "Announcement",
-    "text_channel": "Text channel",
-    "refresh_error": "Unable to refresh channels.",
-    "uncategorized": "Uncategorized",
-    "load_error": "Unable to load Discord channels."
+    "announcement": "Ogłoszenie",
+    "text_channel": "Kanał tekstowy",
+    "refresh_error": "Nie udało się odświeżyć kanałów.",
+    "uncategorized": "Bez kategorii",
+    "load_error": "Nie udało się wczytać kanałów Discord."
   },
   "ai_diagnostics": {
     "title": "Diagnostyka AI",
@@ -2446,7 +2446,6 @@
     "status_active": "Aktywne",
     "status_verified": "Zweryfikowano",
     "status_completed": "Zakończono",
-    "default_message": "👋 Witamy, {mention}!\n\nWitamy na **{guild}**.\n\nPrzejdź do {verification_channel} i zakończ weryfikację.",
     "status_waiting": "Oczekuje"
   },
   "antiflood": {

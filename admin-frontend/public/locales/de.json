@@ -2368,20 +2368,20 @@
     "copyright": "GuildConsole · LRM-IT"
   },
   "channel_picker": {
-    "search": "Search channel or category…",
-    "none": "No channel selected",
-    "choose_before_publish": "Choose before publishing",
-    "no_matches": "No matching text channels.",
-    "unknown": "Unknown or removed channel",
-    "select": "Select Discord channel",
-    "hint": "Search synchronized channels",
+    "search": "Kanal oder Kategorie suchen…",
+    "none": "Kein Kanal ausgewählt",
+    "choose_before_publish": "Vor der Veröffentlichung einen Kanal auswählen",
+    "no_matches": "Keine passenden Textkanäle gefunden.",
+    "unknown": "Unbekannter oder gelöschter Kanal",
+    "select": "Discord-Kanal auswählen",
+    "hint": "Synchronisierte Kanäle durchsuchen",
     "thread": "Thread",
     "forum": "Forum",
-    "announcement": "Announcement",
-    "text_channel": "Text channel",
-    "refresh_error": "Unable to refresh channels.",
-    "uncategorized": "Uncategorized",
-    "load_error": "Unable to load Discord channels."
+    "announcement": "Ankündigung",
+    "text_channel": "Textkanal",
+    "refresh_error": "Kanäle konnten nicht aktualisiert werden.",
+    "uncategorized": "Ohne Kategorie",
+    "load_error": "Discord-Kanäle konnten nicht geladen werden."
   },
   "ai_diagnostics": {
     "title": "KI-Diagnose",
@@ -2448,7 +2448,6 @@
     "status_active": "Aktiv",
     "status_verified": "Verifiziert",
     "status_completed": "Abgeschlossen",
-    "default_message": "👋 Willkommen, {mention}!\n\nWillkommen auf **{guild}**.\n\nBitte gehe zu {verification_channel} und schließe die Verifizierung ab.",
     "status_waiting": "Wartet"
   },
   "antiflood": {

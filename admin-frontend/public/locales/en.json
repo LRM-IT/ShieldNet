@@ -2406,7 +2406,6 @@
     "status_active": "Active",
     "status_verified": "Verified",
     "status_completed": "Completed",
-    "default_message": "👋 Welcome, {mention}!\n\nWelcome to **{guild}**.\n\nPlease continue to {verification_channel} and complete verification.",
     "status_waiting": "Waiting"
   },
   "antiflood": {

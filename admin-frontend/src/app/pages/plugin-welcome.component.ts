@@ -58,9 +58,9 @@ interface Settings {
             </label>
           </div>
 
-          <label class="field">{{'welcome.general_channel'|snT:'General channel'}}<sn-discord-channel-picker [guildId]="guildId" [value]="settings.welcome_channel_id" (valueChange)="settings.welcome_channel_id = $event" /></label>
+          <div class="field"><span>{{'welcome.general_channel'|snT:'General channel'}}</span><sn-discord-channel-picker [guildId]="guildId" [value]="settings.welcome_channel_id" (valueChange)="setWelcomeChannel($event)" /></div>
 
-          <label class="field">{{'welcome.verification_channel'|snT:'Verification channel'}}<sn-discord-channel-picker [guildId]="guildId" [value]="settings.verification_channel_id" (valueChange)="settings.verification_channel_id = $event" /></label>
+          <div class="field"><span>{{'welcome.verification_channel'|snT:'Verification channel'}}</span><sn-discord-channel-picker [guildId]="guildId" [value]="settings.verification_channel_id" (valueChange)="setVerificationChannel($event)" /></div>
 
           <label class="field">
             {{'welcome.stop_role'|snT:'Stop when member receives role'}}
@@ -203,7 +203,7 @@ export class PluginWelcomeComponent implements OnInit{
   settings:Settings={
     enabled:true,welcome_channel_id:null,verification_channel_id:null,
     required_role_id:null,
-    message_template:'👋 Welcome, {mention}!\n\nWelcome to **{guild}**.\n\nPlease continue to {verification_channel} and complete verification.',
+    message_template:this.defaultMessage,
     repeat_enabled:true,repeat_minutes:5,max_reminders:12,
     delete_after_verified:true,ignore_bots:true
   };
@@ -272,7 +272,16 @@ export class PluginWelcomeComponent implements OnInit{
       error:()=>this.error.set(this.i18n.t('welcome.error_structure'))
     });
     this.http.get<Settings>(`${this.base}/settings`).subscribe({
-      next:v=>{this.settings={...this.settings,...v};if(this.settings.message_template===this.defaultMessage){this.settings.message_template=this.i18n.t('welcome.default_message',this.defaultMessage)}this.syncSelectionLabels()},
+      next:v=>{
+        this.settings={
+          ...this.settings,
+          ...v,
+          welcome_channel_id:this.normalizeId(v.welcome_channel_id),
+          verification_channel_id:this.normalizeId(v.verification_channel_id),
+          required_role_id:this.normalizeId(v.required_role_id),
+        };
+        this.syncSelectionLabels();
+      },
       error:()=>this.error.set(this.i18n.t('welcome.error_load'))
     });
     this.http.get<any>(`${this.base}/tasks`).subscribe({next:v=>this.tasks.set(v.items||[])});
@@ -289,10 +298,13 @@ export class PluginWelcomeComponent implements OnInit{
   }
   selectWelcome(c:ChannelItem){this.settings.welcome_channel_id=c.id;this.welcomeSearch=c.name;this.closeSelectors()}
   selectVerification(c:ChannelItem){this.settings.verification_channel_id=c.id;this.verificationSearch=c.name;this.closeSelectors()}
+  setWelcomeChannel(value:string|null){this.settings.welcome_channel_id=this.normalizeId(value);this.syncSelectionLabels()}
+  setVerificationChannel(value:string|null){this.settings.verification_channel_id=this.normalizeId(value);this.syncSelectionLabels()}
   selectRole(r:RoleItem){if(r.managed)return;this.settings.required_role_id=r.id;this.roleSearch=r.name;this.closeSelectors()}
   clearWelcome(){this.settings.welcome_channel_id=null;this.welcomeSearch=''}
   clearVerification(){this.settings.verification_channel_id=null;this.verificationSearch=''}
   clearRole(){this.settings.required_role_id=null;this.roleSearch=''}
+  private normalizeId(value:string|number|null|undefined):string|null{return value===null||value===undefined||value===''?null:String(value)}
   roleColor(role:RoleItem){return role.color?`#${role.color.toString(16).padStart(6,'0')}`:'#7289da'}
   date(v:string|null){return v?new Date(v).toLocaleString(this.i18n.locale()):'—'}
   statusLabel(status:string){return this.i18n.t(`welcome.status_${status.toLowerCase()}`,status.replaceAll('_',' '))}

@@ -2339,7 +2339,6 @@
     "status_active": "Активне",
     "status_verified": "Верифіковано",
     "status_completed": "Завершено",
-    "default_message": "👋 Вітаємо, {mention}!\n\nЛаскаво просимо на **{guild}**.\n\nПерейдіть до {verification_channel} та пройдіть верифікацію.",
     "status_waiting": "Очікує"
   },
   "antiflood": {
