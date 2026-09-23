@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, ElementRef, EventEmitter, HostListener, Input, OnChanges, OnInit, Output, SimpleChanges, ViewChild, computed, inject, signal } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
@@ -29,107 +29,60 @@ interface ChannelOption {
   imports: [CommonModule, FormsModule],
   template: `
     <div class="picker" data-no-auto-translate>
-      <button #trigger type="button" class="trigger" (click)="toggle()" [disabled]="loading()">
-        <span class="trigger-main">
-          <b>{{ selectedIcon() }}</b>
-          <span class="copy">
-            <strong>{{ selectedLabel() }}</strong>
-            <small>{{ selectedHint() }}</small>
-          </span>
-        </span>
-        <span>⌄</span>
-      </button>
-
-      @if (open()) {
-        <div class="menu" [style.top.px]="menuPosition().top" [style.left.px]="menuPosition().left" [style.width.px]="menuPosition().width" [style.height.px]="menuPosition().height">
-          <div class="search">
-            <input type="search" [ngModel]="query()" (ngModelChange)="query.set($event)" [placeholder]="t('channel_picker.search','Search channel or category…')" />
-            <button type="button" (click)="refreshFromDiscord()" [disabled]="refreshing()">
-              {{ refreshing() ? '…' : '↻' }}
-            </button>
-          </div>
-
-          @if (error()) { <div class="error">{{ error() }}</div> }
-
-          <button type="button" class="clear" (click)="choose(null)">
-            <span>×</span>
-            <span class="copy">
-              <strong>{{t('channel_picker.none','No channel selected')}}</strong>
-              <small>{{t('channel_picker.choose_before_publish','Choose before publishing')}}</small>
-            </span>
-          </button>
-
-          <div class="options" tabindex="0" (wheel)="$event.stopPropagation()">
-            @for (group of groupedOptions(); track group.category) {
-              <section>
-                <header>{{ group.category }}</header>
-                @for (channel of group.items; track channel.id) {
-                  <button
-                    type="button"
-                    class="option"
-                    [class.selected]="channel.id === normalizedValue()"
-                    (click)="choose(channel)"
-                  >
-                    <span>{{ iconFor(channel.type) }}</span>
-                    <span class="copy">
-                      <strong># {{ channel.name }}</strong>
-                      <small>{{ typeLabel(channel.type) }}</small>
-                    </span>
-                    @if (channel.id === normalizedValue()) { <span>✓</span> }
-                  </button>
-                }
-              </section>
-            } @empty {
-              <div class="empty">{{t('channel_picker.no_matches','No matching text channels.')}}</div>
-            }
-          </div>
-        </div>
-      }
+      <div class="control">
+        <span class="channel-icon">{{ selectedIcon() }}</span>
+        <select
+          [ngModel]="normalizedValue()"
+          (ngModelChange)="chooseId($event)"
+          [disabled]="loading() || refreshing()"
+          [attr.aria-label]="t('channel_picker.select','Select Discord channel')"
+        >
+          <option value="">{{t('channel_picker.none','No channel selected')}}</option>
+          @for (group of groupedOptions(); track group.category) {
+            <optgroup [label]="group.category">
+              @for (channel of group.items; track channel.id) {
+                <option [value]="channel.id">{{ iconFor(channel.type) }} {{ channel.name }}</option>
+              }
+            </optgroup>
+          }
+        </select>
+        <button type="button" class="refresh" (click)="refreshFromDiscord()" [disabled]="refreshing() || loading()" [attr.aria-label]="t('channel_picker.refresh','Refresh Discord channels')">
+          {{ refreshing() ? '…' : '↻' }}
+        </button>
+      </div>
+      <small>{{ selectedHint() }}</small>
+      @if (error()) { <div class="error">{{ error() }}</div> }
     </div>
   `,
   styles: [`
-    :host{display:block;position:relative;isolation:isolate}
-    :host:has(.menu){z-index:1000}
-    .picker{position:relative;z-index:1}
-    .trigger{box-sizing:border-box;width:100%;min-height:48px;display:flex;align-items:center;justify-content:space-between;gap:.8rem;text-align:start}
-    .trigger-main,.clear{display:flex;align-items:center;gap:.6rem}
-    .copy{display:grid;min-width:0}
-    .copy strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    small{color:var(--muted);font-size:.72rem}
-    .menu{box-sizing:border-box;position:fixed;z-index:10000;min-width:0;max-height:430px;display:flex;flex-direction:column;overflow:hidden;padding:.6rem;border:1px solid var(--line);border-radius:12px;background:var(--panel);box-shadow:var(--shadow)}
-    .search{display:grid;grid-template-columns:1fr 42px;gap:.4rem;margin-bottom:.45rem}
-    input,button{font:inherit;border:1px solid var(--line);border-radius:8px;background:var(--panel-2);color:var(--text);padding:.65rem}
-    button{cursor:pointer}
-    .clear{width:100%;color:var(--muted);text-align:start}
-    .options{flex:1;min-height:0;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable;padding-right:.2rem;touch-action:pan-y}
-    .options::-webkit-scrollbar{width:9px}.options::-webkit-scrollbar-track{background:var(--panel-2);border-radius:9px}.options::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:9px}.options::-webkit-scrollbar-thumb:hover{background:var(--primary)}
-    section header{position:sticky;top:0;padding:.55rem .45rem;background:var(--panel);color:var(--muted);font-size:.69rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
-    .option{width:100%;display:grid;grid-template-columns:28px minmax(0,1fr) 22px;align-items:center;gap:.6rem;text-align:start;border-color:transparent;background:transparent}
-    .option:hover,.option.selected{border-color:var(--primary);background:rgba(52,215,174,.08)}
-    .empty,.error{padding:.8rem;color:var(--muted)}
+    :host{display:block}
+    .picker{display:grid;gap:.35rem}
+    .control{display:grid;grid-template-columns:38px minmax(0,1fr) 44px;align-items:stretch;border:1px solid var(--line);border-radius:10px;background:var(--panel-2);overflow:hidden}
+    .channel-icon{display:grid;place-items:center;color:var(--primary);font-weight:900}
+    select,button{min-width:0;font:inherit;border:0;background:transparent;color:var(--text)}
+    select{width:100%;min-height:50px;padding:.7rem .45rem;cursor:pointer;color-scheme:dark}
+    select:disabled{cursor:wait;opacity:.65}
+    option,optgroup{background:var(--panel);color:var(--text)}
+    .refresh{border-inline-start:1px solid var(--line);cursor:pointer;font-size:1.1rem}
+    .refresh:hover{background:rgba(52,215,174,.08);color:var(--primary)}
+    small{color:var(--muted);font-size:.72rem;padding-inline:.2rem}
+    .error{padding:.45rem .2rem;color:#ff8290}
     .error{color:#ff8290}
-    @media(max-width:700px){.menu{min-width:0;max-height:calc(100vh - 2rem)}}
   `],
 })
 export class DiscordChannelPickerComponent implements OnInit, OnChanges {
   private static readonly cache = new Map<string, { expires: number; data: ExplorerResponse }>();
   private readonly http = inject(HttpClient);
   private readonly i18n = inject(TranslationService);
-  private readonly host = inject(ElementRef<HTMLElement>);
-  @ViewChild('trigger') trigger?: ElementRef<HTMLButtonElement>;
 
   @Input({ required: true }) guildId = '';
   @Input() value: string | number | null = null;
   @Output() valueChange = new EventEmitter<string | null>();
 
-  readonly open = signal(false);
   readonly loading = signal(false);
   readonly refreshing = signal(false);
   readonly error = signal('');
   readonly channels = signal<ChannelOption[]>([]);
-  readonly menuPosition = signal({ top: 0, left: 0, width: 340, height: 430 });
-  readonly query = signal('');
-  readonly localeRevision = signal(0);
 
   normalizedValue(): string {
     return this.value === null || this.value === undefined || this.value === ''
@@ -142,14 +95,8 @@ export class DiscordChannelPickerComponent implements OnInit, OnChanges {
   }
 
   readonly groupedOptions = computed(() => {
-    this.localeRevision();
-    const query = this.query().trim().toLowerCase();
-    const filtered = this.channels().filter((item) =>
-      !query ||
-      item.name.toLowerCase().includes(query) ||
-      this.categoryLabel(item).toLowerCase().includes(query) ||
-      item.type.toLowerCase().includes(query)
-    );
+    this.i18n.locale();
+    const filtered = this.channels();
 
     const groups = new Map<string, ChannelOption[]>();
     for (const channel of filtered) {
@@ -172,68 +119,10 @@ export class DiscordChannelPickerComponent implements OnInit, OnChanges {
     if (changes['guildId'] && !changes['guildId'].firstChange) void this.load();
   }
 
-  toggle(): void {
-    if (this.open()) {
-      this.open.set(false);
-      return;
-    }
-    this.updateMenuPosition();
-    this.open.set(true);
-  }
-
-  @HostListener('window:resize')
-  onViewportResize(): void {
-    if (this.open()) this.updateMenuPosition();
-  }
-
-  @HostListener('window:guildconsole-locale-changed')
-  onLocaleChanged(): void {
-    this.localeRevision.update((value) => value + 1);
-    if (this.open()) this.updateMenuPosition();
-  }
-
-  @HostListener('document:mousedown', ['$event'])
-  closeOnOutsideClick(event: MouseEvent): void {
-    const target = event.target;
-    if (this.open() && target instanceof Node && !this.host.nativeElement.contains(target)) {
-      this.open.set(false);
-      this.query.set('');
-    }
-  }
-
-  @HostListener('document:keydown.escape')
-  closeOnEscape(): void {
-    if (this.open()) {
-      this.open.set(false);
-      this.query.set('');
-    }
-  }
-
-  private updateMenuPosition(): void {
-    const rect = this.trigger?.nativeElement.getBoundingClientRect();
-    if (!rect) return;
-    const margin = 16;
-    const gap = 7;
-    const availableWidth = Math.max(0, window.innerWidth - margin * 2);
-    const width = Math.min(Math.max(rect.width, Math.min(300, availableWidth)), availableWidth);
-    const preferredLeft = document.documentElement.dir === 'rtl' ? rect.right - width : rect.left;
-    const left = Math.min(Math.max(preferredLeft, margin), Math.max(margin, window.innerWidth - width - margin));
-    const roomBelow = window.innerHeight - rect.bottom - gap - margin;
-    const roomAbove = rect.top - gap - margin;
-    const availableHeight = Math.max(120, Math.max(roomBelow, roomAbove));
-    const height = Math.min(430, availableHeight);
-    const top = roomBelow >= 220
-      ? rect.bottom + gap
-      : Math.max(margin, rect.top - gap - height);
-    this.menuPosition.set({ top, left, width, height });
-  }
-
-  choose(channel: ChannelOption | null): void {
-    const selectedId = channel?.id ?? null;
+  chooseId(value: string | number | null): void {
+    const selectedId = value === null || value === undefined || value === '' ? null : String(value);
     this.value = selectedId;
     this.valueChange.emit(selectedId);
-    this.open.set(false);
-    this.query.set('');
   }
 
   selectedLabel(): string {

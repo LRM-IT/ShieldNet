@@ -2380,6 +2380,7 @@
     "announcement": "إعلان",
     "text_channel": "قناة نصية",
     "refresh_error": "تعذر تحديث القنوات.",
+    "refresh": "تحديث قنوات Discord",
     "uncategorized": "بدون فئة",
     "load_error": "تعذر تحميل قنوات Discord."
   },

@@ -2271,6 +2271,7 @@
     "announcement": "Оголошення",
     "text_channel": "Текстовий канал",
     "refresh_error": "Не вдалося оновити канали.",
+    "refresh": "Оновити канали Discord",
     "uncategorized": "Без категорії",
     "load_error": "Не вдалося завантажити канали Discord."
   },

@@ -2338,6 +2338,7 @@
     "announcement": "Announcement",
     "text_channel": "Text channel",
     "refresh_error": "Unable to refresh channels.",
+    "refresh": "Refresh Discord channels",
     "uncategorized": "Uncategorized",
     "load_error": "Unable to load Discord channels."
   },

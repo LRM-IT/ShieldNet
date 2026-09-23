@@ -2271,6 +2271,7 @@
     "announcement": "Объявления",
     "text_channel": "Текстовый канал",
     "refresh_error": "Не удалось обновить каналы.",
+    "refresh": "Обновить каналы Discord",
     "uncategorized": "Без категории",
     "load_error": "Не удалось загрузить каналы Discord."
   },

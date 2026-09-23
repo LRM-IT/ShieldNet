@@ -2380,6 +2380,7 @@
     "announcement": "Ankündigung",
     "text_channel": "Textkanal",
     "refresh_error": "Kanäle konnten nicht aktualisiert werden.",
+    "refresh": "Discord-Kanäle aktualisieren",
     "uncategorized": "Ohne Kategorie",
     "load_error": "Discord-Kanäle konnten nicht geladen werden."
   },

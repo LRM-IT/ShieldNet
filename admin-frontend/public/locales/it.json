@@ -2378,6 +2378,7 @@
     "announcement": "Annuncio",
     "text_channel": "Canale di testo",
     "refresh_error": "Impossibile aggiornare i canali.",
+    "refresh": "Aggiorna i canali Discord",
     "uncategorized": "Senza categoria",
     "load_error": "Impossibile caricare i canali Discord."
   },
