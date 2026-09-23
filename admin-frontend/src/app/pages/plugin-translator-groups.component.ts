@@ -55,7 +55,7 @@ interface CacheStats { entries:number;hits:number;misses:number; }
                       <button class="secondary" (click)="settings.groups.splice(gi, 1)">{{'translator_groups.delete_group'|snT:'Delete group'}}</button></div></div>
                   @for (binding of group.channels; track $index; let bi = $index) {
                     <div class="binding"><label>{{'translator_groups.channel'|snT:'Channel'}}
-                        <sn-discord-channel-picker [guildId]="guildId" [value]="binding.channel_id" (valueChange)="binding.channel_id=$event || ''" />
+                        <sn-discord-channel-picker [guildId]="guildId" [value]="binding.channel_id" [showHint]="false" (valueChange)="binding.channel_id=$event || ''" />
                       </label>
                       <label>{{'translator_groups.language'|snT:'Language'}}<select [(ngModel)]="binding.language"><option value="">{{'translator_groups.select_language'|snT:'Select language'}}</option>
                         @for (language of settings.languages; track language.code) { <option [value]="language.code">{{ language.name }} ({{ language.code }})</option> }

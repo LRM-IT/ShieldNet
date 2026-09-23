@@ -36,7 +36,7 @@ import {TranslationService} from '../core/translation.service';
    <div class="grid">
     <label>{{'voting.primary_language'|snT:'Primary language'}}<select [(ngModel)]="form.primary_language" (ngModelChange)="setPrimaryLanguage($event)">
       <option *ngFor="let language of directoryLanguages()" [value]="language.code">{{language.flag || '🌐'}} {{language.native_name}}</option></select></label>
-    <label>{{'voting.publish_channel'|snT:'Publish channel'}}<sn-discord-channel-picker [guildId]="guildId" [value]="form.channel_id" (valueChange)="form.channel_id = $event" /></label>
+    <label>{{'voting.publish_channel'|snT:'Publish channel'}}<sn-discord-channel-picker [guildId]="guildId" [value]="form.channel_id" [showHint]="false" (valueChange)="form.channel_id = $event" /></label>
     <label>{{'voting.choice_mode'|snT:'Choice mode'}}<select [(ngModel)]="form.selection_mode"><option value="single">{{'voting.single'|snT:'Single'}}</option><option value="multiple">{{'voting.multiple'|snT:'Multiple'}}</option></select></label>
     <label>{{'voting.close_at'|snT:'Close at'}}<input type="datetime-local" [(ngModel)]="form.closes_at"></label>
    </div>
@@ -76,7 +76,7 @@ import {TranslationService} from '../core/translation.service';
     <div><small>{{'voting.result_label'|snT:'RESULT PRESENTATION'}}</small><h4>{{'voting.result_image'|snT:'Final result image'}}</h4></div>
     <div class="grid">
       <label>{{'voting.template'|snT:'Template'}}<select [(ngModel)]="form.result_template_id"><option [ngValue]="null">{{'voting.platform_default'|snT:'Platform default'}}</option><option *ngFor="let template of templates()" [value]="template.id">{{template.name}}</option></select></label>
-      <label>{{'voting.result_channel'|snT:'Results channel'}}<sn-discord-channel-picker [guildId]="guildId" [value]="form.result_channel_id" (valueChange)="form.result_channel_id=$event" /></label>
+      <label>{{'voting.result_channel'|snT:'Results channel'}}<sn-discord-channel-picker [guildId]="guildId" [value]="form.result_channel_id" [showHint]="false" (valueChange)="form.result_channel_id=$event" /></label>
       <label><input type="checkbox" [(ngModel)]="form.publish_result_image"> {{'voting.publish_result_image'|snT:'Publish template image after close'}}</label>
     </div>
     <button class="preview-button" type="button" (click)="openPreview()">{{'voting.preview'|snT:'Preview'}}</button>
