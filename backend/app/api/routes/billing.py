@@ -63,6 +63,9 @@ class ProviderUpdate(BaseModel):
     liqpay_private_key: str = ""
     monobank_enabled: bool = False
     monobank_token: str = ""
+    monobank_standard_enabled: bool = True
+    monobank_subscription_enabled: bool = False
+    monobank_subscription_interval: str = Field(default="1m", pattern=r"^(1m|3m|1y)$")
     hutko_enabled: bool = False
     hutko_merchant_id: str = ""
     hutko_secret_key: str = ""
