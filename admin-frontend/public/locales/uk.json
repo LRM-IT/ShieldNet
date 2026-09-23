@@ -2156,7 +2156,20 @@
     "delete_confirm": "Видалити голосування «{title}»?",
     "deleted": "Голосування видалено.",
     "delete_error": "Не вдалося видалити голосування.",
-    "untitled": "Голосування без назви"
+    "untitled": "Голосування без назви",
+    "error_poll_not_found": "Голосування не знайдено.",
+    "error_options_range": "Голосування повинно містити від 2 до 10 варіантів.",
+    "error_primary_translation": "Потрібен переклад основною мовою.",
+    "error_active_template": "Оберіть активний шаблон результатів голосування.",
+    "error_title_language": "Для мови {language} потрібно вказати заголовок.",
+    "error_option_language": "Варіант {number} для мови {language} порожній.",
+    "error_template_unavailable": "Вибраний шаблон голосування недоступний.",
+    "error_closed_edit": "Завершені голосування не можна редагувати.",
+    "error_select_channel": "Оберіть канал Discord.",
+    "error_source_title": "Потрібно вказати вихідний заголовок.",
+    "error_source_translation": "Вихідний переклад не знайдено.",
+    "error_translation_exists": "Такий переклад уже існує.",
+    "error_source_option": "Вихідний варіант {number} відсутній."
   },
   "language_plugin": {
     "eyebrow": "ПЛАГІН СЕРВЕРА",

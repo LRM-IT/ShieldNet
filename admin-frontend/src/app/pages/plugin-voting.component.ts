@@ -139,9 +139,9 @@ export class PluginVotingComponent implements OnInit{
  guildId=this.route.snapshot.paramMap.get('guildId')||'';
  languages:any[]=[];options:any[]=[];form:any={};
 
- ngOnInit(){this.newPoll();this.reload();this.loadLanguages();this.api.templates(this.guildId).subscribe({next:r=>this.templates.set(r.items||[]),error:r=>this.error.set(r?.error?.detail||this.i18n.t('voting.load_templates_error','Unable to load templates.'))})}
- reload(){this.api.list(this.guildId).subscribe({next:v=>this.polls.set(v.items||[]),error:r=>this.error.set(r?.error?.detail||this.i18n.t('voting.load_polls_error','Unable to load polls.'))})}
- async loadLanguages(){try{const items=await this.languageApi.available(this.guildId);this.directoryLanguages.set(items);if(!this.languages.length)this.newPoll()}catch(e:any){this.error.set(e?.error?.detail||this.i18n.t('voting.load_languages_error','Unable to load language directory.'))}}
+ ngOnInit(){this.newPoll();this.reload();this.loadLanguages();this.api.templates(this.guildId).subscribe({next:r=>this.templates.set(r.items||[]),error:r=>this.error.set(this.apiError(r,'voting.load_templates_error'))})}
+ reload(){this.api.list(this.guildId).subscribe({next:v=>this.polls.set(v.items||[]),error:r=>this.error.set(this.apiError(r,'voting.load_polls_error'))})}
+ async loadLanguages(){try{const items=await this.languageApi.available(this.guildId);this.directoryLanguages.set(items);if(!this.languages.length)this.newPoll()}catch(e:any){this.error.set(this.apiError(e,'voting.load_languages_error'))}}
  newPoll(){const code=this.directoryLanguages()[0]?.code||'en';this.editingId='';this.activeLanguage=code;this.languages=[{code,title:'',description:''}];this.options=[{labels:{[code]:''}},{labels:{[code]:''}}];this.form={primary_language:code,fallback_language:code,language_selection_mode:'automatic_with_selector',channel_id:'',result_channel_id:null,selection_mode:'single',anonymous:true,allow_change_vote:true,show_live_results:true,min_choices:1,max_choices:1,allowed_role_ids:[],closes_at:'',result_template_id:null,publish_result_image:true,result_settings:{}}}
  availableLanguages(){return this.directoryLanguages().filter(x=>!this.languages.some(y=>y.code===x.code))}
  addSelectedLanguage(){const code=this.selectedLanguageCode;if(!code||this.languages.some(x=>x.code===code))return;this.languages.push({code,title:'',description:''});for(const o of this.options)o.labels[code]='';this.activeLanguage=code;this.selectedLanguageCode=''}
@@ -168,7 +168,7 @@ export class PluginVotingComponent implements OnInit{
  closePreview(){this.previewRequest++;this.previewOpen.set(false);this.previewLoading.set(false);this.previewUrl.set('')}
  @HostListener('document:keydown.escape') onEscape(){if(this.previewOpen())this.closePreview()}
  payload(){const translations:any={};for(const l of this.languages)translations[l.code]={title:l.title,description:l.description};const resultChannel=this.form.result_channel_id?String(this.form.result_channel_id):null;return {...this.form,channel_id:this.form.channel_id?String(this.form.channel_id):null,closes_at:this.form.closes_at||null,result_settings:{...(this.form.result_settings||{}),result_channel_id:resultChannel},translations,options:this.options.map(o=>({emoji:null,translations:o.labels}))}}
- save(){this.error.set('');const req=this.editingId?this.api.update(this.guildId,this.editingId,this.payload()):this.api.create(this.guildId,this.payload());req.subscribe({next:()=>{this.success.set(this.i18n.t(this.editingId?'voting.updated':'voting.saved',this.editingId?'Poll updated.':'Poll saved.'));this.newPoll();this.reload()},error:r=>this.error.set(r?.error?.detail||this.i18n.t('voting.save_error','Unable to save poll.'))})}
+ save(){this.error.set('');const req=this.editingId?this.api.update(this.guildId,this.editingId,this.payload()):this.api.create(this.guildId,this.payload());req.subscribe({next:()=>{this.success.set(this.i18n.t(this.editingId?'voting.updated':'voting.saved',this.editingId?'Poll updated.':'Poll saved.'));this.newPoll();this.reload()},error:r=>this.error.set(this.apiError(r,'voting.save_error'))})}
  edit(p:any){this.editingId=p.id;this.form={primary_language:p.primary_language,fallback_language:p.fallback_language,language_selection_mode:p.language_selection_mode,channel_id:p.channel_id||'',result_channel_id:p.result_settings?.result_channel_id||null,selection_mode:p.selection_mode,anonymous:p.anonymous,allow_change_vote:p.allow_change_vote,show_live_results:p.show_live_results,min_choices:p.min_choices,max_choices:p.max_choices,allowed_role_ids:p.allowed_role_ids||[],closes_at:p.closes_at?String(p.closes_at).slice(0,16):'',result_template_id:p.result_template_id||null,publish_result_image:p.publish_result_image,result_settings:p.result_settings||{}};this.languages=Object.entries(p.translations||{}).map(([code,v]:any)=>({code,title:v.title||'',description:v.description||''}));this.options=(p.options||[]).map((o:any)=>({labels:Object.fromEntries(Object.entries(o.translations||{}).map(([code,v]:any)=>[code,v.label||'']))}));this.activeLanguage=p.primary_language;window.scrollTo({top:0,behavior:'smooth'})}
  translateLanguage(code:string){
   const source=this.languages.find(x=>x.code===this.form.primary_language);
@@ -185,7 +185,7 @@ export class PluginVotingComponent implements OnInit{
     }
     this.success.set(this.i18n.t('voting.translation_complete','AI translation completed.'));this.translating=false;
   };
-  const fail=(e:any)=>{this.error.set(e?.error?.detail||this.i18n.t('voting.translation_error','AI translation failed.'));this.translating=false};
+  const fail=(e:any)=>{this.error.set(this.apiError(e,'voting.translation_error'));this.translating=false};
   if(this.editingId){
     this.api.generate(this.guildId,this.editingId,code,{source_language:this.form.primary_language,overwrite_existing:true})
       .subscribe({next:apply,error:fail});
@@ -199,12 +199,23 @@ export class PluginVotingComponent implements OnInit{
     }).subscribe({next:apply,error:fail});
   }
  }
- publish(p:any){this.api.publish(this.guildId,p.id).subscribe({next:()=>{this.success.set(this.i18n.t('voting.publish_queued','Publication queued.'));this.reload()},error:r=>this.error.set(r?.error?.detail||this.i18n.t('voting.publish_error','Unable to publish.'))})}
- close(p:any){if(!confirm(this.i18n.t('voting.close_confirm','Close this poll now and publish the final results?')))return;this.api.close(this.guildId,p.id).subscribe({next:()=>{this.success.set(this.i18n.t('voting.close_queued','Poll closed. Final results are being published.'));this.reload()},error:r=>this.error.set(r?.error?.detail||this.i18n.t('voting.close_error','Unable to close the poll.'))})}
- removePoll(p:any){if(!confirm(this.i18n.t('voting.delete_confirm','Delete poll “{title}”?').replace('{title}',this.title(p))))return;this.api.remove(this.guildId,p.id).subscribe({next:()=>{if(this.editingId===p.id)this.newPoll();this.success.set(this.i18n.t('voting.deleted','Poll deleted.'));this.reload()},error:r=>this.error.set(r?.error?.detail||this.i18n.t('voting.delete_error','Unable to delete poll.'))})}
+ publish(p:any){this.api.publish(this.guildId,p.id).subscribe({next:()=>{this.success.set(this.i18n.t('voting.publish_queued','Publication queued.'));this.reload()},error:r=>this.error.set(this.apiError(r,'voting.publish_error'))})}
+ close(p:any){if(!confirm(this.i18n.t('voting.close_confirm','Close this poll now and publish the final results?')))return;this.api.close(this.guildId,p.id).subscribe({next:()=>{this.success.set(this.i18n.t('voting.close_queued','Poll closed. Final results are being published.'));this.reload()},error:r=>this.error.set(this.apiError(r,'voting.close_error'))})}
+ removePoll(p:any){if(!confirm(this.i18n.t('voting.delete_confirm','Delete poll “{title}”?').replace('{title}',this.title(p))))return;this.api.remove(this.guildId,p.id).subscribe({next:()=>{if(this.editingId===p.id)this.newPoll();this.success.set(this.i18n.t('voting.deleted','Poll deleted.'));this.reload()},error:r=>this.error.set(this.apiError(r,'voting.delete_error'))})}
  languageLabel(code:string){const language=this.directoryLanguages().find(item=>item.code===code);if(!language)return `🌐 ${code.toUpperCase()}`;const flag=(language.flag||'🌐').trim();const name=(language.name||language.native_name||code.toUpperCase()).trim();const nativeName=(language.native_name||'').trim();return nativeName&&nativeName.toLocaleLowerCase()!==name.toLocaleLowerCase()?`${flag} ${name} — ${nativeName}`:`${flag} ${name}`}
  title(p:any){return p.translations?.[p.primary_language]?.title||this.i18n.t('voting.untitled','Untitled poll')}
  statusLabel(status:string){return this.i18n.t(`voting.status_${status}`,status)}
  total(p:any){return (p.options||[]).reduce((n:number,x:any)=>n+(x.votes||0),0)}
  languageCount(p:any){return Object.keys(p.translations||{}).length}
+ private apiError(error:any,fallbackKey:string){
+  const detail=typeof error?.error?.detail==='string'?error.error.detail:'';
+  const exact:Record<string,string>={
+   'Poll not found.':'error_poll_not_found','A poll must contain 2-10 options.':'error_options_range','Primary language translation is required.':'error_primary_translation','Select an active voting result template.':'error_active_template','Selected voting template is unavailable.':'error_template_unavailable','No active voting result template is available.':'template_missing','Closed polls cannot be edited.':'error_closed_edit','Select a Discord channel.':'error_select_channel','Source title is required.':'error_source_title','Source translation not found.':'error_source_translation','Translation already exists.':'error_translation_exists'
+  };
+  if(exact[detail])return this.i18n.t(`voting.${exact[detail]}`,detail);
+  let match=detail.match(/^Title is required for (.+)\.$/);if(match)return this.i18n.t('voting.error_title_language',detail).replace('{language}',match[1]);
+  match=detail.match(/^Option (\d+) is empty for (.+)\.$/);if(match)return this.i18n.t('voting.error_option_language',detail).replace('{number}',match[1]).replace('{language}',match[2]);
+  match=detail.match(/^Source option (\d+) is missing\.$/);if(match)return this.i18n.t('voting.error_source_option',detail).replace('{number}',match[1]);
+  return detail||this.i18n.t(fallbackKey);
+ }
 }
