@@ -1864,7 +1864,7 @@
     "monobank_invoice_rejected": "Monobank a refusé les paramètres de paiement. Vérifiez le montant et réessayez.",
     "monobank_rate_limited": "Trop de requêtes vers la passerelle de paiement. Réessayez dans une minute.",
     "monobank_unavailable": "La passerelle de paiement Monobank est temporairement indisponible. Réessayez plus tard.",
-    "monobank_uah_notice": "Les prix sont affichés en dollars américains, mais la facture Monobank et le débit réel seront traités en hryvnias ukrainiennes.",
+    "monobank_uah_notice": "La réglementation bancaire ukrainienne exige que les paiements soient traités en hryvnias. La conversion est automatique et ne nécessite aucune intervention de votre part ; le prix affiché en USD correspond au tarif applicable à votre région.",
     "code_applied": "Code appliqué.",
     "code_error": "Impossible d'appliquer le code.",
     "server_activation": "Activation du serveur",

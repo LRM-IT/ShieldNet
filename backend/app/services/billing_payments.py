@@ -47,6 +47,21 @@ _monobank_pubkeys: dict[str, tuple[object, datetime]] = {}
 MONOBANK_CHECKOUT_HOSTS = {"pay.mbnk.biz", "pay.monobank.ua"}
 
 
+def _monobank_checkout_text(locale: str, guild_id: int, days: int) -> dict[str, str]:
+    templates = {
+        "uk": ("Доступ до GuildConsole", "Доступ до модулів сервера {guild} на {days} днів"),
+        "ru": ("Доступ к GuildConsole", "Доступ к модулям сервера {guild} на {days} дней"),
+        "en": ("GuildConsole access", "Access to modules for server {guild} for {days} days"),
+        "de": ("GuildConsole-Zugang", "Zugang zu den Modulen für Server {guild} für {days} Tage"),
+        "fr": ("Accès à GuildConsole", "Accès aux modules du serveur {guild} pendant {days} jours"),
+        "it": ("Accesso a GuildConsole", "Accesso ai moduli del server {guild} per {days} giorni"),
+        "pl": ("Dostęp do GuildConsole", "Dostęp do modułów serwera {guild} przez {days} dni"),
+        "ar": ("الوصول إلى GuildConsole", "الوصول إلى وحدات الخادم {guild} لمدة {days} يومًا"),
+    }
+    name, destination = templates.get(locale, templates["en"])
+    return {"name": name, "destination": destination.format(guild=guild_id, days=days)}
+
+
 def _monobank_amount(amount_usd: Decimal, rate: float) -> Decimal:
     amount = (amount_usd * Decimal(str(rate))).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
     if amount < Decimal("0.01") or amount > Decimal("100000000.00"):
@@ -205,7 +220,7 @@ class BillingPaymentService:
                 "period_discount_amount": max(Decimal("0.00"), original - base), "tenure_discount_percent": discount["tenure_percent"],
                 "tenure_discount_amount": base - discount["final"], "total_amount": max(Decimal("0.01"), discount["final"])}
 
-    async def create_checkout(self, guild_id: int, plugin_key: str, period: str, provider: str, base_url: str, owner_discord_id: int, days: int | None = None) -> dict:
+    async def create_checkout(self, guild_id: int, plugin_key: str, period: str, provider: str, base_url: str, owner_discord_id: int, days: int | None = None, locale: str = "en") -> dict:
         key = PAID_PACKAGE_KEY
         if (period not in PERIOD_DAYS and period != "custom") or provider not in {"liqpay", "monobank"} or (period == "custom" and days is None) or (period != "custom" and days is not None):
             raise PaymentError("Unsupported billing period or provider")
@@ -253,12 +268,14 @@ class BillingPaymentService:
         if provider == "monobank":
             token = await self.secret("monobank_token")
             amount_minor = int((amount * 100).to_integral_exact())
+            checkout_text = _monobank_checkout_text(locale, guild_id, payment.access_days)
             invoice = {
                 "amount": amount_minor, "ccy": 980,
                 "merchantPaymInfo": {
                     "reference": order,
-                    "destination": f"GuildConsole: доступ до модулів сервера {guild_id} на {payment.access_days} днів",
-                    "basketOrder": [{"name": "Доступ до GuildConsole", "qty": 1, "sum": amount_minor, "total": amount_minor, "unit": "шт."}],
+                    "destination": checkout_text["destination"],
+                    "comment": checkout_text["destination"],
+                    "basketOrder": [{"name": checkout_text["name"], "qty": 1, "sum": amount_minor, "total": amount_minor, "unit": "шт.", "icon": f"{base_url}/assets/guildconsole-product.svg"}],
                 },
                 "redirectUrl": result, "webHookUrl": callback,
                 "validity": 1800, "paymentType": "debit",

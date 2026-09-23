@@ -101,6 +101,7 @@ class CheckoutRequest(BaseModel):
     billing_period: str = Field(pattern=r"^(monthly|quarterly|yearly|custom)$")
     provider: str = Field(pattern=r"^(liqpay|monobank)$")
     days: int | None = Field(default=None, ge=1, le=3660)
+    locale: str = Field(default="en", pattern=r"^(en|uk|ru|de|fr|it|pl|ar)$")
 class WalletTopupRequest(BaseModel):
     amount: Decimal = Field(gt=0, le=1_000_000)
     provider: str = Field(pattern=r"^liqpay$")
@@ -514,7 +515,7 @@ async def checkout(guild_id: int, payload: CheckoutRequest, request: Request, us
         raise HTTPException(403, "Only the Discord server owner can purchase a subscription")
     base_url = str(request.base_url).rstrip("/")
     try:
-        return await BillingPaymentService(session).create_checkout(guild_id, payload.plugin_key, payload.billing_period, payload.provider, base_url, user.discord_user_id, payload.days)
+        return await BillingPaymentService(session).create_checkout(guild_id, payload.plugin_key, payload.billing_period, payload.provider, base_url, user.discord_user_id, payload.days, payload.locale)
     except PaymentError as exc:
         raise HTTPException(400, str(exc)) from exc
 

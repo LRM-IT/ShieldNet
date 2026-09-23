@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="GuildConsole">
+  <defs><linearGradient id="g" x1="24" y1="22" x2="226" y2="236" gradientUnits="userSpaceOnUse"><stop stop-color="#43efd3"/><stop offset="1" stop-color="#4c78ff"/></linearGradient></defs>
+  <rect width="256" height="256" rx="64" fill="#07131d"/>
+  <path d="M128 22 220 75v106l-92 53-92-53V75z" fill="none" stroke="url(#g)" stroke-width="12"/>
+  <rect x="66" y="70" width="124" height="104" rx="30" fill="#0d2230" stroke="#65dce0" stroke-width="8"/>
+  <path d="M94 116h68M103 140h50" stroke="url(#g)" stroke-width="11" stroke-linecap="round"/>
+  <circle cx="89" cy="91" r="7" fill="#43efd3"/><circle cx="167" cy="91" r="7" fill="#4c78ff"/>
+  <path d="M97 193h62" stroke="#eafcff" stroke-width="10" stroke-linecap="round"/>
+</svg>
