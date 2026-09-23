@@ -44,6 +44,7 @@ class PaymentVerificationPending(RuntimeError):
 
 
 _monobank_pubkeys: dict[str, tuple[object, datetime]] = {}
+MONOBANK_CHECKOUT_HOSTS = {"pay.mbnk.biz", "pay.monobank.ua"}
 
 
 def _monobank_amount(amount_usd: Decimal, rate: float) -> Decimal:
@@ -275,7 +276,7 @@ class BillingPaymentService:
                     raise PaymentError("Invalid monobank invoice response")
                 invoice_id, page_url = created.get("invoiceId"), created.get("pageUrl")
                 parsed = urlparse(page_url or "")
-                if not invoice_id or parsed.scheme != "https" or parsed.hostname != "pay.mbnk.biz":
+                if not invoice_id or parsed.scheme != "https" or parsed.hostname not in MONOBANK_CHECKOUT_HOSTS:
                     raise PaymentError("Invalid monobank invoice response")
             except httpx.HTTPStatusError as exc:
                 try:

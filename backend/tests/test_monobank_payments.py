@@ -9,7 +9,7 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import ec
 
 from app.services.billing_payments import (
-    BillingPaymentService, PaymentError, _monobank_amount, _monobank_confirmed,
+    BillingPaymentService, MONOBANK_CHECKOUT_HOSTS, PaymentError, _monobank_amount, _monobank_confirmed,
 )
 
 
@@ -37,6 +37,7 @@ class MonobankPaymentTests(unittest.IsolatedAsyncioTestCase):
         )
 
     def test_conversion_and_order_matching(self):
+        self.assertEqual(MONOBANK_CHECKOUT_HOSTS, {"pay.mbnk.biz", "pay.monobank.ua"})
         self.assertEqual(_monobank_amount(Decimal("3.00"), 45.0005), Decimal("135.00"))
         status = {"status": "success", "invoiceId": "p2_test", "reference": "gc-test", "ccy": 980, "amount": 13500}
         self.assertTrue(_monobank_confirmed(status, self.payment))
