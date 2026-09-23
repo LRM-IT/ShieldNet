@@ -25,6 +25,7 @@ from app.services.plugin_control_service import PluginControlService
 from app.services.guild_plugin_service import GuildPluginService
 from app.services.billing_discounts import BillingDiscountService, DiscountError
 from app.services.email_delivery import EMAIL_VAULT_KEY, EmailDeliveryService
+from app.services.public_exchange_rate import public_usd_uah_rate
 
 router = APIRouter(tags=["Billing"])
 
@@ -268,8 +269,16 @@ async def guild_billing(guild_id: int, user: User = Depends(get_current_user), s
         data.update({"discounted_monthly_price":discounted[0],"discounted_quarterly_price":discounted[1],"discounted_yearly_price":discounted[2],"discount":discount_meta}); visible_plans=[data]
     tiers={x.plugin_key:("free" if x.is_free else "paid") for x in plans if x.plugin_key != PAID_PACKAGE_KEY}
     provider_config=await BillingPaymentService(session).provider_config();email_config=await EmailDeliveryService(session).public_config()
+    uah_quote = None
+    if provider_config.get("monobank", {}).get("active"):
+        try:
+            quote = await public_usd_uah_rate()
+            uah_quote = {"rate": quote["rate"], "as_of": quote["as_of"], "stale": quote["stale"]}
+        except (httpx.HTTPError, ValueError, TypeError, KeyError):
+            pass
     return {"free_plugin_keys":sorted(x.plugin_key for x in plans if x.plugin_key != PAID_PACKAGE_KEY and x.is_free),"plans":visible_plans,"module_tiers":tiers,"subscriptions":[subscription_dict(x) for x in subscriptions if x.plugin_key == PAID_PACKAGE_KEY],
             "providers":{key:{"active":value["active"]} for key,value in provider_config.items()},
+            "uah_quote":uah_quote,
             "email_available":bool(real_email(user)),"smtp_available":bool(email_config["enabled"] and email_config["configured"])}
 
 @router.post("/billing/wallet/voucher")

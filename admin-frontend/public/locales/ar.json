@@ -1865,6 +1865,7 @@
     "monobank_invoice_rejected": "رفض Monobank معلمات الدفع. تحقق من المبلغ وحاول مرة أخرى.",
     "monobank_rate_limited": "هناك طلبات كثيرة جدًا إلى بوابة الدفع. حاول مرة أخرى بعد دقيقة.",
     "monobank_unavailable": "بوابة الدفع Monobank غير متاحة مؤقتًا. حاول مرة أخرى لاحقًا.",
+    "monobank_uah_notice": "يتم حساب المبلغ النهائي وإرساله إلى Monobank بالهريفنيا الأوكرانية.",
     "code_applied": "تم تطبيق الرمز.",
     "code_error": "تعذر تطبيق الرمز.",
     "server_activation": "تفعيل الخادم",
