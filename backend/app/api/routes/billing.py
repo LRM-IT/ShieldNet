@@ -66,6 +66,8 @@ class ProviderUpdate(BaseModel):
     monobank_standard_enabled: bool = True
     monobank_subscription_enabled: bool = False
     monobank_subscription_interval: str = Field(default="1m", pattern=r"^(1m|3m|1y)$")
+    monobank_hold_enabled: bool = False
+    monobank_hold_validity_days: int = Field(default=9, ge=1, le=9)
     hutko_enabled: bool = False
     hutko_merchant_id: str = ""
     hutko_secret_key: str = ""

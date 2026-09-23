@@ -95,12 +95,16 @@ class BillingPaymentService:
             result[provider] = item
         monobank_standard = (await self.vault.get_secret(BILLING_VAULT_KEY, "monobank_standard_enabled") or "true").lower() == "true"
         monobank_subscription = (await self.vault.get_secret(BILLING_VAULT_KEY, "monobank_subscription_enabled") or "false").lower() == "true"
+        monobank_hold = (await self.vault.get_secret(BILLING_VAULT_KEY, "monobank_hold_enabled") or "false").lower() == "true"
         result["monobank"].update({
             "standard_enabled": monobank_standard,
             "subscription_enabled": monobank_subscription,
             "subscription_interval": await self.vault.get_secret(BILLING_VAULT_KEY, "monobank_subscription_interval") or "1m",
+            "hold_enabled": monobank_hold,
+            "hold_validity_days": int(await self.vault.get_secret(BILLING_VAULT_KEY, "monobank_hold_validity_days") or "9"),
             "standard_active": result["monobank"]["enabled"] and result["monobank"]["configured"] and monobank_standard,
             "subscription_active": result["monobank"]["enabled"] and result["monobank"]["configured"] and monobank_subscription,
+            "hold_active": result["monobank"]["enabled"] and result["monobank"]["configured"] and monobank_hold,
         })
         result["monobank"]["active"] = result["monobank"]["standard_active"]
         # Backwards-compatible flag used by the existing LiqPay form.
