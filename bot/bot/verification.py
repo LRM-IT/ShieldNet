@@ -198,7 +198,7 @@ class VerificationClient:
 
             await member.edit(
                 nick=requested_nickname,
-                reason="ShieldNet verification approved",
+                reason="GuildConsole verification approved",
             )
 
             messages = ["Nickname updated."]
@@ -215,7 +215,7 @@ class VerificationClient:
 
                 await member.add_roles(
                     role,
-                    reason="ShieldNet verification approved",
+                    reason="GuildConsole verification approved",
                 )
                 messages.append(
                     f"Role {role.name} assigned."
@@ -320,10 +320,10 @@ class VerificationClient:
         view = VerificationReviewView(self)
         view.add_item(
             discord.ui.Button(
-                label="Open ShieldNet panel",
+                label="Open GuildConsole panel",
                 style=discord.ButtonStyle.link,
                 url=(
-                    "https://shieldnet.discord.lrm-it.com/"
+                    "https://guildconsole.lrm-it.com/"
                     f"guild/{guild.id}/verification"
                 ),
             )
@@ -346,10 +346,13 @@ class VerificationRejectModal(discord.ui.Modal, title="Reject verification"):
         self.request_id = request_id
 
     async def on_submit(self, interaction: discord.Interaction) -> None:
-        if not isinstance(interaction.user, discord.Member) or \
-                not interaction.user.guild_permissions.manage_guild:
+        if not isinstance(interaction.user, discord.Member) or not (
+            interaction.user.guild_permissions.administrator
+            or interaction.user.guild_permissions.manage_guild
+        ):
             await interaction.response.send_message(
-                "Manage Server permission is required.",
+                "Your Discord account needs Administrator or Manage Server permission. "
+                "The bot's permissions do not grant this permission to you.",
                 ephemeral=True,
             )
             return
@@ -392,10 +395,13 @@ class VerificationReviewView(discord.ui.View):
     ) -> None:
         del button
 
-        if not isinstance(interaction.user, discord.Member) or \
-                not interaction.user.guild_permissions.manage_guild:
+        if not isinstance(interaction.user, discord.Member) or not (
+            interaction.user.guild_permissions.administrator
+            or interaction.user.guild_permissions.manage_guild
+        ):
             await interaction.response.send_message(
-                "Manage Server permission is required.",
+                "Your Discord account needs Administrator or Manage Server permission. "
+                "The bot's permissions do not grant this permission to you.",
                 ephemeral=True,
             )
             return
@@ -443,7 +449,7 @@ class VerificationReviewView(discord.ui.View):
 
 class VerifyModal(
     discord.ui.Modal,
-    title="ShieldNet Verification",
+    title="GuildConsole Verification",
 ):
     alliance = discord.ui.TextInput(
         label="Alliance",
@@ -515,7 +521,7 @@ class VerifyModal(
                 message = (
                     "Verification request created and "
                     "automatically approved.\n"
-                    "ShieldNet will apply it shortly."
+                    "GuildConsole will apply it shortly."
                 )
             else:
                 message = (
