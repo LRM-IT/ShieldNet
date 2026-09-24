@@ -68,11 +68,12 @@ export class DocumentationComponent implements OnInit{
   @HostListener('window:guildconsole-locale-changed',['$event']) async localeChanged(event:CustomEvent<string>){await this.loadDocs(event.detail||this.i18n.locale())}
   private async loadDocs(locale:string){const supported=new Set(['en','uk','ru','de','ar','fr','it','pl']);const code=supported.has(locale)?locale:'en';try{this.docs.set(await firstValueFrom(this.http.get<DocsFile>(`/plugin-docs/${code}.json?v=6`)))}catch{if(code!=='en'){try{this.docs.set(await firstValueFrom(this.http.get<DocsFile>('/plugin-docs/en.json?v=6')))}catch{}}}}
   localized(plugin:GuildPluginMarketplaceItem):LocalGuide{return this.docs()?.plugins?.[plugin.plugin_key]||{purpose:this.guide(plugin).purpose,configuration:this.guide(plugin).features.join(' · '),check:this.guide(plugin).setup.at(-1)||''}}
-  localizedName(plugin:GuildPluginMarketplaceItem):string{const key=plugin.plugin_key==='verification_level1'?'verification':plugin.plugin_key;return this.i18n.t(`plugin_names.${key}`,plugin.name)}
+  localizedName(plugin:GuildPluginMarketplaceItem):string{return this.i18n.t(`plugin_names.${this.pluginNameKey(plugin.plugin_key)}`,plugin.name)}
   coreModule(id:string){return this.coreModules.find(module=>module.id===id)||null}
   coreText(id:string,field:'name'|'purpose'|'details',fallback:string){return this.i18n.t(`core_docs.modules.${id}.${field}`,fallback)}
   catalogGuide(key:string):LocalGuide|null{return this.docs()?.plugins?.[key]||null}
-  catalogName(key:string):string{const normalized=key==='verification_level1'?'verification':key;return this.i18n.t(`plugin_names.${normalized}`,key.replaceAll('_',' ').replaceAll('-',' '))}
+  catalogName(key:string):string{return this.i18n.t(`plugin_names.${this.pluginNameKey(key)}`,key.replaceAll('_',' ').replaceAll('-',' '))}
+  pluginNameKey(key:string):string{return ({verification_level1:'verification',first_introduction:'language_selection'} as Record<string,string>)[key]||key}
   catalogIcon(key:string):string{return ({welcome:'W',antiflood:'A',translator_groups:'T',first_introduction:'F',verification_level1:'V',voting:'✓','guild-dm-broadcast':'DM',role_menu:'R',ai_automod:'AI',event_manager:'E',war_planner:'⚔',activity_ranking:'XP',audit_security:'S',backup_restore:'B',cross_guild_network:'C',moderation:'M'} as Record<string,string>)[key]||'P'}
   replacePlugin(value:string,name:string){return value.replaceAll('{plugin}',name)}
   guide(plugin:GuildPluginMarketplaceItem):Guide{const known:Record<string,Guide>={
