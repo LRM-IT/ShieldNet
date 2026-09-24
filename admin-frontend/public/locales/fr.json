@@ -1939,7 +1939,8 @@
     "day_short": "j",
     "hour_short": "h",
     "minute_short": "min",
-    "second_short": "s"
+    "second_short": "s",
+    "load_error": "Impossible d’actualiser la liste des serveurs."
   },
   "platform_users": {
     "nav": "Propriétaires",

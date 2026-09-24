@@ -1938,7 +1938,8 @@
     "day_short": "g",
     "hour_short": "h",
     "minute_short": "min",
-    "second_short": "s"
+    "second_short": "s",
+    "load_error": "Impossibile aggiornare l’elenco dei server."
   },
   "platform_users": {
     "nav": "Proprietari server",

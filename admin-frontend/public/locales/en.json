@@ -1898,7 +1898,8 @@
     "day_short": "d",
     "hour_short": "h",
     "minute_short": "m",
-    "second_short": "s"
+    "second_short": "s",
+    "load_error": "Unable to refresh the server list."
   },
   "platform_users": {
     "nav": "Server owners",

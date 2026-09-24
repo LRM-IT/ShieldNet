@@ -1831,7 +1831,8 @@
     "day_short": "д",
     "hour_short": "ч",
     "minute_short": "м",
-    "second_short": "с"
+    "second_short": "с",
+    "load_error": "Не удалось обновить список серверов."
   },
   "platform_users": {
     "nav": "Владельцы серверов",

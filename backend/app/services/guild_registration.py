@@ -122,3 +122,24 @@ class GuildRegistrationService:
             guild.bot_status = BotStatus.REMOVED
             guild.left_at = datetime.now(UTC)
             await self.session.commit()
+
+    async def reconcile_connected(self, guild_ids: list[int]) -> int:
+        """Mark previously synchronized guilds absent from the bot as removed."""
+        current_ids = set(guild_ids)
+        result = await self.session.execute(
+            select(Guild).where(
+                Guild.last_sync_at.is_not(None),
+                Guild.status != GuildStatus.LEFT,
+            )
+        )
+        removed = 0
+        now = datetime.now(UTC)
+        for guild in result.scalars().all():
+            if guild.guild_id in current_ids:
+                continue
+            guild.status = GuildStatus.LEFT
+            guild.bot_status = BotStatus.REMOVED
+            guild.left_at = now
+            removed += 1
+        await self.session.commit()
+        return removed

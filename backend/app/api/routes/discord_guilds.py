@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.dependencies.auth import get_current_user
 from app.db.session import get_db_session
 from app.models.core import User
-from app.models.discord import Guild, GuildMembership, MembershipStatus
+from app.models.discord import Guild, GuildMembership, GuildStatus, MembershipStatus
 from app.models.billing import BillingSubscription
 from app.schemas.discord import GuildAccessResponse
 from app.services.global_access import GlobalAccessService
@@ -37,6 +37,7 @@ async def list_my_guilds(
         ).exists()
         guilds = (await session.execute(
             select(Guild).where(
+                Guild.status != GuildStatus.LEFT,
                 or_(Guild.last_sync_at.is_not(None), membership_exists)
             ).order_by(Guild.name)
         )).scalars().all()
@@ -70,6 +71,7 @@ async def list_my_guilds(
                 GuildMembership.discord_user_id == current_user.discord_user_id,
             ),
             GuildMembership.status == MembershipStatus.ACTIVE,
+            Guild.status != GuildStatus.LEFT,
             or_(GuildMembership.expires_at.is_(None), GuildMembership.expires_at > datetime.now(UTC)),
         )
         .order_by(Guild.name)

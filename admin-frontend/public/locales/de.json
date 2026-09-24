@@ -1940,7 +1940,8 @@
     "day_short": "T",
     "hour_short": "Std",
     "minute_short": "Min",
-    "second_short": "Sek"
+    "second_short": "Sek",
+    "load_error": "Die Serverliste konnte nicht aktualisiert werden."
   },
   "platform_users": {
     "nav": "Serverbesitzer",

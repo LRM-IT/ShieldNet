@@ -44,6 +44,15 @@ class BackendClient:
             )
         response.raise_for_status()
 
+    async def reconcile_guilds(self, guild_ids: list[int]) -> None:
+        async with httpx.AsyncClient(timeout=20) as client:
+            response = await client.post(
+                f"{self.base_url}/api/v1/internal/discord/guilds/reconcile",
+                headers=self.headers,
+                json={"guild_ids": guild_ids},
+            )
+        response.raise_for_status()
+
     async def get_guild_modules(self, guild_id: int) -> dict:
         async with httpx.AsyncClient(timeout=20) as client:
             response = await client.get(

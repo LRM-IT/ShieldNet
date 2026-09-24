@@ -1940,7 +1940,8 @@
     "day_short": "ي",
     "hour_short": "س",
     "minute_short": "د",
-    "second_short": "ث"
+    "second_short": "ث",
+    "load_error": "تعذر تحديث قائمة الخوادم."
   },
   "platform_users": {
     "nav": "مالكو الخوادم",
