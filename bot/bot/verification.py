@@ -421,21 +421,18 @@ class VerifyModal(
 ):
     alliance = discord.ui.TextInput(
         label="Alliance",
-        placeholder="EVEX",
         min_length=1,
         max_length=32,
     )
 
     nickname = discord.ui.TextInput(
         label="Nickname",
-        placeholder="Mr.Cat",
         min_length=1,
         max_length=64,
     )
 
     server_number = discord.ui.TextInput(
         label="Server number",
-        placeholder="2279",
         min_length=1,
         max_length=32,
     )

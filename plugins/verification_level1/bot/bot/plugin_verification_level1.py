@@ -34,13 +34,11 @@ class VerificationModal(discord.ui.Modal):
 
         self.alliance = discord.ui.TextInput(
             label="Alliance",
-            placeholder="EVEX",
             min_length=1,
             max_length=64,
         )
         self.nickname = discord.ui.TextInput(
             label="Nickname",
-            placeholder="Roman",
             min_length=1,
             max_length=64,
         )
