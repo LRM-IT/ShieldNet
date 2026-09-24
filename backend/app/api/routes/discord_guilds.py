@@ -47,41 +47,6 @@ async def list_my_guilds(
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
 ):
-    if GlobalAccessService.is_superadmin(current_user):
-        membership_exists = select(GuildMembership.id).where(
-            GuildMembership.guild_id == Guild.guild_id
-        ).exists()
-        guilds = (await session.execute(
-            select(Guild).where(
-                Guild.status != GuildStatus.LEFT,
-                or_(Guild.last_sync_at.is_not(None), membership_exists)
-            ).order_by(Guild.name)
-        )).scalars().all()
-        billing = await _billing_by_guild(session, [g.guild_id for g in guilds])
-        plugins = await _plugin_counts(session, [g.guild_id for g in guilds])
-        return [
-            GuildAccessResponse(
-                guild_id=str(g.guild_id),
-                name=g.name,
-                icon_url=g.icon_url,
-                owner_discord_id=str(g.owner_discord_id),
-                member_count=g.member_count,
-                guild_status=g.status.value,
-                bot_status=g.bot_status.value,
-                access_role="admin",
-                permissions=["*"],
-                expires_at=None,
-                is_owner=(g.owner_discord_id == current_user.discord_user_id),
-                billing_status=billing[g.guild_id].status if g.guild_id in billing else "inactive",
-                billing_expires_at=billing[g.guild_id].expires_at.isoformat() if g.guild_id in billing else None,
-                billing_auto_renew=billing[g.guild_id].auto_renew if g.guild_id in billing else False,
-                last_sync_at=g.last_sync_at.isoformat() if g.last_sync_at else None,
-                sync_status=_sync_status(g),
-                enabled_plugins=plugins.get(g.guild_id, 0),
-            )
-            for g in guilds
-        ]
-
     result = await session.execute(
         select(Guild, GuildMembership)
         .join(GuildMembership, GuildMembership.guild_id == Guild.guild_id)
