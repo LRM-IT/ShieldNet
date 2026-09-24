@@ -527,6 +527,7 @@ export class ShellComponent implements OnInit, OnDestroy {
       { label: 'permissions_engine.title', icon: '⊞', path: ['/guild', id, 'permissions'] },
       { label: 'Server languages', icon: '🌐', path: ['/guild', id, 'languages'] },
       { label: 'AI Center', icon: 'AI', path: ['/guild', id, 'ai'] },
+      { label: 'wizard.title', icon: '✨', path: ['/guild', id, 'setup-wizard'] },
     ];
   });
 
