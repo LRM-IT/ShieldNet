@@ -890,7 +890,7 @@
     "retry": "Erneut versuchen"
   },
   "permission": {
-    "title": "Permission Simulator",
+    "title": "Berechtigungssimulator",
     "heading": "Explain access before changing roles",
     "description": "Select a member and channel to calculate effective Discord permissions, including role permissions and channel overwrites.",
     "simulate": "Simulate",

@@ -515,6 +515,7 @@ export class ShellComponent implements OnInit, OnDestroy {
       { label: 'shell.overview', icon: '◫', path: ['/guild', id], exact: true },
       { label: 'shell.members', icon: '◉', path: ['/guild', id, 'members'] },
       { label: 'shell.security', icon: '◇', path: ['/guild', id, 'security'] },
+      { label: 'permission.title', icon: '⚿', path: ['/guild', id, 'permission-simulator'] },
       { label: 'Server languages', icon: '🌐', path: ['/guild', id, 'languages'] },
       { label: 'AI Center', icon: 'AI', path: ['/guild', id, 'ai'] },
     ];
