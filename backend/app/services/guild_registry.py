@@ -153,6 +153,11 @@ class GuildRegistryService:
                 ),
                 bot_online=None,
             )
+            # A guild that still exists in the user's Discord account must
+            # remain visible so the bot can be connected again.
+            if guild.status == GuildStatus.LEFT:
+                guild.status = GuildStatus.INACTIVE
+                guild.left_at = None
 
             membership_result = await self.session.execute(
                 select(GuildMembership).where(

@@ -40,5 +40,8 @@ export interface GuildAccess {
   billing_status?: string;
   billing_expires_at?: string | null;
   billing_auto_renew?: boolean;
+  last_sync_at?: string | null;
+  sync_status?: 'fresh' | 'stale' | 'never';
+  enabled_plugins?: number;
 
 }

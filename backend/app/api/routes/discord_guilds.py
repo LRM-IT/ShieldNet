@@ -1,7 +1,7 @@
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
-from fastapi import APIRouter, Depends
-from sqlalchemy import or_, select
+from fastapi import APIRouter, Depends, HTTPException, Response, status
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.dependencies.auth import get_current_user
@@ -9,6 +9,7 @@ from app.db.session import get_db_session
 from app.models.core import User
 from app.models.discord import Guild, GuildMembership, GuildStatus, MembershipStatus
 from app.models.billing import BillingSubscription
+from app.models.modules import GuildModule
 from app.schemas.discord import GuildAccessResponse
 from app.services.global_access import GlobalAccessService
 
@@ -24,6 +25,21 @@ async def _billing_by_guild(session: AsyncSession, guild_ids: list[int]) -> dict
         BillingSubscription.plugin_key == PAID_PACKAGE_KEY,
     ))).scalars().all()
     return {row.guild_id: row for row in rows}
+
+async def _plugin_counts(session: AsyncSession, guild_ids: list[int]) -> dict[int, int]:
+    if not guild_ids:
+        return {}
+    rows = (await session.execute(
+        select(GuildModule.guild_id, func.count(GuildModule.id))
+        .where(GuildModule.guild_id.in_(guild_ids), GuildModule.enabled.is_(True))
+        .group_by(GuildModule.guild_id)
+    )).all()
+    return {guild_id: count for guild_id, count in rows}
+
+def _sync_status(guild: Guild) -> str:
+    if guild.last_sync_at is None:
+        return "never"
+    return "stale" if guild.last_sync_at < datetime.now(UTC) - timedelta(minutes=15) else "fresh"
 
 
 @router.get("/guilds", response_model=list[GuildAccessResponse])
@@ -42,6 +58,7 @@ async def list_my_guilds(
             ).order_by(Guild.name)
         )).scalars().all()
         billing = await _billing_by_guild(session, [g.guild_id for g in guilds])
+        plugins = await _plugin_counts(session, [g.guild_id for g in guilds])
         return [
             GuildAccessResponse(
                 guild_id=str(g.guild_id),
@@ -58,6 +75,9 @@ async def list_my_guilds(
                 billing_status=billing[g.guild_id].status if g.guild_id in billing else "inactive",
                 billing_expires_at=billing[g.guild_id].expires_at.isoformat() if g.guild_id in billing else None,
                 billing_auto_renew=billing[g.guild_id].auto_renew if g.guild_id in billing else False,
+                last_sync_at=g.last_sync_at.isoformat() if g.last_sync_at else None,
+                sync_status=_sync_status(g),
+                enabled_plugins=plugins.get(g.guild_id, 0),
             )
             for g in guilds
         ]
@@ -78,6 +98,7 @@ async def list_my_guilds(
     )
     rows = result.all()
     billing = await _billing_by_guild(session, [g.guild_id for g, _ in rows])
+    plugins = await _plugin_counts(session, [g.guild_id for g, _ in rows])
     return [
         GuildAccessResponse(
             guild_id=str(g.guild_id),
@@ -94,6 +115,28 @@ async def list_my_guilds(
             billing_status=billing[g.guild_id].status if g.guild_id in billing else "inactive",
             billing_expires_at=billing[g.guild_id].expires_at.isoformat() if g.guild_id in billing else None,
             billing_auto_renew=billing[g.guild_id].auto_renew if g.guild_id in billing else False,
+            last_sync_at=g.last_sync_at.isoformat() if g.last_sync_at else None,
+            sync_status=_sync_status(g),
+            enabled_plugins=plugins.get(g.guild_id, 0),
         )
         for g, m in rows
     ]
+
+@router.delete("/guilds/{guild_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_my_removed_guild(
+    guild_id: int,
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+) -> Response:
+    guild = await session.get(Guild, guild_id)
+    if guild is None:
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
+    is_superadmin = GlobalAccessService.is_superadmin(current_user)
+    is_owner = bool(current_user.discord_user_id and guild.owner_discord_id == current_user.discord_user_id)
+    if not (is_superadmin or is_owner):
+        raise HTTPException(status_code=403, detail="Only the server owner can delete this record")
+    if guild.bot_status.value == "online":
+        raise HTTPException(status_code=409, detail="Disconnect the bot from Discord before deleting this server")
+    await session.delete(guild)
+    await session.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

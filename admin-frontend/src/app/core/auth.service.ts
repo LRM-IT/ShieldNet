@@ -34,7 +34,7 @@ export class AuthService {
     await this.router.navigateByUrl('/app');
   }
 
-  async startDiscordLogin(): Promise<void> {
+  async startDiscordLogin(redirectTo: string | null = '/app'): Promise<void> {
     const response = await firstValueFrom(
       this.http.get<{ authorization_url: string }>('/api/v1/auth/discord/start'),
     );
@@ -74,7 +74,7 @@ export class AuthService {
     });
 
     await this.loadProfile();
-    await this.router.navigateByUrl('/app');
+    if (redirectTo) await this.router.navigateByUrl(redirectTo);
   }
 
   saveTokens(tokens: TokenPair): void {

@@ -269,6 +269,23 @@ class DiscordOAuthService:
             for item in oauth_guilds
             if item.get("id")
         }
+
+        # Discord is the source of truth for administrator access discovered
+        # through OAuth. Revoke stale administrator memberships when a server
+        # was deleted or the user can no longer manage it. Explicit moderator
+        # assignments are preserved.
+        stale_result = await self.session.execute(
+            select(GuildMembership).where(
+                GuildMembership.discord_user_id == discord_user_id,
+                GuildMembership.user_id == user.id,
+                GuildMembership.role == MembershipRole.ADMIN,
+                GuildMembership.status == MembershipStatus.ACTIVE,
+            )
+        )
+        for membership in stale_result.scalars().all():
+            if membership.guild_id not in oauth_ids:
+                membership.status = MembershipStatus.REVOKED
+
         if not oauth_ids:
             return
 

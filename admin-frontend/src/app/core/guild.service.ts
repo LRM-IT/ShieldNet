@@ -13,4 +13,8 @@ export class GuildService {
       this.http.get<GuildAccess[]>('/api/v1/discord/guilds'),
     );
   }
+
+  remove(guildId: string): Promise<void> {
+    return firstValueFrom(this.http.delete<void>(`/api/v1/discord/guilds/${guildId}`));
+  }
 }

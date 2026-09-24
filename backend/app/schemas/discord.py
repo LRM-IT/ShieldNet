@@ -19,3 +19,6 @@ class GuildAccessResponse(BaseModel):
     billing_status: str = "inactive"
     billing_expires_at: str | None = None
     billing_auto_renew: bool = False
+    last_sync_at: str | None = None
+    sync_status: str = "never"
+    enabled_plugins: int = 0
