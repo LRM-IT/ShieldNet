@@ -74,11 +74,11 @@ import { TranslationService } from '../core/translation.service';
           <h3>{{ "server_control.management" | snT:"Server management" }}</h3>
           <div class="grid nav">
             <a [routerLink]="['/guild', guildId, 'members']">{{ "server_control.members" | snT:"Members" }}</a>
-            <a [routerLink]="['/guild', guildId, 'roles']">{{ "server_control.roles" | snT:"Roles" }}</a>
-            <a [routerLink]="['/guild', guildId, 'modules']">{{ "server_control.modules" | snT:"Modules" }}</a>
+            <a [routerLink]="['/guild', guildId, 'explorer']">{{ "server_control.roles" | snT:"Roles" }}</a>
+            <a [routerLink]="['/guild', guildId, 'plugin-runtime']">{{ "server_control.modules" | snT:"Modules" }}</a>
             <a [routerLink]="['/guild', guildId, 'audit']">{{ "server_control.audit" | snT:"Audit" }}</a>
             <a [routerLink]="['/guild', guildId, 'verification']">{{ "server_control.verification" | snT:"Verification" }}</a>
-            <a [routerLink]="['/guild', guildId, 'settings']">{{ "server_control.settings" | snT:"Settings" }}</a>
+            <a [routerLink]="['/guild', guildId, 'permissions']">{{ "server_control.settings" | snT:"Settings" }}</a>
           </div>
         </section>
       }
