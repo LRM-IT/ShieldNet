@@ -37,7 +37,7 @@ import { TranslationService } from '../core/translation.service';
             @if(isConnected(guild)){
               <a class="primary" [routerLink]="['/guild',guild.guild_id]">{{'server_cards.open'|snT:'Open server'}}</a>
               <a [routerLink]="['/guild',guild.guild_id,'members']">{{'server_cards.members'|snT:'Members'}}</a>
-              <a [routerLink]="['/guild',guild.guild_id,'plugins']">{{'server_cards.plugins'|snT:'Plugins'}}</a>
+              <a [routerLink]="['/guild',guild.guild_id,'plugin-runtime']">{{'server_cards.plugins'|snT:'Plugins'}}</a>
             }@else{
               <a class="primary" [href]="botInstallUrl(guild.guild_id)">{{'dashboard.connect_bot'|snT:'Connect bot'}}</a>
               @if(guild.is_owner){<button class="danger" type="button" (click)="remove(guild)">{{'server_cards.delete_record'|snT:'Delete permanently'}}</button>}
