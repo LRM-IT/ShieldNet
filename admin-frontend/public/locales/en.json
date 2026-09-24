@@ -2610,6 +2610,22 @@
     "logo_too_large": "The logo must be smaller than 1 MB.",
     "queued": "Server setup has started. Keep this page open to see the result.",
     "completed_message": "Initial server setup is complete.",
-    "error": "Wizard operation failed."
+    "error": "Wizard operation failed.",
+    "structure_title": "Choose a server structure",
+    "structure_help": "Select a ready layout. The preview shows the categories and channels that will be created.",
+    "channels": "channels",
+    "preview_server": "Your server",
+    "preview_label": "STRUCTURE PREVIEW",
+    "system_badge": "SYSTEM",
+    "template_minimal": "Minimal",
+    "template_minimal_help": "Only the essential channels.",
+    "template_community": "Community",
+    "template_community_help": "A balanced social community.",
+    "template_gaming": "Gaming",
+    "template_gaming_help": "Groups, media and squad voice rooms.",
+    "template_clan": "Clan / alliance",
+    "template_clan_help": "Operations, events and recruitment.",
+    "template_support": "Support community",
+    "template_support_help": "Information and help channels."
   }
 }

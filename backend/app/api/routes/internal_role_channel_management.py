@@ -16,8 +16,19 @@ router = APIRouter(prefix="/internal/discord-management", tags=["Internal Discor
 async def pending(limit: int = Query(25, ge=1, le=100), session: AsyncSession = Depends(get_db_session)):
     changes = (await session.execute(select(DiscordStructureChange).where(DiscordStructureChange.status == "pending").order_by(DiscordStructureChange.created_at).limit(limit))).scalars().all()
     bulk = (await session.execute(select(DiscordBulkRoleOperation).where(DiscordBulkRoleOperation.status == "pending").order_by(DiscordBulkRoleOperation.created_at).limit(limit))).scalars().all()
+    serialized=[]
+    for x in changes:
+        data=dict(x.payload or {})
+        parent_change_id=data.pop("_parent_change_id",None)
+        if parent_change_id:
+            parent=await session.get(DiscordStructureChange,uuid.UUID(parent_change_id))
+            parent_id=((parent.payload or {}).get("_result") or {}).get("channel_id") if parent else None
+            if not parent_id:
+                continue
+            data["parent_id"]=parent_id
+        serialized.append({"id":str(x.id),"guild_id":x.guild_id,"object_type":x.object_type,"operation":x.operation,"target_id":x.target_id,"payload":data})
     return {
-        "changes": [{"id": str(x.id), "guild_id": x.guild_id, "object_type": x.object_type, "operation": x.operation, "target_id": x.target_id, "payload": x.payload} for x in changes],
+        "changes": serialized,
         "bulk_roles": [{"id": str(x.id), "guild_id": x.guild_id, "discord_role_id": x.discord_role_id, "operation": x.operation, "member_ids": x.member_ids} for x in bulk],
     }
 
