@@ -2582,6 +2582,9 @@
     "template_tournament_help": "Реєстрація, матчі та результати.",
     "template_tournament": "Турнір",
     "template_marketplace": "Торговий майданчик",
-    "template_marketplace_help": "Оголошення, відгуки та кімнати угод."
+    "template_marketplace_help": "Оголошення, відгуки та кімнати угод.",
+    "restore_channel": "Повернути",
+    "required_badge": "ОБОВЯЗКОВО",
+    "exclude_channel": "Не потрібно"
   }
 }

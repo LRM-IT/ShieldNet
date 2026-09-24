@@ -2649,6 +2649,9 @@
     "template_tournament_help": "Registration, matches and results.",
     "template_tournament": "Tournament",
     "template_marketplace": "Marketplace",
-    "template_marketplace_help": "Listings, reviews and deal rooms."
+    "template_marketplace_help": "Listings, reviews and deal rooms.",
+    "restore_channel": "Restore",
+    "required_badge": "REQUIRED",
+    "exclude_channel": "Not needed"
   }
 }

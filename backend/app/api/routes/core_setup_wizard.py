@@ -23,6 +23,7 @@ class WizardApply(BaseModel):
     game: str = Field(default="", max_length=100)
     system_channel_name: str = Field(min_length=1, max_length=100)
     template_key: Literal["minimal", "community", "gaming", "clan", "support", "creator", "education", "business", "global_alliance", "esports", "tournament", "roleplay", "music", "technology", "marketplace"] = "community"
+    excluded_channels: list[str] = Field(default_factory=list, max_length=250)
 
 STRUCTURES = {
     "minimal": [("START", [("text","welcome",True),("text","rules",False),("text","general",False)])],
@@ -97,11 +98,15 @@ async def apply(guild_id:int,payload:WizardApply,user:User=Depends(get_current_u
     if pending: raise HTTPException(409,"Wizard setup is already running")
     profile=DiscordStructureChange(guild_id=guild_id,object_type="guild_profile",operation="update",payload={"name":payload.name.strip(),"icon_data":payload.icon_data,"description":payload.description.strip(),"game":payload.game.strip()},preview={"safe_to_apply":True,"wizard_plugin":True},status="pending",requested_by=user.id)
     db.add(profile);await db.flush();queued=[profile];system_job=None
+    excluded=set(payload.excluded_channels)
     for category_name, channels in STRUCTURES[payload.template_key]:
         if payload.template_key=="global_alliance":
             channels=[item for item in channels if item[1] not in LANGUAGE_CHANNEL_CODES]
             if category_name in {"R5 LEADERS","R5 R4","GLOBAL"}:
                 channels=[*(('text',alliance_language_channel(code,category_name),False) for code in languages),*channels]
+        channels=[item for item in channels if item[2] or f"{category_name}/{item[1]}" not in excluded]
+        if not channels:
+            continue
         category=DiscordStructureChange(guild_id=guild_id,object_type="category",operation="create",payload={"name":category_name},preview={"safe_to_apply":True,"wizard_plugin":True,"template":payload.template_key},status="pending",requested_by=user.id)
         db.add(category);await db.flush();queued.append(category)
         for channel_type,name,is_system in channels:
