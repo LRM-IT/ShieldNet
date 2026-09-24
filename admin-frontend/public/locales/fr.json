@@ -2497,5 +2497,91 @@
     "error_slowmode": "Le mode lent de Discord accepte au maximum 21600 secondes.",
     "saved": "Paramètres AntiFlood enregistrés.",
     "error_save": "Impossible d’enregistrer les paramètres AntiFlood."
+  },
+  "core_docs": {
+    "nav": "Modules centraux",
+    "label": "CŒUR DU SYSTÈME",
+    "title": "Modules centraux du système",
+    "intro": "Outils serveur intégrés disponibles selon votre profil GuildConsole et vos permissions Discord.",
+    "details": "Documentation du module",
+    "capabilities": "Opérations disponibles",
+    "access_title": "Accès et autorisations",
+    "access_text": "Le module apparaît uniquement si votre profil GuildConsole le permet. Les modifications Discord exigent aussi les permissions correspondantes et un rôle du bot supérieur aux rôles gérés.",
+    "workflow_title": "Procédure sûre",
+    "workflow_1": "Sélectionnez le bon serveur Discord et vérifiez son état synchronisé.",
+    "workflow_2": "Effectuez la modification et vérifiez l’aperçu ou la confirmation.",
+    "workflow_3": "Vérifiez le résultat dans Discord et l’historique d’audit.",
+    "modules": {
+      "overview": {
+        "name": "Vue du serveur",
+        "purpose": "Affiche la connexion, la synchronisation, l’abonnement et l’état des modules.",
+        "details": "Vérifiez l’identité du serveur, le bot, les membres, les plugins et les raccourcis."
+      },
+      "members": {
+        "name": "Membres",
+        "purpose": "Recherche et examine les membres Discord synchronisés.",
+        "details": "Ouvrez les profils, rôles et activités et effectuez les opérations autorisées."
+      },
+      "explorer": {
+        "name": "Explorateur du serveur",
+        "purpose": "Parcourt la structure Discord synchronisée.",
+        "details": "Examinez les salons, catégories, rôles et relations au même endroit."
+      },
+      "security": {
+        "name": "Sécurité",
+        "purpose": "Analyse les risques et les contrôles de sécurité.",
+        "details": "Vérifiez les permissions risquées, la position du rôle du bot et les recommandations."
+      },
+      "permissions": {
+        "name": "Permissions et simulateur",
+        "purpose": "Explique l’accès réel avant toute modification.",
+        "details": "Examinez les permissions et simulez l’accès d’un membre dans un salon."
+      },
+      "verification": {
+        "name": "Vérification",
+        "purpose": "Contrôle la vérification intégrée des membres.",
+        "details": "Configurez les exigences, rôles finaux et procédures de validation."
+      },
+      "languages": {
+        "name": "Langues du serveur",
+        "purpose": "Définit les langues des fonctions multilingues.",
+        "details": "Gérez la liste commune utilisée par les plugins de traduction et de sélection linguistique."
+      },
+      "ai": {
+        "name": "Centre IA",
+        "purpose": "Fournit les fournisseurs et routes IA partagés.",
+        "details": "Configurez les identifiants, modèles, routes, limites et tests de connexion."
+      },
+      "automations": {
+        "name": "Automatisations",
+        "purpose": "Exécute les flux planifiés et déclenchés par événements.",
+        "details": "Créez des flux et surveillez les horaires, exécutions et erreurs."
+      },
+      "audit": {
+        "name": "Journal d’audit",
+        "purpose": "Enregistre l’activité administrative.",
+        "details": "Recherchez qui a modifié les réglages, quand et avec quel résultat."
+      },
+      "backups": {
+        "name": "Sauvegardes et comparaison",
+        "purpose": "Protège la configuration par instantanés et comparaisons.",
+        "details": "Créez et comparez des instantanés puis vérifiez le plan de restauration."
+      },
+      "control": {
+        "name": "Contrôle du serveur",
+        "purpose": "Regroupe les réglages et actions protégés du serveur.",
+        "details": "Synchronisez les données, vérifiez le bot et exécutez les actions du propriétaire."
+      },
+      "runtime": {
+        "name": "Exécution des plugins",
+        "purpose": "Affiche les modules installés et leur état.",
+        "details": "Installez, activez, désactivez et examinez les plugins séparément par serveur."
+      },
+      "subscription": {
+        "name": "Abonnement du serveur",
+        "purpose": "Gère l’accès payant d’un serveur.",
+        "details": "Choisissez une durée, calculez les remises, payez ou utilisez un bon."
+      }
+    }
   }
 }

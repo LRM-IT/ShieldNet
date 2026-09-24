@@ -2496,5 +2496,91 @@
     "error_slowmode": "Tryb spowolniony Discorda obsługuje maksymalnie 21600 sekund.",
     "saved": "Ustawienia AntiFlood zapisano.",
     "error_save": "Nie udało się zapisać ustawień AntiFlood."
+  },
+  "core_docs": {
+    "nav": "Moduły rdzenia",
+    "label": "RDZEŃ SYSTEMU",
+    "title": "Moduły rdzenia systemu",
+    "intro": "Wbudowane narzędzia serwera dostępne zgodnie z profilem dostępu GuildConsole i uprawnieniami Discord.",
+    "details": "Dokumentacja modułu",
+    "capabilities": "Dostępne operacje",
+    "access_title": "Dostęp i uprawnienia",
+    "access_text": "Moduł jest widoczny tylko wtedy, gdy pozwala na to profil GuildConsole. Zmiany w Discord wymagają też odpowiednich uprawnień i roli bota nad zarządzanymi rolami.",
+    "workflow_title": "Bezpieczny przebieg pracy",
+    "workflow_1": "Wybierz właściwy serwer Discord i sprawdź stan synchronizacji.",
+    "workflow_2": "Wprowadź zmianę i sprawdź podgląd lub potwierdzenie.",
+    "workflow_3": "Sprawdź wynik w Discord i historię audytu.",
+    "modules": {
+      "overview": {
+        "name": "Przegląd serwera",
+        "purpose": "Pokazuje połączenie, synchronizację, subskrypcję i stan modułów.",
+        "details": "Sprawdź serwer, bota, członków, wtyczki i skróty do operacji."
+      },
+      "members": {
+        "name": "Członkowie",
+        "purpose": "Wyszukuje i sprawdza zsynchronizowanych członków Discord.",
+        "details": "Otwieraj profile, role i aktywność oraz wykonuj dozwolone operacje."
+      },
+      "explorer": {
+        "name": "Eksplorator serwera",
+        "purpose": "Przegląda zsynchronizowaną strukturę Discord.",
+        "details": "Sprawdź kanały, kategorie, role i zależności w jednym miejscu."
+      },
+      "security": {
+        "name": "Bezpieczeństwo",
+        "purpose": "Sprawdza ryzyka i zabezpieczenia serwera.",
+        "details": "Analizuj ryzykowne uprawnienia, pozycję roli bota i zalecenia ochrony."
+      },
+      "permissions": {
+        "name": "Uprawnienia i symulator",
+        "purpose": "Pokazuje rzeczywisty dostęp przed zmianą ustawień.",
+        "details": "Sprawdź uprawnienia i symuluj dostęp członka w wybranym kanale."
+      },
+      "verification": {
+        "name": "Weryfikacja",
+        "purpose": "Steruje wbudowaną weryfikacją członków.",
+        "details": "Skonfiguruj wymagania, role wynikowe i przebieg przeglądu."
+      },
+      "languages": {
+        "name": "Języki serwera",
+        "purpose": "Określa języki funkcji wielojęzycznych.",
+        "details": "Zarządzaj wspólną listą dla wtyczek tłumaczenia i wyboru języka."
+      },
+      "ai": {
+        "name": "Centrum AI",
+        "purpose": "Udostępnia wspólnych dostawców i trasy AI.",
+        "details": "Skonfiguruj dane dostępowe, modele, trasy, limity i testy połączenia."
+      },
+      "automations": {
+        "name": "Automatyzacje",
+        "purpose": "Uruchamia procesy według harmonogramu i zdarzeń.",
+        "details": "Twórz procesy i monitoruj harmonogramy, wykonania oraz błędy."
+      },
+      "audit": {
+        "name": "Dziennik audytu",
+        "purpose": "Rejestruje działania administracyjne.",
+        "details": "Sprawdź kto i kiedy zmienił ustawienia oraz wynik operacji."
+      },
+      "backups": {
+        "name": "Kopie i porównanie",
+        "purpose": "Chroni konfigurację migawkami i porównaniem.",
+        "details": "Twórz i porównuj migawki oraz sprawdzaj plan przywracania."
+      },
+      "control": {
+        "name": "Sterowanie serwerem",
+        "purpose": "Zawiera chronione ustawienia i działania serwera.",
+        "details": "Synchronizuj dane, sprawdzaj bota i wykonuj operacje właściciela."
+      },
+      "runtime": {
+        "name": "Środowisko wtyczek",
+        "purpose": "Pokazuje zainstalowane moduły i ich stan.",
+        "details": "Instaluj, włączaj, wyłączaj i sprawdzaj wtyczki osobno dla każdego serwera."
+      },
+      "subscription": {
+        "name": "Subskrypcja serwera",
+        "purpose": "Zarządza płatnym dostępem wybranego serwera.",
+        "details": "Wybierz okres, oblicz rabaty, zapłać lub użyj vouchera."
+      }
+    }
   }
 }

@@ -2496,5 +2496,91 @@
     "error_slowmode": "La modalità lenta di Discord supporta al massimo 21600 secondi.",
     "saved": "Impostazioni AntiFlood salvate.",
     "error_save": "Impossibile salvare le impostazioni AntiFlood."
+  },
+  "core_docs": {
+    "nav": "Moduli principali",
+    "label": "NUCLEO DEL SISTEMA",
+    "title": "Moduli principali del sistema",
+    "intro": "Strumenti server integrati disponibili in base al profilo GuildConsole e ai permessi Discord.",
+    "details": "Documentazione del modulo",
+    "capabilities": "Operazioni disponibili",
+    "access_title": "Accesso e permessi",
+    "access_text": "Il modulo appare solo se consentito dal profilo GuildConsole. Le modifiche Discord richiedono anche i permessi corretti e il ruolo del bot sopra i ruoli gestiti.",
+    "workflow_title": "Procedura sicura",
+    "workflow_1": "Seleziona il server Discord corretto e verifica lo stato sincronizzato.",
+    "workflow_2": "Applica la modifica e controlla anteprima o conferma.",
+    "workflow_3": "Verifica il risultato in Discord e la cronologia di audit.",
+    "modules": {
+      "overview": {
+        "name": "Panoramica server",
+        "purpose": "Mostra connessione, sincronizzazione, abbonamento e stato dei moduli.",
+        "details": "Controlla identità del server, bot, membri, plugin e collegamenti operativi."
+      },
+      "members": {
+        "name": "Membri",
+        "purpose": "Cerca e controlla i membri Discord sincronizzati.",
+        "details": "Apri profili, ruoli e attività ed esegui le operazioni consentite."
+      },
+      "explorer": {
+        "name": "Esplora server",
+        "purpose": "Esplora la struttura Discord sincronizzata.",
+        "details": "Controlla canali, categorie, ruoli e relazioni in un unico punto."
+      },
+      "security": {
+        "name": "Sicurezza",
+        "purpose": "Esamina rischi e controlli di sicurezza.",
+        "details": "Analizza permessi rischiosi, posizione del ruolo bot e suggerimenti di protezione."
+      },
+      "permissions": {
+        "name": "Permessi e simulatore",
+        "purpose": "Mostra l’accesso effettivo prima delle modifiche.",
+        "details": "Controlla i permessi e simula l’accesso di un membro a un canale."
+      },
+      "verification": {
+        "name": "Verifica",
+        "purpose": "Gestisce la verifica integrata dei membri.",
+        "details": "Configura requisiti, ruoli finali e procedura di revisione."
+      },
+      "languages": {
+        "name": "Lingue del server",
+        "purpose": "Definisce le lingue delle funzioni multilingue.",
+        "details": "Gestisci l’elenco comune usato dai plugin di traduzione e selezione lingua."
+      },
+      "ai": {
+        "name": "Centro IA",
+        "purpose": "Fornisce provider e percorsi IA condivisi.",
+        "details": "Configura credenziali, modelli, percorsi, limiti e test di connessione."
+      },
+      "automations": {
+        "name": "Automazioni",
+        "purpose": "Esegue flussi pianificati e basati su eventi.",
+        "details": "Crea flussi e controlla pianificazioni, esecuzioni ed errori."
+      },
+      "audit": {
+        "name": "Registro di audit",
+        "purpose": "Registra le attività amministrative.",
+        "details": "Cerca chi ha modificato le impostazioni, quando e con quale esito."
+      },
+      "backups": {
+        "name": "Backup e confronto",
+        "purpose": "Protegge la configurazione con snapshot e confronti.",
+        "details": "Crea e confronta snapshot e verifica il piano di ripristino."
+      },
+      "control": {
+        "name": "Controllo server",
+        "purpose": "Contiene impostazioni e azioni protette del server.",
+        "details": "Sincronizza i dati, controlla il bot ed esegui operazioni del proprietario."
+      },
+      "runtime": {
+        "name": "Runtime dei plugin",
+        "purpose": "Mostra moduli installati e stato operativo.",
+        "details": "Installa, abilita, disabilita e controlla i plugin separatamente per server."
+      },
+      "subscription": {
+        "name": "Abbonamento server",
+        "purpose": "Gestisce l’accesso a pagamento di un server.",
+        "details": "Scegli la durata, calcola gli sconti, paga o usa un voucher."
+      }
+    }
   }
 }

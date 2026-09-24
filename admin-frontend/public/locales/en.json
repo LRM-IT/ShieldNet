@@ -2456,5 +2456,91 @@
     "error_slowmode": "Discord Slow Mode supports a maximum of 21600 seconds.",
     "saved": "AntiFlood settings saved.",
     "error_save": "Unable to save AntiFlood settings."
+  },
+  "core_docs": {
+    "nav": "Core modules",
+    "label": "SYSTEM CORE",
+    "title": "Core system modules",
+    "intro": "Built-in server tools available according to your GuildConsole access profile and Discord permissions.",
+    "details": "Module documentation",
+    "capabilities": "Available operations",
+    "access_title": "Access and permissions",
+    "access_text": "The module is shown only when your GuildConsole access profile permits it. Discord changes also require the corresponding Discord permissions and a bot role above managed roles.",
+    "workflow_title": "Safe workflow",
+    "workflow_1": "Select the correct Discord server and review the current synchronized state.",
+    "workflow_2": "Make the required change and check the preview or confirmation when available.",
+    "workflow_3": "Verify the result in Discord and review the audit history for administrative operations.",
+    "modules": {
+      "overview": {
+        "name": "Server overview",
+        "purpose": "Shows connection, synchronization, subscription and module status.",
+        "details": "Review server identity, bot connection, member totals, installed plugins and shortcuts to core operations."
+      },
+      "members": {
+        "name": "Members",
+        "purpose": "Search and inspect synchronized Discord members.",
+        "details": "Open member profiles, review roles and activity, and perform permitted member operations."
+      },
+      "explorer": {
+        "name": "Server explorer",
+        "purpose": "Browse the synchronized Discord structure.",
+        "details": "Inspect channels, categories, roles and relationships in one place."
+      },
+      "security": {
+        "name": "Security",
+        "purpose": "Review risks and server security controls.",
+        "details": "Inspect risky permissions, bot role placement, protection state and actionable findings."
+      },
+      "permissions": {
+        "name": "Permissions and simulator",
+        "purpose": "Understand effective access before changing settings.",
+        "details": "Review role permissions and simulate member access in a selected channel."
+      },
+      "verification": {
+        "name": "Verification",
+        "purpose": "Control the built-in member verification flow.",
+        "details": "Configure requirements, result roles and review behavior for authorized operators."
+      },
+      "languages": {
+        "name": "Server languages",
+        "purpose": "Define languages used by multilingual functions.",
+        "details": "Manage the shared language list used by translation and language-selection plugins."
+      },
+      "ai": {
+        "name": "AI Center",
+        "purpose": "Provide shared AI providers and routing.",
+        "details": "Configure credentials, models, routes, usage controls and connection tests."
+      },
+      "automations": {
+        "name": "Automations",
+        "purpose": "Run scheduled and event-driven workflows.",
+        "details": "Create workflows, inspect schedules and monitor executions and failures."
+      },
+      "audit": {
+        "name": "Audit trail",
+        "purpose": "Record administrative activity in GuildConsole.",
+        "details": "Search who changed settings, when an action ran and whether it succeeded."
+      },
+      "backups": {
+        "name": "Backups and server diff",
+        "purpose": "Protect configuration with snapshots and comparisons.",
+        "details": "Create snapshots, compare states and review restore plans before applying changes."
+      },
+      "control": {
+        "name": "Server control",
+        "purpose": "Provide protected server-level settings and actions.",
+        "details": "Synchronize state, inspect bot connectivity and run owner-level operations."
+      },
+      "runtime": {
+        "name": "Plugin runtime",
+        "purpose": "Show installed modules and operating state.",
+        "details": "Install, enable, disable and inspect plugins with settings isolated per server."
+      },
+      "subscription": {
+        "name": "Server subscription",
+        "purpose": "Manage paid access for a selected server.",
+        "details": "Choose a period, calculate discounts, pay through a gateway or use a voucher."
+      }
+    }
   }
 }

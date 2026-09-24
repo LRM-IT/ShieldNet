@@ -2498,5 +2498,91 @@
     "error_slowmode": "Der Discord-Slowmode unterstützt höchstens 21600 Sekunden.",
     "saved": "AntiFlood-Einstellungen gespeichert.",
     "error_save": "AntiFlood-Einstellungen konnten nicht gespeichert werden."
+  },
+  "core_docs": {
+    "nav": "Kernmodule",
+    "label": "SYSTEMKERN",
+    "title": "Systemkernmodule",
+    "intro": "Integrierte Serverwerkzeuge, verfügbar gemäß GuildConsole-Zugriffsprofil und Discord-Berechtigungen.",
+    "details": "Moduldokumentation",
+    "capabilities": "Verfügbare Vorgänge",
+    "access_title": "Zugriff und Berechtigungen",
+    "access_text": "Das Modul wird nur angezeigt, wenn das GuildConsole-Zugriffsprofil es erlaubt. Änderungen in Discord erfordern passende Berechtigungen und eine Bot-Rolle über den verwalteten Rollen.",
+    "workflow_title": "Sicherer Arbeitsablauf",
+    "workflow_1": "Wählen Sie den richtigen Discord-Server und prüfen Sie den synchronisierten Zustand.",
+    "workflow_2": "Nehmen Sie die Änderung vor und prüfen Sie Vorschau oder Bestätigung.",
+    "workflow_3": "Prüfen Sie das Ergebnis in Discord und den Auditverlauf.",
+    "modules": {
+      "overview": {
+        "name": "Serverübersicht",
+        "purpose": "Zeigt Verbindung, Synchronisierung, Abonnement und Modulstatus.",
+        "details": "Prüfen Sie Serveridentität, Bot-Verbindung, Mitgliederzahlen, Plugins und Schnellzugriffe."
+      },
+      "members": {
+        "name": "Mitglieder",
+        "purpose": "Durchsucht und prüft synchronisierte Discord-Mitglieder.",
+        "details": "Öffnen Sie Profile, Rollen und Aktivität und führen Sie erlaubte Mitgliederaktionen aus."
+      },
+      "explorer": {
+        "name": "Server-Explorer",
+        "purpose": "Zeigt die synchronisierte Discord-Struktur.",
+        "details": "Prüfen Sie Kanäle, Kategorien, Rollen und Beziehungen an einem Ort."
+      },
+      "security": {
+        "name": "Sicherheit",
+        "purpose": "Prüft Risiken und Sicherheitskontrollen.",
+        "details": "Analysieren Sie riskante Berechtigungen, Bot-Rollenposition und Schutzempfehlungen."
+      },
+      "permissions": {
+        "name": "Berechtigungen und Simulator",
+        "purpose": "Zeigt wirksamen Zugriff vor Änderungen.",
+        "details": "Prüfen Sie Rollenrechte und simulieren Sie den Zugriff eines Mitglieds in einem Kanal."
+      },
+      "verification": {
+        "name": "Verifizierung",
+        "purpose": "Steuert die integrierte Mitgliederverifizierung.",
+        "details": "Konfigurieren Sie Anforderungen, Ergebnisrollen und den Prüfablauf."
+      },
+      "languages": {
+        "name": "Serversprachen",
+        "purpose": "Definiert Sprachen für mehrsprachige Funktionen.",
+        "details": "Verwalten Sie die gemeinsame Sprachenliste für Übersetzungs- und Sprachauswahl-Plugins."
+      },
+      "ai": {
+        "name": "AI Center",
+        "purpose": "Stellt gemeinsame KI-Anbieter und Routen bereit.",
+        "details": "Konfigurieren Sie Zugangsdaten, Modelle, Routen, Nutzungslimits und Verbindungstests."
+      },
+      "automations": {
+        "name": "Automatisierungen",
+        "purpose": "Führt geplante und ereignisgesteuerte Abläufe aus.",
+        "details": "Erstellen Sie Abläufe und überwachen Sie Zeitpläne, Ausführungen und Fehler."
+      },
+      "audit": {
+        "name": "Auditverlauf",
+        "purpose": "Protokolliert administrative Aktivitäten.",
+        "details": "Suchen Sie, wer wann Einstellungen geändert hat und ob die Aktion erfolgreich war."
+      },
+      "backups": {
+        "name": "Backups und Serververgleich",
+        "purpose": "Schützt Konfigurationen mit Snapshots und Vergleichen.",
+        "details": "Erstellen und vergleichen Sie Snapshots und prüfen Sie Wiederherstellungspläne."
+      },
+      "control": {
+        "name": "Serversteuerung",
+        "purpose": "Bietet geschützte Einstellungen und Serveraktionen.",
+        "details": "Synchronisieren Sie Daten, prüfen Sie die Bot-Verbindung und führen Sie Eigentümeraktionen aus."
+      },
+      "runtime": {
+        "name": "Plugin-Laufzeit",
+        "purpose": "Zeigt installierte Module und ihren Betriebsstatus.",
+        "details": "Installieren, aktivieren, deaktivieren und prüfen Sie Plugins getrennt je Server."
+      },
+      "subscription": {
+        "name": "Server-Abonnement",
+        "purpose": "Verwaltet bezahlten Zugriff für einen Server.",
+        "details": "Wählen Sie Laufzeit, berechnen Sie Rabatte, bezahlen Sie oder verwenden Sie einen Gutschein."
+      }
+    }
   }
 }
