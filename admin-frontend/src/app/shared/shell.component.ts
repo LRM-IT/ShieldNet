@@ -435,17 +435,22 @@ export class ShellComponent implements OnInit, OnDestroy {
     if (id) {
       commands.push(
         { id: 'members', label: 'palette.members', fallback: 'Open Members', icon: '◉', path: ['/guild', id, 'members'], guildOnly: true },
-        { id: 'guild-languages', label: 'Server languages', fallback: 'Open Server Languages', icon: '🌐', path: ['/guild', id, 'languages'], guildOnly: true },
+        { id: 'explorer', label: 'palette.explorer', fallback: 'Open Discord Explorer', icon: '⌕', path: ['/guild', id, 'explorer'], guildOnly: true },
         { id: 'security', label: 'palette.security', fallback: 'Open Security Center', icon: '◇', path: ['/guild', id, 'security'], guildOnly: true },
+        { id: 'permission-simulator', label: 'palette.permissions', fallback: 'Open Permission Simulator', icon: '⚿', path: ['/guild', id, 'permission-simulator'], guildOnly: true },
+        { id: 'permission-rules', label: 'permissions_engine.title', fallback: 'Open Permissions', icon: '⊞', path: ['/guild', id, 'permissions'], guildOnly: true },
+        { id: 'guild-languages', label: 'Server languages', fallback: 'Open Server Languages', icon: '🌐', path: ['/guild', id, 'languages'], guildOnly: true },
+        { id: 'ai-center', label: 'ai.title', fallback: 'Open AI Center', icon: 'AI', path: ['/guild', id, 'ai'], guildOnly: true },
         { id: 'runtime', label: 'palette.runtime', fallback: 'Open Plugin Runtime', icon: '⬢', path: ['/guild', id, 'plugin-runtime'], guildOnly: true },
+        { id: 'documentation', label: 'documentation.title', fallback: 'Open Documentation', icon: '?', path: ['/guild', id, 'documentation'], guildOnly: true },
         { id: 'audit', label: 'palette.audit', fallback: 'Open Audit Trail', icon: '≡', path: ['/guild', id, 'audit'], guildOnly: true },
+        { id: 'server-diff', label: 'diff.title', fallback: 'Open Server Diff', icon: '⇄', path: ['/guild', id, 'server-diff'], guildOnly: true },
         { id: 'control', label: 'palette.control', fallback: 'Open Server Control', icon: '⌬', path: ['/guild', id, 'control'], guildOnly: true },
+        { id: 'guild-access', label: 'access.title', fallback: 'Open Guild Access', icon: '⌑', path: ['/guild', id, 'access'], guildOnly: true },
         { id: 'backups', label: 'palette.backups', fallback: 'Open Backup Center', icon: '▣', path: ['/guild', id, 'backups'], guildOnly: true },
         { id: 'automations', label: 'palette.automations', fallback: 'Open Automations', icon: '⌘', path: ['/guild', id, 'automations'], guildOnly: true },
         { id: 'scheduler', label: 'palette.scheduler', fallback: 'Open Workflow Scheduler', icon: '◷', path: ['/guild', id, 'workflow-scheduler'], guildOnly: true },
         { id: 'monitor', label: 'palette.monitor', fallback: 'Open Automation Monitor', icon: '◈', path: ['/guild', id, 'automation-monitor'], guildOnly: true },
-        { id: 'explorer', label: 'palette.explorer', fallback: 'Open Discord Explorer', icon: '⌕', path: ['/guild', id, 'explorer'], guildOnly: true },
-        { id: 'permissions', label: 'palette.permissions', fallback: 'Open Permission Simulator', icon: '⚿', path: ['/guild', id, 'permission-simulator'], guildOnly: true },
       );
     }
 
@@ -516,8 +521,10 @@ export class ShellComponent implements OnInit, OnDestroy {
     return [
       { label: 'shell.overview', icon: '◫', path: ['/guild', id], exact: true },
       { label: 'shell.members', icon: '◉', path: ['/guild', id, 'members'] },
+      { label: 'explorer.title', icon: '⌕', path: ['/guild', id, 'explorer'] },
       { label: 'shell.security', icon: '◇', path: ['/guild', id, 'security'] },
       { label: 'permission.title', icon: '⚿', path: ['/guild', id, 'permission-simulator'] },
+      { label: 'permissions_engine.title', icon: '⊞', path: ['/guild', id, 'permissions'] },
       { label: 'Server languages', icon: '🌐', path: ['/guild', id, 'languages'] },
       { label: 'AI Center', icon: 'AI', path: ['/guild', id, 'ai'] },
     ];
@@ -530,6 +537,7 @@ export class ShellComponent implements OnInit, OnDestroy {
       { label: 'shell.plugin_runtime', icon: '⬢', path: ['/guild', id, 'plugin-runtime'] },
       { label: 'Documentation', icon: '?', path: ['/guild', id, 'documentation'] },
       { label: 'shell.audit_trail', icon: '≡', path: ['/guild', id, 'audit'] },
+      { label: 'diff.title', icon: '⇄', path: ['/guild', id, 'server-diff'] },
       { label: 'shell.server_control', icon: '⌬', path: ['/guild', id, 'control'] },
       { label: 'Guild access', icon: '⌑', path: ['/guild', id, 'access'] },
     ];
