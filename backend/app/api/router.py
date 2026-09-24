@@ -93,6 +93,7 @@ from app.api.routes.plugin_war_planner import router as plugin_war_planner_route
 from app.api.routes.plugin_activity_ranking import router as plugin_activity_ranking_router, internal_router as internal_plugin_activity_ranking_router
 from app.api.routes.plugin_audit_security import router as plugin_audit_security_router, internal_router as internal_plugin_audit_security_router
 from app.api.routes.plugin_cross_guild_network import router as plugin_cross_guild_network_router
+from app.api.routes.plugin_wizard import router as plugin_wizard_router
 from app.api.routes.verification_levels import router as verification_levels_router, internal_router as internal_verification_levels_router
 
 api_router = APIRouter()
@@ -188,6 +189,7 @@ api_router.include_router(internal_plugin_activity_ranking_router)
 api_router.include_router(plugin_audit_security_router)
 api_router.include_router(internal_plugin_audit_security_router)
 api_router.include_router(plugin_cross_guild_network_router)
+api_router.include_router(plugin_wizard_router)
 api_router.include_router(settings_router)
 api_router.include_router(moderation_router)
 api_router.include_router(events_router)

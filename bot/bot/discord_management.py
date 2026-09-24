@@ -1,4 +1,5 @@
 import asyncio
+import base64
 import httpx
 import discord
 from bot.config import settings
@@ -30,7 +31,29 @@ class DiscordManagementWorker:
             if guild is None: raise RuntimeError("Guild not available")
             kind, op, target_id, data = item["object_type"], item["operation"], item.get("target_id"), item.get("payload") or {}
             result = {}
-            if kind == "language_panel" and op == "publish":
+            if kind == "permission_check":
+                permissions = guild.me.guild_permissions
+                result = {
+                    "manage_guild": permissions.manage_guild,
+                    "manage_channels": permissions.manage_channels,
+                    "sufficient": permissions.manage_guild and permissions.manage_channels,
+                }
+                if not result["sufficient"]:
+                    missing = [name for name in ("manage_guild", "manage_channels") if not result[name]]
+                    raise RuntimeError("Missing Discord permissions: " + ", ".join(missing))
+            elif kind == "guild_profile" and op == "update":
+                permissions = guild.me.guild_permissions
+                if not permissions.manage_guild:
+                    raise RuntimeError("Missing Discord permission: manage_guild")
+                kwargs = {"name": data.get("name") or guild.name, "reason": "GuildConsole Setup Wizard"}
+                icon_data = data.get("icon_data")
+                if icon_data:
+                    encoded = icon_data.split(",", 1)[-1]
+                    kwargs["icon"] = base64.b64decode(encoded, validate=True)
+                description = (data.get("description") or "").strip()
+                await guild.edit(**kwargs)
+                result = {"guild_id": str(guild.id), "name": kwargs["name"], "description": description, "game": data.get("game") or ""}
+            elif kind == "language_panel" and op == "publish":
                 message = await self.bot.language_selection.publish_panel(guild, data["group_id"])
                 result = {"message_id": str(message.id), "channel_id": str(message.channel.id)}
             elif kind == "role_menu_panel" and op == "publish":
@@ -71,7 +94,11 @@ class DiscordManagementWorker:
                     else:
                         category = guild.get_channel(int(data["parent_id"])) if data.get("parent_id") else None
                         ctype = data.get("channel_type", "text")
-                        channel = await (guild.create_voice_channel(data.get("name", "new-channel"), category=category, reason="ShieldNet") if ctype == "voice" else guild.create_text_channel(data.get("name", "new-channel"), category=category, topic=data.get("topic"), nsfw=bool(data.get("nsfw", False)), reason="ShieldNet"))
+                        channel = await (guild.create_voice_channel(data.get("name", "new-channel"), category=category, reason="ShieldNet") if ctype == "voice" else guild.create_text_channel(data.get("name", "new-channel"), category=category, topic=data.get("topic"), nsfw=bool(data.get("nsfw", False)), position=data.get("position"), reason="ShieldNet"))
+                    if data.get("set_system_channel"):
+                        if not guild.me.guild_permissions.manage_guild:
+                            raise RuntimeError("Missing Discord permission: manage_guild")
+                        await guild.edit(system_channel=channel, reason="GuildConsole Setup Wizard")
                 elif channel is None:
                     raise RuntimeError("Channel not found")
                 elif op == "update":

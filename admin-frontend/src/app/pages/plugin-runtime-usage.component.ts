@@ -292,6 +292,7 @@ export class PluginRuntimeUsageComponent implements OnInit {
       voting: ['plugins', 'voting'],
       war_planner: ['plugins', 'war-planner'],
       welcome: ['plugins', 'welcome'],
+      wizard: ['plugins', 'wizard'],
     };
     return routes[pluginKey.replace(/-/g, '_')] || null;
   }
