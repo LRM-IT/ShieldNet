@@ -85,15 +85,15 @@ async def state(guild_id:int,user:User=Depends(get_current_user),db:AsyncSession
 @router.post("/discord/guilds/{guild_id}/setup-wizard/check")
 async def check(guild_id:int,user:User=Depends(get_current_user),db:AsyncSession=Depends(get_db_session)):
     await require_guild_management(db,user,guild_id)
-    languages=await enabled_language_codes(db,guild_id)
-    if payload.template_key=="global_alliance" and not languages:
-        raise HTTPException(422,{"code":"server_languages_required","message":"Configure server languages before applying the Global Game Alliance template.","settings_url":f"/guild/{guild_id}/languages"})
     job=DiscordStructureChange(guild_id=guild_id,object_type="permission_check",operation="check",payload={},preview={"safe_to_apply":True,"wizard_plugin":True},status="pending",requested_by=user.id)
     db.add(job);await db.commit();return {"job_id":str(job.id)}
 
 @router.post("/discord/guilds/{guild_id}/setup-wizard/apply")
 async def apply(guild_id:int,payload:WizardApply,user:User=Depends(get_current_user),db:AsyncSession=Depends(get_db_session)):
     await require_guild_management(db,user,guild_id)
+    languages=await enabled_language_codes(db,guild_id)
+    if payload.template_key=="global_alliance" and not languages:
+        raise HTTPException(422,{"code":"server_languages_required","message":"Configure server languages before applying the Global Game Alliance template.","settings_url":f"/guild/{guild_id}/languages"})
     pending=await db.scalar(select(DiscordStructureChange).where(DiscordStructureChange.guild_id==guild_id,DiscordStructureChange.preview["wizard_plugin"].as_boolean().is_(True),DiscordStructureChange.status.in_(["pending","processing"])))
     if pending: raise HTTPException(409,"Wizard setup is already running")
     profile=DiscordStructureChange(guild_id=guild_id,object_type="guild_profile",operation="update",payload={"name":payload.name.strip(),"icon_data":payload.icon_data,"description":payload.description.strip(),"game":payload.game.strip()},preview={"safe_to_apply":True,"wizard_plugin":True},status="pending",requested_by=user.id)
