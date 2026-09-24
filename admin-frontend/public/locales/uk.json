@@ -2567,6 +2567,9 @@
     "template_creator_help": "Контент, оголошення та кімнати прямих ефірів.",
     "template_business": "Робоча команда",
     "template_global_alliance_help": "Велика багатомовна структура для керівництва, битв, верифікації та підтримки.",
-    "template_global_alliance": "Глобальний ігровий альянс"
+    "template_global_alliance": "Глобальний ігровий альянс",
+    "open_languages": "Відкрити мови сервера",
+    "languages_required": "Спочатку налаштуйте мови сервера",
+    "languages_required_help": "Global Game Alliance створює мовні гілки лише для увімкнених мов сервера."
   }
 }

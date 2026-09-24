@@ -2634,6 +2634,9 @@
     "template_creator_help": "Content, announcements and live rooms.",
     "template_business": "Business team",
     "template_global_alliance_help": "A large multilingual structure for leadership, battles, verification and support.",
-    "template_global_alliance": "Global game alliance"
+    "template_global_alliance": "Global game alliance",
+    "open_languages": "Open server languages",
+    "languages_required": "Configure server languages first",
+    "languages_required_help": "Global Game Alliance creates language branches only for enabled server languages."
   }
 }

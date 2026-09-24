@@ -2567,6 +2567,9 @@
     "template_creator_help": "Контент, объявления и комнаты прямых эфиров.",
     "template_business": "Рабочая команда",
     "template_global_alliance_help": "Большая многоязычная структура для руководства, сражений, верификации и поддержки.",
-    "template_global_alliance": "Глобальный игровой альянс"
+    "template_global_alliance": "Глобальный игровой альянс",
+    "open_languages": "Открыть языки сервера",
+    "languages_required": "Сначала настройте языки сервера",
+    "languages_required_help": "Global Game Alliance создаёт языковые ветки только для включённых языков сервера."
   }
 }

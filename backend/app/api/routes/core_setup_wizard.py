@@ -11,6 +11,7 @@ from app.api.dependencies.guild_access import require_guild_management
 from app.db.session import get_db_session
 from app.models.core import User
 from app.models.discord import Guild
+from app.models.guild_languages import GuildLanguage
 from app.models.role_channel_management import DiscordStructureChange
 
 router = APIRouter(tags=["Core server setup wizard"])
@@ -35,6 +36,23 @@ STRUCTURES = {
     "global_alliance": [("START", [("text","welcome",True),("text","rules",False),("text","verify",False),("text","choose-language",False),("text","announcements",False)]),("VERIFICATION",[("text","how-to-verify",False),("text","apply-r5-r4",False),("text","verification-status",False),("text","approved",False),("text","rejected",False)]),("R5 LEADERS",[("text","us-r5-leader-chat-english",False),("text","kr-r5-leader-chat-korean",False),("text","jp-r5-leader-chat-japanese",False),("text","cn-r5-leader-chat-chinese",False),("text","id-r5-leader-chat-indonesian",False),("text","fr-r5-leader-chat-french",False),("text","sa-r5-leader-chat-arabic",False),("text","ru-r5-leader-chat-russian",False),("text","r5-leader-voting",False)]),("R5 R4",[("text","us-r4-r5-main-chat-english",False),("text","kr-r4-r5-chat-korean",False),("text","jp-r4-r5-chat-japanese",False),("text","de-r4-r5-chat-german",False),("text","map-rotation",False),("text","our-opponents",False),("text","voting",False),("voice","r5-r4-voice",False)]),("SVS COMMAND CENTER",[("text","svs-defense",False),("text","svs-offense",False),("text","intel-reports",False),("text","battle-plans",False),("text","command-chat",False),("text","event-schedule",False)]),("ALLIANCE BATTLES",[("text","alliance-opponents",False),("text","desert-opponents",False),("text","enemy-coordinates",False)]),("GLOBAL",[("text","us-english-chat",False),("text","eu-russian-chat",False),("text","kr-korean-chat",False),("text","jp-japanese-chat",False),("text","id-indonesian-chat",False),("text","cn-chinese-chat",False),("text","de-german-chat",False),("text","fr-french-chat",False),("text","es-spanish-chat",False),("text","sa-chat-arabic",False)]),("GAMEPLAY",[("text","recommendations-from-tops",False),("text","ascii-art",False),("text","news-and-events",False),("text","update-note",False)]),("SUPPORT CENTER",[("text","report-issue",False),("text","resolved",False),("text","suggestions",False)])],
 }
 
+LANGUAGE_CHANNEL_CODES = {
+    "us-r5-leader-chat-english":"en", "kr-r5-leader-chat-korean":"ko", "jp-r5-leader-chat-japanese":"ja", "cn-r5-leader-chat-chinese":"zh", "id-r5-leader-chat-indonesian":"id", "fr-r5-leader-chat-french":"fr", "sa-r5-leader-chat-arabic":"ar", "ru-r5-leader-chat-russian":"ru",
+    "us-r4-r5-main-chat-english":"en", "kr-r4-r5-chat-korean":"ko", "jp-r4-r5-chat-japanese":"ja", "de-r4-r5-chat-german":"de",
+    "us-english-chat":"en", "eu-russian-chat":"ru", "kr-korean-chat":"ko", "jp-japanese-chat":"ja", "id-indonesian-chat":"id", "cn-chinese-chat":"zh", "de-german-chat":"de", "fr-french-chat":"fr", "es-spanish-chat":"es", "sa-chat-arabic":"ar",
+}
+
+def alliance_language_channel(code: str, category: str) -> str:
+    prefix={"en":"us-english","uk":"ua-ukrainian","ru":"eu-russian","de":"de-german","fr":"fr-french","es":"es-spanish","it":"it-italian","pl":"pl-polish","pt":"pt-portuguese","ar":"sa-arabic","ko":"kr-korean","ja":"jp-japanese","zh":"cn-chinese","id":"id-indonesian","vi":"vn-vietnamese","lv":"lv-latvian","lt":"lt-lithuanian"}.get(code,f"{code}-{code}")
+    if category=="R5 LEADERS": return f"{prefix}-r5-leader-chat"
+    if category=="R5 R4": return f"{prefix}-r4-r5-chat"
+    return f"{prefix}-chat"
+
+async def enabled_language_codes(db: AsyncSession, guild_id: int) -> list[str]:
+    return list((await db.execute(select(GuildLanguage.language_code).where(
+        GuildLanguage.guild_id == guild_id, GuildLanguage.enabled.is_(True)
+    ).order_by(GuildLanguage.sort_order))).scalars())
+
 def change_payload(item: DiscordStructureChange | None):
     if not item: return None
     return {"id":str(item.id),"status":item.status,"message":item.result_message,"result":(item.payload or {}).get("_result",{})}
@@ -54,11 +72,15 @@ async def state(guild_id:int,user:User=Depends(get_current_user),db:AsyncSession
     completed=bool(profile and channel and batch and all(job.status=="completed" for job in batch))
     result=(channel.payload or {}).get("_result",{}) if channel else {}
     configuration={"game":(profile.payload or {}).get("game","") if profile else "","description":(profile.payload or {}).get("description","") if profile else "","system_channel_id":result.get("channel_id"),"system_channel_name":(channel.payload or {}).get("name") if channel else None}
-    return {"completed":completed,"running":any(job.status in {"pending","processing"} for job in batch),"failed_jobs":[change_payload(job) for job in batch if job.status=="failed"],"guild":{"name":guild.name,"icon_url":guild.icon_url},"permission_check":change_payload(check),"profile_job":change_payload(profile),"channel_job":change_payload(channel),"configuration":configuration}
+    languages=await enabled_language_codes(db,guild_id)
+    return {"completed":completed,"running":any(job.status in {"pending","processing"} for job in batch),"failed_jobs":[change_payload(job) for job in batch if job.status=="failed"],"guild":{"name":guild.name,"icon_url":guild.icon_url},"server_languages":languages,"permission_check":change_payload(check),"profile_job":change_payload(profile),"channel_job":change_payload(channel),"configuration":configuration}
 
 @router.post("/discord/guilds/{guild_id}/setup-wizard/check")
 async def check(guild_id:int,user:User=Depends(get_current_user),db:AsyncSession=Depends(get_db_session)):
     await require_guild_management(db,user,guild_id)
+    languages=await enabled_language_codes(db,guild_id)
+    if payload.template_key=="global_alliance" and not languages:
+        raise HTTPException(422,{"code":"server_languages_required","message":"Configure server languages before applying the Global Game Alliance template.","settings_url":f"/guild/{guild_id}/languages"})
     job=DiscordStructureChange(guild_id=guild_id,object_type="permission_check",operation="check",payload={},preview={"safe_to_apply":True,"wizard_plugin":True},status="pending",requested_by=user.id)
     db.add(job);await db.commit();return {"job_id":str(job.id)}
 
@@ -70,6 +92,10 @@ async def apply(guild_id:int,payload:WizardApply,user:User=Depends(get_current_u
     profile=DiscordStructureChange(guild_id=guild_id,object_type="guild_profile",operation="update",payload={"name":payload.name.strip(),"icon_data":payload.icon_data,"description":payload.description.strip(),"game":payload.game.strip()},preview={"safe_to_apply":True,"wizard_plugin":True},status="pending",requested_by=user.id)
     db.add(profile);await db.flush();queued=[profile];system_job=None
     for category_name, channels in STRUCTURES[payload.template_key]:
+        if payload.template_key=="global_alliance":
+            channels=[item for item in channels if item[1] not in LANGUAGE_CHANNEL_CODES]
+            if category_name in {"R5 LEADERS","R5 R4","GLOBAL"}:
+                channels=[*(('text',alliance_language_channel(code,category_name),False) for code in languages),*channels]
         category=DiscordStructureChange(guild_id=guild_id,object_type="category",operation="create",payload={"name":category_name},preview={"safe_to_apply":True,"wizard_plugin":True,"template":payload.template_key},status="pending",requested_by=user.id)
         db.add(category);await db.flush();queued.append(category)
         for channel_type,name,is_system in channels:
