@@ -440,24 +440,25 @@ class VerifyModal(
     def __init__(
         self,
         verification_client: VerificationClient,
+        guild_id: int,
+        prompt_message: discord.Message | None = None,
     ) -> None:
         super().__init__()
         self.verification_client = verification_client
+        self.guild_id = guild_id
+        self.prompt_message = prompt_message
 
     async def on_submit(
         self,
         interaction: discord.Interaction,
     ) -> None:
-        if interaction.guild is None:
-            await interaction.response.send_message(
-                "This command is available only on a server.",
-                ephemeral=True,
-            )
-            return
-
-        config = await self.verification_client.settings(interaction.guild.id)
+        config = await self.verification_client.settings(self.guild_id)
         channel_id = config.get("invocation_channel_id")
-        if not config.get("enabled") or (channel_id and str(interaction.channel_id) != channel_id):
+        if not config.get("enabled") or (
+            interaction.guild is not None
+            and channel_id
+            and str(interaction.channel_id) != channel_id
+        ):
             await interaction.response.send_message(
                 f"Use verification in <#{channel_id}>." if channel_id else "Verification is unavailable.",
                 ephemeral=True,
@@ -472,7 +473,7 @@ class VerifyModal(
         try:
             item = (
                 await self.verification_client.create_request(
-                    guild_id=interaction.guild.id,
+                    guild_id=self.guild_id,
                     discord_user_id=interaction.user.id,
                     alliance=str(self.alliance.value),
                     nickname=str(self.nickname.value),
@@ -522,13 +523,21 @@ class VerifyModal(
                 "Unexpected verification error.",
                 ephemeral=True,
             )
+            if self.prompt_message is not None:
+                try:
+                    await self.prompt_message.delete()
+                except discord.HTTPException:
+                    pass
 
 
 class VerificationStartView(discord.ui.View):
-    def __init__(self, verification_client: VerificationClient) -> None:
+    def __init__(self, verification_client: VerificationClient, guild_id: int) -> None:
         super().__init__(timeout=300)
         self.verification_client = verification_client
+        self.guild_id = guild_id
 
     @discord.ui.button(label="Start verification", style=discord.ButtonStyle.primary)
     async def start(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
-        await interaction.response.send_modal(VerifyModal(self.verification_client))
+        await interaction.response.send_modal(
+            VerifyModal(self.verification_client, self.guild_id, interaction.message)
+        )

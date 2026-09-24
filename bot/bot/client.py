@@ -97,7 +97,7 @@ class ShieldNetBot(discord.Client):
         if channel_id and str(interaction.channel_id) != channel_id:
             await interaction.response.send_message(f"Use verification in <#{channel_id}>.", ephemeral=True)
             return
-        await interaction.response.send_modal(VerifyModal(self.verification))
+        await interaction.response.send_modal(VerifyModal(self.verification, interaction.guild.id))
 
     async def _sync_verification_command(self, guild: discord.Guild) -> None:
         config = await self.verification.settings(guild.id)
@@ -620,8 +620,20 @@ class ShieldNetBot(discord.Client):
             commands = {item.strip().casefold() for item in (config.get("text_commands") or "").split(",") if item.strip()}
             if (config.get("enabled") and str(message.channel.id) == str(config.get("invocation_channel_id") or "")
                     and message.content.strip().casefold() in commands):
-                await message.reply("Select the button below to open the verification form.",
-                                    view=VerificationStartView(self.verification), mention_author=False)
+                try:
+                    await message.delete()
+                except discord.HTTPException:
+                    logger.warning("Could not delete verification trigger guild=%s message=%s", message.guild.id, message.id)
+                try:
+                    await message.author.send(
+                        f"Complete your profile for **{message.guild.name}**.",
+                        view=VerificationStartView(self.verification, message.guild.id),
+                    )
+                except discord.Forbidden:
+                    await message.channel.send(
+                        f"{message.author.mention}, enable direct messages or use the private slash command `/verify`.",
+                        delete_after=10,
+                    )
         except Exception:
             logger.exception("Verification text trigger failed guild=%s message=%s", message.guild.id, message.id)
 
