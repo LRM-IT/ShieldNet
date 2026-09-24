@@ -98,9 +98,62 @@
       "check": "Invia un annuncio di test e verifica che ci sia esattamente una copia in ogni canale del server mappato."
     },
     "moderation": {
-      "purpose": "Gestisce segnalazioni, prove, avvisi, sanzioni, appelli e il carico di lavoro dei moderatori.",
-      "configuration": "Seleziona i ruoli e i canali dei moderatori, quindi definisci categorie dei casi, sanzioni, scadenze e regole di notifica.",
-      "check": "Crea un caso di test, assegnalo, aggiungi prove, chiudilo e verifica la cronologia di audit."
+      "purpose": "Il plugin Moderazione è il centro operativo per gestire le violazioni e coordinare i moderatori di un server Discord. Riunisce segnalazioni, prove, casi, sanzioni, ricorsi, scadenze e carico di lavoro in un processo controllato.",
+      "configuration": "Seleziona ruoli dei moderatori e canali operativi. Definisci categorie di violazione, gravità, azioni consigliate, priorità, scadenze, notifiche e modelli di sanzione. Il ruolo del bot deve essere sopra tutti i ruoli gestiti e disporre delle autorizzazioni Discord necessarie.",
+      "check": "Crea una segnalazione di prova innocua, convertila in un caso, assegna moderatore e scadenza, aggiungi una prova e una nota interna, esegui un’azione di prova, chiudi il caso e verifica cronologia e statistiche.",
+      "sections": [
+        {
+          "title": "Funzionamento",
+          "items": [
+            "Una segnalazione viene creata manualmente o una violazione viene rilevata da un altro modulo.",
+            "La segnalazione viene esaminata, respinta o convertita in un caso collegato al membro.",
+            "Un moderatore prende il caso, imposta priorità e scadenza e registra prove e note interne.",
+            "La sanzione scelta viene messa in coda e il risultato viene salvato.",
+            "Il caso viene risolto o archiviato con un esito.",
+            "Se necessario, un ricorso viene deciso da un amministratore autorizzato."
+          ]
+        },
+        {
+          "title": "Casi e operazioni",
+          "items": [
+            "Tipi di violazione con gravità e risposta consigliata.",
+            "Segnalazioni con link al messaggio, canale e fino a 20 link di prova.",
+            "Casi manuali, stati, priorità, responsabile e scadenza.",
+            "Note interne, cronologia azioni, modelli di sanzione e ricorsi.",
+            "Filtri per casi aperti, in indagine, scaduti, urgenti e non assegnati.",
+            "Indicatori e carico corrente di ogni moderatore."
+          ]
+        },
+        {
+          "title": "Azioni disponibili",
+          "items": [
+            "Registrare un avviso.",
+            "Inviare un messaggio diretto.",
+            "Rimuovere un ruolo.",
+            "Espellere un membro.",
+            "Bannare un membro.",
+            "Registrare un’azione amministrativa personalizzata."
+          ]
+        },
+        {
+          "title": "Integrazione con AI AutoMod",
+          "body": "AI AutoMod può analizzare le categorie di rischio configurate e, quando conferma una violazione, eliminare il messaggio, avvisare o sospendere temporaneamente il membro, pubblicare una voce di registro e creare automaticamente un caso di moderazione."
+        },
+        {
+          "title": "Autorizzazioni Discord richieste",
+          "items": [
+            "Visualizzare membri e registro di controllo.",
+            "Moderare i membri.",
+            "Gestire i ruoli.",
+            "Espellere e bannare membri.",
+            "Inviare messaggi nei canali configurati."
+          ]
+        },
+        {
+          "title": "Copertura attuale dell’interfaccia",
+          "body": "La pagina corrente si concentra su coda dei casi, responsabili, priorità, scadenze, statistiche e carico dei moderatori. L’API supporta anche segnalazioni, prove, note, sanzioni, modelli e ricorsi; alcune funzioni possono essere disponibili in schermate collegate o in futuri aggiornamenti."
+        }
+      ]
     }
   }
 }

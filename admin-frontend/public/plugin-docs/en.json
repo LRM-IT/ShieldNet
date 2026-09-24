@@ -1,2 +1,159 @@
-{"common":{"configuration_title":"Configuration","check_title":"How to verify","troubleshooting_title":"Troubleshooting","requirements":["The GuildConsole bot is present on the Discord server.","The bot role is above every role that {plugin} must manage.","Required Discord channels and roles already exist, unless the plugin can create them."],"steps":["Open the Plugin store and install {plugin}.","Open the plugin settings from the server menu and fill every required field.","Save the settings, then enable the plugin in the store.","Run the verification scenario described on this page before using it with members."],"troubleshooting":["If enabling fails, read the error on the card and complete the missing settings.","Check the bot role position and its channel permissions.","Confirm that selected channels and roles were not deleted in Discord.","Disable and enable {plugin} after changing critical Discord permissions."]},"plugins":{"welcome":{"purpose":"Welcomes each new member and directs them to the next required server action.","configuration":"Select the welcome channel, message sequence, delays, completion role and the condition that stops reminders.","check":"Join with a test account and confirm that messages appear in order and stop after the configured role is assigned."},"antiflood":{"purpose":"Limits repeated messages and protects selected channels from floods.","configuration":"Create limits for message count and interval, select channels, exclusions and the moderation action.","check":"Send messages with a test account until the limit is reached and verify the configured warning, deletion or timeout."},"translator_groups":{"purpose":"Translates and forwards messages, files and images between language channels.","configuration":"Create a group, add at least two channels, assign one language to each and select the AI Center provider.","check":"Send text and an image in one channel and verify delivery and translation in every other group channel."},"first_introduction":{"purpose":"Assigns language roles when members react to flag messages.","configuration":"Create independent language groups, choose a channel or thread, default language, access role and role-name mask.","check":"Publish the reaction post, click each flag with a test account and verify that only the expected language role changes."},"verification_level1":{"purpose":"Verifies member identity through forms and optional AI image checks.","configuration":"Configure commands, accepted channels, nickname template, review mode, verification levels, image markers, accepted values and result roles.","check":"Complete every level with matching and non-matching test data and verify nickname, roles and review messages."},"voting":{"purpose":"Publishes polls using reusable visual templates and displays their results.","configuration":"Select a template, channel, question, choices, duration and the template markers for title and result values.","check":"Preview the poll, publish a short test vote and confirm that reactions and final results are counted correctly."},"guild-dm-broadcast":{"purpose":"Sends controlled direct-message campaigns to selected server members.","configuration":"Choose the audience, exclusions, message content, sending speed and delivery schedule; preview before starting.","check":"Send first to a small test audience and inspect delivered, skipped and failed counters."},"role_menu":{"purpose":"Lets members assign approved roles to themselves from buttons or select menus.","configuration":"Create a panel, choose its channel and layout, add roles, labels and mutually exclusive groups.","check":"Publish the panel and verify role add, remove and exclusivity behavior with a test account."},"ai_automod":{"purpose":"Uses AI Center to detect risky messages and apply moderation actions.","configuration":"Select monitored channels, excluded roles, risk categories, thresholds and actions such as warning, deletion or timeout.","check":"Use harmless test phrases for every enabled category and review the moderation log before enabling strict actions."},"event_manager":{"purpose":"Schedules events, collects RSVPs and sends reminders in Discord.","configuration":"Set the time zone, announcement channel, RSVP options, reminder intervals and optional participant roles.","check":"Create a near-term test event and confirm publication, RSVP updates and every reminder."},"war_planner":{"purpose":"Coordinates wars, waves, targets and participant assignments.","configuration":"Create the war dates, waves and targets, then assign participants and the publication channel.","check":"Publish a test plan and verify that assignments, status changes and times are visible to participants."},"activity_ranking":{"purpose":"Awards XP for text and voice activity, calculates levels and grants reward roles.","configuration":"Set XP values, cooldown, level curve, excluded channels and roles, then map reward levels to Discord roles. Keep the bot role above all reward roles.","check":"Generate test text and voice activity, confirm that the level increases, the expected role is granted and /leaderboard shows level and XP."},"audit_security":{"purpose":"Records security-sensitive Discord changes and sends filtered audit alerts.","configuration":"Select event types, audit channel, retention limit and optional role to mention for important events.","check":"Perform a harmless role or channel change and confirm a correctly formatted audit event."},"backup_restore":{"purpose":"Creates versioned snapshots and restores selected GuildConsole and Discord settings.","configuration":"Choose included sections, retention and schedule; review a restore plan before applying it.","check":"Create a snapshot, confirm its contents and test comparison without applying a destructive restore."},"cross_guild_network":{"purpose":"Links trusted Discord servers and synchronizes network announcements.","configuration":"Create a network, add trusted servers, map announcement channels and configure publishing permissions.","check":"Send a test announcement and verify exactly one copy in every mapped server channel."},"moderation":{"purpose":"Manages reports, evidence, warnings, sanctions, appeals and moderator workload.","configuration":"Select moderator roles and channels, then define case categories, sanctions, deadlines and notification rules.","check":"Create a test case, assign it, add evidence, close it and verify the audit history."}}
+{
+  "common": {
+    "configuration_title": "Configuration",
+    "check_title": "How to verify",
+    "troubleshooting_title": "Troubleshooting",
+    "requirements": [
+      "The GuildConsole bot is present on the Discord server.",
+      "The bot role is above every role that {plugin} must manage.",
+      "Required Discord channels and roles already exist, unless the plugin can create them."
+    ],
+    "steps": [
+      "Open the Plugin store and install {plugin}.",
+      "Open the plugin settings from the server menu and fill every required field.",
+      "Save the settings, then enable the plugin in the store.",
+      "Run the verification scenario described on this page before using it with members."
+    ],
+    "troubleshooting": [
+      "If enabling fails, read the error on the card and complete the missing settings.",
+      "Check the bot role position and its channel permissions.",
+      "Confirm that selected channels and roles were not deleted in Discord.",
+      "Disable and enable {plugin} after changing critical Discord permissions."
+    ]
+  },
+  "plugins": {
+    "welcome": {
+      "purpose": "Welcomes each new member and directs them to the next required server action.",
+      "configuration": "Select the welcome channel, message sequence, delays, completion role and the condition that stops reminders.",
+      "check": "Join with a test account and confirm that messages appear in order and stop after the configured role is assigned."
+    },
+    "antiflood": {
+      "purpose": "Limits repeated messages and protects selected channels from floods.",
+      "configuration": "Create limits for message count and interval, select channels, exclusions and the moderation action.",
+      "check": "Send messages with a test account until the limit is reached and verify the configured warning, deletion or timeout."
+    },
+    "translator_groups": {
+      "purpose": "Translates and forwards messages, files and images between language channels.",
+      "configuration": "Create a group, add at least two channels, assign one language to each and select the AI Center provider.",
+      "check": "Send text and an image in one channel and verify delivery and translation in every other group channel."
+    },
+    "first_introduction": {
+      "purpose": "Assigns language roles when members react to flag messages.",
+      "configuration": "Create independent language groups, choose a channel or thread, default language, access role and role-name mask.",
+      "check": "Publish the reaction post, click each flag with a test account and verify that only the expected language role changes."
+    },
+    "verification_level1": {
+      "purpose": "Verifies member identity through forms and optional AI image checks.",
+      "configuration": "Configure commands, accepted channels, nickname template, review mode, verification levels, image markers, accepted values and result roles.",
+      "check": "Complete every level with matching and non-matching test data and verify nickname, roles and review messages."
+    },
+    "voting": {
+      "purpose": "Publishes polls using reusable visual templates and displays their results.",
+      "configuration": "Select a template, channel, question, choices, duration and the template markers for title and result values.",
+      "check": "Preview the poll, publish a short test vote and confirm that reactions and final results are counted correctly."
+    },
+    "guild-dm-broadcast": {
+      "purpose": "Sends controlled direct-message campaigns to selected server members.",
+      "configuration": "Choose the audience, exclusions, message content, sending speed and delivery schedule; preview before starting.",
+      "check": "Send first to a small test audience and inspect delivered, skipped and failed counters."
+    },
+    "role_menu": {
+      "purpose": "Lets members assign approved roles to themselves from buttons or select menus.",
+      "configuration": "Create a panel, choose its channel and layout, add roles, labels and mutually exclusive groups.",
+      "check": "Publish the panel and verify role add, remove and exclusivity behavior with a test account."
+    },
+    "ai_automod": {
+      "purpose": "Uses AI Center to detect risky messages and apply moderation actions.",
+      "configuration": "Select monitored channels, excluded roles, risk categories, thresholds and actions such as warning, deletion or timeout.",
+      "check": "Use harmless test phrases for every enabled category and review the moderation log before enabling strict actions."
+    },
+    "event_manager": {
+      "purpose": "Schedules events, collects RSVPs and sends reminders in Discord.",
+      "configuration": "Set the time zone, announcement channel, RSVP options, reminder intervals and optional participant roles.",
+      "check": "Create a near-term test event and confirm publication, RSVP updates and every reminder."
+    },
+    "war_planner": {
+      "purpose": "Coordinates wars, waves, targets and participant assignments.",
+      "configuration": "Create the war dates, waves and targets, then assign participants and the publication channel.",
+      "check": "Publish a test plan and verify that assignments, status changes and times are visible to participants."
+    },
+    "activity_ranking": {
+      "purpose": "Awards XP for text and voice activity, calculates levels and grants reward roles.",
+      "configuration": "Set XP values, cooldown, level curve, excluded channels and roles, then map reward levels to Discord roles. Keep the bot role above all reward roles.",
+      "check": "Generate test text and voice activity, confirm that the level increases, the expected role is granted and /leaderboard shows level and XP."
+    },
+    "audit_security": {
+      "purpose": "Records security-sensitive Discord changes and sends filtered audit alerts.",
+      "configuration": "Select event types, audit channel, retention limit and optional role to mention for important events.",
+      "check": "Perform a harmless role or channel change and confirm a correctly formatted audit event."
+    },
+    "backup_restore": {
+      "purpose": "Creates versioned snapshots and restores selected GuildConsole and Discord settings.",
+      "configuration": "Choose included sections, retention and schedule; review a restore plan before applying it.",
+      "check": "Create a snapshot, confirm its contents and test comparison without applying a destructive restore."
+    },
+    "cross_guild_network": {
+      "purpose": "Links trusted Discord servers and synchronizes network announcements.",
+      "configuration": "Create a network, add trusted servers, map announcement channels and configure publishing permissions.",
+      "check": "Send a test announcement and verify exactly one copy in every mapped server channel."
+    },
+    "moderation": {
+      "purpose": "The Moderation plugin is the operational center for processing violations and coordinating Discord server moderators. It brings reports, evidence, cases, sanctions, appeals, deadlines and moderator workload into one controlled workflow.",
+      "configuration": "Choose moderator roles and operational channels. Define violation categories, severity, recommended actions, case priorities, deadlines, notification rules and reusable sanction templates. Confirm that the bot role is above every managed role and has the required Discord permissions.",
+      "check": "Create a harmless test report, convert it into a case, assign a moderator and deadline, attach evidence and a private note, apply a test action, close the case and verify its history and statistics.",
+      "sections": [
+        {
+          "title": "How it works",
+          "items": [
+            "A report is submitted manually or a violation is detected by another module.",
+            "The report is reviewed, rejected or converted into a case linked to the member.",
+            "A moderator takes ownership, sets priority and a deadline, and records evidence and internal notes.",
+            "An appropriate sanction is queued and its execution result is stored.",
+            "The case is resolved or dismissed with an outcome.",
+            "If necessary, an appeal is submitted and decided by an authorized administrator."
+          ]
+        },
+        {
+          "title": "Cases and operations",
+          "items": [
+            "Violation types with severity and a recommended response.",
+            "Reports with a message link, channel and up to 20 evidence links.",
+            "Manual cases, statuses, priorities, responsible moderator and deadline.",
+            "Private or service notes, action history, sanction templates and appeals.",
+            "Queue filters for open, investigating, overdue, urgent and unassigned cases.",
+            "Dashboard counters and live workload for each moderator."
+          ]
+        },
+        {
+          "title": "Available moderation actions",
+          "items": [
+            "Record a warning.",
+            "Send a direct message.",
+            "Remove a role.",
+            "Kick a member.",
+            "Ban a member.",
+            "Record a custom administrative action."
+          ]
+        },
+        {
+          "title": "AI AutoMod integration",
+          "body": "AI AutoMod can analyze configured risk categories and, when a violation is confirmed, delete the message, warn or time out the member, publish a log entry and automatically create a Moderation case."
+        },
+        {
+          "title": "Required Discord permissions",
+          "items": [
+            "View members and the audit log.",
+            "Moderate members.",
+            "Manage roles.",
+            "Kick and ban members.",
+            "Send messages in configured channels."
+          ]
+        },
+        {
+          "title": "Current interface coverage",
+          "body": "The current plugin page focuses on the operational case queue, ownership, priority, deadlines, statistics and moderator workload. The platform API also supports reports, evidence, notes, sanctions, templates and appeals; some of these functions may be exposed through related screens or later interface updates."
+        }
+      ]
+    }
+  }
 }

@@ -98,9 +98,62 @@
       "check": "Senden Sie eine Testankündigung und überprüfen Sie genau eine Kopie in jedem zugeordneten Serverkanal."
     },
     "moderation": {
-      "purpose": "Verwaltet Meldungen, Beweise, Verwarnungen, Sanktionen, Einsprüche und die Arbeitslast der Moderatoren.",
-      "configuration": "Wählen Sie Moderatorenrollen und Kanäle aus und definieren Sie dann Fallkategorien, Sanktionen, Fristen und Benachrichtigungsregeln.",
-      "check": "Erstellen Sie einen Testfall, weisen Sie ihn zu, fügen Sie Beweise hinzu, schließen Sie ihn ab und überprüfen Sie den Audit-Verlauf."
+      "purpose": "Das Moderations-Plugin ist die Einsatzzentrale für Verstöße und die Koordination der Moderatoren eines Discord-Servers. Es bündelt Meldungen, Beweise, Fälle, Sanktionen, Einsprüche, Fristen und Arbeitslast in einem kontrollierten Ablauf.",
+      "configuration": "Wählen Sie Moderatorenrollen und Arbeitskanäle. Definieren Sie Verstoßkategorien, Schweregrade, empfohlene Maßnahmen, Prioritäten, Fristen, Benachrichtigungsregeln und Sanktionsvorlagen. Die Bot-Rolle muss über allen verwalteten Rollen stehen und die erforderlichen Discord-Berechtigungen besitzen.",
+      "check": "Erstellen Sie eine harmlose Testmeldung, wandeln Sie sie in einen Fall um, weisen Sie Moderator und Frist zu, ergänzen Sie Beweis und interne Notiz, führen Sie eine Testmaßnahme aus, schließen Sie den Fall und prüfen Sie Verlauf und Statistik.",
+      "sections": [
+        {
+          "title": "Arbeitsablauf",
+          "items": [
+            "Eine Meldung wird manuell erstellt oder ein anderes Modul erkennt einen Verstoß.",
+            "Die Meldung wird geprüft, abgelehnt oder in einen mit dem Mitglied verknüpften Fall umgewandelt.",
+            "Ein Moderator übernimmt den Fall, setzt Priorität und Frist und dokumentiert Beweise und interne Notizen.",
+            "Die gewählte Sanktion wird eingereiht und ihr Ergebnis gespeichert.",
+            "Der Fall wird mit einem Ergebnis gelöst oder verworfen.",
+            "Bei Bedarf wird ein Einspruch von einem berechtigten Administrator entschieden."
+          ]
+        },
+        {
+          "title": "Fälle und Betrieb",
+          "items": [
+            "Verstoßtypen mit Schweregrad und empfohlener Reaktion.",
+            "Meldungen mit Nachrichtenlink, Kanal und bis zu 20 Beweislinks.",
+            "Manuelle Fälle, Status, Priorität, Verantwortlicher und Frist.",
+            "Interne Notizen, Aktionsverlauf, Sanktionsvorlagen und Einsprüche.",
+            "Filter für offene, untersuchte, überfällige, dringende und nicht zugewiesene Fälle.",
+            "Statuskennzahlen und aktuelle Arbeitslast je Moderator."
+          ]
+        },
+        {
+          "title": "Verfügbare Maßnahmen",
+          "items": [
+            "Verwarnung dokumentieren.",
+            "Direktnachricht senden.",
+            "Rolle entfernen.",
+            "Mitglied entfernen.",
+            "Mitglied sperren.",
+            "Eigene administrative Maßnahme dokumentieren."
+          ]
+        },
+        {
+          "title": "Integration mit AI AutoMod",
+          "body": "AI AutoMod kann konfigurierte Risikokategorien analysieren und bei einem bestätigten Verstoß die Nachricht löschen, das Mitglied verwarnen oder zeitweise sperren, einen Protokolleintrag veröffentlichen und automatisch einen Moderationsfall anlegen."
+        },
+        {
+          "title": "Erforderliche Discord-Berechtigungen",
+          "items": [
+            "Mitglieder und Audit-Log anzeigen.",
+            "Mitglieder moderieren.",
+            "Rollen verwalten.",
+            "Mitglieder entfernen und sperren.",
+            "Nachrichten in konfigurierten Kanälen senden."
+          ]
+        },
+        {
+          "title": "Aktueller Umfang der Oberfläche",
+          "body": "Die aktuelle Plugin-Seite konzentriert sich auf Fallwarteschlange, Zuständigkeit, Priorität, Fristen, Statistiken und Moderatorauslastung. Die Plattform-API unterstützt zusätzlich Meldungen, Beweise, Notizen, Sanktionen, Vorlagen und Einsprüche; einige Funktionen können über verbundene Ansichten oder spätere UI-Updates bereitgestellt werden."
+        }
+      ]
     }
   }
 }

@@ -98,9 +98,62 @@
       "check": "Envoyez une annonce de test et vérifiez qu’il n’y a exactement qu’une copie dans chaque salon de serveur associé."
     },
     "moderation": {
-      "purpose": "Gère les signalements, les preuves, les avertissements, les sanctions, les appels et la charge de travail des modérateurs.",
-      "configuration": "Sélectionnez les rôles et salons de modération, puis définissez les catégories de cas, les sanctions, les délais et les règles de notification.",
-      "check": "Créez un cas de test, attribuez-le, ajoutez des preuves, clôturez-le et vérifiez l’historique d’audit."
+      "purpose": "Le plugin Modération est le centre opérationnel de traitement des infractions et de coordination des modérateurs d’un serveur Discord. Il réunit signalements, preuves, dossiers, sanctions, appels, délais et charge de travail dans un processus contrôlé.",
+      "configuration": "Sélectionnez les rôles de modération et les salons de travail. Définissez les catégories d’infraction, la gravité, les actions recommandées, les priorités, les délais, les notifications et les modèles de sanction. Le rôle du bot doit être au-dessus des rôles gérés et disposer des autorisations Discord requises.",
+      "check": "Créez un signalement de test inoffensif, convertissez-le en dossier, attribuez un modérateur et une échéance, ajoutez une preuve et une note interne, exécutez une action de test, clôturez le dossier puis vérifiez son historique et les statistiques.",
+      "sections": [
+        {
+          "title": "Fonctionnement",
+          "items": [
+            "Un signalement est créé manuellement ou une infraction est détectée par un autre module.",
+            "Le signalement est examiné, rejeté ou converti en dossier lié au membre.",
+            "Un modérateur prend le dossier, fixe priorité et échéance, puis consigne preuves et notes internes.",
+            "La sanction choisie est mise en file d’attente et son résultat est enregistré.",
+            "Le dossier est résolu ou classé avec un résultat.",
+            "Si nécessaire, un appel est examiné par un administrateur autorisé."
+          ]
+        },
+        {
+          "title": "Dossiers et opérations",
+          "items": [
+            "Types d’infraction avec gravité et réponse recommandée.",
+            "Signalements avec lien du message, salon et jusqu’à 20 liens de preuve.",
+            "Dossiers manuels, statuts, priorités, responsable et échéance.",
+            "Notes internes, historique des actions, modèles de sanction et appels.",
+            "Filtres des dossiers ouverts, en enquête, en retard, urgents et non attribués.",
+            "Indicateurs et charge actuelle de chaque modérateur."
+          ]
+        },
+        {
+          "title": "Actions disponibles",
+          "items": [
+            "Enregistrer un avertissement.",
+            "Envoyer un message privé.",
+            "Retirer un rôle.",
+            "Expulser un membre.",
+            "Bannir un membre.",
+            "Enregistrer une action administrative personnalisée."
+          ]
+        },
+        {
+          "title": "Intégration avec AI AutoMod",
+          "body": "AI AutoMod peut analyser les catégories de risque configurées et, lorsqu’une infraction est confirmée, supprimer le message, avertir ou suspendre temporairement le membre, publier une entrée de journal et créer automatiquement un dossier de modération."
+        },
+        {
+          "title": "Autorisations Discord requises",
+          "items": [
+            "Voir les membres et le journal d’audit.",
+            "Modérer les membres.",
+            "Gérer les rôles.",
+            "Expulser et bannir des membres.",
+            "Envoyer des messages dans les salons configurés."
+          ]
+        },
+        {
+          "title": "Couverture actuelle de l’interface",
+          "body": "La page actuelle se concentre sur la file des dossiers, les responsables, les priorités, les délais, les statistiques et la charge des modérateurs. L’API prend aussi en charge signalements, preuves, notes, sanctions, modèles et appels; certaines fonctions peuvent apparaître dans des écrans associés ou de futures mises à jour."
+        }
+      ]
     }
   }
 }

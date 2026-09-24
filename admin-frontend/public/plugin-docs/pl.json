@@ -98,9 +98,62 @@
       "check": "Wyślij testowe ogłoszenie i sprawdź dokładnie jedną kopię w każdym mapowanym kanale serwera."
     },
     "moderation": {
-      "purpose": "Zarządza zgłoszeniami, dowodami, ostrzeżeniami, sankcjami, odwołaniami i obciążeniem moderatorów.",
-      "configuration": "Wybierz role i kanały moderatorów, a następnie zdefiniuj kategorie spraw, sankcje, terminy i reguły powiadomień.",
-      "check": "Utwórz testową sprawę, przypisz ją, dodaj dowody, zamknij ją i zweryfikuj historię audytu."
+      "purpose": "Wtyczka Moderacja jest centrum operacyjnym do obsługi naruszeń i koordynowania moderatorów serwera Discord. Łączy zgłoszenia, dowody, sprawy, sankcje, odwołania, terminy i obciążenie moderatorów w jednym kontrolowanym procesie.",
+      "configuration": "Wybierz role moderatorów i kanały robocze. Zdefiniuj kategorie naruszeń, wagę, zalecane działania, priorytety, terminy, powiadomienia i szablony sankcji. Rola bota musi znajdować się ponad wszystkimi zarządzanymi rolami i mieć wymagane uprawnienia Discord.",
+      "check": "Utwórz nieszkodliwe zgłoszenie testowe, przekształć je w sprawę, przypisz moderatora i termin, dodaj dowód oraz notatkę wewnętrzną, wykonaj działanie testowe, zamknij sprawę i sprawdź historię oraz statystyki.",
+      "sections": [
+        {
+          "title": "Zasada działania",
+          "items": [
+            "Zgłoszenie jest tworzone ręcznie albo naruszenie wykrywa inny moduł.",
+            "Zgłoszenie jest sprawdzane, odrzucane lub przekształcane w sprawę powiązaną z członkiem.",
+            "Moderator przejmuje sprawę, ustala priorytet i termin oraz zapisuje dowody i notatki.",
+            "Wybrana sankcja trafia do kolejki, a jej wynik jest zapisywany.",
+            "Sprawa zostaje rozwiązana lub odrzucona z podaniem wyniku.",
+            "W razie potrzeby odwołanie rozpatruje uprawniony administrator."
+          ]
+        },
+        {
+          "title": "Sprawy i operacje",
+          "items": [
+            "Typy naruszeń z wagą i zalecaną reakcją.",
+            "Zgłoszenia z linkiem do wiadomości, kanałem i maksymalnie 20 linkami do dowodów.",
+            "Sprawy ręczne, statusy, priorytety, odpowiedzialny moderator i termin.",
+            "Notatki wewnętrzne, historia działań, szablony sankcji i odwołania.",
+            "Filtry spraw otwartych, badanych, zaległych, pilnych i nieprzypisanych.",
+            "Wskaźniki i bieżące obciążenie każdego moderatora."
+          ]
+        },
+        {
+          "title": "Dostępne działania",
+          "items": [
+            "Zarejestrować ostrzeżenie.",
+            "Wysłać wiadomość prywatną.",
+            "Usunąć rolę.",
+            "Wyrzucić członka.",
+            "Zbanować członka.",
+            "Zarejestrować własne działanie administracyjne."
+          ]
+        },
+        {
+          "title": "Integracja z AI AutoMod",
+          "body": "AI AutoMod może analizować skonfigurowane kategorie ryzyka i po potwierdzeniu naruszenia usunąć wiadomość, ostrzec lub czasowo wyciszyć członka, opublikować wpis w dzienniku i automatycznie utworzyć sprawę moderacyjną."
+        },
+        {
+          "title": "Wymagane uprawnienia Discord",
+          "items": [
+            "Wyświetlanie członków i dziennika audytu.",
+            "Moderowanie członków.",
+            "Zarządzanie rolami.",
+            "Wyrzucanie i banowanie członków.",
+            "Wysyłanie wiadomości w skonfigurowanych kanałach."
+          ]
+        },
+        {
+          "title": "Aktualny zakres interfejsu",
+          "body": "Obecna strona skupia się na kolejce spraw, odpowiedzialności, priorytetach, terminach, statystykach i obciążeniu moderatorów. API obsługuje również zgłoszenia, dowody, notatki, sankcje, szablony i odwołania; część funkcji może być dostępna w powiązanych ekranach lub przyszłych aktualizacjach."
+        }
+      ]
     }
   }
 }
