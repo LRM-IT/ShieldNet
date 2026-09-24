@@ -3,6 +3,7 @@ import { ActivatedRoute, Router, RouterLink, RouterLinkActive } from '@angular/r
 import { TranslatePipe } from '../core/translate.pipe';
 import { EventBusService } from '../core/event-bus.service';
 import { ThemeService } from '../core/theme.service';
+import { TranslationService } from '../core/translation.service';
 
 import { AuthService } from '../core/auth.service';
 import {
@@ -455,7 +456,8 @@ export class ShellComponent implements OnInit, OnDestroy {
     const query = this.paletteQuery().trim().toLowerCase();
     if (!query) return this.paletteCommands();
     return this.paletteCommands().filter((command) =>
-      `${command.id} ${command.label} ${command.fallback}`.toLowerCase().includes(query),
+      `${command.id} ${command.label} ${command.fallback} ${this.i18n.t(command.label, command.fallback)}`
+        .toLowerCase().includes(query),
     );
   });
 
@@ -589,6 +591,7 @@ export class ShellComponent implements OnInit, OnDestroy {
     private readonly route: ActivatedRoute,
     private readonly guildPluginService: GuildPluginService,
     private readonly router: Router,
+    private readonly i18n: TranslationService,
     public readonly themes: ThemeService,
     public readonly eventBus: EventBusService,
   ) {}
