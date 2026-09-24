@@ -59,6 +59,6 @@ export class PublicDocumentationComponent implements OnInit {
   async loadModuleTiers(){try{const pricing=await firstValueFrom(this.http.get<PublicPricing>('/api/v1/public/pricing'));this.moduleTiers.set(Object.fromEntries((pricing.modules??[]).map(item=>[item.plugin_key,item.is_free])))}catch{this.moduleTiers.set({})}}
   isFree(key:string){return this.moduleTiers()[key.replaceAll('-','_')]===true}
   replacePlugin(value:string,name:string){return value.replaceAll('{plugin}',name)}
-  pluginName(key:string){const normalized=({verification_level1:'verification',first_introduction:'language_selection'} as Record<string,string>)[key]||key;return this.i18n.t(`plugin_names.${normalized}`,key.replaceAll('_',' '))}
+  pluginName(key:string){const normalized=({verification_level1:'verification',first_introduction:'language_selection','guild-dm-broadcast':'guild_dm_broadcast'} as Record<string,string>)[key]||key;return this.i18n.t(`plugin_names.${normalized}`,key.replaceAll('_',' '))}
   pluginIcon(key:string){return ({welcome:'W',antiflood:'A',translator_groups:'T',first_introduction:'F',verification_level1:'V',voting:'✓','guild-dm-broadcast':'G',role_menu:'R',ai_automod:'AI',event_manager:'E',war_planner:'⚔',activity_ranking:'XP',audit_security:'S',backup_restore:'B',cross_guild_network:'C',moderation:'M'} as Record<string,string>)[key]||'P'}
 }

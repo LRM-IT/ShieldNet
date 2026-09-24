@@ -73,7 +73,7 @@ export class DocumentationComponent implements OnInit{
   coreText(id:string,field:'name'|'purpose'|'details',fallback:string){return this.i18n.t(`core_docs.modules.${id}.${field}`,fallback)}
   catalogGuide(key:string):LocalGuide|null{return this.docs()?.plugins?.[key]||null}
   catalogName(key:string):string{return this.i18n.t(`plugin_names.${this.pluginNameKey(key)}`,key.replaceAll('_',' ').replaceAll('-',' '))}
-  pluginNameKey(key:string):string{return ({verification_level1:'verification',first_introduction:'language_selection'} as Record<string,string>)[key]||key}
+  pluginNameKey(key:string):string{return ({verification_level1:'verification',first_introduction:'language_selection','guild-dm-broadcast':'guild_dm_broadcast'} as Record<string,string>)[key]||key}
   catalogIcon(key:string):string{return ({welcome:'W',antiflood:'A',translator_groups:'T',first_introduction:'F',verification_level1:'V',voting:'✓','guild-dm-broadcast':'DM',role_menu:'R',ai_automod:'AI',event_manager:'E',war_planner:'⚔',activity_ranking:'XP',audit_security:'S',backup_restore:'B',cross_guild_network:'C',moderation:'M'} as Record<string,string>)[key]||'P'}
   replacePlugin(value:string,name:string){return value.replaceAll('{plugin}',name)}
   guide(plugin:GuildPluginMarketplaceItem):Guide{const known:Record<string,Guide>={
