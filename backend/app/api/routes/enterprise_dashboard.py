@@ -21,6 +21,7 @@ from app.models.notifications import PlatformNotification
 from app.models.plugins import GuildPluginInstallation
 from app.models.runtime import RuntimeHeartbeat
 from app.models.security import SecurityFinding, SecuritySeverity
+from app.services.global_access import GlobalAccessService
 
 router = APIRouter(prefix="/platform/dashboard", tags=["Enterprise Dashboard"])
 
@@ -30,7 +31,7 @@ def _enum_value(value: object) -> str:
 
 
 async def _accessible_guilds(session: AsyncSession, user: User) -> list[Guild]:
-    if getattr(user, "is_superadmin", False):
+    if GlobalAccessService.is_superadmin(user):
         query = select(Guild).order_by(Guild.name)
     else:
         query = (
@@ -183,7 +184,7 @@ async def enterprise_overview(
         await redis.aclose()
 
     guild_cards = []
-    for guild in guilds[:12]:
+    for guild in guilds:
         guild_cards.append({
             "guild_id": str(guild.guild_id),
             "name": guild.name,
@@ -211,7 +212,7 @@ async def enterprise_overview(
     return {
         "generated_at": now.isoformat(),
         "overall_status": overall_status,
-        "scope": "global" if getattr(current_user, "is_superadmin", False) else "assigned",
+        "scope": "global" if GlobalAccessService.is_superadmin(current_user) else "assigned",
         "components": {
             "backend": {"status": "online"},
             "postgresql": {"status": "online", "latency_ms": db_latency_ms},
