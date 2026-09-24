@@ -19,7 +19,9 @@
       "Sprawdź pozycję roli bota oraz jej uprawnienia do kanałów.",
       "Potwierdź, że wybrane kanały i role nie zostały usunięte w Discordzie.",
       "Wyłącz i włącz {plugin} ponownie po zmianie krytycznych uprawnień Discorda."
-    ]
+    ],
+    "full_documentation": "Pełna dokumentacja",
+    "close": "Zamknij"
   },
   "plugins": {
     "welcome": {
@@ -98,9 +100,9 @@
       "check": "Wyślij testowe ogłoszenie i sprawdź dokładnie jedną kopię w każdym mapowanym kanale serwera."
     },
     "moderation": {
-      "purpose": "Wtyczka Moderacja jest centrum operacyjnym do obsługi naruszeń i koordynowania moderatorów serwera Discord. Łączy zgłoszenia, dowody, sprawy, sankcje, odwołania, terminy i obciążenie moderatorów w jednym kontrolowanym procesie.",
-      "configuration": "Wybierz role moderatorów i kanały robocze. Zdefiniuj kategorie naruszeń, wagę, zalecane działania, priorytety, terminy, powiadomienia i szablony sankcji. Rola bota musi znajdować się ponad wszystkimi zarządzanymi rolami i mieć wymagane uprawnienia Discord.",
-      "check": "Utwórz nieszkodliwe zgłoszenie testowe, przekształć je w sprawę, przypisz moderatora i termin, dodaj dowód oraz notatkę wewnętrzną, wykonaj działanie testowe, zamknij sprawę i sprawdź historię oraz statystyki.",
+      "purpose": "Zarządza zgłoszeniami, dowodami, ostrzeżeniami, sankcjami, odwołaniami i obciążeniem moderatorów.",
+      "configuration": "Wybierz role i kanały moderatorów, a następnie zdefiniuj kategorie spraw, sankcje, terminy i reguły powiadomień.",
+      "check": "Utwórz testową sprawę, przypisz ją, dodaj dowody, zamknij ją i zweryfikuj historię audytu.",
       "sections": [
         {
           "title": "Zasada działania",

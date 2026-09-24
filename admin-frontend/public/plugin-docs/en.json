@@ -19,7 +19,9 @@
       "Check the bot role position and its channel permissions.",
       "Confirm that selected channels and roles were not deleted in Discord.",
       "Disable and enable {plugin} after changing critical Discord permissions."
-    ]
+    ],
+    "full_documentation": "Full documentation",
+    "close": "Close"
   },
   "plugins": {
     "welcome": {
@@ -98,9 +100,9 @@
       "check": "Send a test announcement and verify exactly one copy in every mapped server channel."
     },
     "moderation": {
-      "purpose": "The Moderation plugin is the operational center for processing violations and coordinating Discord server moderators. It brings reports, evidence, cases, sanctions, appeals, deadlines and moderator workload into one controlled workflow.",
-      "configuration": "Choose moderator roles and operational channels. Define violation categories, severity, recommended actions, case priorities, deadlines, notification rules and reusable sanction templates. Confirm that the bot role is above every managed role and has the required Discord permissions.",
-      "check": "Create a harmless test report, convert it into a case, assign a moderator and deadline, attach evidence and a private note, apply a test action, close the case and verify its history and statistics.",
+      "purpose": "Manages reports, evidence, warnings, sanctions, appeals and moderator workload.",
+      "configuration": "Select moderator roles and channels, then define case categories, sanctions, deadlines and notification rules.",
+      "check": "Create a test case, assign it, add evidence, close it and verify the audit history.",
       "sections": [
         {
           "title": "How it works",

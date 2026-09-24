@@ -19,7 +19,9 @@
       "Überprüfen Sie die Position der Bot-Rolle und ihre Kanalberechtigungen.",
       "Bestätigen Sie, dass ausgewählte Kanäle und Rollen in Discord nicht gelöscht wurden.",
       "Deaktivieren und aktivieren Sie {plugin} erneut, nachdem Sie kritische Discord-Berechtigungen geändert haben."
-    ]
+    ],
+    "full_documentation": "Vollständige Dokumentation",
+    "close": "Schließen"
   },
   "plugins": {
     "welcome": {
@@ -98,9 +100,9 @@
       "check": "Senden Sie eine Testankündigung und überprüfen Sie genau eine Kopie in jedem zugeordneten Serverkanal."
     },
     "moderation": {
-      "purpose": "Das Moderations-Plugin ist die Einsatzzentrale für Verstöße und die Koordination der Moderatoren eines Discord-Servers. Es bündelt Meldungen, Beweise, Fälle, Sanktionen, Einsprüche, Fristen und Arbeitslast in einem kontrollierten Ablauf.",
-      "configuration": "Wählen Sie Moderatorenrollen und Arbeitskanäle. Definieren Sie Verstoßkategorien, Schweregrade, empfohlene Maßnahmen, Prioritäten, Fristen, Benachrichtigungsregeln und Sanktionsvorlagen. Die Bot-Rolle muss über allen verwalteten Rollen stehen und die erforderlichen Discord-Berechtigungen besitzen.",
-      "check": "Erstellen Sie eine harmlose Testmeldung, wandeln Sie sie in einen Fall um, weisen Sie Moderator und Frist zu, ergänzen Sie Beweis und interne Notiz, führen Sie eine Testmaßnahme aus, schließen Sie den Fall und prüfen Sie Verlauf und Statistik.",
+      "purpose": "Verwaltet Meldungen, Beweise, Verwarnungen, Sanktionen, Einsprüche und die Arbeitslast der Moderatoren.",
+      "configuration": "Wählen Sie Moderatorenrollen und Kanäle aus und definieren Sie dann Fallkategorien, Sanktionen, Fristen und Benachrichtigungsregeln.",
+      "check": "Erstellen Sie einen Testfall, weisen Sie ihn zu, fügen Sie Beweise hinzu, schließen Sie ihn ab und überprüfen Sie den Audit-Verlauf.",
       "sections": [
         {
           "title": "Arbeitsablauf",

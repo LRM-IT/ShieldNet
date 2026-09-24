@@ -19,7 +19,9 @@
       "Controlla la posizione del ruolo del bot e i suoi permessi sui canali.",
       "Conferma che i canali e i ruoli selezionati non siano stati eliminati in Discord.",
       "Disabilita e riabilita {plugin} dopo aver modificato i permessi critici di Discord."
-    ]
+    ],
+    "full_documentation": "Documentazione completa",
+    "close": "Chiudi"
   },
   "plugins": {
     "welcome": {
@@ -98,9 +100,9 @@
       "check": "Invia un annuncio di test e verifica che ci sia esattamente una copia in ogni canale del server mappato."
     },
     "moderation": {
-      "purpose": "Il plugin Moderazione è il centro operativo per gestire le violazioni e coordinare i moderatori di un server Discord. Riunisce segnalazioni, prove, casi, sanzioni, ricorsi, scadenze e carico di lavoro in un processo controllato.",
-      "configuration": "Seleziona ruoli dei moderatori e canali operativi. Definisci categorie di violazione, gravità, azioni consigliate, priorità, scadenze, notifiche e modelli di sanzione. Il ruolo del bot deve essere sopra tutti i ruoli gestiti e disporre delle autorizzazioni Discord necessarie.",
-      "check": "Crea una segnalazione di prova innocua, convertila in un caso, assegna moderatore e scadenza, aggiungi una prova e una nota interna, esegui un’azione di prova, chiudi il caso e verifica cronologia e statistiche.",
+      "purpose": "Gestisce segnalazioni, prove, avvisi, sanzioni, appelli e il carico di lavoro dei moderatori.",
+      "configuration": "Seleziona i ruoli e i canali dei moderatori, quindi definisci categorie dei casi, sanzioni, scadenze e regole di notifica.",
+      "check": "Crea un caso di test, assegnalo, aggiungi prove, chiudilo e verifica la cronologia di audit.",
       "sections": [
         {
           "title": "Funzionamento",
