@@ -97,6 +97,7 @@ async def get_settings(
         "invocation_channel_id": str(item.invocation_channel_id) if item.invocation_channel_id else None,
         "text_commands": item.text_commands,
         "slash_command_name": item.slash_command_name,
+        "channel_cleanup_minutes": item.channel_cleanup_minutes,
         "nickname_template": item.nickname_template,
         "auto_approve": item.auto_approve,
         "alliance_min_length": item.alliance_min_length,

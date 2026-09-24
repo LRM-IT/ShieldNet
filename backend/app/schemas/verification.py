@@ -12,6 +12,7 @@ class VerificationSettingsInput(BaseModel):
     invocation_channel_id: int | None = None
     text_commands: str = Field(default="!verify", max_length=255)
     slash_command_name: str = Field(default="verify", min_length=1, max_length=32)
+    channel_cleanup_minutes: int = Field(default=0, ge=0, le=10080)
     nickname_template: str = Field(
         default="[{alliance}] {nickname}",
         min_length=3,

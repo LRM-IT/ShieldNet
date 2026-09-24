@@ -64,6 +64,11 @@ import { DiscordChannelPickerComponent } from '../shared/discord-channel-picker.
           <small class="muted">{{'verification.slash_command_help'|snT:'Use lowercase Latin letters, numbers, _ or -. Discord updates the command automatically after saving.'}}</small>
         </label>
 
+        <label>{{'verification.cleanup_minutes'|snT:'Delete channel messages older than, minutes'}}
+          <input type="number" min="0" max="10080" [(ngModel)]="channelCleanupMinutes">
+          <small class="muted">{{'verification.cleanup_minutes_help'|snT:'All messages in the verification channel older than this value are deleted. Set 0 to disable cleanup.'}}</small>
+        </label>
+
         <label>
           {{ "verification.verified_role" | snT:"Verified role" }}
           <select [(ngModel)]="verifiedRoleId">
@@ -638,6 +643,7 @@ export class VerificationComponent
   invocationChannelId = '';
   textCommands = '!verify';
   slashCommandName = 'verify';
+  channelCleanupMinutes = 0;
   nicknameTemplate = '[{alliance}] {nickname}';
   allianceMin = 2;
   allianceMax = 8;
@@ -671,6 +677,7 @@ export class VerificationComponent
     this.invocationChannelId = settings.invocation_channel_id ? String(settings.invocation_channel_id) : '';
     this.textCommands = settings.text_commands || '';
     this.slashCommandName = settings.slash_command_name || 'verify';
+    this.channelCleanupMinutes = Number(settings.channel_cleanup_minutes || 0);
     this.nicknameTemplate =
       settings.nickname_template;
     this.allianceMin =
@@ -827,6 +834,7 @@ export class VerificationComponent
           invocation_channel_id: this.invocationChannelId || null,
           text_commands: this.textCommands,
           slash_command_name: this.slashCommandName,
+          channel_cleanup_minutes: Number(this.channelCleanupMinutes || 0),
           nickname_template:
             this.nicknameTemplate,
           auto_approve: true,

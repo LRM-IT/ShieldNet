@@ -603,7 +603,9 @@
     "settings_saved": "Paramètres de vérification enregistrés.",
     "settings_save_error": "Impossible d’enregistrer vos paramètres.",
     "reason_required_error": "Le motif est requis.",
-    "decision_save_error": "Impossible d'enregistrer cette décision."
+    "decision_save_error": "Impossible d'enregistrer cette décision.",
+    "cleanup_minutes": "Supprimer les messages du canal plus anciens que, minutes",
+    "cleanup_minutes_help": "Tous les messages du canal de vérification plus anciens que cette valeur sont supprimés. 0 désactive le nettoyage."
   },
   "members": {
     "title": "Members Control Center",

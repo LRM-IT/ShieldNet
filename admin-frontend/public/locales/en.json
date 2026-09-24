@@ -602,7 +602,9 @@
     "settings_saved": "Verification settings saved.",
     "settings_save_error": "Unable to save verification settings.",
     "reason_required_error": "Reason is required.",
-    "decision_save_error": "Unable to save this decision."
+    "decision_save_error": "Unable to save this decision.",
+    "cleanup_minutes": "Delete channel messages older than, minutes",
+    "cleanup_minutes_help": "All messages in the verification channel older than this value are deleted. Set 0 to disable cleanup."
   },
   "members": {
     "title": "Members Control Center",

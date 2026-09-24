@@ -604,7 +604,9 @@
     "settings_saved": "تم حفظ إعدادات التحقق.",
     "settings_save_error": "تعذر حفظ إعدادات التحقق.",
     "reason_required_error": "السبب مطلوب.",
-    "decision_save_error": "تعذر حفظ هذا القرار."
+    "decision_save_error": "تعذر حفظ هذا القرار.",
+    "cleanup_minutes": "حذف رسائل القناة الأقدم من، بالدقائق",
+    "cleanup_minutes_help": "تُحذف جميع الرسائل في قناة التحقق الأقدم من هذه القيمة. استخدم 0 لتعطيل التنظيف."
   },
   "members": {
     "title": "Members Control Center",

@@ -604,7 +604,9 @@
     "settings_saved": "Verifizierungseinstellungen gespeichert.",
     "settings_save_error": "Die Verifizierungseinstellungen konnten nicht gespeichert werden.",
     "reason_required_error": "Grund ist erforderlich",
-    "decision_save_error": "Diese Entscheidung konnte nicht gespeichert werden."
+    "decision_save_error": "Diese Entscheidung konnte nicht gespeichert werden.",
+    "cleanup_minutes": "Kanalnachrichten löschen, die älter sind als, Minuten",
+    "cleanup_minutes_help": "Alle Nachrichten im Verifizierungskanal, die älter als dieser Wert sind, werden gelöscht. 0 deaktiviert die Bereinigung."
   },
   "members": {
     "title": "Members Control Center",

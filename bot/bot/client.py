@@ -2,7 +2,7 @@ from bot.verification import VerificationClient, VerifyModal, VerificationStartV
 from bot.permissions import PermissionClient
 import asyncio
 import logging
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 import discord
 import json
@@ -394,6 +394,7 @@ class ShieldNetBot(discord.Client):
             logger.info("Commands synchronized: %s", len(synced))
         self.periodic_sync.start()
         self.verification_loop.start()
+        self.verification_channel_cleanup_loop.start()
         self.verification_notification_loop.start()
         self.leadership_sync_loop.start()
         self.discord_management_loop.start()
@@ -869,6 +870,29 @@ class ShieldNetBot(discord.Client):
 
     @verification_loop.before_loop
     async def before_verification_loop(self) -> None:
+        await self.wait_until_ready()
+
+    @tasks.loop(minutes=1)
+    async def verification_channel_cleanup_loop(self) -> None:
+        for guild in self.guilds:
+            try:
+                config = await self.verification.settings(guild.id)
+                minutes = int(config.get("channel_cleanup_minutes") or 0)
+                channel_id = config.get("invocation_channel_id")
+                if not config.get("enabled") or minutes <= 0 or not channel_id:
+                    continue
+                channel = guild.get_channel_or_thread(int(channel_id))
+                if channel is None:
+                    channel = await guild.fetch_channel(int(channel_id))
+                cutoff = discord.utils.utcnow() - timedelta(minutes=minutes)
+                deleted = await channel.purge(before=cutoff, limit=None, bulk=True, reason="GuildConsole verification channel cleanup")
+                if deleted:
+                    logger.info("Verification channel cleaned: guild=%s channel=%s messages=%s", guild.id, channel_id, len(deleted))
+            except Exception:
+                logger.exception("Verification channel cleanup failed: guild=%s", guild.id)
+
+    @verification_channel_cleanup_loop.before_loop
+    async def before_verification_channel_cleanup_loop(self) -> None:
         await self.wait_until_ready()
 
     @tasks.loop(seconds=10)

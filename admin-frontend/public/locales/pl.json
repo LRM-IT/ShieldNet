@@ -602,7 +602,9 @@
     "settings_saved": "Ustawienia weryfikacji zapisane.",
     "settings_save_error": "Nie udało się zapisać ustawień weryfikacji.",
     "reason_required_error": "Powód jest wymagany.",
-    "decision_save_error": "Nie udało się zapisać tej decyzji."
+    "decision_save_error": "Nie udało się zapisać tej decyzji.",
+    "cleanup_minutes": "Usuwaj wiadomości kanału starsze niż, minuty",
+    "cleanup_minutes_help": "Wszystkie wiadomości na kanale weryfikacji starsze niż ta wartość zostaną usunięte. 0 wyłącza czyszczenie."
   },
   "members": {
     "title": "Members Control Center",

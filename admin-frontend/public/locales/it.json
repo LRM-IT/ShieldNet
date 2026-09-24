@@ -602,7 +602,9 @@
     "settings_saved": "Impostazioni di verifica salvate.",
     "settings_save_error": "Impossibile salvare le impostazioni di verifica.",
     "reason_required_error": "Il motivo è richiesto.",
-    "decision_save_error": "Impossibile salvare questa decisione."
+    "decision_save_error": "Impossibile salvare questa decisione.",
+    "cleanup_minutes": "Elimina i messaggi del canale più vecchi di, minuti",
+    "cleanup_minutes_help": "Tutti i messaggi nel canale di verifica più vecchi di questo valore vengono eliminati. 0 disattiva la pulizia."
   },
   "members": {
     "title": "Members Control Center",
