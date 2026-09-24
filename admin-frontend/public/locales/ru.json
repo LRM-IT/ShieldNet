@@ -2570,6 +2570,18 @@
     "template_global_alliance": "Глобальный игровой альянс",
     "open_languages": "Открыть языки сервера",
     "languages_required": "Сначала настройте языки сервера",
-    "languages_required_help": "Global Game Alliance создаёт языковые ветки только для включённых языков сервера."
+    "languages_required_help": "Global Game Alliance создаёт языковые ветки только для включённых языков сервера.",
+    "template_music_help": "Релизы, отзывы и студийные комнаты.",
+    "template_esports_help": "Матчи, тренировки и управление командой.",
+    "template_esports": "Киберспортивная команда",
+    "template_roleplay": "Ролевая игра",
+    "template_music": "Музыкальное сообщество",
+    "template_roleplay_help": "Персонажи, история мира и игровые сцены.",
+    "template_technology_help": "Разработка, инциденты и выпуски.",
+    "template_technology": "Технический проект",
+    "template_tournament_help": "Регистрация, матчи и результаты.",
+    "template_tournament": "Турнир",
+    "template_marketplace": "Торговая площадка",
+    "template_marketplace_help": "Объявления, отзывы и комнаты сделок."
   }
 }

@@ -2637,6 +2637,18 @@
     "template_global_alliance": "Global game alliance",
     "open_languages": "Open server languages",
     "languages_required": "Configure server languages first",
-    "languages_required_help": "Global Game Alliance creates language branches only for enabled server languages."
+    "languages_required_help": "Global Game Alliance creates language branches only for enabled server languages.",
+    "template_music_help": "Releases, feedback and studio rooms.",
+    "template_esports_help": "Matches, practice and team management.",
+    "template_esports": "Esports team",
+    "template_roleplay": "Roleplay",
+    "template_music": "Music community",
+    "template_roleplay_help": "Characters, lore and roleplay scenes.",
+    "template_technology_help": "Development, incidents and releases.",
+    "template_technology": "Technology project",
+    "template_tournament_help": "Registration, matches and results.",
+    "template_tournament": "Tournament",
+    "template_marketplace": "Marketplace",
+    "template_marketplace_help": "Listings, reviews and deal rooms."
   }
 }
