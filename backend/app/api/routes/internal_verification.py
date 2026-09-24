@@ -91,12 +91,6 @@ async def create_request(
             detail="Invalid nickname template.",
         ) from exc
 
-    initial_status = (
-        "approved"
-        if settings.auto_approve
-        else "pending"
-    )
-
     item = VerificationRequest(
         guild_id=guild_id,
         discord_user_id=payload.discord_user_id,
@@ -104,12 +98,8 @@ async def create_request(
         nickname=nickname,
         server_number=server_number,
         requested_nickname=requested_nickname,
-        status=initial_status,
-        decided_at=(
-            datetime.now(UTC)
-            if settings.auto_approve
-            else None
-        ),
+        status="approved",
+        decided_at=datetime.now(UTC),
     )
     session.add(item)
 

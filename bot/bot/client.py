@@ -1,4 +1,4 @@
-from bot.verification import VerificationClient, VerifyModal, VerificationReviewView, VerificationStartView
+from bot.verification import VerificationClient, VerifyModal, VerificationStartView
 from bot.permissions import PermissionClient
 import asyncio
 import logging
@@ -389,14 +389,12 @@ class ShieldNetBot(discord.Client):
                 await interaction.followup.send(chunk, ephemeral=private)
 
     async def setup_hook(self) -> None:
-        self.add_view(VerificationReviewView(self.verification))
         if settings.sync_commands_on_start:
             synced = await self.tree.sync()
             logger.info("Commands synchronized: %s", len(synced))
         self.periodic_sync.start()
         self.verification_loop.start()
         self.verification_notification_loop.start()
-        self.verification_review_loop.start()
         self.leadership_sync_loop.start()
         self.discord_management_loop.start()
         self.guild_dm_broadcast_loop.start()

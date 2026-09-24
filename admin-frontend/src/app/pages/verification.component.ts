@@ -49,18 +49,6 @@ import { DiscordChannelPickerComponent } from '../shared/discord-channel-picker.
           {{ "verification.enabled" | snT:"Verification module enabled" }}
         </label>
 
-        <label class="check">
-          <input
-            type="checkbox"
-            [(ngModel)]="autoApprove"
-          >
-          {{ "verification.auto_approve" | snT:"Automatically approve new requests" }}
-        </label>
-
-        <label>{{ "verification.review_channel" | snT:"Review channel" }}
-          <sn-discord-channel-picker [guildId]="guildId" [value]="reviewChannelId || null" (valueChange)="reviewChannelId=$event || ''" />
-        </label>
-
         <label>{{'verification.invocation_channel'|snT:'Verification command channel or thread'}}
           <sn-discord-channel-picker [guildId]="guildId" [value]="invocationChannelId || null" (valueChange)="invocationChannelId=$event || ''" />
           <small class="muted">{{'verification.invocation_channel_help'|snT:'Text commands and /verify are accepted only in this channel or thread.'}}</small>
@@ -336,26 +324,6 @@ import { DiscordChannelPickerComponent } from '../shared/discord-channel-picker.
                 <button class="btn" (click)="requeue(item)">{{ "verification.requeue" | snT:"Requeue" }}</button>
               }
 
-              @if (item.status === 'pending') {
-                <div class="buttons">
-                  <button class="btn secondary" (click)="resendReview(item)">{{ "verification.resend" | snT:"Resend" }}</button>
-                  <button class="btn danger" (click)="cancel(item)">{{ "verification.cancel" | snT:"Cancel" }}</button>
-                  <button
-                    class="btn"
-                    (click)="openApprove(item)"
-                  >
-                    {{'verification.approve'|snT:'Approve'}}
-                  </button>
-
-                  <button class="btn secondary" (click)="openChanges(item)">{{ "verification.request_changes" | snT:"Request changes" }}</button>
-                  <button
-                    class="btn danger"
-                    (click)="openReject(item)"
-                  >
-                    {{'verification.reject'|snT:'Reject'}}
-                  </button>
-                </div>
-              }
             </div>
           </article>
         }
@@ -855,14 +823,13 @@ export class VerificationComponent
           enabled: this.enabled,
           verified_role_id:
             this.verifiedRoleId,
-          review_channel_id: this.reviewChannelId || null,
+          review_channel_id: null,
           invocation_channel_id: this.invocationChannelId || null,
           text_commands: this.textCommands,
           slash_command_name: this.slashCommandName,
           nickname_template:
             this.nicknameTemplate,
-          auto_approve:
-            this.autoApprove,
+          auto_approve: true,
           alliance_min_length:
             Number(this.allianceMin),
           alliance_max_length:

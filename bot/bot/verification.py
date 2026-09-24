@@ -484,9 +484,8 @@ class VerifyModal(
 
             if status == "approved":
                 message = (
-                    "Verification request created and "
-                    "automatically approved.\n"
-                    "GuildConsole will apply it shortly."
+                    "Your profile has been submitted.\n"
+                    "GuildConsole will update your nickname and role shortly."
                 )
             else:
                 message = (
