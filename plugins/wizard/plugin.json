@@ -6,7 +6,7 @@
   "author": "LRM-IT",
   "min_core_version": "5.1.0",
   "category": "administration",
-  "components": {"backend": true, "frontend": true, "bot": true},
+  "components": {"backend": true, "frontend": true, "bot": false},
   "capabilities": ["manage_guild", "manage_channels"],
   "ui": {"navigation": {"label": "Setup Wizard", "icon": "✨", "route": "plugins/wizard"}},
   "entrypoints": {"backend": "runtime:WizardPlugin", "frontend": "admin-frontend/src/app/pages/plugin-wizard.component.ts"},
