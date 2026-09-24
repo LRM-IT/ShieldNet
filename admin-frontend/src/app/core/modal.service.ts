@@ -18,6 +18,7 @@ export interface ModalRequest {
   cancelLabel: string;
   danger: boolean;
   required: boolean;
+  matchValue: string | null;
   rows: ModalDetailRow[];
   raw: string;
   copyLabel: string;
@@ -47,6 +48,7 @@ export class ModalService {
         cancelLabel: options.cancelLabel ?? 'Cancel',
         danger: options.danger ?? false,
         required: false,
+        matchValue: null,
         rows: [],
         raw: '',
         copyLabel: 'Copy',
@@ -72,6 +74,7 @@ export class ModalService {
         cancelLabel: options.cancelLabel ?? 'Cancel',
         danger: options.danger ?? false,
         required: options.required ?? false,
+        matchValue: options.matchValue ?? null,
         rows: [],
         raw: '',
         copyLabel: 'Copy',
@@ -101,6 +104,7 @@ export class ModalService {
       cancelLabel: '',
       danger: options.danger ?? false,
       required: false,
+      matchValue: null,
       rows,
       raw: options.raw ?? '',
       copyLabel: options.copyLabel ?? 'Copy',

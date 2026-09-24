@@ -60,7 +60,7 @@ import { ToastService } from '../core/toast.service';
             } @else {
               <button type="button" class="secondary" (click)="close()">{{ request.cancelLabel }}</button>
               <button type="button" class="primary" [class.danger]="request.danger"
-                      [disabled]="request.kind === 'prompt' && request.required && !inputValue().trim()"
+                      [disabled]="request.kind === 'prompt' && ((request.required && !inputValue().trim()) || (request.matchValue !== null && inputValue().trim() !== request.matchValue))"
                       (click)="submit()">
                 {{ request.confirmLabel }}
               </button>
@@ -128,6 +128,7 @@ export class ModalHostComponent {
     if (request.kind === 'prompt') {
       const value = this.inputValue();
       if (request.required && !value.trim()) return;
+      if (request.matchValue !== null && value.trim() !== request.matchValue) return;
       this.modal.resolve(value);
     }
   }

@@ -2673,6 +2673,9 @@
     "nav": "All servers",
     "members": "Members",
     "heading": "Server registry",
-    "delete_record": "Delete permanently"
+    "delete_record": "Delete permanently",
+    "delete_title": "Delete server record",
+    "type_id_confirm": "To permanently delete {name} and all saved settings, enter the server ID: {id}",
+    "delete_error": "Unable to delete the server."
   }
 }

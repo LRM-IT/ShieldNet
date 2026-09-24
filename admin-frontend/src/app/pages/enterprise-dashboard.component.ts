@@ -21,6 +21,7 @@ import { TranslatePipe } from '../core/translate.pipe';
 import { ShellComponent } from '../shared/shell.component';
 import { AuthService } from '../core/auth.service';
 import { ModalService } from '../core/modal.service';
+import { TranslationService } from '../core/translation.service';
 
 @Component({
   standalone: true,
@@ -189,6 +190,7 @@ export class EnterpriseDashboardComponent implements OnInit, OnDestroy {
     private readonly dashboard: EnterpriseDashboardService,
     readonly auth: AuthService,
     private readonly modal: ModalService,
+    private readonly i18n: TranslationService,
     private readonly operationsService: OperationsService,
     private readonly notificationService: NotificationService,
     readonly eventBus: EventBusService,
@@ -203,9 +205,22 @@ export class EnterpriseDashboardComponent implements OnInit, OnDestroy {
   }
 
   async removeGuild(guild: EnterpriseDashboardOverview['guilds'][number]): Promise<void> {
-    if (!await this.modal.confirm(`Permanently delete ${guild.name} and all saved settings?`, {title:'Delete server',confirmLabel:'Delete permanently',cancelLabel:'Cancel',danger:true})) return;
+    const confirmation = await this.modal.prompt(
+      this.i18n.t('platform_servers.type_id_confirm', 'To permanently delete {name} and all saved settings, enter the server ID: {id}')
+        .replace('{name}', guild.name).replace('{id}', guild.guild_id),
+      '',
+      {
+        title: this.i18n.t('platform_servers.delete_title', 'Delete server record'),
+        confirmLabel: this.i18n.t('platform_servers.delete_record', 'Delete permanently'),
+        cancelLabel: this.i18n.t('ui.cancel', 'Cancel'),
+        danger: true,
+        required: true,
+        matchValue: guild.guild_id,
+      },
+    );
+    if (confirmation === null) return;
     try { await this.dashboard.removeGuild(guild.guild_id); await this.load(); }
-    catch (error:any) { this.error.set(error?.error?.detail || 'Unable to delete the server.'); }
+    catch (error:any) { this.error.set(error?.error?.detail || this.i18n.t('platform_servers.delete_error', 'Unable to delete the server.')); }
   }
 
   ngOnInit(): void {
