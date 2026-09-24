@@ -1241,7 +1241,8 @@
     "request_count": "requests",
     "tooltip_requests": "requests",
     "tooltip_errors": "errors",
-    "tooltip_limited": "rate limited"
+    "tooltip_limited": "rate limited",
+    "not_installed": "Non installato"
   },
   "palette": {
     "open": "Open command palette",
@@ -1917,7 +1918,17 @@
     "features": "Funzioni principali",
     "purpose": "Scopo",
     "free_badge": "Gratuito",
-    "paid_badge": "A pagamento"
+    "paid_badge": "A pagamento",
+    "requirements": "Prima di iniziare",
+    "install_step": "L’installazione crea una configurazione separata per questo server Discord.",
+    "enable_step": "L’attivazione verifica l’accesso e avvia l’ambiente del plugin.",
+    "disable_step": "La disattivazione interrompe l’elaborazione mantenendo le impostazioni.",
+    "remove_step": "La disinstallazione rimuove definitivamente l’installazione e le impostazioni del server.",
+    "choose_server": "Scegli un server Discord dalla pagina Server.",
+    "open_plugins": "Apri lo store dei plugin nel menu di amministrazione del server.",
+    "install_enable": "Installa il plugin richiesto, configuralo e poi attivalo.",
+    "load_error": "Impossibile caricare la documentazione del plugin.",
+    "not_found": "Documentazione del plugin non trovata."
   },
   "server_cards": {
     "not_paid": "Accesso a pagamento non attivo",

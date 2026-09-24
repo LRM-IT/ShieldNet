@@ -1241,7 +1241,8 @@
     "request_count": "requests",
     "tooltip_requests": "requests",
     "tooltip_errors": "errors",
-    "tooltip_limited": "rate limited"
+    "tooltip_limited": "rate limited",
+    "not_installed": "Nie zainstalowano"
   },
   "palette": {
     "open": "Open command palette",
@@ -1917,7 +1918,17 @@
     "features": "Główne funkcje",
     "purpose": "Przeznaczenie",
     "free_badge": "Bezpłatny",
-    "paid_badge": "Płatny"
+    "paid_badge": "Płatny",
+    "requirements": "Przed rozpoczęciem",
+    "install_step": "Instalacja tworzy osobną konfigurację dla tego serwera Discord.",
+    "enable_step": "Włączenie sprawdza dostęp i uruchamia środowisko wtyczki.",
+    "disable_step": "Wyłączenie zatrzymuje przetwarzanie, zachowując ustawienia.",
+    "remove_step": "Odinstalowanie trwale usuwa instalację i ustawienia serwera.",
+    "choose_server": "Wybierz serwer Discord na stronie Serwery.",
+    "open_plugins": "Otwórz sklep z wtyczkami w menu administracyjnym serwera.",
+    "install_enable": "Zainstaluj wymaganą wtyczkę, skonfiguruj ją, a następnie włącz.",
+    "load_error": "Nie udało się wczytać dokumentacji wtyczki.",
+    "not_found": "Nie znaleziono dokumentacji wtyczki."
   },
   "server_cards": {
     "not_paid": "Płatny dostęp nie jest aktywny",

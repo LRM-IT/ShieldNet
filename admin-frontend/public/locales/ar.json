@@ -1243,7 +1243,8 @@
     "request_count": "requests",
     "tooltip_requests": "requests",
     "tooltip_errors": "errors",
-    "tooltip_limited": "rate limited"
+    "tooltip_limited": "rate limited",
+    "not_installed": "غير مثبت"
   },
   "palette": {
     "open": "Open command palette",
@@ -1919,7 +1920,17 @@
     "features": "الميزات الرئيسية",
     "purpose": "الغرض",
     "free_badge": "مجاني",
-    "paid_badge": "مدفوع"
+    "paid_badge": "مدفوع",
+    "requirements": "قبل أن تبدأ",
+    "install_step": "ينشئ التثبيت إعدادات مستقلة لهذا الخادم على Discord.",
+    "enable_step": "يتحقق التفعيل من الصلاحيات ويشغّل بيئة الإضافة.",
+    "disable_step": "يوقف التعطيل المعالجة مع الاحتفاظ بالإعدادات.",
+    "remove_step": "تزيل إزالة التثبيت الإضافة وإعداداتها من الخادم نهائيًا.",
+    "choose_server": "اختر خادم Discord من صفحة الخوادم.",
+    "open_plugins": "افتح متجر الإضافات من قائمة إدارة الخادم.",
+    "install_enable": "ثبّت الإضافة المطلوبة واضبطها ثم فعّلها.",
+    "load_error": "تعذر تحميل وثائق الإضافة.",
+    "not_found": "لم يتم العثور على وثائق الإضافة."
   },
   "server_cards": {
     "not_paid": "الوصول المدفوع غير نشط",
