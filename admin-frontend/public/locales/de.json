@@ -1930,7 +1930,8 @@
     "open_plugins": "Öffnen Sie den Plugin-Shop im Verwaltungsmenü des Servers.",
     "install_enable": "Installieren und konfigurieren Sie das benötigte Plugin und aktivieren Sie es anschließend.",
     "load_error": "Die Plugin-Dokumentation konnte nicht geladen werden.",
-    "not_found": "Die Plugin-Dokumentation wurde nicht gefunden."
+    "not_found": "Die Plugin-Dokumentation wurde nicht gefunden.",
+    "plugin_generic": "das Plugin"
   },
   "server_cards": {
     "not_paid": "Bezahlter Zugang ist nicht aktiv",

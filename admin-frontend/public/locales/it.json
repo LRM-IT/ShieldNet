@@ -1928,7 +1928,8 @@
     "open_plugins": "Apri lo store dei plugin nel menu di amministrazione del server.",
     "install_enable": "Installa il plugin richiesto, configuralo e poi attivalo.",
     "load_error": "Impossibile caricare la documentazione del plugin.",
-    "not_found": "Documentazione del plugin non trovata."
+    "not_found": "Documentazione del plugin non trovata.",
+    "plugin_generic": "il plugin"
   },
   "server_cards": {
     "not_paid": "Accesso a pagamento non attivo",

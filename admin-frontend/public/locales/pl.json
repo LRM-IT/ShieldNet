@@ -1928,7 +1928,8 @@
     "open_plugins": "Otwórz sklep z wtyczkami w menu administracyjnym serwera.",
     "install_enable": "Zainstaluj wymaganą wtyczkę, skonfiguruj ją, a następnie włącz.",
     "load_error": "Nie udało się wczytać dokumentacji wtyczki.",
-    "not_found": "Nie znaleziono dokumentacji wtyczki."
+    "not_found": "Nie znaleziono dokumentacji wtyczki.",
+    "plugin_generic": "wtyczkę"
   },
   "server_cards": {
     "not_paid": "Płatny dostęp nie jest aktywny",

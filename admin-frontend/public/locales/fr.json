@@ -1929,7 +1929,8 @@
     "open_plugins": "Ouvrez la boutique de plugins dans le menu d’administration du serveur.",
     "install_enable": "Installez le plugin requis, configurez-le, puis activez-le.",
     "load_error": "Impossible de charger la documentation du plugin.",
-    "not_found": "La documentation du plugin est introuvable."
+    "not_found": "La documentation du plugin est introuvable.",
+    "plugin_generic": "le plugin"
   },
   "server_cards": {
     "not_paid": "Accès payant non actif",

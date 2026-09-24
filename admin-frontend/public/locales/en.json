@@ -1888,7 +1888,8 @@
     "open_plugins": "Open Plugin store in the server administration menu.",
     "install_enable": "Install the required plugin, configure it, then enable it.",
     "load_error": "Unable to load plugin documentation.",
-    "not_found": "Plugin documentation was not found."
+    "not_found": "Plugin documentation was not found.",
+    "plugin_generic": "the plugin"
   },
   "server_cards": {
     "not_paid": "Paid access is not active",
