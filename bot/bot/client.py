@@ -121,7 +121,7 @@ class ShieldNetBot(discord.Client):
         logger.info("Verification slash command synchronized guild=%s command=/%s", guild.id, desired)
 
     def _register_commands(self) -> None:
-        @self.tree.command(name="shieldnet_status", description="Show ShieldNet status.")
+        @self.tree.command(name="guildconsole_status", description="Show GuildConsole status.")
         async def status(interaction: discord.Interaction) -> None:
             if interaction.guild is None:
                 await interaction.response.send_message("Server only.", ephemeral=True)
@@ -129,7 +129,7 @@ class ShieldNetBot(discord.Client):
             state = self.cache.get(interaction.guild.id)
             revision = state.configuration_revision if state else 0
             await interaction.response.send_message(
-                f"ShieldNet online. Revision: {revision}",
+                f"GuildConsole online. Revision: {revision}",
                 ephemeral=True,
             )
 
@@ -148,7 +148,7 @@ class ShieldNetBot(discord.Client):
             embed = discord.Embed(title="🏆 Levels & rewards", description=text, colour=discord.Colour.gold())
             await interaction.followup.send(embed=embed)
 
-        @self.tree.command(name="shieldnet_modules", description="Show enabled modules.")
+        @self.tree.command(name="guildconsole_modules", description="Show enabled GuildConsole modules.")
         async def modules(interaction: discord.Interaction) -> None:
             if interaction.guild is None:
                 await interaction.response.send_message("Server only.", ephemeral=True)
@@ -167,7 +167,7 @@ class ShieldNetBot(discord.Client):
                 ephemeral=True,
             )
 
-        @self.tree.command(name="shieldnet_reload", description="Reload ShieldNet settings.")
+        @self.tree.command(name="guildconsole_reload", description="Reload GuildConsole settings.")
         @app_commands.default_permissions(manage_guild=True)
         async def reload_cmd(interaction: discord.Interaction) -> None:
             if not await self._can_manage(interaction):
@@ -179,7 +179,7 @@ class ShieldNetBot(discord.Client):
                 ephemeral=True,
             )
 
-        @self.tree.command(name="shieldnet_clear_cache", description="Clear ShieldNet cache.")
+        @self.tree.command(name="guildconsole_clear_cache", description="Clear GuildConsole cache.")
         @app_commands.default_permissions(manage_guild=True)
         async def clear_cmd(interaction: discord.Interaction) -> None:
             if not await self._can_manage(interaction):
@@ -348,7 +348,7 @@ class ShieldNetBot(discord.Client):
                 if exc.status_code == 404:
                     message = (
                         "No AI provider is configured for the Translator module on this server. "
-                        "Configure translator/translation in ShieldNet AI & Integrations."
+                        "Configure translator/translation in GuildConsole AI & Integrations."
                     )
                 await interaction.followup.send(f"Translation failed: {message}", ephemeral=True)
                 return
