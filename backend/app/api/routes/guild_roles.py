@@ -22,7 +22,7 @@ async def list_roles(
         .order_by(DiscordGuildRole.position.desc())
     )
     return [{
-        "discord_role_id": r.discord_role_id,
+        "discord_role_id": str(r.discord_role_id),
         "name": r.name,
         "position": r.position,
         "color": r.color,

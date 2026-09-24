@@ -633,7 +633,7 @@ export class VerificationComponent
 
   enabled = false;
   autoApprove = false;
-  verifiedRoleId: number | null = null;
+  verifiedRoleId: string | null = null;
   reviewChannelId = '';
   invocationChannelId = '';
   textCommands = '!verify';
