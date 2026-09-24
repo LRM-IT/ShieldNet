@@ -2586,5 +2586,26 @@
     "restore_channel": "Вернуть",
     "required_badge": "ОБЯЗАТЕЛЬНО",
     "exclude_channel": "Не нужно"
+  },
+  "platform_servers": {
+    "record": "Запись",
+    "server": "Сервер",
+    "connected": "Подключён",
+    "offline": "Не подключён",
+    "all_states": "Все состояния",
+    "connection": "Подключение",
+    "sync": "Синхронизация",
+    "help": "Все серверы Discord, известные GuildConsole, включая отключённые и удалённые записи.",
+    "stale": "Устарел",
+    "search": "Поиск по названию или ID сервера",
+    "plugins": "Плагины",
+    "removed": "Удалён",
+    "open": "Открыть",
+    "title": "Все серверы Discord",
+    "empty": "Нет серверов, соответствующих фильтру.",
+    "nav": "Все серверы",
+    "members": "Участники",
+    "heading": "Реестр серверов",
+    "delete_record": "Удалить навсегда"
   }
 }

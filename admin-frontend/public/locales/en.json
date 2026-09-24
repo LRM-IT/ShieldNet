@@ -2653,5 +2653,26 @@
     "restore_channel": "Restore",
     "required_badge": "REQUIRED",
     "exclude_channel": "Not needed"
+  },
+  "platform_servers": {
+    "record": "Record",
+    "server": "Server",
+    "connected": "Connected",
+    "offline": "Offline",
+    "all_states": "All states",
+    "connection": "Connection",
+    "sync": "Synchronization",
+    "help": "All Discord servers known to GuildConsole, including disconnected and removed records.",
+    "stale": "Stale",
+    "search": "Search name or server ID",
+    "plugins": "Plugins",
+    "removed": "Removed",
+    "open": "Open",
+    "title": "All Discord servers",
+    "empty": "No servers match the selected filter.",
+    "nav": "All servers",
+    "members": "Members",
+    "heading": "Server registry",
+    "delete_record": "Delete permanently"
   }
 }

@@ -23,4 +23,8 @@ export class EnterpriseDashboardService {
   overview(): Promise<EnterpriseDashboardOverview> {
     return firstValueFrom(this.http.get<EnterpriseDashboardOverview>('/api/v1/platform/dashboard/overview'));
   }
+
+  removeGuild(guildId: string): Promise<void> {
+    return firstValueFrom(this.http.delete<void>(`/api/v1/platform/dashboard/guilds/${guildId}`));
+  }
 }

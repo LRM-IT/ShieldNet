@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import UTC, datetime, timedelta
 from time import perf_counter
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from redis.asyncio import Redis
 from sqlalchemy import case, func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -44,6 +44,23 @@ async def _accessible_guilds(session: AsyncSession, user: User) -> list[Guild]:
             .order_by(Guild.name)
         )
     return list((await session.scalars(query)).unique().all())
+
+
+@router.delete("/guilds/{guild_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_platform_guild(
+    guild_id: int,
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+) -> Response:
+    GlobalAccessService.require_superadmin(current_user)
+    guild = await session.get(Guild, guild_id)
+    if guild is None:
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
+    if _enum_value(guild.bot_status) == "online":
+        raise HTTPException(status_code=409, detail="Disconnect the bot before deleting this server")
+    await session.delete(guild)
+    await session.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.get("/overview")

@@ -69,7 +69,7 @@ interface PluginNavDefinition {
                 @if (accordionOpen('platform')) {
                   <div class="accordion-items">
                     <a routerLink="/platform" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }"><span class="nav-icon">⌂</span><span>Platform overview</span></a>
-                    <a routerLink="/servers" routerLinkActive="active"><span class="nav-icon">◫</span><span>Guild Control Centers</span></a>
+                    <a routerLink="/platform/servers" routerLinkActive="active"><span class="nav-icon">◫</span><span>{{'platform_servers.nav'|snT:'All servers'}}</span></a>
                     <a routerLink="/platform/plugins" routerLinkActive="active"><span class="nav-icon">⬡</span><span>{{ 'shell.plugin_fabric' | snT:'Plugin fabric' }}</span></a>
                     @if (auth.profile()?.is_superadmin) {
                       <a routerLink="/platform/users" routerLinkActive="active"><span class="nav-icon">♙</span><span>{{ 'platform_users.nav' | snT:'Server owners' }}</span></a>

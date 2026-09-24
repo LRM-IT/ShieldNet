@@ -97,6 +97,7 @@ export const routes: Routes = [
   { path: 'platform/access', component: PlatformAccessComponent, canActivate: [platformGuard] },
   { path: 'platform/users', component: PlatformUsersComponent, canActivate: [superadminGuard] },
   { path: 'platform/users/:userId', component: PlatformUserProfileComponent, canActivate: [superadminGuard] },
+  { path: 'platform/servers', loadComponent: () => import('./pages/platform-servers.component').then(m => m.PlatformServersComponent), canActivate: [superadminGuard] },
   { path: 'platform/plugins', component: PluginsComponent, canActivate: [platformGuard] },
   { path: 'platform/billing', loadComponent: () => import('./pages/billing.component').then(m => m.BillingComponent), canActivate: [superadminGuard] },
   { path: 'platform/system-settings', redirectTo: 'platform/system-email', pathMatch: 'full' },
