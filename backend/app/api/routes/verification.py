@@ -92,9 +92,9 @@ async def get_settings(
     return {
         "guild_id": guild_id,
         "enabled": item.enabled,
-        "verified_role_id": item.verified_role_id,
-        "review_channel_id": item.review_channel_id,
-        "invocation_channel_id": item.invocation_channel_id,
+        "verified_role_id": str(item.verified_role_id) if item.verified_role_id else None,
+        "review_channel_id": str(item.review_channel_id) if item.review_channel_id else None,
+        "invocation_channel_id": str(item.invocation_channel_id) if item.invocation_channel_id else None,
         "text_commands": item.text_commands,
         "slash_command_name": item.slash_command_name,
         "nickname_template": item.nickname_template,

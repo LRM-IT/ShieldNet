@@ -738,7 +738,7 @@ export class VerificationComponent
       const values=String(item.values_text||'').split(/[,\n]/).map(value=>value.trim()).filter(Boolean);
       return {label:item.label,expected_text:values[0]||'',values,role_ids:(item.role_ids||[]).map(Number)};
     });
-    const payload={name:level.name,enabled:level.enabled,channel_id:level.channel_id?Number(level.channel_id):null,expected_text:criteria[0]?.expected_text||'',role_ids:criteria[0]?.role_ids||[],criteria,marker:level.marker};
+    const payload={name:level.name,enabled:level.enabled,channel_id:level.channel_id ? String(level.channel_id) : null,expected_text:criteria[0]?.expected_text||'',role_ids:criteria[0]?.role_ids||[],criteria,marker:level.marker};
     if(level.file)await this.verification.uploadLevelTemplate(this.guildId,level.id,level.file,level.marker);
     const saved=await this.verification.updateLevel(this.guildId,level.id,payload);
     Object.assign(level,saved,{file:null,preview:null,criteria:(saved.criteria||[]).map((criterion:any)=>({...criterion,values_text:(criterion.values||[criterion.expected_text]).filter(Boolean).join(', ')}))}); this.message.set(this.i18n.t('verification.level_saved','Level {name} saved.').replace('{name}',level.name));
@@ -855,10 +855,8 @@ export class VerificationComponent
           enabled: this.enabled,
           verified_role_id:
             this.verifiedRoleId,
-          review_channel_id: this.reviewChannelId
-            ? Number(this.reviewChannelId)
-            : null,
-          invocation_channel_id: this.invocationChannelId ? Number(this.invocationChannelId) : null,
+          review_channel_id: this.reviewChannelId || null,
+          invocation_channel_id: this.invocationChannelId || null,
           text_commands: this.textCommands,
           slash_command_name: this.slashCommandName,
           nickname_template:
