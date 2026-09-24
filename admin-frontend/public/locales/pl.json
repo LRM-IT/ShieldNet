@@ -515,7 +515,7 @@
   "verification": {
     "title": "Weryfikacja",
     "settings": "Ustawienia weryfikacji",
-    "description": "Skonfiguruj polecenie weryfikacji, tryb zatwierdzania i rolę Verified.",
+    "description": "Skonfiguruj polecenie weryfikacji, pseudonim członka i rolę Verified.",
     "saving": "Zapisywanie…",
     "save": "Zapisz ustawienia",
     "enabled": "Moduł weryfikacji włączony",

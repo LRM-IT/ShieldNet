@@ -515,7 +515,7 @@
   "verification": {
     "title": "Verifica",
     "settings": "Impostazioni di verifica",
-    "description": "Configure /verify, approval mode and Verified role.",
+    "description": "Configura il comando di verifica, il nickname del membro e il ruolo Verified.",
     "saving": "Salvataggio…",
     "save": "Salva impostazioni",
     "enabled": "Modulo di verifica abilitato",

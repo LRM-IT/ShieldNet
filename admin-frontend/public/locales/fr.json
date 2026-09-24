@@ -516,7 +516,7 @@
   "verification": {
     "title": "Vérification",
     "settings": "Paramètres de vérification",
-    "description": "Configure /verify, approval mode and Verified role.",
+    "description": "Configurez la commande de vérification, le pseudonyme du membre et le rôle Verified.",
     "saving": "Enregistrement…",
     "save": "Valider les paramètres",
     "enabled": "Module de vérification activé",

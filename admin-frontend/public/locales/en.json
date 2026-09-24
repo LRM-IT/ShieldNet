@@ -515,7 +515,7 @@
   "verification": {
     "title": "Verification",
     "settings": "Verification settings",
-    "description": "Configure the verification command, approval mode and Verified role.",
+    "description": "Configure the verification command, member nickname and Verified role.",
     "saving": "Saving…",
     "save": "Save settings",
     "enabled": "Verification module enabled",

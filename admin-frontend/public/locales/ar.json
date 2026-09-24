@@ -517,7 +517,7 @@
   "verification": {
     "title": "التحقق",
     "settings": "إعدادات التحقق",
-    "description": "اضبط أمر التحقق ووضع الموافقة ودور Verified.",
+    "description": "اضبط أمر التحقق واسم العضو ودور Verified.",
     "saving": "جارٍ الحفظ…",
     "save": "حفظ الإعدادات",
     "enabled": "وحدة التحقق مفعّلة",
