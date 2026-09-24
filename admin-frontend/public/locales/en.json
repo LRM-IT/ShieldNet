@@ -2626,6 +2626,14 @@
     "template_clan": "Clan / alliance",
     "template_clan_help": "Operations, events and recruitment.",
     "template_support": "Support community",
-    "template_support_help": "Information and help channels."
+    "template_support_help": "Information and help channels.",
+    "template_education_help": "Lessons, resources and study rooms.",
+    "template_education": "Education",
+    "template_creator": "Creator / streamer",
+    "template_business_help": "Projects, reports and meetings.",
+    "template_creator_help": "Content, announcements and live rooms.",
+    "template_business": "Business team",
+    "template_global_alliance_help": "A large multilingual structure for leadership, battles, verification and support.",
+    "template_global_alliance": "Global game alliance"
   }
 }

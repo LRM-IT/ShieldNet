@@ -21,7 +21,7 @@ class WizardApply(BaseModel):
     description: str = Field(default="", max_length=300)
     game: str = Field(default="", max_length=100)
     system_channel_name: str = Field(min_length=1, max_length=100)
-    template_key: Literal["minimal", "community", "gaming", "clan", "support"] = "community"
+    template_key: Literal["minimal", "community", "gaming", "clan", "support", "creator", "education", "business", "global_alliance"] = "community"
 
 STRUCTURES = {
     "minimal": [("START", [("text","welcome",True),("text","rules",False),("text","general",False)])],
@@ -29,6 +29,10 @@ STRUCTURES = {
     "gaming": [("START HERE", [("text","welcome",True),("text","rules",False),("text","choose-roles",False)]),("GAME",[("text","general",False),("text","looking-for-group",False),("text","clips-and-media",False)]),("VOICE",[("voice","Lobby",False),("voice","Squad 1",False),("voice","Squad 2",False)])],
     "clan": [("HEADQUARTERS", [("text","welcome",True),("text","announcements",False),("text","rules",False)]),("OPERATIONS",[("text","strategy",False),("text","events",False),("text","recruitment",False)]),("VOICE",[("voice","Command",False),("voice","Squad",False)])],
     "support": [("INFORMATION", [("text","welcome",True),("text","announcements",False),("text","faq",False)]),("SUPPORT",[("text","help-desk",False),("text","resolved-cases",False)]),("COMMUNITY",[("text","general",False)]),("VOICE",[("voice","Support room",False)])],
+    "creator": [("WELCOME", [("text","welcome",True),("text","rules",False),("text","announcements",False)]),("CONTENT",[("text","new-content",False),("text","clips-and-media",False),("text","ideas-and-feedback",False)]),("COMMUNITY",[("text","general",False),("text","off-topic",False)]),("LIVE ROOMS",[("voice","Live lobby",False),("voice","Community stage",False)])],
+    "education": [("START HERE", [("text","welcome",True),("text","rules",False),("text","announcements",False)]),("LEARNING",[("text","lessons",False),("text","homework",False),("text","resources",False),("text","questions",False)]),("STUDY ROOMS",[("voice","Study room 1",False),("voice","Study room 2",False)])],
+    "business": [("COMPANY", [("text","welcome",True),("text","announcements",False),("text","policies",False)]),("WORKSPACE",[("text","general",False),("text","projects",False),("text","reports",False),("text","ideas",False)]),("MEETINGS",[("voice","Meeting room",False),("voice","Private meeting",False)])],
+    "global_alliance": [("START", [("text","welcome",True),("text","rules",False),("text","verify",False),("text","choose-language",False),("text","announcements",False)]),("VERIFICATION",[("text","how-to-verify",False),("text","apply-r5-r4",False),("text","verification-status",False),("text","approved",False),("text","rejected",False)]),("R5 LEADERS",[("text","us-r5-leader-chat-english",False),("text","kr-r5-leader-chat-korean",False),("text","jp-r5-leader-chat-japanese",False),("text","cn-r5-leader-chat-chinese",False),("text","id-r5-leader-chat-indonesian",False),("text","fr-r5-leader-chat-french",False),("text","sa-r5-leader-chat-arabic",False),("text","ru-r5-leader-chat-russian",False),("text","r5-leader-voting",False)]),("R5 R4",[("text","us-r4-r5-main-chat-english",False),("text","kr-r4-r5-chat-korean",False),("text","jp-r4-r5-chat-japanese",False),("text","de-r4-r5-chat-german",False),("text","map-rotation",False),("text","our-opponents",False),("text","voting",False),("voice","r5-r4-voice",False)]),("SVS COMMAND CENTER",[("text","svs-defense",False),("text","svs-offense",False),("text","intel-reports",False),("text","battle-plans",False),("text","command-chat",False),("text","event-schedule",False)]),("ALLIANCE BATTLES",[("text","alliance-opponents",False),("text","desert-opponents",False),("text","enemy-coordinates",False)]),("GLOBAL",[("text","us-english-chat",False),("text","eu-russian-chat",False),("text","kr-korean-chat",False),("text","jp-japanese-chat",False),("text","id-indonesian-chat",False),("text","cn-chinese-chat",False),("text","de-german-chat",False),("text","fr-french-chat",False),("text","es-spanish-chat",False),("text","sa-chat-arabic",False)]),("GAMEPLAY",[("text","recommendations-from-tops",False),("text","ascii-art",False),("text","news-and-events",False),("text","update-note",False)]),("SUPPORT CENTER",[("text","report-issue",False),("text","resolved",False),("text","suggestions",False)])],
 }
 
 def change_payload(item: DiscordStructureChange | None):
@@ -42,7 +46,7 @@ async def state(guild_id:int,user:User=Depends(get_current_user),db:AsyncSession
     jobs=(await db.execute(select(DiscordStructureChange).where(
         DiscordStructureChange.guild_id==guild_id,
         DiscordStructureChange.preview["wizard_plugin"].as_boolean().is_(True),
-    ).order_by(DiscordStructureChange.created_at.desc()).limit(50))).scalars().all()
+    ).order_by(DiscordStructureChange.created_at.desc()).limit(200))).scalars().all()
     by_kind={}
     for job in jobs: by_kind.setdefault(job.object_type,job)
     profile=by_kind.get("guild_profile"); channel=by_kind.get("wizard_system_channel"); check=by_kind.get("permission_check")

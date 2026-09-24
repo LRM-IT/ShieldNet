@@ -2559,6 +2559,14 @@
     "template_clan": "Клан / альянс",
     "template_clan_help": "Операції, події та набір учасників.",
     "template_support": "Спільнота підтримки",
-    "template_support_help": "Інформаційні канали та допомога."
+    "template_support_help": "Інформаційні канали та допомога.",
+    "template_education_help": "Уроки, матеріали та навчальні кімнати.",
+    "template_education": "Навчання",
+    "template_creator": "Автор / стрімер",
+    "template_business_help": "Проєкти, звіти та кімнати нарад.",
+    "template_creator_help": "Контент, оголошення та кімнати прямих ефірів.",
+    "template_business": "Робоча команда",
+    "template_global_alliance_help": "Велика багатомовна структура для керівництва, битв, верифікації та підтримки.",
+    "template_global_alliance": "Глобальний ігровий альянс"
   }
 }
