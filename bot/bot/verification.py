@@ -318,16 +318,6 @@ class VerificationClient:
         embed.set_footer(text=f"Request ID: {item['id']}")
 
         view = VerificationReviewView(self)
-        view.add_item(
-            discord.ui.Button(
-                label="Open GuildConsole panel",
-                style=discord.ButtonStyle.link,
-                url=(
-                    "https://guildconsole.lrm-it.com/"
-                    f"guild/{guild.id}/verification"
-                ),
-            )
-        )
 
         await channel.send(embed=embed, view=view)
 
@@ -346,17 +336,6 @@ class VerificationRejectModal(discord.ui.Modal, title="Reject verification"):
         self.request_id = request_id
 
     async def on_submit(self, interaction: discord.Interaction) -> None:
-        if not isinstance(interaction.user, discord.Member) or not (
-            interaction.user.guild_permissions.administrator
-            or interaction.user.guild_permissions.manage_guild
-        ):
-            await interaction.response.send_message(
-                "Your Discord account needs Administrator or Manage Server permission. "
-                "The bot's permissions do not grant this permission to you.",
-                ephemeral=True,
-            )
-            return
-
         await interaction.response.defer(ephemeral=True)
         await self.client.discord_reject(
             self.request_id,
@@ -394,17 +373,6 @@ class VerificationReviewView(discord.ui.View):
         button: discord.ui.Button,
     ) -> None:
         del button
-
-        if not isinstance(interaction.user, discord.Member) or not (
-            interaction.user.guild_permissions.administrator
-            or interaction.user.guild_permissions.manage_guild
-        ):
-            await interaction.response.send_message(
-                "Your Discord account needs Administrator or Manage Server permission. "
-                "The bot's permissions do not grant this permission to you.",
-                ephemeral=True,
-            )
-            return
 
         request_id = self.request_id(interaction)
 
