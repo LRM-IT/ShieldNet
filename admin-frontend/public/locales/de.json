@@ -2653,6 +2653,8 @@
     "expiry_help": "Eine Benachrichtigung vor Ablauf des Bot-Abonnements senden.",
     "activate_reminder": "Aktiviere zuerst das Bot-Abonnement.",
     "voucher_title": "Gutschein für eigenen Bot",
-    "voucher_help": "Verwende einen Gutschein für das Abonnement des eigenen Discord-Bots."
+    "voucher_help": "Verwende einen Gutschein für das Abonnement des eigenen Discord-Bots.",
+    "subscription_tab": "Abonnement und Einrichtung",
+    "notifications_tab": "Ablaufbenachrichtigung"
   }
 }

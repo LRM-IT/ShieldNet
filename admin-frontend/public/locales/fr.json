@@ -2652,6 +2652,8 @@
     "expiry_help": "Envoyer une notification avant l’expiration de l’abonnement du bot.",
     "activate_reminder": "Activez d’abord l’abonnement du bot.",
     "voucher_title": "Bon du bot personnalisé",
-    "voucher_help": "Utilisez un bon émis pour l’abonnement du bot Discord personnalisé."
+    "voucher_help": "Utilisez un bon émis pour l’abonnement du bot Discord personnalisé.",
+    "subscription_tab": "Abonnement et configuration",
+    "notifications_tab": "Notification d’expiration"
   }
 }

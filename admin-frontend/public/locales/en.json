@@ -2720,6 +2720,8 @@
     "expiry_help": "Send one advance notification before the custom bot subscription expires.",
     "activate_reminder": "Activate the custom bot subscription before configuring its reminder.",
     "voucher_title": "Custom bot voucher",
-    "voucher_help": "Use a voucher issued specifically for the Custom Discord bot subscription."
+    "voucher_help": "Use a voucher issued specifically for the Custom Discord bot subscription.",
+    "subscription_tab": "Subscription and setup",
+    "notifications_tab": "Expiry notification"
   }
 }
