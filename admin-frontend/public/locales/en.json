@@ -2718,6 +2718,8 @@
     "payment_confirmed": "Payment confirmed. Custom bot subscription is active.",
     "expiry_title": "Subscription expiry notification",
     "expiry_help": "Send one advance notification before the custom bot subscription expires.",
-    "activate_reminder": "Activate the custom bot subscription before configuring its reminder."
+    "activate_reminder": "Activate the custom bot subscription before configuring its reminder.",
+    "voucher_title": "Custom bot voucher",
+    "voucher_help": "Use a voucher issued specifically for the Custom Discord bot subscription."
   }
 }

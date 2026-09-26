@@ -116,6 +116,7 @@ class BillingDiscountCard(Base, TimestampMixin):
     __table_args__ = (UniqueConstraint("code", name="uq_billing_discount_card_code"), {"schema": "billing"})
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     code: Mapped[str] = mapped_column(String(64), nullable=False)
+    plugin_key: Mapped[str] = mapped_column(String(96), nullable=False, default="__paid_modules__", server_default="__paid_modules__")
     amount_usd: Mapped[Decimal | None] = mapped_column(Numeric(12, 2))
     access_days: Mapped[int | None] = mapped_column()
     active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True, server_default="true")

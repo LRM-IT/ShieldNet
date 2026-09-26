@@ -141,6 +141,7 @@ class WalletCreditRequest(BaseModel):
     comment: str = Field(default="", max_length=500)
 class DiscountCardIn(BaseModel):
     code:str=Field(min_length=3,max_length=64)
+    plugin_key:str=Field(default=PAID_PACKAGE_KEY,pattern=r"^(__paid_modules__|__custom_bot__)$")
     amount_usd:Decimal|None=Field(default=None,gt=0,le=1_000_000)
     access_days:int|None=Field(default=None,ge=1,le=3660)
     active:bool=True
@@ -149,6 +150,8 @@ class DiscountCardIn(BaseModel):
     def exactly_one_value(self):
         if (self.amount_usd is None) == (self.access_days is None):
             raise ValueError("Set either access days or a legacy USD voucher value")
+        if self.plugin_key == "__custom_bot__" and self.access_days is None:
+            raise ValueError("Custom bot vouchers must use access days")
         return self
 class TenureDiscountIn(BaseModel):
     minimum_months:int=Field(ge=1,le=240);percent:Decimal=Field(gt=0,le=50);active:bool=True
@@ -156,6 +159,7 @@ class RedeemDiscountIn(BaseModel): code:str=Field(min_length=3,max_length=64)
 class ServerVoucherIn(BaseModel):
     guild_id:int
     code:str=Field(min_length=3,max_length=64)
+    plugin_key:str=Field(default=PAID_PACKAGE_KEY,pattern=r"^(__paid_modules__|__custom_bot__)$")
 
 def plan_dict(row):
     return {"plugin_key":row.plugin_key,"is_free":row.is_free,"enabled":row.enabled,"currency":row.currency,
@@ -307,8 +311,8 @@ async def preview_server_voucher(payload:ServerVoucherIn,user:User=Depends(get_c
     if not user.discord_user_id or guild is None or guild.owner_discord_id!=user.discord_user_id:
         raise HTTPException(403,"Only the Discord server owner can use a voucher")
     try:
-        card,days=await BillingDiscountService(session).server_voucher_days(payload.code,user.id,payload.guild_id)
-        return {"code":card.code,"guild_id":str(payload.guild_id),"days":days}
+        card,days=await BillingDiscountService(session).server_voucher_days(payload.code,user.id,payload.guild_id,plugin_key=payload.plugin_key)
+        return {"code":card.code,"guild_id":str(payload.guild_id),"days":days,"plugin_key":card.plugin_key}
     except (DiscountError,PaymentError) as exc:raise HTTPException(400,str(exc)) from exc
 
 @router.post("/billing/server-voucher/redeem")
@@ -316,7 +320,7 @@ async def redeem_server_voucher(payload:ServerVoucherIn,user:User=Depends(get_cu
     guild=await session.get(Guild,payload.guild_id)
     if not user.discord_user_id or guild is None or guild.owner_discord_id!=user.discord_user_id:
         raise HTTPException(403,"Only the Discord server owner can use a voucher")
-    try:return await BillingDiscountService(session).redeem_server_voucher(payload.code,user.id,user.discord_user_id,payload.guild_id)
+    try:return await BillingDiscountService(session).redeem_server_voucher(payload.code,user.id,user.discord_user_id,payload.guild_id,payload.plugin_key)
     except (DiscountError,PaymentError) as exc:raise HTTPException(400,str(exc)) from exc
 
 @router.post("/billing/wallet/checkout")
@@ -382,7 +386,7 @@ async def discord_dm_check_status(action_id:UUID,user:User=Depends(get_current_u
 async def discounts(_:User=Depends(require_superadmin),session:AsyncSession=Depends(get_db_session)):
     cards=list((await session.execute(select(BillingDiscountCard).order_by(BillingDiscountCard.created_at.desc()))).scalars())
     tenure=list((await session.execute(select(BillingTenureDiscount).order_by(BillingTenureDiscount.minimum_months))).scalars())
-    return {"cards":[{"id":x.id,"code":x.code,"amount_usd":x.amount_usd,"access_days":x.access_days,"active":x.active,"valid_from":x.valid_from,"valid_until":x.valid_until,"max_redemptions":x.max_redemptions,"redemptions":x.redemptions} for x in cards],"tenure":[{"id":x.id,"minimum_months":x.minimum_months,"percent":x.percent,"active":x.active} for x in tenure],"maximum_combined_percent":50}
+    return {"cards":[{"id":x.id,"code":x.code,"plugin_key":x.plugin_key,"amount_usd":x.amount_usd,"access_days":x.access_days,"active":x.active,"valid_from":x.valid_from,"valid_until":x.valid_until,"max_redemptions":x.max_redemptions,"redemptions":x.redemptions} for x in cards],"tenure":[{"id":x.id,"minimum_months":x.minimum_months,"percent":x.percent,"active":x.active} for x in tenure],"maximum_combined_percent":50}
 
 @router.post("/platform/billing/discounts/cards")
 async def save_discount_card(payload:DiscountCardIn,_:User=Depends(require_superadmin),session:AsyncSession=Depends(get_db_session)):

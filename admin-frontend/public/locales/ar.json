@@ -2651,6 +2651,8 @@
     "payment_confirmed": "Payment confirmed. Custom bot subscription is active.",
     "expiry_title": "إشعار انتهاء الاشتراك",
     "expiry_help": "إرسال إشعار مسبق قبل انتهاء اشتراك الروبوت.",
-    "activate_reminder": "فعّل اشتراك الروبوت أولاً."
+    "activate_reminder": "فعّل اشتراك الروبوت أولاً.",
+    "voucher_title": "قسيمة الروبوت المخصص",
+    "voucher_help": "استخدم قسيمة مخصصة لاشتراك روبوت Discord الخاص."
   }
 }

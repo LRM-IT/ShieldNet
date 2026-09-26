@@ -27,8 +27,8 @@ export interface BillingEmailSettings{enabled:boolean;host:string;port:number;us
  creditWallet(x:{discord_user_id:string;amount:number;comment:string}){return firstValueFrom(this.http.post('/api/v1/platform/billing/wallets/credit',x))}
  guildBilling(guildId:string){return firstValueFrom(this.http.get<any>(`/api/v1/discord/guilds/${guildId}/billing`))}
  quoteDays(guildId:string,days:number){return firstValueFrom(this.http.get<any>(`/api/v1/discord/guilds/${guildId}/billing/quote`,{params:{days}}))}
- previewServerVoucher(guildId:string,code:string){return firstValueFrom(this.http.post<any>('/api/v1/billing/server-voucher/preview',{guild_id:guildId,code}))}
- redeemServerVoucher(guildId:string,code:string){return firstValueFrom(this.http.post<any>('/api/v1/billing/server-voucher/redeem',{guild_id:guildId,code}))}
+ previewServerVoucher(guildId:string,code:string,pluginKey='__paid_modules__'){return firstValueFrom(this.http.post<any>('/api/v1/billing/server-voucher/preview',{guild_id:guildId,code,plugin_key:pluginKey}))}
+ redeemServerVoucher(guildId:string,code:string,pluginKey='__paid_modules__'){return firstValueFrom(this.http.post<any>('/api/v1/billing/server-voucher/redeem',{guild_id:guildId,code,plugin_key:pluginKey}))}
  checkout(guildId:string,x:{plugin_key:string;billing_period:string;provider:string;days?:number;locale?:string}){return firstValueFrom(this.http.post<any>(`/api/v1/discord/guilds/${guildId}/billing/checkout`,x))}
  refreshPayment(orderReference:string){return firstValueFrom(this.http.get<{status:string;order_reference:string}>(`/api/v1/billing/payments/${encodeURIComponent(orderReference)}/refresh`))}
  walletTopup(x:any){return firstValueFrom(this.http.post<any>('/api/v1/billing/wallet/checkout',x))}

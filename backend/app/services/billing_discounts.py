@@ -11,7 +11,7 @@ class DiscountError(ValueError): pass
 class BillingDiscountService:
     def __init__(self, session: AsyncSession): self.session=session
 
-    async def server_voucher_days(self, code: str, user_id, guild_id: int, *, lock: bool = False) -> tuple[BillingDiscountCard, int]:
+    async def server_voucher_days(self, code: str, user_id, guild_id: int, *, lock: bool = False, plugin_key: str = "__paid_modules__") -> tuple[BillingDiscountCard, int]:
         normalized = code.strip().upper()
         query = select(BillingDiscountCard).where(BillingDiscountCard.code == normalized)
         if lock: query = query.with_for_update()
@@ -19,6 +19,8 @@ class BillingDiscountService:
         now = datetime.now(timezone.utc)
         if not card or not card.active or (card.valid_from and card.valid_from > now) or (card.valid_until and card.valid_until <= now):
             raise DiscountError("Voucher is invalid or expired")
+        if card.plugin_key != plugin_key:
+            raise DiscountError("Voucher is intended for another subscription")
         used = await self.session.scalar(select(BillingDiscountRedemption.id).where(BillingDiscountRedemption.card_id == card.id, BillingDiscountRedemption.redeemed_by_user_id == user_id))
         if used: raise DiscountError("Voucher has already been redeemed")
         if card.max_redemptions is not None and card.redemptions >= card.max_redemptions:
@@ -56,12 +58,12 @@ class BillingDiscountService:
             return card, low
         raise DiscountError("Voucher value exceeds the maximum subscription period; contact support")
 
-    async def redeem_server_voucher(self, code: str, user_id, owner_discord_id: int, guild_id: int) -> dict:
-        card, days = await self.server_voucher_days(code, user_id, guild_id, lock=True)
+    async def redeem_server_voucher(self, code: str, user_id, owner_discord_id: int, guild_id: int, plugin_key: str = "__paid_modules__") -> dict:
+        card, days = await self.server_voucher_days(code, user_id, guild_id, lock=True, plugin_key=plugin_key)
         from app.services.billing_payments import BillingPaymentService
         quote = await BillingPaymentService(self.session).quote_days(guild_id, days)
         payment = BillingPayment(id=uuid4(), order_reference=f"voucher-{guild_id}-{uuid4().hex}", guild_id=guild_id,
-            plugin_key="__paid_modules__", billing_period="custom", access_days=days, purpose="subscription", owner_discord_id=owner_discord_id,
+            plugin_key=plugin_key, billing_period="custom", access_days=days, purpose="subscription", owner_discord_id=owner_discord_id,
             provider="voucher", amount=Decimal("0.00"), currency="USD", status="created", signature_verified=True,
             original_amount_usd=quote["total_amount"], base_amount_usd=Decimal("0.00"), discount_code=card.code)
         self.session.add(payment)
