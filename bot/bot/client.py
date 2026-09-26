@@ -423,6 +423,8 @@ class ShieldNetBot(discord.Client):
 
     async def on_guild_join(self, guild: discord.Guild) -> None:
         await self.backend.register_guild(guild)
+        await self._ensure_guildconsole_role(guild)
+        await self.guild_role_sync.synchronize(guild)
         await self.reload_config(guild.id)
 
     async def on_guild_remove(self, guild: discord.Guild) -> None:
@@ -826,6 +828,7 @@ class ShieldNetBot(discord.Client):
     async def _sync_all_guild_roles(self) -> None:
         for guild in self.guilds:
             try:
+                await self._ensure_guildconsole_role(guild)
                 await self.guild_role_sync.synchronize(guild)
                 logger.info(
                     "Guild roles synchronized: guild=%s roles=%s",
@@ -839,6 +842,56 @@ class ShieldNetBot(discord.Client):
                 )
 
             await asyncio.sleep(0.25)
+
+    async def _ensure_guildconsole_role(self, guild: discord.Guild) -> discord.Role | None:
+        member = guild.me
+        if member is None:
+            try:
+                member = await guild.fetch_member(self.user.id)
+            except discord.HTTPException:
+                logger.exception("Could not fetch bot member while creating GuildConsole role: guild=%s", guild.id)
+                return None
+
+        role = discord.utils.find(lambda item: item.name.casefold() == "guildconsole", guild.roles)
+        if role is None:
+            permissions = discord.Permissions.none()
+            permissions.update(
+                view_channel=True,
+                send_messages=True,
+                read_message_history=True,
+                manage_messages=True,
+                manage_channels=True,
+                manage_roles=True,
+                manage_nicknames=True,
+                moderate_members=True,
+            )
+            try:
+                role = await guild.create_role(
+                    name="GuildConsole",
+                    permissions=permissions,
+                    colour=discord.Colour.teal(),
+                    hoist=True,
+                    mentionable=False,
+                    reason="GuildConsole initial server setup",
+                )
+                logger.info("GuildConsole role created: guild=%s role=%s", guild.id, role.id)
+            except discord.Forbidden:
+                logger.error("Manage Roles permission is required to create the GuildConsole role: guild=%s", guild.id)
+                return None
+            except discord.HTTPException:
+                logger.exception("GuildConsole role creation failed: guild=%s", guild.id)
+                return None
+
+        if role not in member.roles and not role.managed:
+            try:
+                await member.add_roles(role, reason="GuildConsole initial server setup")
+                logger.info("GuildConsole role assigned to bot: guild=%s role=%s", guild.id, role.id)
+            except discord.Forbidden:
+                logger.error("Could not assign GuildConsole role to bot; check role hierarchy: guild=%s role=%s", guild.id, role.id)
+            except discord.HTTPException:
+                logger.exception("GuildConsole role assignment failed: guild=%s role=%s", guild.id, role.id)
+
+        return role
 
     @tasks.loop(seconds=12)
     async def leadership_sync_loop(self) -> None:
