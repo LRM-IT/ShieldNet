@@ -529,6 +529,7 @@
     "manual_queue_help": "Zatwierdzaj lub odrzucaj zgłoszenia weryfikacyjne użytkowników.",
     "no_pending_requests": "Brak zgłoszeń oczekujących na zatwierdzenie.",
     "rejection_reason_prompt": "Podaj powód odrzucenia:",
+    "role_unavailable": "niedostępna dla bota",
     "saving": "Zapisywanie…",
     "save": "Zapisz ustawienia",
     "enabled": "Moduł weryfikacji włączony",

@@ -531,6 +531,7 @@
     "manual_queue_help": "Genehmigen oder lehnen Sie Verifizierungsanfragen von Mitgliedern ab.",
     "no_pending_requests": "Es gibt keine Anfragen, die auf Freigabe warten.",
     "rejection_reason_prompt": "Ablehnungsgrund eingeben:",
+    "role_unavailable": "für den Bot nicht verfügbar",
     "saving": "Sichern …",
     "save": "Einstellungen speichern",
     "enabled": "Verifizierungsmodul aktiviert",

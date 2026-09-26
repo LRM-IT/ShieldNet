@@ -530,6 +530,7 @@
     "manual_queue_help": "Approuvez ou refusez les demandes de vérification des membres.",
     "no_pending_requests": "Aucune demande n’attend une approbation.",
     "rejection_reason_prompt": "Saisissez le motif du refus :",
+    "role_unavailable": "indisponible pour le bot",
     "saving": "Enregistrement…",
     "save": "Valider les paramètres",
     "enabled": "Module de vérification activé",

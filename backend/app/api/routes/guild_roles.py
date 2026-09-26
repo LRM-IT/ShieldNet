@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.dependencies.auth import get_current_user
@@ -12,15 +12,15 @@ router = APIRouter(tags=["Guild Roles"])
 @router.get("/discord/guilds/{guild_id}/roles")
 async def list_roles(
     guild_id: int,
+    include_unassignable: bool = Query(default=False),
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
 ):
     await require_guild_management(session, current_user, guild_id)
-    result = await session.execute(
-        select(DiscordGuildRole)
-        .where(DiscordGuildRole.guild_id == guild_id, DiscordGuildRole.assignable.is_(True))
-        .order_by(DiscordGuildRole.position.desc())
-    )
+    query = select(DiscordGuildRole).where(DiscordGuildRole.guild_id == guild_id)
+    if not include_unassignable:
+        query = query.where(DiscordGuildRole.assignable.is_(True))
+    result = await session.execute(query.order_by(DiscordGuildRole.position.desc()))
     return [{
         "discord_role_id": str(r.discord_role_id),
         "name": r.name,

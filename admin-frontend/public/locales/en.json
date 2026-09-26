@@ -529,6 +529,7 @@
     "manual_queue_help": "Approve or reject verification requests submitted by members.",
     "no_pending_requests": "There are no requests awaiting approval.",
     "rejection_reason_prompt": "Enter the rejection reason:",
+    "role_unavailable": "unavailable to bot",
     "saving": "Saving…",
     "save": "Save settings",
     "enabled": "Verification module enabled",

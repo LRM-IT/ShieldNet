@@ -531,6 +531,7 @@
     "manual_queue_help": "وافق على طلبات تحقق الأعضاء أو ارفضها.",
     "no_pending_requests": "لا توجد طلبات تنتظر الموافقة.",
     "rejection_reason_prompt": "أدخل سبب الرفض:",
+    "role_unavailable": "غير متاح للبوت",
     "saving": "جارٍ الحفظ…",
     "save": "حفظ الإعدادات",
     "enabled": "وحدة التحقق مفعّلة",

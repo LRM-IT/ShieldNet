@@ -529,6 +529,7 @@
     "manual_queue_help": "Approva o rifiuta le richieste di verifica dei membri.",
     "no_pending_requests": "Non ci sono richieste in attesa di approvazione.",
     "rejection_reason_prompt": "Inserisci il motivo del rifiuto:",
+    "role_unavailable": "non disponibile per il bot",
     "saving": "Salvataggio…",
     "save": "Salva impostazioni",
     "enabled": "Modulo di verifica abilitato",

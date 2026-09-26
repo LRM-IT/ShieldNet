@@ -97,8 +97,9 @@ import { DiscordChannelPickerComponent } from '../shared/discord-channel-picker.
             ) {
               <option
                 [ngValue]="role.discord_role_id"
+                [disabled]="!role.assignable"
               >
-                {{ role.name }}
+                {{ role.name }}{{ role.assignable ? '' : (' — ' + ('verification.role_unavailable'|snT:'unavailable to bot')) }}
               </option>
             }
           </select>
@@ -158,7 +159,7 @@ import { DiscordChannelPickerComponent } from '../shared/discord-channel-picker.
                   <article class="criterion"><label>{{'verification.criterion_name'|snT:'Criterion name'}}<input [(ngModel)]="criterion.label" maxlength="80" [placeholder]="'verification.criterion_example'|snT:'For example: Leader'"></label>
                     <label>{{'verification.accepted_values'|snT:'Accepted values'}}<input [(ngModel)]="criterion.values_text" maxlength="1000" [placeholder]="'verification.values_example'|snT:'For example: R4, R5'"><span class="field-help">{{'verification.values_help'|snT:'Separate values with commas or new lines. Any matching value activates the roles below.'}}</span></label>
                     <label>{{'verification.match_roles'|snT:'Roles for this match'}}<select multiple [(ngModel)]="criterion.role_ids">
-                      @for (role of roles(); track role.discord_role_id) { <option [value]="role.discord_role_id">{{role.name}}</option> }
+                      @for (role of roles(); track role.discord_role_id) { <option [value]="role.discord_role_id" [disabled]="!role.assignable">{{role.name}}{{role.assignable ? '' : (' — ' + ('verification.role_unavailable'|snT:'unavailable to bot'))}}</option> }
                     </select></label>
                     <button class="btn danger" (click)="removeCriterion(level,$index)">{{'verification.remove_criterion'|snT:'Remove criterion'}}</button>
                   </article>
@@ -368,7 +369,7 @@ export class VerificationComponent
   async ngOnInit(): Promise<void> {
     const [settings, roles, levels] = await Promise.all([
       this.verification.getSettings(this.guildId),
-      this.guildRoles.list(this.guildId),
+      this.guildRoles.list(this.guildId, true),
       this.verification.levels(this.guildId),
     ]);
 
