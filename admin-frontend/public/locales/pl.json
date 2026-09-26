@@ -1879,6 +1879,7 @@
     "monobank_invoice_rejected": "Monobank odrzucił parametry płatności. Sprawdź kwotę i spróbuj ponownie.",
     "monobank_rate_limited": "Zbyt wiele żądań do bramki płatniczej. Spróbuj ponownie za minutę.",
     "monobank_unavailable": "Bramka płatnicza Monobank jest tymczasowo niedostępna. Spróbuj ponownie później.",
+    "banking_day_transition": "Płatności są tymczasowo niedostępne podczas rozpoczęcia nowego dnia bankowego. Poczekaj do 00:05 czasu kijowskiego."
     "monobank_uah_notice": "Ukraińskie przepisy bankowe wymagają realizacji płatności w hrywnach. Przeliczenie odbywa się automatycznie i nie wymaga żadnych działań z Twojej strony; podana cena w USD odpowiada taryfie dla Twojego regionu.",
     "code_applied": "Kod zastosowany.",
     "code_error": "Nie udało się zastosować kodu.",

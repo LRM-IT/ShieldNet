@@ -5,9 +5,10 @@ import hmac
 import json
 import logging
 from urllib.parse import urlparse
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, time, timedelta, timezone
 from decimal import Decimal, ROUND_HALF_UP
 from uuid import uuid4
+from zoneinfo import ZoneInfo
 
 import httpx
 from cryptography.exceptions import InvalidSignature
@@ -45,6 +46,13 @@ class PaymentVerificationPending(RuntimeError):
 
 _monobank_pubkeys: dict[str, tuple[object, datetime]] = {}
 MONOBANK_CHECKOUT_HOSTS = {"pay.mbnk.biz", "pay.monobank.ua"}
+KYIV_TIMEZONE = ZoneInfo("Europe/Kyiv")
+
+
+def _ensure_banking_payment_window() -> None:
+    local_time = datetime.now(KYIV_TIMEZONE).time()
+    if local_time >= time(23, 45) or local_time < time(0, 5):
+        raise PaymentError("banking_day_transition")
 
 
 def _monobank_checkout_text(locale: str, guild_id: int, days: int) -> dict[str, str]:
@@ -228,6 +236,7 @@ class BillingPaymentService:
             raise PaymentError("Custom days are unavailable for this subscription")
         if (period not in PERIOD_DAYS and period != "custom") or provider not in {"liqpay", "monobank"} or (period == "custom" and days is None) or (period != "custom" and days is not None):
             raise PaymentError("Unsupported billing period or provider")
+        _ensure_banking_payment_window()
         config = await self.provider_config()
         if not config[provider]["active"]:
             raise PaymentError("Payment provider is disabled or not configured")

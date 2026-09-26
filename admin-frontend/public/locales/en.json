@@ -1839,6 +1839,7 @@
     "monobank_invoice_rejected": "Monobank rejected the payment parameters. Check the amount and try again.",
     "monobank_rate_limited": "Too many requests to the payment gateway. Try again in a minute.",
     "monobank_unavailable": "The Monobank payment gateway is temporarily unavailable. Try again later.",
+    "banking_day_transition": "Payments are temporarily unavailable while the new banking day begins. Please wait until 00:05 Kyiv time."
     "monobank_uah_notice": "Ukrainian banking regulations require payments to be processed in hryvnias. Currency conversion is automatic and requires no action from you; the USD price shown is the applicable price for your region.",
     "code_applied": "Code applied.",
     "code_error": "Unable to apply code.",
