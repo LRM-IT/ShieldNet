@@ -490,10 +490,13 @@ class ShieldNetBot(discord.Client):
             except Exception:
                 logger.exception("Initial sync failed for guild %s", guild.id)
             await asyncio.sleep(.25)
-        try:
-            await self.backend.reconcile_guilds([guild.id for guild in self.managed_guilds])
-        except Exception:
-            logger.exception("Guild registry reconciliation failed")
+        if self.target_guild_id is None:
+            try:
+                # Inventory reflects Discord membership, independently of which
+                # bot identity currently handles this guild.
+                await self.backend.reconcile_guilds([guild.id for guild in self.guilds])
+            except Exception:
+                logger.exception("Guild registry reconciliation failed")
 
     @tasks.loop(minutes=5)
     async def periodic_sync(self) -> None:
@@ -502,10 +505,11 @@ class ShieldNetBot(discord.Client):
                 await self.reload_config(guild.id)
             except Exception:
                 logger.exception("Periodic sync failed for guild %s", guild.id)
-        try:
-            await self.backend.reconcile_guilds([guild.id for guild in self.managed_guilds])
-        except Exception:
-            logger.exception("Periodic guild registry reconciliation failed")
+        if self.target_guild_id is None:
+            try:
+                await self.backend.reconcile_guilds([guild.id for guild in self.guilds])
+            except Exception:
+                logger.exception("Periodic guild registry reconciliation failed")
 
     @periodic_sync.before_loop
     async def before_periodic_sync(self) -> None:
