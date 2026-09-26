@@ -1,5 +1,8 @@
 :80 {
     encode zstd gzip
+    header {
+        Cache-Control "no-cache, must-revalidate"
+    }
     handle /api/* {
         reverse_proxy backend:8000 {
             lb_try_duration 5s
