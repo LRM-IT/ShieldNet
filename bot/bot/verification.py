@@ -362,6 +362,17 @@ class VerificationReviewView(discord.ui.View):
         prefix = "Request ID: "
         return footer[len(prefix):].strip() if footer.startswith(prefix) else None
 
+    @staticmethod
+    async def require_moderator(interaction: discord.Interaction) -> bool:
+        permissions = getattr(interaction.user, "guild_permissions", None)
+        allowed = bool(permissions and (permissions.administrator or permissions.manage_guild or permissions.moderate_members))
+        if not allowed:
+            await interaction.response.send_message(
+                "Only a server moderator can make this decision.",
+                ephemeral=True,
+            )
+        return allowed
+
     @discord.ui.button(
         label="Approve",
         style=discord.ButtonStyle.success,
@@ -373,6 +384,9 @@ class VerificationReviewView(discord.ui.View):
         button: discord.ui.Button,
     ) -> None:
         del button
+
+        if not await self.require_moderator(interaction):
+            return
 
         request_id = self.request_id(interaction)
 
@@ -401,6 +415,8 @@ class VerificationReviewView(discord.ui.View):
         button: discord.ui.Button,
     ) -> None:
         del button
+        if not await self.require_moderator(interaction):
+            return
         request_id = self.request_id(interaction)
 
         if not request_id:

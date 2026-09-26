@@ -36,10 +36,11 @@ router = APIRouter(
 async def internal_settings(guild_id: int, session: AsyncSession = Depends(get_db_session)):
     item = await session.scalar(select(VerificationSettings).where(VerificationSettings.guild_id == guild_id))
     if item is None:
-        return {"enabled": False, "invocation_channel_id": None, "text_commands": "", "slash_command_name": "verify", "channel_cleanup_minutes": 0}
+        return {"enabled": False, "invocation_channel_id": None, "text_commands": "", "slash_command_name": "verify", "channel_cleanup_minutes": 0, "auto_approve": True, "review_channel_id": None}
     return {"enabled": item.enabled, "invocation_channel_id": str(item.invocation_channel_id) if item.invocation_channel_id else None,
             "text_commands": item.text_commands, "slash_command_name": item.slash_command_name,
-            "channel_cleanup_minutes": item.channel_cleanup_minutes}
+            "channel_cleanup_minutes": item.channel_cleanup_minutes, "auto_approve": item.auto_approve,
+            "review_channel_id": str(item.review_channel_id) if item.review_channel_id else None}
 
 
 @router.post("/guilds/{guild_id}/requests")
@@ -99,8 +100,8 @@ async def create_request(
         nickname=nickname,
         server_number=server_number,
         requested_nickname=requested_nickname,
-        status="approved",
-        decided_at=datetime.now(UTC),
+        status="approved" if settings.auto_approve else "pending",
+        decided_at=datetime.now(UTC) if settings.auto_approve else None,
     )
     session.add(item)
 
@@ -297,6 +298,7 @@ async def pending_review_notifications(
         select(VerificationRequest)
         .where(
             VerificationRequest.guild_id == guild_id,
+            VerificationRequest.status == "pending",
             VerificationRequest.review_notification_status == "pending",
         )
         .order_by(VerificationRequest.created_at)

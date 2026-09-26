@@ -49,6 +49,21 @@ import { DiscordChannelPickerComponent } from '../shared/discord-channel-picker.
           {{ "verification.enabled" | snT:"Verification module enabled" }}
         </label>
 
+        <label>{{'verification.mode'|snT:'Verification mode'}}
+          <select [(ngModel)]="autoApprove">
+            <option [ngValue]="true">{{'verification.mode_automatic'|snT:'Automatic — apply nickname and role immediately'}}</option>
+            <option [ngValue]="false">{{'verification.mode_manual'|snT:'Manual — wait for moderator approval'}}</option>
+          </select>
+          <small class="muted">{{(autoApprove ? 'verification.mode_automatic_help' : 'verification.mode_manual_help')|snT:(autoApprove ? 'The member is verified immediately after submitting the form.' : 'The nickname and role are applied only after a moderator approves the request.')}}</small>
+        </label>
+
+        @if (!autoApprove) {
+          <label>{{'verification.review_channel'|snT:'Moderator review channel'}}
+            <sn-discord-channel-picker [guildId]="guildId" [value]="reviewChannelId || null" (valueChange)="reviewChannelId=$event || ''" />
+            <small class="muted">{{'verification.review_channel_help'|snT:'New requests are posted here with Approve and Reject buttons. Only moderators can use them.'}}</small>
+          </label>
+        }
+
         <label>{{'verification.invocation_channel'|snT:'Verification command channel or thread'}}
           <sn-discord-channel-picker [guildId]="guildId" [value]="invocationChannelId || null" (valueChange)="invocationChannelId=$event || ''" />
           <small class="muted">{{'verification.invocation_channel_help'|snT:'Text commands and /verify are accepted only in this channel or thread.'}}</small>
@@ -174,6 +189,32 @@ import { DiscordChannelPickerComponent } from '../shared/discord-channel-picker.
         </div>
       }
 
+      @if (!autoApprove) {
+        <section class="card manual-queue">
+          <div class="heading">
+            <div>
+              <h2>{{'verification.manual_queue'|snT:'Requests awaiting moderator approval'}}</h2>
+              <p class="muted">{{'verification.manual_queue_help'|snT:'Approve or reject verification requests submitted by members.'}}</p>
+            </div>
+            <button class="btn secondary" (click)="loadPending()">{{'verification.refresh'|snT:'Refresh'}}</button>
+          </div>
+          @for (item of requests(); track item.id) {
+            <article class="request-row">
+              <div>
+                <strong>{{item.requested_nickname}}</strong>
+                <p class="muted">{{'verification.alliance'|snT:'Alliance'}}: {{item.alliance}} · {{'verification.discord_id'|snT:'Discord ID'}}: {{item.discord_user_id}}</p>
+              </div>
+              <div class="buttons">
+                <button class="btn" (click)="approveRequest(item)">{{'verification.approve'|snT:'Approve'}}</button>
+                <button class="btn danger" (click)="rejectRequest(item)">{{'verification.reject'|snT:'Reject'}}</button>
+              </div>
+            </article>
+          } @empty {
+            <p class="muted empty">{{'verification.no_pending_requests'|snT:'There are no requests awaiting approval.'}}</p>
+          }
+        </section>
+      }
+
     </sn-shell>
   `,
   styles: [`
@@ -223,6 +264,7 @@ import { DiscordChannelPickerComponent } from '../shared/discord-channel-picker.
     .command-input span { padding-left:.8rem; font-weight:800; color:var(--text); }
     .command-input input { flex:1; border:0; background:transparent; }
     .levels{margin-top:1.2rem}.level-card{border:1px solid var(--line);border-radius:12px;overflow:hidden}.level-card summary{display:flex;justify-content:space-between;padding:1rem;cursor:pointer;list-style:none}.level-body{display:grid;gap:.8rem;padding:1rem;border-top:1px solid var(--line)}.criteria{display:grid;gap:.8rem}.criterion{display:grid;grid-template-columns:minmax(180px,.8fr) minmax(260px,1.2fr) minmax(260px,1.2fr);gap:1rem;align-items:start;padding:1rem;border:1px solid var(--line);border-radius:12px;background:var(--panel-2)}.criterion>label{min-width:0;align-content:start}.criterion input{min-height:3.75rem}.criterion select{height:8.5rem;overflow-y:auto}.criterion .field-help{min-height:3rem;font-size:.9rem;line-height:1.35;color:var(--muted)}.criterion>.danger{grid-column:1/-1;justify-self:end}.marker-image{position:relative;width:min(100%,700px)}.marker-image img{display:block;width:100%;border-radius:10px}.marker{position:absolute;border:3px solid #45e0b3;background:rgba(69,224,179,.14);pointer-events:none}.marker-modal{position:fixed;inset:0;z-index:1200;display:grid;place-items:center;padding:1rem;background:rgba(0,0,0,.78);backdrop-filter:blur(8px)}.marker-dialog{width:min(1100px,96vw);max-height:95vh;overflow:auto;padding:1.2rem}.marker-editor{position:relative;width:fit-content;max-width:100%;margin:auto;cursor:crosshair;touch-action:none;user-select:none;background:#050708;border-radius:12px;overflow:hidden}.marker-editor img{display:block;max-width:100%;max-height:72vh;width:auto;height:auto;pointer-events:none}.marker.active{border-width:4px;box-shadow:0 0 0 9999px rgba(0,0,0,.42)}
+    .manual-queue{margin-top:1.2rem;padding:1.2rem;display:grid;gap:.8rem}.request-row{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:1rem;border:1px solid var(--line);border-radius:12px;background:var(--panel-2)}.request-row p{margin-top:.35rem}.empty{padding:.6rem 0}
 
     .check {
       display: flex;
@@ -285,6 +327,7 @@ import { DiscordChannelPickerComponent } from '../shared/discord-channel-picker.
         grid-template-columns: 1fr;
       }
       .criterion{grid-template-columns:1fr}.criterion>label:last-of-type{grid-column:auto}
+      .request-row{align-items:stretch;flex-direction:column}
 
     }
   `],
@@ -296,6 +339,7 @@ export class VerificationComponent
 
   readonly roles = signal<any[]>([]);
   readonly levels = signal<any[]>([]);
+  readonly requests = signal<any[]>([]);
   markerLevel:any=null;
   markerDraft:any={x:0,y:0,width:1,height:1};
   private markerOrigin:{x:number;y:number}|null=null;
@@ -303,7 +347,9 @@ export class VerificationComponent
   readonly message = signal('');
 
   enabled = false;
+  autoApprove = true;
   verifiedRoleId: string | null = null;
+  reviewChannelId = '';
   invocationChannelId = '';
   textCommands = '!verify';
   slashCommandName = 'verify';
@@ -327,8 +373,10 @@ export class VerificationComponent
     ]);
 
     this.enabled = settings.enabled;
+    this.autoApprove = settings.auto_approve !== false;
     this.verifiedRoleId =
       settings.verified_role_id;
+    this.reviewChannelId = settings.review_channel_id ? String(settings.review_channel_id) : '';
     this.invocationChannelId = settings.invocation_channel_id ? String(settings.invocation_channel_id) : '';
     this.textCommands = settings.text_commands || '';
     this.slashCommandName = settings.slash_command_name || 'verify';
@@ -344,6 +392,7 @@ export class VerificationComponent
       ...criterion,
       values_text:(criterion.values?.length ? criterion.values : [criterion.expected_text]).filter(Boolean).join(', '),
     }))})));
+    if (!this.autoApprove) await this.loadPending();
   }
 
   async addLevel(): Promise<void> {
@@ -373,6 +422,23 @@ export class VerificationComponent
   }
   async removeLevel(level:any):Promise<void> { await this.verification.deleteLevel(this.guildId,level.id); this.levels.update(items=>items.filter(item=>item.id!==level.id)); }
 
+  async loadPending():Promise<void> {
+    const result=await this.verification.listRequests(this.guildId,'pending');
+    this.requests.set(result.items||[]);
+  }
+
+  async approveRequest(item:any):Promise<void> {
+    await this.verification.approve(this.guildId,item.id,null);
+    await this.loadPending();
+  }
+
+  async rejectRequest(item:any):Promise<void> {
+    const reason=window.prompt(this.i18n.t('verification.rejection_reason_prompt','Enter the rejection reason:'))?.trim();
+    if(!reason)return;
+    await this.verification.reject(this.guildId,item.id,reason);
+    await this.loadPending();
+  }
+
   async saveSettings(): Promise<void> {
     this.saving.set(true);
     this.message.set('');
@@ -384,14 +450,14 @@ export class VerificationComponent
           enabled: this.enabled,
           verified_role_id:
             this.verifiedRoleId,
-          review_channel_id: null,
+          review_channel_id: this.autoApprove ? null : (this.reviewChannelId || null),
           invocation_channel_id: this.invocationChannelId || null,
           text_commands: this.textCommands,
           slash_command_name: this.slashCommandName,
           channel_cleanup_minutes: Number(this.channelCleanupMinutes || 0),
           nickname_template:
             this.nicknameTemplate,
-          auto_approve: true,
+          auto_approve: this.autoApprove,
           alliance_min_length:
             Number(this.allianceMin),
           alliance_max_length:
@@ -402,6 +468,7 @@ export class VerificationComponent
       this.message.set(
         this.i18n.t('verification.settings_saved','Verification settings saved.'),
       );
+      if (!this.autoApprove) await this.loadPending();
     } catch {
       this.message.set(
         this.i18n.t('verification.settings_save_error','Unable to save verification settings.'),
