@@ -123,6 +123,7 @@ export const routes: Routes = [
   },
   { path: 'guild/:guildId/access-overview', component: GuildAccessOverviewComponent, canActivate: [guildGuard] },
   { path: 'guild/:guildId/billing', redirectTo: '/billing' },
+  { path: 'custom-bot', loadComponent: () => import('./pages/custom-bot.component').then(m => m.CustomBotComponent), canActivate: [authGuard] },
 { path: 'guild/:guildId/access', component: GuildAccessComponent, canActivate: [guildGuard], data: { guildModule: 'access' } },
   { path: 'guild/:guildId/explorer', component: ExplorerComponent, canActivate: [guildGuard], data: { guildModule: 'members' } },
   { path: 'guild/:guildId/ai', component: GuildAIComponent, canActivate: [guildGuard], data: { guildModule: 'settings' } },

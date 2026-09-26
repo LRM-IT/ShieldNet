@@ -125,6 +125,7 @@ interface PluginNavDefinition {
               <div class="accordion-items standalone">
                 <a routerLink="/servers" routerLinkActive="active"><span class="nav-icon">⌂</span><span>{{ 'shell.servers' | snT:'Servers' }}</span></a>
                 <a routerLink="/billing" routerLinkActive="active"><span class="nav-icon">₴</span><span>{{ 'billing.server_subscription_title' | snT:'Server subscription' }}</span></a>
+                <a routerLink="/custom-bot" routerLinkActive="active"><span class="nav-icon">⚙</span><span>{{ 'custom_bot.menu' | snT:'Custom Discord bot' }}</span></a>
                 <a routerLink="/documentation" routerLinkActive="active"><span class="nav-icon">?</span><span>{{ 'documentation.title' | snT:'Documentation' }}</span></a>
               </div>
             </section>

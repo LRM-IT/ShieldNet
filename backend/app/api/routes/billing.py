@@ -203,6 +203,11 @@ async def plans(_: User = Depends(require_superadmin), session: AsyncSession = D
                 "enabled": True, "currency": "USD", "monthly_price": None,
                 "quarterly_price": None, "yearly_price": None,
             })
+    custom = configured.get("__custom_bot__")
+    if custom:
+        data = plan_dict(custom)
+        data["name"] = "Custom Discord Bot"
+        result.append(data)
     return result
 
 @router.get("/platform/billing/package")
@@ -242,7 +247,7 @@ async def subscriptions(guild_id: int | None = None, _: User = Depends(require_s
 
 @router.post("/platform/billing/subscriptions/grant")
 async def grant(payload: GrantRequest, user: User = Depends(require_superadmin), session: AsyncSession = Depends(get_db_session)):
-    key = PAID_PACKAGE_KEY; now = datetime.now(timezone.utc)
+    key = payload.plugin_key if payload.plugin_key in {PAID_PACKAGE_KEY, "__custom_bot__"} else PAID_PACKAGE_KEY; now = datetime.now(timezone.utc)
     row = (await session.execute(select(BillingSubscription).where(BillingSubscription.guild_id == payload.guild_id, BillingSubscription.plugin_key == key))).scalar_one_or_none()
     if row is None:
         row = BillingSubscription(id=uuid4(), guild_id=payload.guild_id, plugin_key=key, billing_period=payload.billing_period,
@@ -264,16 +269,16 @@ async def revoke(subscription_id: UUID, _: User = Depends(require_superadmin), s
 async def guild_billing(guild_id: int, user: User = Depends(get_current_user), session: AsyncSession = Depends(get_db_session)):
     await require_guild_management(session, user, guild_id)
     plans = await BillingService(session).list_plans(); subscriptions = await BillingService(session).list_subscriptions(guild_id)
-    package = next((x for x in plans if x.plugin_key == PAID_PACKAGE_KEY), None)
+    billable = [x for x in plans if x.plugin_key in {PAID_PACKAGE_KEY, "__custom_bot__"} and x.enabled]
     visible_plans = []
-    if package and package.enabled:
+    for package in billable:
         data=plan_dict(package); originals=[package.monthly_price,package.quarterly_price,package.yearly_price]; discounted=[]; discount_meta=None
         for amount in originals:
             if amount is None: discounted.append(None)
             else:
                 q=await BillingDiscountService(session).quote(guild_id,amount);discounted.append(q["final"]);discount_meta=q
-        data.update({"discounted_monthly_price":discounted[0],"discounted_quarterly_price":discounted[1],"discounted_yearly_price":discounted[2],"discount":discount_meta}); visible_plans=[data]
-    tiers={x.plugin_key:("free" if x.is_free else "paid") for x in plans if x.plugin_key != PAID_PACKAGE_KEY}
+        data.update({"discounted_monthly_price":discounted[0],"discounted_quarterly_price":discounted[1],"discounted_yearly_price":discounted[2],"discount":discount_meta}); visible_plans.append(data)
+    tiers={x.plugin_key:("free" if x.is_free else "paid") for x in plans if x.plugin_key not in {PAID_PACKAGE_KEY,"__custom_bot__"}}
     provider_config=await BillingPaymentService(session).provider_config();email_config=await EmailDeliveryService(session).public_config()
     uah_quote = None
     if provider_config.get("monobank", {}).get("active"):
@@ -282,7 +287,7 @@ async def guild_billing(guild_id: int, user: User = Depends(get_current_user), s
             uah_quote = {"rate": quote["rate"], "as_of": quote["as_of"], "stale": quote["stale"]}
         except (httpx.HTTPError, ValueError, TypeError, KeyError):
             pass
-    return {"free_plugin_keys":sorted(x.plugin_key for x in plans if x.plugin_key != PAID_PACKAGE_KEY and x.is_free),"plans":visible_plans,"module_tiers":tiers,"subscriptions":[subscription_dict(x) for x in subscriptions if x.plugin_key == PAID_PACKAGE_KEY],
+    return {"free_plugin_keys":sorted(x.plugin_key for x in plans if x.plugin_key not in {PAID_PACKAGE_KEY,"__custom_bot__"} and x.is_free),"plans":visible_plans,"module_tiers":tiers,"subscriptions":[subscription_dict(x) for x in subscriptions if x.plugin_key in {PAID_PACKAGE_KEY,"__custom_bot__"}],
             "providers":{key:{"active":value["active"]} for key,value in provider_config.items()},
             "uah_quote":uah_quote,
             "email_available":bool(real_email(user)),"smtp_available":bool(email_config["enabled"] and email_config["configured"])}

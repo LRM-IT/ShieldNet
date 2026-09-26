@@ -521,7 +521,7 @@
     "mode_manual": "Manuale — attendi l’approvazione di un moderatore",
     "mode_automatic_help": "Il membro viene verificato subito dopo l’invio del modulo.",
     "mode_manual_help": "Nickname e ruolo vengono applicati solo dopo l’approvazione di un moderatore.",
-    "review_channel": "Canale o thread privato dei moderatori",
+    "review_channel": "Review channel ID",
     "review_channel_help": "Seleziona un canale o thread Discord separato visibile solo ai moderatori. Le nuove richieste vengono pubblicate lì con i pulsanti Approva e Rifiuta.",
     "review_channel_required": "Seleziona un canale o thread privato dei moderatori per la verifica manuale.",
     "review_channel_must_differ": "Il canale dei moderatori deve essere diverso dal canale di verifica dei membri.",
@@ -534,7 +534,6 @@
     "save": "Salva impostazioni",
     "enabled": "Modulo di verifica abilitato",
     "auto_approve": "Approva automaticamente le nuove richieste",
-    "review_channel": "Review channel ID",
     "channel_placeholder": "ID canale Discord",
     "verified_role": "Ruolo Verified",
     "no_role": "Non assegnare un ruolo",
@@ -2624,5 +2623,29 @@
         "details": "Scegli la durata, calcola gli sconti, paga o usa un voucher."
       }
     }
+  },
+  "custom_bot": {
+    "menu": "Bot Discord personalizzato",
+    "title": "Bot Discord personalizzato",
+    "eyebrow": "BOT CLIENTE",
+    "intro": "Run GuildConsole under your own Discord bot identity. This feature has a separate subscription.",
+    "server": "Discord server",
+    "subscription": "Custom bot subscription",
+    "subscription_help": "The subscription is independent from the server subscription.",
+    "active_until": "Active until",
+    "settings": "Bot connection",
+    "settings_help": "Create a bot in Discord Developer Portal and paste its bot token. The token is encrypted and is never shown again.",
+    "activate_first": "Activate the custom bot subscription to configure this feature.",
+    "token": "Discord bot token",
+    "validate_save": "Validate and save token",
+    "add_to_server": "Add bot to server",
+    "remove_token": "Remove token",
+    "discord_setup": "Discord setup",
+    "step1": "Create an application and bot in Discord Developer Portal.",
+    "step2": "Enable Server Members Intent and Message Content Intent.",
+    "step3": "Save the token here, then use Add bot to server.",
+    "saved": "Bot token validated and saved securely.",
+    "removed": "Bot token removed.",
+    "payment_confirmed": "Payment confirmed. Custom bot subscription is active."
   }
 }

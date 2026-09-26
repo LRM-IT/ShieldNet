@@ -523,7 +523,7 @@
     "mode_manual": "يدوي — انتظار موافقة المشرف",
     "mode_automatic_help": "يتم التحقق من العضو فور إرسال النموذج.",
     "mode_manual_help": "لا يتم تطبيق الاسم والدور إلا بعد موافقة المشرف.",
-    "review_channel": "قناة أو سلسلة خاصة بالمشرفين",
+    "review_channel": "قناة المراجعة",
     "review_channel_help": "حدد قناة أو سلسلة Discord منفصلة لا يراها سوى المشرفين. تُنشر الطلبات الجديدة هناك مع زري الموافقة والرفض.",
     "review_channel_required": "حدد قناة أو سلسلة خاصة بالمشرفين للتحقق اليدوي.",
     "review_channel_must_differ": "يجب أن تختلف قناة المشرفين عن قناة تحقق الأعضاء.",
@@ -536,7 +536,6 @@
     "save": "حفظ الإعدادات",
     "enabled": "وحدة التحقق مفعّلة",
     "auto_approve": "الموافقة تلقائيًا على الطلبات الجديدة",
-    "review_channel": "قناة المراجعة",
     "channel_placeholder": "معرّف قناة Discord",
     "verified_role": "دور Verified",
     "no_role": "عدم تعيين دور",
@@ -2626,5 +2625,29 @@
         "details": "اختر المدة واحسب الخصومات وادفع أو استخدم قسيمة."
       }
     }
+  },
+  "custom_bot": {
+    "menu": "روبوت Discord مخصص",
+    "title": "روبوت Discord مخصص",
+    "eyebrow": "روبوت العميل",
+    "intro": "Run GuildConsole under your own Discord bot identity. This feature has a separate subscription.",
+    "server": "Discord server",
+    "subscription": "Custom bot subscription",
+    "subscription_help": "The subscription is independent from the server subscription.",
+    "active_until": "Active until",
+    "settings": "Bot connection",
+    "settings_help": "Create a bot in Discord Developer Portal and paste its bot token. The token is encrypted and is never shown again.",
+    "activate_first": "Activate the custom bot subscription to configure this feature.",
+    "token": "Discord bot token",
+    "validate_save": "Validate and save token",
+    "add_to_server": "Add bot to server",
+    "remove_token": "Remove token",
+    "discord_setup": "Discord setup",
+    "step1": "Create an application and bot in Discord Developer Portal.",
+    "step2": "Enable Server Members Intent and Message Content Intent.",
+    "step3": "Save the token here, then use Add bot to server.",
+    "saved": "Bot token validated and saved securely.",
+    "removed": "Bot token removed.",
+    "payment_confirmed": "Payment confirmed. Custom bot subscription is active."
   }
 }

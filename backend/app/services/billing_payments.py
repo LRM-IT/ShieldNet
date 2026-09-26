@@ -172,7 +172,9 @@ class BillingPaymentService:
         await self.session.commit()
 
     async def pay_from_wallet(self, guild_id: int, discord_user_id: int, plugin_key: str, period: str, auto_renew:bool=False) -> dict:
-        key = PAID_PACKAGE_KEY
+        key = plugin_key if plugin_key in {PAID_PACKAGE_KEY, "__custom_bot__"} else PAID_PACKAGE_KEY
+        if key == "__custom_bot__" and period == "custom":
+            raise PaymentError("Custom days are unavailable for this subscription")
         if period not in PERIOD_DAYS:
             raise PaymentError("Unsupported plan")
         plan = (await self.session.execute(select(BillingPluginPlan).where(BillingPluginPlan.plugin_key == key))).scalar_one_or_none()
@@ -221,7 +223,9 @@ class BillingPaymentService:
                 "tenure_discount_amount": base - discount["final"], "total_amount": max(Decimal("0.01"), discount["final"])}
 
     async def create_checkout(self, guild_id: int, plugin_key: str, period: str, provider: str, base_url: str, owner_discord_id: int, days: int | None = None, locale: str = "en") -> dict:
-        key = PAID_PACKAGE_KEY
+        key = plugin_key if plugin_key in {PAID_PACKAGE_KEY, "__custom_bot__"} else PAID_PACKAGE_KEY
+        if key == "__custom_bot__" and period == "custom":
+            raise PaymentError("Custom days are unavailable for this subscription")
         if (period not in PERIOD_DAYS and period != "custom") or provider not in {"liqpay", "monobank"} or (period == "custom" and days is None) or (period != "custom" and days is not None):
             raise PaymentError("Unsupported billing period or provider")
         config = await self.provider_config()
@@ -262,9 +266,12 @@ class BillingPaymentService:
                                  original_amount_usd=original_amount,base_amount_usd=base_amount,discount_percent=discount["total_percent"],discount_code=discount["card_code"],quote_expires_at=datetime.now(timezone.utc)+timedelta(minutes=30))
         self.session.add(payment)
         await self.session.commit()
-        product = f"GuildConsole software modules for Discord server {guild_id} - {payment.access_days} days"
+        product = (f"GuildConsole custom Discord bot for server {guild_id} - {payment.access_days} days"
+                   if key == "__custom_bot__" else
+                   f"GuildConsole software modules for Discord server {guild_id} - {payment.access_days} days")
         callback = f"{base_url}/api/v1/billing/callback/{provider}"
-        result = f"{base_url}/billing?payment={order}&guild_id={guild_id}"
+        result_path = "/custom-bot" if key == "__custom_bot__" else "/billing"
+        result = f"{base_url}{result_path}?payment={order}&guild_id={guild_id}"
         if provider == "monobank":
             token = await self.secret("monobank_token")
             amount_minor = int((amount * 100).to_integral_exact())
