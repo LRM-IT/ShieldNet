@@ -1979,7 +1979,8 @@
     "status_error": "errore",
     "sync_fresh": "aggiornato",
     "sync_stale": "obsoleto",
-    "sync_never": "mai"
+    "sync_never": "mai",
+    "custom_bot_online": "Online con il bot personalizzato"
   },
   "platform_users": {
     "nav": "Proprietari server",

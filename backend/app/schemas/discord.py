@@ -22,3 +22,4 @@ class GuildAccessResponse(BaseModel):
     last_sync_at: str | None = None
     sync_status: str = "never"
     enabled_plugins: int = 0
+    custom_bot_active: bool = False

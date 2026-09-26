@@ -276,13 +276,14 @@ class BillingPaymentService:
             token = await self.secret("monobank_token")
             amount_minor = int((amount * 100).to_integral_exact())
             checkout_text = _monobank_checkout_text(locale, guild_id, payment.access_days)
+            product_code = "guildconsole-custom-bot" if key == "__custom_bot__" else "guildconsole-server-access"
             invoice = {
                 "amount": amount_minor, "ccy": 980,
                 "merchantPaymInfo": {
                     "reference": order,
                     "destination": checkout_text["destination"],
                     "comment": checkout_text["destination"],
-                    "basketOrder": [{"name": checkout_text["name"], "qty": 1, "sum": amount_minor, "total": amount_minor, "unit": "шт.", "icon": f"{base_url}/assets/guildconsole-product.svg"}],
+                    "basketOrder": [{"name": checkout_text["name"], "code": product_code, "qty": 1, "sum": amount_minor, "total": amount_minor, "unit": "шт.", "icon": f"{base_url}/assets/guildconsole-product.svg"}],
                 },
                 "redirectUrl": result, "webHookUrl": callback,
                 "validity": 1800, "paymentType": "debit",

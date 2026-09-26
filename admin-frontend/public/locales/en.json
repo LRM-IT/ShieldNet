@@ -1939,7 +1939,8 @@
     "status_error": "error",
     "sync_fresh": "fresh",
     "sync_stale": "stale",
-    "sync_never": "never"
+    "sync_never": "never",
+    "custom_bot_online": "Online on custom bot"
   },
   "platform_users": {
     "nav": "Server owners",

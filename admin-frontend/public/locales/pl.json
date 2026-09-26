@@ -1979,7 +1979,8 @@
     "status_error": "błąd",
     "sync_fresh": "aktualny",
     "sync_stale": "nieaktualny",
-    "sync_never": "nigdy"
+    "sync_never": "nigdy",
+    "custom_bot_online": "Online na własnym bocie"
   },
   "platform_users": {
     "nav": "Właściciele serwerów",

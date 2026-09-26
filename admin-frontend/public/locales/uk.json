@@ -1872,7 +1872,8 @@
     "status_error": "помилка",
     "sync_fresh": "актуально",
     "sync_stale": "застаріло",
-    "sync_never": "ніколи"
+    "sync_never": "ніколи",
+    "custom_bot_online": "У мережі на власному боті"
   },
   "platform_users": {
     "nav": "Власники серверів",

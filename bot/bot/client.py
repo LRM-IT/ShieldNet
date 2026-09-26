@@ -502,6 +502,9 @@ class ShieldNetBot(discord.Client):
     async def periodic_sync(self) -> None:
         for guild in self.managed_guilds:
             try:
+                # Keep inventory health current for both the platform bot and
+                # guild-scoped custom bot sessions.
+                await self.backend.register_guild(guild)
                 await self.reload_config(guild.id)
             except Exception:
                 logger.exception("Periodic sync failed for guild %s", guild.id)

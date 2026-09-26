@@ -25,7 +25,7 @@ import { TranslationService } from '../core/translation.service';
           <div class="guild-head">
             @if(guild.icon_url){<img [src]="guild.icon_url" alt="">}@else{<div class="avatar">{{guild.name.slice(0,1).toUpperCase()}}</div>}
             <div><strong>{{guild.name}}</strong><small>{{guild.guild_id}}</small></div>
-            <span class="state" [class.online]="isConnected(guild)" [class.stale]="guild.sync_status==='stale'"><i></i>{{statusLabel(guild)}}</span>
+            <span class="state" [class.online]="isConnected(guild)" [class.stale]="!guild.custom_bot_active&&guild.sync_status==='stale'"><i></i>{{statusLabel(guild)}}</span>
           </div>
           <div class="stats">
             <div><span>{{'server_cards.members'|snT:'Members'}}</span><strong>{{guild.member_count}}</strong></div>
@@ -59,7 +59,7 @@ export class ServerSelectorComponent implements OnInit,OnDestroy {
   async remove(g:GuildAccess){const ok=await this.modal.confirm(this.i18n.t('server_cards.delete_confirm','Permanently delete {name} and all saved GuildConsole settings?').replace('{name}',g.name),{title:this.i18n.t('server_cards.delete_title','Delete server record'),confirmLabel:this.i18n.t('server_cards.delete_record','Delete permanently'),cancelLabel:this.i18n.t('ui.cancel','Cancel'),danger:true});if(!ok)return;try{await this.service.remove(g.guild_id);this.guilds.update(items=>items.filter(x=>x.guild_id!==g.guild_id));this.toast.success(this.i18n.t('ui.success','Completed'),this.i18n.t('server_cards.deleted','Server record deleted.'))}catch(e:any){this.error.set(e?.error?.detail||this.i18n.t('server_cards.delete_error','Unable to delete the server record.'))}}
   isConnected(g:GuildAccess){return g.bot_status==='online'&&!!g.last_sync_at}
   botInstallUrl(id:string){return `/api/v1/auth/discord/bot-install?guild_id=${encodeURIComponent(id)}`}
-  statusLabel(g:GuildAccess){return `${this.i18n.t('server_cards.status_'+g.bot_status,g.bot_status)} · ${this.i18n.t('server_cards.sync_'+(g.sync_status||'never'),g.sync_status||'never')}`}
+  statusLabel(g:GuildAccess){if(g.custom_bot_active)return this.i18n.t('server_cards.custom_bot_online','Online on custom bot');return `${this.i18n.t('server_cards.status_'+g.bot_status,g.bot_status)} · ${this.i18n.t('server_cards.sync_'+(g.sync_status||'never'),g.sync_status||'never')}`}
   isPaid(g:GuildAccess){return g.billing_status==='active'&&!!g.billing_expires_at&&new Date(g.billing_expires_at).getTime()>this.now()}
   isExpired(g:GuildAccess){return !!g.billing_expires_at&&!this.isPaid(g)}
   paymentLabel(g:GuildAccess){if(!g.billing_expires_at)return this.i18n.t('server_cards.not_paid','Paid access is not active');const left=new Date(g.billing_expires_at).getTime()-this.now();if(left<=0||g.billing_status!=='active')return this.i18n.t('server_cards.expired','Paid access expired');const total=Math.floor(left/1000),days=Math.floor(total/86400),hours=Math.floor(total%86400/3600),minutes=Math.floor(total%3600/60),seconds=total%60;const time=days>0?`${days}${this.i18n.t('server_cards.day_short','d')} ${hours}${this.i18n.t('server_cards.hour_short','h')} ${minutes}${this.i18n.t('server_cards.minute_short','m')}`:`${hours}${this.i18n.t('server_cards.hour_short','h')} ${minutes}${this.i18n.t('server_cards.minute_short','m')} ${seconds}${this.i18n.t('server_cards.second_short','s')}`;return `${this.i18n.t('server_cards.paid_for','Paid for')} ${time}`}

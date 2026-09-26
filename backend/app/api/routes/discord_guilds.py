@@ -10,12 +10,15 @@ from app.models.core import User
 from app.models.discord import Guild, GuildMembership, GuildStatus, MembershipStatus
 from app.models.billing import BillingSubscription
 from app.models.modules import GuildModule
+from app.models.plugin_control import PluginSecret
 from app.schemas.discord import GuildAccessResponse
 from app.services.global_access import GlobalAccessService
 
 router = APIRouter(prefix="/discord", tags=["Discord"])
 
 PAID_PACKAGE_KEY = "__paid_modules__"
+CUSTOM_BOT_PACKAGE_KEY = "__custom_bot__"
+CUSTOM_BOT_VAULT_KEY = "custom_discord_bot"
 
 async def _billing_by_guild(session: AsyncSession, guild_ids: list[int]) -> dict[int, BillingSubscription]:
     if not guild_ids:
@@ -35,6 +38,26 @@ async def _plugin_counts(session: AsyncSession, guild_ids: list[int]) -> dict[in
         .group_by(GuildModule.guild_id)
     )).all()
     return {guild_id: count for guild_id, count in rows}
+
+async def _active_custom_bot_guilds(session: AsyncSession, guild_ids: list[int]) -> set[int]:
+    if not guild_ids:
+        return set()
+    now = datetime.now(UTC)
+    subscribed = set((await session.execute(select(BillingSubscription.guild_id).where(
+        BillingSubscription.guild_id.in_(guild_ids),
+        BillingSubscription.plugin_key == CUSTOM_BOT_PACKAGE_KEY,
+        BillingSubscription.status == "active",
+        BillingSubscription.expires_at > now,
+    ))).scalars())
+    if not subscribed:
+        return set()
+    configured = set((await session.execute(select(PluginSecret.scope_key).where(
+        PluginSecret.plugin_key == CUSTOM_BOT_VAULT_KEY,
+        PluginSecret.scope == "guild",
+        PluginSecret.secret_name == "token",
+        PluginSecret.scope_key.in_([str(guild_id) for guild_id in subscribed]),
+    ))).scalars())
+    return {guild_id for guild_id in subscribed if str(guild_id) in configured}
 
 def _sync_status(guild: Guild) -> str:
     if guild.last_sync_at is None:
@@ -64,6 +87,7 @@ async def list_my_guilds(
     rows = result.all()
     billing = await _billing_by_guild(session, [g.guild_id for g, _ in rows])
     plugins = await _plugin_counts(session, [g.guild_id for g, _ in rows])
+    custom_bots = await _active_custom_bot_guilds(session, [g.guild_id for g, _ in rows])
     return [
         GuildAccessResponse(
             guild_id=str(g.guild_id),
@@ -83,6 +107,7 @@ async def list_my_guilds(
             last_sync_at=g.last_sync_at.isoformat() if g.last_sync_at else None,
             sync_status=_sync_status(g),
             enabled_plugins=plugins.get(g.guild_id, 0),
+            custom_bot_active=g.guild_id in custom_bots,
         )
         for g, m in rows
     ]

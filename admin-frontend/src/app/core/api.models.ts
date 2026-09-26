@@ -43,5 +43,6 @@ export interface GuildAccess {
   last_sync_at?: string | null;
   sync_status?: 'fresh' | 'stale' | 'never';
   enabled_plugins?: number;
+  custom_bot_active?: boolean;
 
 }

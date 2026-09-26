@@ -1980,7 +1980,8 @@
     "status_error": "erreur",
     "sync_fresh": "à jour",
     "sync_stale": "obsolète",
-    "sync_never": "jamais"
+    "sync_never": "jamais",
+    "custom_bot_online": "En ligne sur le bot personnalisé"
   },
   "platform_users": {
     "nav": "Propriétaires",

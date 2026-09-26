@@ -1981,7 +1981,8 @@
     "status_error": "Fehler",
     "sync_fresh": "aktuell",
     "sync_stale": "veraltet",
-    "sync_never": "nie"
+    "sync_never": "nie",
+    "custom_bot_online": "Online über eigenen Bot"
   },
   "platform_users": {
     "nav": "Serverbesitzer",

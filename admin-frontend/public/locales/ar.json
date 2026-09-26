@@ -1981,7 +1981,8 @@
     "status_error": "خطأ",
     "sync_fresh": "محدّث",
     "sync_stale": "قديم",
-    "sync_never": "أبداً"
+    "sync_never": "أبداً",
+    "custom_bot_online": "متصل عبر البوت الخاص"
   },
   "platform_users": {
     "nav": "مالكو الخوادم",
