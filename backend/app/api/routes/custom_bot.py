@@ -8,12 +8,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.dependencies.auth import get_current_user
 from app.api.dependencies.guild_access import require_guild_management
+from app.api.dependencies.internal import verify_internal_service_token
 from app.db.session import get_db_session
 from app.models.billing import BillingSubscription
 from app.models.core import User
 from app.services.plugin_control_service import PluginControlService
 
 router = APIRouter(tags=["Custom Discord Bot"])
+internal_router = APIRouter(prefix="/internal/custom-bots", tags=["Internal Custom Bots"], dependencies=[Depends(verify_internal_service_token)])
 PLAN_KEY = "__custom_bot__"
 VAULT_KEY = "custom_discord_bot"
 
@@ -30,6 +32,15 @@ async def active_subscription(session: AsyncSession, guild_id: int) -> BillingSu
         BillingSubscription.status == "active",
         BillingSubscription.expires_at > now,
     ))
+
+@internal_router.get("")
+async def active_custom_bots(session: AsyncSession = Depends(get_db_session)):
+    rows=list((await session.execute(select(BillingSubscription).where(BillingSubscription.plugin_key==PLAN_KEY,BillingSubscription.status=="active",BillingSubscription.expires_at>datetime.now(UTC)))).scalars())
+    vault=PluginControlService(session);result=[]
+    for row in rows:
+        token=await vault.get_secret(VAULT_KEY,"token","guild",str(row.guild_id))
+        if token:result.append({"guild_id":str(row.guild_id),"token":token,"expires_at":row.expires_at})
+    return result
 
 
 @router.get("/discord/guilds/{guild_id}/custom-bot")

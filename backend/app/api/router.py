@@ -95,7 +95,7 @@ from app.api.routes.plugin_audit_security import router as plugin_audit_security
 from app.api.routes.plugin_cross_guild_network import router as plugin_cross_guild_network_router
 from app.api.routes.core_setup_wizard import router as core_setup_wizard_router
 from app.api.routes.verification_levels import router as verification_levels_router, internal_router as internal_verification_levels_router
-from app.api.routes.custom_bot import router as custom_bot_router
+from app.api.routes.custom_bot import router as custom_bot_router, internal_router as internal_custom_bot_router
 
 api_router = APIRouter()
 
@@ -152,6 +152,7 @@ api_router.include_router(verification_router)
 api_router.include_router(internal_verification_router)
 api_router.include_router(verification_levels_router)
 api_router.include_router(custom_bot_router)
+api_router.include_router(internal_custom_bot_router)
 api_router.include_router(internal_verification_levels_router)
 api_router.include_router(leadership_router)
 api_router.include_router(internal_leadership_router)

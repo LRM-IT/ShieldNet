@@ -18,6 +18,12 @@ class BackendClient:
             "Content-Type": "application/json",
         }
 
+    async def active_custom_bots(self) -> list[dict]:
+        async with httpx.AsyncClient(timeout=20) as client:
+            response = await client.get(f"{self.base_url}/api/v1/internal/custom-bots", headers=self.headers)
+        response.raise_for_status()
+        return response.json()
+
     async def register_guild(self, guild) -> None:
         payload = {
             "guild_id": guild.id,

@@ -41,7 +41,7 @@ logger = logging.getLogger(__name__)
 
 
 class ShieldNetBot(discord.Client):
-    def __init__(self) -> None:
+    def __init__(self, *, target_guild_id: int | None = None, excluded_guild_ids: set[int] | None = None) -> None:
         intents = discord.Intents.default()
         intents.guilds = True
         intents.members = True
@@ -50,6 +50,8 @@ class ShieldNetBot(discord.Client):
         intents.presences = True
         intents.voice_states = True
         super().__init__(intents=intents, chunk_guilds_at_startup=False)
+        self.target_guild_id = target_guild_id
+        self.excluded_guild_ids = excluded_guild_ids or set()
 
         self.tree = app_commands.CommandTree(self)
         self.backend = BackendClient()
@@ -81,8 +83,24 @@ class ShieldNetBot(discord.Client):
         self._verification_slash_commands: dict[int, str] = {}
         self._initial_sync_done = False
         self.redis = Redis.from_url(settings.redis_url, decode_responses=True)
-        self.worker_name = f"discord-worker:{socket.gethostname()}"
+        self.worker_name = f"discord-worker:{socket.gethostname()}" + (f":custom:{target_guild_id}" if target_guild_id else ":system")
         self._register_commands()
+
+    @property
+    def managed_guilds(self):
+        return [g for g in self.guilds if self._handles_guild(g.id)]
+
+    def _handles_guild(self, guild_id: int | None) -> bool:
+        if guild_id is None:return True
+        return guild_id == self.target_guild_id if self.target_guild_id else guild_id not in self.excluded_guild_ids
+
+    def dispatch(self, event: str, /, *args, **kwargs) -> None:
+        if event not in {"ready", "connect", "disconnect", "resumed"} and args:
+            obj=args[0];guild_id=getattr(obj,"guild_id",None)
+            if guild_id is None:
+                guild=getattr(obj,"guild",None);guild_id=getattr(guild,"id",None)
+            if guild_id is not None and not self._handles_guild(guild_id):return
+        super().dispatch(event,*args,**kwargs)
 
     async def _open_verification(self, interaction: discord.Interaction, *, command_name: str) -> None:
         if interaction.guild is None:
@@ -389,9 +407,8 @@ class ShieldNetBot(discord.Client):
                 await interaction.followup.send(chunk, ephemeral=private)
 
     async def setup_hook(self) -> None:
-        if settings.sync_commands_on_start:
-            synced = await self.tree.sync()
-            logger.info("Commands synchronized: %s", len(synced))
+        # Commands are synchronized per guild in on_ready so one application owns
+        # a guild at a time and Discord does not show duplicate command sets.
         self.periodic_sync.start()
         self.verification_loop.start()
         self.verification_channel_cleanup_loop.start()
@@ -406,7 +423,7 @@ class ShieldNetBot(discord.Client):
         self.explorer_snapshot_loop.start()
         self.runtime_heartbeat_loop.start()
         self.voting.loop.start()
-        asyncio.create_task(self.queue_worker())
+        if self.target_guild_id is None: asyncio.create_task(self.queue_worker())
 
     async def close(self) -> None:
         if self.periodic_sync.is_running():
@@ -418,6 +435,13 @@ class ShieldNetBot(discord.Client):
         logger.info("Connected as %s; guilds=%s", self.user, len(self.guilds))
         if not self._initial_sync_done:
             self._initial_sync_done = True
+            if self.target_guild_id:
+                for guild in list(self.guilds):
+                    if guild.id != self.target_guild_id: await guild.leave()
+            if settings.sync_commands_on_start:
+                for guild in self.managed_guilds:
+                    ref=discord.Object(id=guild.id);self.tree.copy_global_to(guild=ref);await self.tree.sync(guild=ref)
+                self.tree.clear_commands(guild=None);await self.tree.sync()
             asyncio.create_task(self._sync_all())
             asyncio.create_task(self._sync_all_guild_roles())
 
@@ -459,7 +483,7 @@ class ShieldNetBot(discord.Client):
             return state
 
     async def _sync_all(self) -> None:
-        for guild in self.guilds:
+        for guild in self.managed_guilds:
             try:
                 await self.backend.register_guild(guild)
                 await self.reload_config(guild.id)
@@ -467,19 +491,19 @@ class ShieldNetBot(discord.Client):
                 logger.exception("Initial sync failed for guild %s", guild.id)
             await asyncio.sleep(.25)
         try:
-            await self.backend.reconcile_guilds([guild.id for guild in self.guilds])
+            await self.backend.reconcile_guilds([guild.id for guild in self.managed_guilds])
         except Exception:
             logger.exception("Guild registry reconciliation failed")
 
     @tasks.loop(minutes=5)
     async def periodic_sync(self) -> None:
-        for guild in self.guilds:
+        for guild in self.managed_guilds:
             try:
                 await self.reload_config(guild.id)
             except Exception:
                 logger.exception("Periodic sync failed for guild %s", guild.id)
         try:
-            await self.backend.reconcile_guilds([guild.id for guild in self.guilds])
+            await self.backend.reconcile_guilds([guild.id for guild in self.managed_guilds])
         except Exception:
             logger.exception("Periodic guild registry reconciliation failed")
 
@@ -693,7 +717,7 @@ class ShieldNetBot(discord.Client):
 
     @tasks.loop(seconds=10)
     async def member_action_loop(self) -> None:
-        for guild in self.guilds:
+        for guild in self.managed_guilds:
             try:
                 actions = await self.member_actions.fetch(guild.id)
                 for action in actions:
@@ -708,7 +732,7 @@ class ShieldNetBot(discord.Client):
 
     @tasks.loop(minutes=15)
     async def security_snapshot_loop(self) -> None:
-        for guild in self.guilds:
+        for guild in self.managed_guilds:
             try:
                 await self.security_sync.synchronize(guild)
             except Exception:
@@ -722,7 +746,7 @@ class ShieldNetBot(discord.Client):
 
     @tasks.loop(minutes=10)
     async def explorer_snapshot_loop(self) -> None:
-        for guild in self.guilds:
+        for guild in self.managed_guilds:
             try:
                 await self.explorer_sync.synchronize(guild)
             except Exception:
@@ -761,7 +785,7 @@ class ShieldNetBot(discord.Client):
                 payload = json.loads(raw)
                 job = str(payload.get("job") or "")
                 guild_id = payload.get("guild_id")
-                guilds = [self.get_guild(int(guild_id))] if guild_id else list(self.guilds)
+                guilds = [self.get_guild(int(guild_id))] if guild_id else list(self.managed_guilds)
                 guilds = [g for g in guilds if g is not None]
                 logger.info("Queue job received: job=%s guilds=%s", job, len(guilds))
                 if job == "sync_guilds":
@@ -826,7 +850,7 @@ class ShieldNetBot(discord.Client):
             )
 
     async def _sync_all_guild_roles(self) -> None:
-        for guild in self.guilds:
+        for guild in self.managed_guilds:
             try:
                 await self._ensure_guildconsole_role(guild)
                 await self.guild_role_sync.synchronize(guild)
@@ -912,7 +936,7 @@ class ShieldNetBot(discord.Client):
 
     @tasks.loop(seconds=10)
     async def verification_loop(self) -> None:
-        for guild in self.guilds:
+        for guild in self.managed_guilds:
             try:
                 await self._sync_verification_command(guild)
                 items = await self.verification.fetch_pending(guild.id)
@@ -927,7 +951,7 @@ class ShieldNetBot(discord.Client):
 
     @tasks.loop(minutes=1)
     async def verification_channel_cleanup_loop(self) -> None:
-        for guild in self.guilds:
+        for guild in self.managed_guilds:
             try:
                 config = await self.verification.settings(guild.id)
                 minutes = int(config.get("channel_cleanup_minutes") or 0)
@@ -950,7 +974,7 @@ class ShieldNetBot(discord.Client):
 
     @tasks.loop(seconds=10)
     async def verification_notification_loop(self) -> None:
-        for guild in self.guilds:
+        for guild in self.managed_guilds:
             try:
                 items = await self.verification.fetch_notifications(
                     guild.id
@@ -997,7 +1021,7 @@ class ShieldNetBot(discord.Client):
 
     @tasks.loop(seconds=10)
     async def verification_review_loop(self) -> None:
-        for guild in self.guilds:
+        for guild in self.managed_guilds:
             try:
                 payload = await self.verification.fetch_review_notifications(
                     guild.id
