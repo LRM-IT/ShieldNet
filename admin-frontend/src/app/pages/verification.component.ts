@@ -58,9 +58,9 @@ import { DiscordChannelPickerComponent } from '../shared/discord-channel-picker.
         </label>
 
         @if (!autoApprove) {
-          <label>{{'verification.review_channel'|snT:'Moderator review channel'}}
+          <label>{{'verification.review_channel'|snT:'Private moderator channel or thread'}}
             <sn-discord-channel-picker [guildId]="guildId" [value]="reviewChannelId || null" (valueChange)="reviewChannelId=$event || ''" />
-            <small class="muted">{{'verification.review_channel_help'|snT:'New requests are posted here with Approve and Reject buttons. Only moderators can use them.'}}</small>
+            <small class="muted">{{'verification.review_channel_help'|snT:'Select a separate Discord channel or thread visible only to moderators. New requests are posted there with Approve and Reject buttons.'}}</small>
           </label>
         }
 
@@ -442,6 +442,17 @@ export class VerificationComponent
   async saveSettings(): Promise<void> {
     this.saving.set(true);
     this.message.set('');
+
+    if (!this.autoApprove && !this.reviewChannelId) {
+      this.message.set(this.i18n.t('verification.review_channel_required','Select a private moderator channel or thread for manual verification.'));
+      this.saving.set(false);
+      return;
+    }
+    if (!this.autoApprove && this.reviewChannelId === this.invocationChannelId) {
+      this.message.set(this.i18n.t('verification.review_channel_must_differ','The moderator channel must be different from the member verification channel.'));
+      this.saving.set(false);
+      return;
+    }
 
     try {
       await this.verification.saveSettings(
