@@ -41,15 +41,16 @@ async def get_custom_bot(guild_id: int, user: User = Depends(get_current_user), 
     application_id = await vault.get_secret(VAULT_KEY, "application_id", "guild", str(guild_id))
     subscription = await active_subscription(session, guild_id)
     invite_url = None
-    if application_id:
+    if application_id and subscription:
         permissions = 8
-        invite_url = f"https://discord.com/oauth2/authorize?client_id={application_id}&permissions={permissions}&scope=bot%20applications.commands"
+        invite_url = f"https://discord.com/oauth2/authorize?client_id={application_id}&permissions={permissions}&scope=bot%20applications.commands&guild_id={guild_id}&disable_guild_select=true"
     return {
         "configured": configured,
         "username": username,
         "application_id": application_id,
         "invite_url": invite_url,
         "subscription_active": subscription is not None,
+        "service_active": subscription is not None and configured,
         "expires_at": subscription.expires_at if subscription else None,
     }
 
@@ -73,7 +74,7 @@ async def save_custom_bot(payload: CustomBotInput, guild_id: int, user: User = D
     for name, value in (("token", token), ("application_id", application_id), ("username", username)):
         await vault.put_secret(VAULT_KEY, name, value, "guild", str(guild_id), user.id)
     return {"configured": True, "username": username, "application_id": application_id,
-            "invite_url": f"https://discord.com/oauth2/authorize?client_id={application_id}&permissions=8&scope=bot%20applications.commands"}
+            "invite_url": f"https://discord.com/oauth2/authorize?client_id={application_id}&permissions=8&scope=bot%20applications.commands&guild_id={guild_id}&disable_guild_select=true"}
 
 
 @router.delete("/discord/guilds/{guild_id}/custom-bot")

@@ -2722,6 +2722,9 @@
     "voucher_title": "Custom bot voucher",
     "voucher_help": "Use a voucher issued specifically for the Custom Discord bot subscription.",
     "subscription_tab": "Subscription and setup",
-    "notifications_tab": "Expiry notification"
+    "notifications_tab": "Expiry notification",
+    "install_title": "Install your bot on the server",
+    "install_help": "The administrator must add the customer-owned bot to the selected Discord server. Save and validate its token first.",
+    "save_token_first": "Save the bot token first"
   }
 }

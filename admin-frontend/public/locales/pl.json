@@ -2653,6 +2653,9 @@
     "voucher_title": "Voucher własnego bota",
     "voucher_help": "Użyj vouchera przeznaczonego dla subskrypcji własnego bota Discord.",
     "subscription_tab": "Subskrypcja i konfiguracja",
-    "notifications_tab": "Powiadomienie o wygaśnięciu"
+    "notifications_tab": "Powiadomienie o wygaśnięciu",
+    "install_title": "Zainstaluj własnego bota na serwerze",
+    "install_help": "Administrator musi dodać własnego bota do wybranego serwera Discord. Najpierw zapisz i sprawdź token.",
+    "save_token_first": "Najpierw zapisz token bota"
   }
 }

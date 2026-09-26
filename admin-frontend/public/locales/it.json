@@ -2653,6 +2653,9 @@
     "voucher_title": "Voucher bot personalizzato",
     "voucher_help": "Usa un voucher emesso per l’abbonamento del bot Discord personalizzato.",
     "subscription_tab": "Abbonamento e configurazione",
-    "notifications_tab": "Notifica di scadenza"
+    "notifications_tab": "Notifica di scadenza",
+    "install_title": "Installa il tuo bot sul server",
+    "install_help": "L’amministratore deve aggiungere il bot al server Discord selezionato. Prima salva e verifica il token.",
+    "save_token_first": "Salva prima il token del bot"
   }
 }

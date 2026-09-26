@@ -2654,6 +2654,9 @@
     "voucher_title": "Bon du bot personnalisé",
     "voucher_help": "Utilisez un bon émis pour l’abonnement du bot Discord personnalisé.",
     "subscription_tab": "Abonnement et configuration",
-    "notifications_tab": "Notification d’expiration"
+    "notifications_tab": "Notification d’expiration",
+    "install_title": "Installer votre bot sur le serveur",
+    "install_help": "L’administrateur doit ajouter le bot au serveur Discord sélectionné. Enregistrez et validez d’abord son jeton.",
+    "save_token_first": "Enregistrer d’abord le jeton"
   }
 }

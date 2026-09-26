@@ -2655,6 +2655,9 @@
     "voucher_title": "Gutschein für eigenen Bot",
     "voucher_help": "Verwende einen Gutschein für das Abonnement des eigenen Discord-Bots.",
     "subscription_tab": "Abonnement und Einrichtung",
-    "notifications_tab": "Ablaufbenachrichtigung"
+    "notifications_tab": "Ablaufbenachrichtigung",
+    "install_title": "Eigenen Bot auf dem Server installieren",
+    "install_help": "Der Administrator muss den eigenen Bot zum ausgewählten Discord-Server hinzufügen. Speichere und prüfe zuerst das Token.",
+    "save_token_first": "Zuerst Bot-Token speichern"
   }
 }
