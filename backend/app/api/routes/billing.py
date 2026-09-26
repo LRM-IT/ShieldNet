@@ -35,6 +35,7 @@ def billing_message(locale:str|None,key:str,**values)->str:
         "dm_check":{"uk":"✅ GuildConsole: особисті повідомлення доступні. Нагадування про завершення підписки можуть надходити сюди.","ru":"✅ GuildConsole: личные сообщения доступны. Напоминания об окончании подписки могут приходить сюда.","en":"✅ GuildConsole: direct messages are available. Subscription expiry reminders can be delivered here."},
         "low_balance":{"uk":"⚠️ GuildConsole: ваш баланс становить {balance:.2f} USD і досяг установленого порога {threshold:.2f} USD.","ru":"⚠️ GuildConsole: ваш баланс составляет {balance:.2f} USD и достиг установленного порога {threshold:.2f} USD.","en":"⚠️ GuildConsole: your balance is {balance:.2f} USD and has reached the configured threshold of {threshold:.2f} USD."},
         "expiry":{"uk":"⏳ GuildConsole: підписка сервера «{name}» завершується {expires} UTC (залишилось приблизно {days} дн.).","ru":"⏳ GuildConsole: подписка сервера «{name}» заканчивается {expires} UTC (осталось примерно {days} дн.).","en":"⏳ GuildConsole: the subscription for “{name}” expires at {expires} UTC (approximately {days} days remaining)."},
+        "custom_bot_expiry":{"uk":"⏳ GuildConsole: підписка власного Discord-бота для сервера «{name}» завершується {expires} UTC (залишилось приблизно {days} дн.).","ru":"⏳ GuildConsole: подписка собственного Discord-бота для сервера «{name}» заканчивается {expires} UTC (осталось примерно {days} дн.).","en":"⏳ GuildConsole: the custom Discord bot subscription for “{name}” expires at {expires} UTC (approximately {days} days remaining)."},
     }
     return messages[key][language].format(**values)
 
@@ -349,15 +350,16 @@ async def wallet_settings(payload:WalletSettingsRequest,user:User=Depends(get_cu
     await session.commit();return {"low_balance_enabled":wallet.low_balance_enabled,"low_balance_threshold":wallet.low_balance_threshold,"low_balance_discord_dm":wallet.low_balance_discord_dm,"low_balance_email":wallet.low_balance_email}
 
 @router.put("/billing/subscriptions/{guild_id}/reminder")
-async def subscription_reminder(guild_id:int,payload:SubscriptionReminderRequest,user:User=Depends(get_current_user),session:AsyncSession=Depends(get_db_session)):
+async def subscription_reminder(guild_id:int,payload:SubscriptionReminderRequest,plugin_key:str=Query(default=PAID_PACKAGE_KEY),user:User=Depends(get_current_user),session:AsyncSession=Depends(get_db_session)):
     guild=await session.get(Guild,guild_id)
     if not user.discord_user_id or guild is None or guild.owner_discord_id!=user.discord_user_id:raise HTTPException(403,"Only the Discord server owner can change subscription reminders")
     if payload.email and not real_email(user):raise HTTPException(422,"Email notifications require a verified email address in the user profile")
     email_config=await EmailDeliveryService(session).public_config()
     if payload.email and not (email_config["enabled"] and email_config["configured"]):raise HTTPException(422,"Email delivery is not configured by the platform administrator")
     if payload.enabled and not (payload.discord_dm or payload.email):raise HTTPException(422,"Select at least one notification channel")
-    row=await session.scalar(select(BillingSubscription).where(BillingSubscription.guild_id==guild_id,BillingSubscription.plugin_key==PAID_PACKAGE_KEY))
-    if row is None:raise HTTPException(404,"Server subscription not found")
+    if plugin_key not in {PAID_PACKAGE_KEY,"__custom_bot__"}:raise HTTPException(422,"Unsupported subscription")
+    row=await session.scalar(select(BillingSubscription).where(BillingSubscription.guild_id==guild_id,BillingSubscription.plugin_key==plugin_key))
+    if row is None:raise HTTPException(404,"Subscription not found")
     row.expiry_notice_enabled=payload.enabled;row.expiry_notice_days=payload.days_before;row.expiry_notice_discord_dm=payload.discord_dm;row.expiry_notice_email=payload.email
     row.expiry_notice_sent_at=None;row.expiry_notice_for_expires_at=None;row.expiry_dm_notice_for_expires_at=None;row.expiry_email_notice_for_expires_at=None
     await session.commit();return subscription_dict(row)
@@ -583,13 +585,14 @@ async def reconcile_billing(session: AsyncSession = Depends(get_db_session)):
         if item.expires_at>now+timedelta(days=item.expiry_notice_days):continue
         guild=await session.get(Guild,item.guild_id);owner_id=item.owner_discord_id or (guild.owner_discord_id if guild else None)
         name=guild.name if guild else str(item.guild_id);days=max(0,(item.expires_at-now).days);owner=await session.scalar(select(User).where(User.discord_user_id==owner_id)) if owner_id else None
-        message=billing_message(owner.preferred_locale if owner else None,"expiry",name=name,expires=f"{item.expires_at:%Y-%m-%d %H:%M}",days=days)
+        message_key="custom_bot_expiry" if item.plugin_key=="__custom_bot__" else "expiry"
+        message=billing_message(owner.preferred_locale if owner else None,message_key,name=name,expires=f"{item.expires_at:%Y-%m-%d %H:%M}",days=days)
         if item.expiry_notice_discord_dm and owner_id and item.expiry_dm_notice_for_expires_at!=item.expires_at:
-            session.add(MemberAction(guild_id=item.guild_id,discord_user_id=owner_id,action_type=MemberActionType.SEND_DM,payload={"message":billing_message(owner.preferred_locale if owner else None,"expiry",name=name,expires=f"{item.expires_at:%Y-%m-%d %H:%M}",days=days),"source":"subscription_expiry_reminder"},requested_by=None))
+            session.add(MemberAction(guild_id=item.guild_id,discord_user_id=owner_id,action_type=MemberActionType.SEND_DM,payload={"message":message,"source":"subscription_expiry_reminder","plugin_key":item.plugin_key},requested_by=None))
             queued.append({"type":"subscription_expiry_dm","guild_id":str(item.guild_id)});item.expiry_dm_notice_for_expires_at=item.expires_at
         email=real_email(owner)
         if item.expiry_notice_email and email and item.expiry_email_notice_for_expires_at!=item.expires_at:
-            try:await EmailDeliveryService(session).send(email,"GuildConsole: server subscription expiry",message);item.expiry_email_notice_for_expires_at=item.expires_at;queued.append({"type":"subscription_expiry_email","guild_id":str(item.guild_id)})
+            try:await EmailDeliveryService(session).send(email,"GuildConsole: subscription expiry",message);item.expiry_email_notice_for_expires_at=item.expires_at;queued.append({"type":"subscription_expiry_email","guild_id":str(item.guild_id),"plugin_key":item.plugin_key})
             except Exception:pass
         if item.expiry_dm_notice_for_expires_at==item.expires_at or item.expiry_email_notice_for_expires_at==item.expires_at:item.expiry_notice_sent_at=now;item.expiry_notice_for_expires_at=item.expires_at
     await session.commit()

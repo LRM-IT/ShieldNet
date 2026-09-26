@@ -2648,6 +2648,9 @@
     "step3": "Save the token here, then use Add bot to server.",
     "saved": "Токен бота перевірено й безпечно збережено.",
     "removed": "Токен бота видалено.",
-    "payment_confirmed": "Payment confirmed. Custom bot subscription is active."
+    "payment_confirmed": "Payment confirmed. Custom bot subscription is active.",
+    "expiry_title": "Повідомлення про завершення підписки",
+    "expiry_help": "Надіслати одне завчасне повідомлення перед завершенням підписки власного бота.",
+    "activate_reminder": "Активуйте підписку власного бота, перш ніж налаштовувати нагадування."
   }
 }

@@ -34,7 +34,7 @@ export interface BillingEmailSettings{enabled:boolean;host:string;port:number;us
  walletTopup(x:any){return firstValueFrom(this.http.post<any>('/api/v1/billing/wallet/checkout',x))}
  purchaseSubscription(x:any){return firstValueFrom(this.http.post<any>('/api/v1/billing/subscriptions/purchase',x))}
  saveWalletSettings(x:any){return firstValueFrom(this.http.put<any>('/api/v1/billing/wallet/settings',x))}
- saveSubscriptionReminder(guildId:string,x:any){return firstValueFrom(this.http.put<any>(`/api/v1/billing/subscriptions/${guildId}/reminder`,x))}
+ saveSubscriptionReminder(guildId:string,x:any,pluginKey='__paid_modules__'){return firstValueFrom(this.http.put<any>(`/api/v1/billing/subscriptions/${guildId}/reminder`,x,{params:{plugin_key:pluginKey}}))}
  testDiscordDm(guildId:string){return firstValueFrom(this.http.post<any>('/api/v1/billing/wallet/dm-check',{guild_id:guildId}))}
  discordDmCheck(id:string){return firstValueFrom(this.http.get<any>(`/api/v1/billing/wallet/dm-check/${id}`))}
  redeemVoucher(code:string){return firstValueFrom(this.http.post<any>('/api/v1/billing/wallet/voucher',{code}))}

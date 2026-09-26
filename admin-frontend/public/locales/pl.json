@@ -2646,6 +2646,9 @@
     "step3": "Save the token here, then use Add bot to server.",
     "saved": "Bot token validated and saved securely.",
     "removed": "Bot token removed.",
-    "payment_confirmed": "Payment confirmed. Custom bot subscription is active."
+    "payment_confirmed": "Payment confirmed. Custom bot subscription is active.",
+    "expiry_title": "Powiadomienie o wygaśnięciu subskrypcji",
+    "expiry_help": "Wyślij jedno powiadomienie przed wygaśnięciem subskrypcji bota.",
+    "activate_reminder": "Najpierw aktywuj subskrypcję bota."
   }
 }
