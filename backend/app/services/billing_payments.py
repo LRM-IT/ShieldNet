@@ -51,7 +51,7 @@ KYIV_TIMEZONE = ZoneInfo("Europe/Kyiv")
 
 def _ensure_banking_payment_window() -> None:
     local_time = datetime.now(KYIV_TIMEZONE).time()
-    if local_time >= time(23, 45) or local_time < time(0, 5):
+    if local_time >= time(23, 40) or local_time < time(0, 10):
         raise PaymentError("banking_day_transition")
 
 
