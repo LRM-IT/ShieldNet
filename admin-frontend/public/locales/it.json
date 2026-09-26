@@ -1879,7 +1879,7 @@
     "monobank_invoice_rejected": "Monobank ha rifiutato i parametri di pagamento. Controlla l'importo e riprova.",
     "monobank_rate_limited": "Troppe richieste al gateway di pagamento. Riprova tra un minuto.",
     "monobank_unavailable": "Il gateway di pagamento Monobank è temporaneamente non disponibile. Riprova più tardi.",
-    "banking_day_transition": "I pagamenti sono temporaneamente non disponibili durante l’inizio del nuovo giorno bancario. Attendi fino alle 00:10, ora di Kyiv."
+    "banking_day_transition": "I pagamenti sono temporaneamente non disponibili durante l’inizio del nuovo giorno bancario. Attendi fino alle 00:10, ora di Kyiv.",
     "monobank_uah_notice": "Le norme bancarie ucraine richiedono che i pagamenti siano elaborati in grivnie. La conversione avviene automaticamente senza alcuna azione da parte tua; il prezzo in USD mostrato corrisponde alla tariffa applicabile alla tua regione.",
     "code_applied": "Codice applicato.",
     "code_error": "Impossibile applicare il codice.",
