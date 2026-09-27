@@ -10,7 +10,7 @@ class GuildRoleSyncClient:
     async def synchronize(self, guild):
         bot_member = guild.me
         roles = []
-        for role in guild.roles:
+        for role in await guild.fetch_roles():
             if role.is_default():
                 continue
             roles.append({
@@ -29,3 +29,4 @@ class GuildRoleSyncClient:
                 json={"roles": roles},
             )
         response.raise_for_status()
+        return response.json().get("count", len(roles))

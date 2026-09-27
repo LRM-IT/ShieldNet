@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import json
 import os
+import asyncio
+from uuid import uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from redis.asyncio import Redis
@@ -189,26 +191,34 @@ async def refresh_discord_structure(
     try:
         # BRPOP у Discord worker читає елементи справа.
         # LPUSH зберігає нормальну FIFO-послідовність завдань.
+        request_id = uuid4().hex
         await redis.lpush(
             DISCORD_WORKER_QUEUE,
             json.dumps(
                 {
-                    "job": "sync_roles",
+                    "job": "sync_structure",
                     "guild_id": guild_id,
+                    "request_id": request_id,
                     "source": "admin_explorer",
                 }
             ),
         )
-        await redis.lpush(
-            DISCORD_WORKER_QUEUE,
-            json.dumps(
-                {
-                    "job": "sync_explorer",
-                    "guild_id": guild_id,
-                    "source": "admin_explorer",
-                }
-            ),
-        )
+        result = None
+        result_key = f"shieldnet:discord:sync:{request_id}"
+        for _ in range(80):
+            raw = await redis.get(result_key)
+            if raw:
+                result = json.loads(raw)
+                await redis.delete(result_key)
+                break
+            await asyncio.sleep(0.25)
+        if result is None:
+            raise HTTPException(
+                status_code=status.HTTP_504_GATEWAY_TIMEOUT,
+                detail="Discord synchronization did not finish within 20 seconds.",
+            )
+    except HTTPException:
+        raise
     except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
@@ -219,10 +229,9 @@ async def refresh_discord_structure(
 
     return {
         "success": True,
-        "status": "queued",
+        "status": "synchronized",
         "guild_id": guild_id,
-        "message": (
-            "Discord channel and role synchronization was queued. "
-            "The updated inventory will appear in a few seconds."
-        ),
+        "channels": result.get("channels", 0),
+        "roles": result.get("roles", 0),
+        "message": "Discord channels and roles were updated.",
     }

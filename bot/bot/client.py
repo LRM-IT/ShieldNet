@@ -805,6 +805,17 @@ class ShieldNetBot(discord.Client):
                 elif job == "sync_explorer":
                     for guild in guilds:
                         await self.explorer_sync.synchronize(guild)
+                elif job == "sync_structure":
+                    request_id = str(payload.get("request_id") or "")
+                    for guild in guilds:
+                        roles = await self.guild_role_sync.synchronize(guild)
+                        counts = await self.explorer_sync.synchronize(guild)
+                        if request_id:
+                            await self.redis.setex(
+                                f"shieldnet:discord:sync:{request_id}",
+                                60,
+                                json.dumps({"roles": roles, **counts}),
+                            )
                 elif job == "security_scan":
                     for guild in guilds:
                         await self.security_sync.synchronize(guild)
