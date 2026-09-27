@@ -213,10 +213,10 @@ class TranslatorGroups:
             excerpt = discord.utils.escape_markdown(visible[:140])
             if len(visible) > 140:
                 excerpt += "…"
-            summary = f"[{author}]({replied.jump_url})"
+            summary = f"**[{author}]({replied.jump_url})**"
             if excerpt:
-                summary += f": {excerpt}"
-            return f"-# ↪ {summary}\n"
+                summary += f"  {excerpt}"
+            return f"-# ╭─ {summary}\n"
         except (discord.NotFound, discord.Forbidden, discord.HTTPException):
             return ""
 
