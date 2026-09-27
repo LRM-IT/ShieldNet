@@ -204,11 +204,19 @@ class TranslatorGroups:
         try:
             replied = await channel.fetch_message(message_id)
             author = discord.utils.escape_markdown(replied.author.display_name[:80])
-            excerpt = " ".join(replied.clean_content.split())[:180]
-            if len(replied.clean_content) > 180:
+            visible_lines = [
+                line.strip()
+                for line in replied.clean_content.splitlines()
+                if line.strip() and not line.lstrip().startswith(("↗", "📎", "> [↩]", "-# ↪"))
+            ]
+            visible = " ".join(visible_lines)
+            excerpt = discord.utils.escape_markdown(visible[:140])
+            if len(visible) > 140:
                 excerpt += "…"
-            summary = f"**{author}:** {discord.utils.escape_markdown(excerpt)}" if excerpt else f"**{author}**"
-            return f"> [↩]({replied.jump_url}) {summary}\n"
+            summary = f"[{author}]({replied.jump_url})"
+            if excerpt:
+                summary += f": {excerpt}"
+            return f"-# ↪ {summary}\n"
         except (discord.NotFound, discord.Forbidden, discord.HTTPException):
             return ""
 
