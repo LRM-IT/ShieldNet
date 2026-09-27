@@ -18,7 +18,9 @@ interface Settings { installed: boolean; enabled: boolean; languages: Language[]
   standalone: true, imports: [FormsModule, ShellComponent, DiscordChannelPickerComponent, TranslatePipe],
   template: `
   <sn-shell [title]="'language_plugin.title'|snT:'Language Selection'"><main class="page">
-    <header><span>{{'language_plugin.eyebrow'|snT:'GUILD PLUGIN'}}</span><h2>{{'language_plugin.title'|snT:'Language Selection'}}</h2><p>{{'language_plugin.description'|snT:'Independent language panels and roles for each access level.'}}</p></header>
+    <header class="header-row"><div><span>{{'language_plugin.eyebrow'|snT:'GUILD PLUGIN'}}</span><h2>{{'language_plugin.title'|snT:'Language Selection'}}</h2><p>{{'language_plugin.description'|snT:'Independent language panels and roles for each access level.'}}</p></div>
+      @if (settings.installed) { <div class="plugin-state"><strong [class.active]="settings.enabled">{{settings.enabled ? ('plugins.enabled'|snT:'Enabled') : ('plugins.disabled'|snT:'Disabled')}}</strong><button [class.secondary]="settings.enabled" (click)="toggle()" [disabled]="busy()">{{settings.enabled ? ('plugins.disable'|snT:'Disable') : ('plugins.enable'|snT:'Enable')}}</button></div> }
+    </header>
     @if (error()) { <div class="panel error">{{error()}}</div> }
     @if (success()) { <div class="panel success">{{success()}}</div> }
     @if (!settings.installed) { <section class="panel"><button (click)="install()" [disabled]="busy()">{{'language_plugin.install'|snT:'Install plugin'}}</button></section> }
@@ -61,10 +63,11 @@ interface Settings { installed: boolean; enabled: boolean; languages: Language[]
   styles: [`
     .page{max-width:960px;margin:auto;display:grid;gap:1rem;padding-bottom:3rem}header span{color:var(--primary);font-size:.7rem;font-weight:800;letter-spacing:.12em}
     h2{margin:.3rem 0;font-size:1.8rem}h3,h4{margin:0 0 .6rem}p{color:var(--muted);margin:.3rem 0 1rem}.panel{padding:1.25rem;border:1px solid var(--line);border-radius:16px;background:var(--panel)}
+    .header-row,.plugin-state{display:flex;align-items:center;justify-content:space-between;gap:1rem}.plugin-state{justify-content:flex-end;flex-wrap:wrap}.plugin-state strong{padding:.45rem .7rem;border:1px solid var(--line);border-radius:999px;color:var(--muted)}.plugin-state strong.active{color:var(--primary);border-color:var(--primary)}
     .row{display:flex;justify-content:space-between;align-items:start;gap:1rem;flex-wrap:wrap}.group-panel{padding:0}.group-panel summary{list-style:none;display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:1.25rem}.group-panel summary::-webkit-details-marker{display:none}.group-panel summary strong{font-size:1.15rem}.chevron{font-size:1.5rem;transition:transform .15s}.group-panel details[open] .chevron{transform:rotate(180deg)}.group-body{padding:0 1.25rem 1.25rem;border-top:1px solid var(--line)}.builder{margin:1rem 0;padding:1rem;border:1px solid var(--line);border-radius:12px}.preview{display:flex;flex-wrap:wrap;gap:.4rem;margin:.6rem 0 1rem}.preview small{padding:.35rem .6rem;border:1px solid var(--line);border-radius:7px;color:var(--muted)}
     label{display:grid;gap:.4rem;margin:.85rem 0;color:var(--text);font-weight:650}.inline{display:flex;align-items:center;gap:.5rem}.inline input{width:auto}
     select,input{width:100%;padding:.72rem;border:1px solid var(--line);border-radius:9px;background:#111922;color:var(--text);font:inherit}
-    button{padding:.7rem 1rem;border:0;border-radius:9px;background:var(--primary);color:#07120f;font-weight:800;cursor:pointer}.secondary{background:#26343e;color:var(--text)}button:disabled{opacity:.55;cursor:not-allowed}.error{color:#ff9ea3}.success{color:#76e8b8}
+    button{padding:.7rem 1rem;border:0;border-radius:9px;background:var(--primary);color:#07120f;font-weight:800;cursor:pointer}.secondary{background:#26343e;color:var(--text)}button:disabled{opacity:.55;cursor:not-allowed}.error{color:#ff9ea3}.success{color:#76e8b8}@media(max-width:650px){.header-row{align-items:flex-start;flex-direction:column}.plugin-state{justify-content:flex-start}}
   `],
 })
 export class PluginFirstIntroductionComponent implements OnInit {
@@ -84,7 +87,7 @@ export class PluginFirstIntroductionComponent implements OnInit {
   async install(): Promise<void> { this.busy.set(true); this.error.set(''); try { await this.plugins.install(this.guildId,'first_introduction'); await this.ngOnInit(); }
     catch { this.error.set(this.i18n.t('language_plugin.install_error','Could not install the plugin.')); } finally { this.busy.set(false); } }
   async toggle(): Promise<void> { this.busy.set(true); this.error.set(''); try { if (this.settings.enabled) await this.plugins.disable(this.guildId,'first_introduction');
-      else await this.plugins.enable(this.guildId,'first_introduction'); await this.ngOnInit(); }
+      else { await this.persist(); await this.plugins.enable(this.guildId,'first_introduction'); } await this.ngOnInit(); }
     catch { this.error.set(this.i18n.t('language_plugin.toggle_error','Could not change the plugin state. Check the group settings.')); } finally { this.busy.set(false); } }
   private payload(): object { const languageCodes = new Set(this.settings.languages.map(language => language.code)); return {groups:this.settings.groups.map(group => ({id:group.id,name:group.name.trim(),enabled:group.enabled,
     channel_id:group.channel_id?.trim() || null,access_role_id:group.access_role_id || null,role_name_mask:this.englishRoleMask(group.role_name_mask),default_language_code:group.default_language_code || null,

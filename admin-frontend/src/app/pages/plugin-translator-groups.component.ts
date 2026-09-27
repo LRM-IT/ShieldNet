@@ -20,8 +20,10 @@ interface CacheStats { entries:number;hits:number;misses:number; }
   imports: [FormsModule, ShellComponent, TranslatePipe, DiscordChannelPickerComponent],
   template: `
     <sn-shell [title]="'translator_groups.title'|snT:'Translator Groups'"><main class="page">
-      <header><span>{{'translator_groups.eyebrow'|snT:'GUILD PLUGIN'}}</span><h2>{{'translator_groups.title'|snT:'Translator Groups'}}</h2>
-        <p>{{'translator_groups.description'|snT:'Messages in one language channel are translated into the other channels of its group through AI Center.'}}</p></header>
+      <header class="header-row"><div><span>{{'translator_groups.eyebrow'|snT:'GUILD PLUGIN'}}</span><h2>{{'translator_groups.title'|snT:'Translator Groups'}}</h2>
+        <p>{{'translator_groups.description'|snT:'Messages in one language channel are translated into the other channels of its group through AI Center.'}}</p></div>
+        @if (settings.installed) { <div class="plugin-state"><strong [class.active]="settings.enabled">{{settings.enabled ? ('plugins.enabled'|snT:'Enabled') : ('plugins.disabled'|snT:'Disabled')}}</strong><button [class.secondary]="settings.enabled" (click)="toggle()" [disabled]="busy()">{{settings.enabled ? ('plugins.disable'|snT:'Disable') : ('plugins.enable'|snT:'Enable')}}</button></div> }
+      </header>
       @if (error()) { <div class="panel error">{{ error() }}</div> }
       @if (success()) { <div class="panel success">{{ success() }}</div> }
       @if (!settings.installed) {
@@ -76,7 +78,7 @@ interface CacheStats { entries:number;hits:number;misses:number; }
   `,
   styles: [`
     .page{max-width:1050px;margin:auto;display:grid;gap:1rem;padding-bottom:3rem}
-    header span{color:var(--primary);font-size:.7rem;font-weight:800;letter-spacing:.12em}
+    header span{color:var(--primary);font-size:.7rem;font-weight:800;letter-spacing:.12em}.header-row,.plugin-state{display:flex;align-items:center;justify-content:space-between;gap:1rem}.plugin-state{justify-content:flex-end;flex-wrap:wrap}.plugin-state strong{padding:.45rem .7rem;border:1px solid var(--line);border-radius:999px;color:var(--muted)}.plugin-state strong.active{color:var(--primary);border-color:var(--primary)}
     h2{margin:.3rem 0;font-size:1.8rem}h3{margin:0 0 .6rem}p{color:var(--muted);margin:.3rem 0 1rem}
     .panel,.group{padding:1.25rem;border:1px solid var(--line);border-radius:16px;background:var(--panel)}
     .group{margin-top:1rem;padding:0;overflow:hidden;background:var(--surface-1)}.group-summary{width:100%;padding:1.1rem 1.25rem;display:flex;align-items:center;justify-content:space-between;text-align:left;border:0;border-radius:0;background:transparent;color:var(--text)}.group-summary span:first-child{display:grid;gap:.25rem}.group-summary strong{font-size:1.05rem}.group-summary small{color:var(--muted);font-weight:500}.chevron{font-size:1.5rem;line-height:1;transition:transform .18s ease}.chevron.open{transform:rotate(180deg)}.group-body{padding:0 1.25rem 1.25rem;border-top:1px solid var(--line)}.heading,.actions{display:flex;justify-content:space-between;align-items:start;gap:1rem}
@@ -87,7 +89,7 @@ interface CacheStats { entries:number;hits:number;misses:number; }
     button{padding:.7rem 1rem;border:0;border-radius:9px;background:var(--primary);color:#07120f;font-weight:800;cursor:pointer;white-space:nowrap}
     button.secondary{background:transparent;color:var(--text);border:1px solid var(--line)}button:disabled{opacity:.55;cursor:not-allowed}
     .save{justify-self:end}.error{color:#ff9ea3}.success{color:#76e8b8}
-    @media(max-width:800px){.checks-grid,.cache-stats{grid-template-columns:1fr 1fr}.detail-grid{grid-template-columns:1fr}}@media(max-width:650px){.binding,.checks-grid,.cache-stats{grid-template-columns:1fr}.heading,.cache-actions{flex-wrap:wrap}}
+    @media(max-width:800px){.checks-grid,.cache-stats{grid-template-columns:1fr 1fr}.detail-grid{grid-template-columns:1fr}}@media(max-width:650px){.binding,.checks-grid,.cache-stats{grid-template-columns:1fr}.heading,.cache-actions{flex-wrap:wrap}.header-row{align-items:flex-start;flex-direction:column}.plugin-state{justify-content:flex-start}}
   `],
 })
 export class PluginTranslatorGroupsComponent implements OnInit {
@@ -103,6 +105,8 @@ export class PluginTranslatorGroupsComponent implements OnInit {
   settings: Settings = {installed:false,enabled:false,groups:[],include_source_link:true,languages:[],cache_enabled:true,cache_ttl_hours:72,cache_max_entries:2000,cache_min_characters:4,max_source_characters:4000,fallback_to_original:true,forward_attachments:true,forward_stickers:true,protected_terms:[],detect_source_language:true,detection_min_characters:8};
   protectedTermsText='';
   private get url(): string { return `/api/v1/discord/guilds/${this.guildId}/plugins/translator-groups/settings`; }
+  private payload(): object { const protected_terms=[...new Set(this.protectedTermsText.split(/\r?\n/).map(x=>x.trim()).filter(Boolean))]; return {groups:this.settings.groups.map(({name,enabled,channels})=>({name,enabled,channels})),include_source_link:this.settings.include_source_link,cache_enabled:this.settings.cache_enabled,cache_ttl_hours:this.settings.cache_ttl_hours,cache_max_entries:this.settings.cache_max_entries,cache_min_characters:this.settings.cache_min_characters,max_source_characters:this.settings.max_source_characters,fallback_to_original:this.settings.fallback_to_original,forward_attachments:this.settings.forward_attachments,forward_stickers:this.settings.forward_stickers,protected_terms,detect_source_language:this.settings.detect_source_language,detection_min_characters:this.settings.detection_min_characters}; }
+  private async persist(): Promise<void> { const saved=await firstValueFrom(this.http.put<Settings>(this.url,this.payload())); this.settings={...saved,groups:(saved.groups||[]).map(group=>({...group,expanded:false}))}; this.protectedTermsText=(saved.protected_terms||[]).join('\n'); }
 
   async ngOnInit(): Promise<void> {
     try {
@@ -131,7 +135,7 @@ export class PluginTranslatorGroupsComponent implements OnInit {
     this.busy.set(true); this.error.set('');
     try {
       if (this.settings.enabled) await this.plugins.disable(this.guildId, 'translator_groups');
-      else await this.plugins.enable(this.guildId, 'translator_groups');
+      else { await this.persist(); await this.plugins.enable(this.guildId, 'translator_groups'); }
       await this.ngOnInit();
     } catch (error: any) { this.error.set(error?.error?.detail || this.i18n.t('translator_groups.state_error','Could not change plugin state.')); }
     finally { this.busy.set(false); }
@@ -139,9 +143,7 @@ export class PluginTranslatorGroupsComponent implements OnInit {
 
   async save(): Promise<void> {
     this.busy.set(true); this.error.set(''); this.success.set('');
-    const protected_terms=[...new Set(this.protectedTermsText.split(/\r?\n/).map(x=>x.trim()).filter(Boolean))];
-    const payload = {groups:this.settings.groups.map(({name,enabled,channels})=>({name,enabled,channels})),include_source_link:this.settings.include_source_link,cache_enabled:this.settings.cache_enabled,cache_ttl_hours:this.settings.cache_ttl_hours,cache_max_entries:this.settings.cache_max_entries,cache_min_characters:this.settings.cache_min_characters,max_source_characters:this.settings.max_source_characters,fallback_to_original:this.settings.fallback_to_original,forward_attachments:this.settings.forward_attachments,forward_stickers:this.settings.forward_stickers,protected_terms,detect_source_language:this.settings.detect_source_language,detection_min_characters:this.settings.detection_min_characters};
-    try { const saved=await firstValueFrom(this.http.put<Settings>(this.url, payload)); this.settings={...saved,groups:(saved.groups||[]).map(group=>({...group,expanded:false}))}; this.success.set(this.i18n.t('translator_groups.saved','Translation settings saved.')); }
+    try { await this.persist(); this.success.set(this.i18n.t('translator_groups.saved','Translation settings saved.')); }
     catch (error: any) { this.error.set(error?.error?.detail || this.i18n.t('translator_groups.save_error','Could not save translation settings.')); }
     finally { this.busy.set(false); }
   }
