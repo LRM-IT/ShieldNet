@@ -86,9 +86,9 @@ export class PluginFirstIntroductionComponent implements OnInit {
   async toggle(): Promise<void> { this.busy.set(true); this.error.set(''); try { if (this.settings.enabled) await this.plugins.disable(this.guildId,'first_introduction');
       else await this.plugins.enable(this.guildId,'first_introduction'); await this.ngOnInit(); }
     catch { this.error.set(this.i18n.t('language_plugin.toggle_error','Could not change the plugin state. Check the group settings.')); } finally { this.busy.set(false); } }
-  private payload(): object { return {groups:this.settings.groups.map(group => ({id:group.id,name:group.name.trim(),enabled:group.enabled,
+  private payload(): object { const languageCodes = new Set(this.settings.languages.map(language => language.code)); return {groups:this.settings.groups.map(group => ({id:group.id,name:group.name.trim(),enabled:group.enabled,
     channel_id:group.channel_id?.trim() || null,access_role_id:group.access_role_id || null,role_name_mask:this.englishRoleMask(group.role_name_mask),default_language_code:group.default_language_code || null,
-    language_roles:Object.fromEntries(Object.entries(group.language_roles || {}).filter(([,value]) => value))}))}; }
+    language_roles:Object.fromEntries(Object.entries(group.language_roles || {}).filter(([code,value]) => languageCodes.has(code) && value))}))}; }
   private async persist(): Promise<void> { this.settings = await firstValueFrom(this.http.put<Settings>(this.url,this.payload())); }
   async save(): Promise<void> { this.busy.set(true); this.error.set(''); this.success.set(''); try { await this.persist(); this.success.set(this.i18n.t('language_plugin.saved','Settings saved. Publish the panels for active groups.')); }
     catch (error:any) { this.error.set(this.errorMessage(error,this.i18n.t('language_plugin.save_error','Could not save settings.'))); } finally { this.busy.set(false); } }
