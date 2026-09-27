@@ -40,6 +40,7 @@ class GroupInput(BaseModel):
     role_name_mask: str = Field(default="{group} - {name}", min_length=1, max_length=100)
     language_roles: dict[str, str] = Field(default_factory=dict)
     default_language_code: str | None = None
+    multiple_selection: bool = False
 
     @field_validator("id")
     @classmethod
@@ -102,6 +103,7 @@ def _default_groups() -> list[dict]:
     return [{**group, "channel_id": None, "access_role_id": None,
              "role_name_mask": "{group} - {name}", "language_roles": {},
              "default_language_code": None,
+             "multiple_selection": False,
              "message_id": None} for group in DEFAULT_GROUPS]
 
 
@@ -118,6 +120,7 @@ def _groups(configuration: dict) -> list[dict]:
         groups = [dict(group) for group in configuration["groups"]]
         for group in groups:
             group["role_name_mask"] = _normalize_role_mask(group.get("role_name_mask"))
+            group["multiple_selection"] = bool(group.get("multiple_selection", False))
         return groups
     if any(key in configuration for key in ("channel_id", "language_roles", "message_id")):
         legacy = [{**_default_groups()[0], "id": "r1", "name": "R1"}]
@@ -212,7 +215,8 @@ async def save_settings(guild_id: int, payload: SettingsInput,
         old = previous.get(group.id) or {}
         data["message_id"] = (old.get("message_id") if
                               old.get("channel_id") == group.channel_id and
-                              old.get("language_roles") == data["language_roles"] else None)
+                              old.get("language_roles") == data["language_roles"] and
+                              bool(old.get("multiple_selection", False)) == group.multiple_selection else None)
         saved.append(data)
     installation.configuration = {**(installation.configuration or {}), "groups": saved}
     await session.commit()

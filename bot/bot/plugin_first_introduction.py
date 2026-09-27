@@ -45,7 +45,8 @@ class LanguageSelection:
         lines = [f'{item["flag"]} — {item["name"]}' for item in config["languages"]]
         if not lines or any(not item["flag"] for item in config["languages"]):
             raise ValueError("Every language needs a flag")
-        message = await channel.send(f"**{group['name']} — Choose your language**\nReact with one flag:\n" + "\n".join(lines))
+        selection_hint = "React with one or more flags:" if group.get("multiple_selection") else "React with one flag:"
+        message = await channel.send(f"**{group['name']} — Choose your language**\n{selection_hint}\n" + "\n".join(lines))
         try:
             for item in config["languages"]:
                 await message.add_reaction(item["flag"])
@@ -154,7 +155,8 @@ class LanguageSelection:
             if access_role_id and not any(str(current.id) == access_role_id for current in member.roles):
                 return
             await self.ensure_default_roles(member, group["id"])
-            old_roles = [current for current in member.roles
+            multiple_selection = bool(group.get("multiple_selection", False))
+            old_roles = [] if multiple_selection else [current for current in member.roles
                          if current.id != role.id and str(current.id) != default_role_id
                          and str(current.id) in roles_by_code.values()]
             if any(old >= bot_member.top_role for old in old_roles):
@@ -163,16 +165,17 @@ class LanguageSelection:
                 await member.add_roles(role, reason="GuildConsole flag language selection")
             if old_roles:
                 await member.remove_roles(*old_roles, reason="GuildConsole language changed")
-            channel = guild.get_channel_or_thread(payload.channel_id)
-            if channel is None:
-                channel = await self.bot.fetch_channel(payload.channel_id)
-            if isinstance(channel, (discord.TextChannel, discord.Thread)):
-                message = await channel.fetch_message(payload.message_id)
-                for language in config["languages"]:
-                    if language["flag"] != emoji:
-                        try:
-                            await message.remove_reaction(language["flag"], member)
-                        except discord.HTTPException:
-                            logger.warning("Could not clear old language reaction guild=%s user=%s", guild.id, member.id)
+            if not multiple_selection:
+                channel = guild.get_channel_or_thread(payload.channel_id)
+                if channel is None:
+                    channel = await self.bot.fetch_channel(payload.channel_id)
+                if isinstance(channel, (discord.TextChannel, discord.Thread)):
+                    message = await channel.fetch_message(payload.message_id)
+                    for language in config["languages"]:
+                        if language["flag"] != emoji:
+                            try:
+                                await message.remove_reaction(language["flag"], member)
+                            except discord.HTTPException:
+                                logger.warning("Could not clear old language reaction guild=%s user=%s", guild.id, member.id)
         elif role in member.roles and str(role.id) != default_role_id:
             await member.remove_roles(role, reason="GuildConsole language flag removed")
