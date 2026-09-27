@@ -78,6 +78,7 @@ export class DiscordChannelPickerComponent implements OnInit, OnChanges {
   @Input({ required: true }) guildId = '';
   @Input() value: string | number | null = null;
   @Input() showHint = true;
+  @Input() allowedTypes: string[] | null = null;
   @Output() valueChange = new EventEmitter<string | null>();
 
   readonly loading = signal(false);
@@ -225,6 +226,9 @@ export class DiscordChannelPickerComponent implements OnInit, OnChanges {
   }
 
   private isAllowed(type: string): boolean {
+    if (this.allowedTypes?.length) {
+      return this.allowedTypes.map((item) => this.normalizeType(item)).includes(this.normalizeType(type));
+    }
     return [
       'text','guild_text','0',
       'news','announcement','guild_announcement','5',

@@ -20,6 +20,7 @@ from app.db.session import get_db_session
 from app.models.core import User
 from app.models.global_languages import GlobalLanguage
 from app.models.guild_languages import GuildLanguage
+from app.models.explorer import GuildChannel
 from app.models.plugins import GuildPluginInstallation, TranslationCacheArchive
 from app.core.config import settings
 
@@ -130,7 +131,7 @@ async def _languages(session: AsyncSession, guild_id: int) -> list[dict]:
     return [{"code": code, "name": name} for code, name in rows]
 
 
-def _validate_groups(groups: list[Group], languages: set[str]) -> None:
+async def _validate_groups(session: AsyncSession, guild_id: int, groups: list[Group], languages: set[str]) -> None:
     names = [group.name.casefold() for group in groups]
     if len(set(names)) != len(names):
         raise HTTPException(422, "Translation group names must be unique")
@@ -140,6 +141,16 @@ def _validate_groups(groups: list[Group], languages: set[str]) -> None:
             raise HTTPException(422, f"Channel is duplicated in group {group.name}")
         if any(binding.language not in languages for binding in group.channels):
             raise HTTPException(422, f"Group {group.name} uses a language not enabled on this server")
+    channel_ids = {int(binding.channel_id) for group in groups for binding in group.channels}
+    if channel_ids:
+        rows = (await session.execute(select(GuildChannel.discord_channel_id, GuildChannel.channel_type).where(
+            GuildChannel.guild_id == guild_id,
+            GuildChannel.discord_channel_id.in_(channel_ids),
+        ))).all()
+        supported = {"text", "guild_text", "0", "news", "announcement", "guild_announcement", "5"}
+        valid_ids = {channel_id for channel_id, channel_type in rows if str(channel_type).lower() in supported}
+        if channel_ids - valid_ids:
+            raise HTTPException(422, "Translation groups support text channels only. Remove forum channels and threads")
 
 
 async def _settings(session: AsyncSession, guild_id: int) -> dict:
@@ -177,7 +188,8 @@ async def save_settings(guild_id: int, payload: SettingsInput, user: User = Depe
     installation = await _installation(session, guild_id)
     if installation is None:
         raise HTTPException(409, "Install Translator Groups first")
-    _validate_groups(payload.groups, {item["code"] for item in await _languages(session, guild_id)})
+    await _validate_groups(session, guild_id, payload.groups,
+                           {item["code"] for item in await _languages(session, guild_id)})
     installation.configuration = payload.model_dump()
     await session.commit()
     return await _settings(session, guild_id)
