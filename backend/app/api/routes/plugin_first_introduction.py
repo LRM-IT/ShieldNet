@@ -207,9 +207,6 @@ async def save_settings(guild_id: int, payload: SettingsInput,
             raise HTTPException(422, f"Unknown language role in {group.name}")
         if group.default_language_code and group.default_language_code not in codes:
             raise HTTPException(422, f"Unknown default language in {group.name}")
-        if installation.enabled and group.enabled and (not group.channel_id or not group.access_role_id or
-                              set(group.language_roles) != codes):
-            raise HTTPException(422, f"{group.name}: select a channel, access role and every language role")
         data = group.model_dump()
         data["role_name_mask"] = role_name_mask
         old = previous.get(group.id) or {}

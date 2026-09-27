@@ -74,6 +74,7 @@ export class PluginFirstIntroductionComponent implements OnInit {
   readonly busy = signal(false); readonly provisioning = signal(''); readonly error = signal(''); readonly success = signal('');
   settings: Settings = {installed:false,enabled:false,languages:[],groups:[]};
   private get url(): string { return `/api/v1/discord/guilds/${this.guildId}/plugins/first-introduction/settings`; }
+  private errorMessage(error:any,fallback:string): string { return error?.error?.detail || error?.message || fallback; }
   async ngOnInit(): Promise<void> {
     try { const [settings, structure] = await Promise.all([firstValueFrom(this.http.get<Settings>(this.url)),firstValueFrom(this.http.get<{roles:Role[]}>(`/api/v1/discord/guilds/${this.guildId}/structure`))]);
       this.settings = settings; const roles = (structure.roles || []).filter(role => !role.managed && role.name !== '@everyone');
@@ -90,7 +91,7 @@ export class PluginFirstIntroductionComponent implements OnInit {
     language_roles:Object.fromEntries(Object.entries(group.language_roles || {}).filter(([,value]) => value))}))}; }
   private async persist(): Promise<void> { this.settings = await firstValueFrom(this.http.put<Settings>(this.url,this.payload())); }
   async save(): Promise<void> { this.busy.set(true); this.error.set(''); this.success.set(''); try { await this.persist(); this.success.set(this.i18n.t('language_plugin.saved','Settings saved. Publish the panels for active groups.')); }
-    catch { this.error.set(this.i18n.t('language_plugin.save_error','Could not save settings.')); } finally { this.busy.set(false); } }
+    catch (error:any) { this.error.set(this.errorMessage(error,this.i18n.t('language_plugin.save_error','Could not save settings.'))); } finally { this.busy.set(false); } }
   addGroup(): void { const id = `group${Date.now().toString(36)}`; this.settings.groups.push({id,name:this.i18n.t('language_plugin.new_group','New group'),enabled:false,channel_id:null,access_role_id:null,role_name_mask:'{group} - {name}',language_roles:{},default_language_code:null,message_id:null}); }
   removeGroup(id:string): void { this.settings.groups = this.settings.groups.filter(group => group.id !== id); }
   private englishRoleMask(mask:string): string { const value = (mask || '').trim(); return !value || /[^\x00-\x7F]/.test(value) ? '{group} - {name}' : value; }
@@ -107,7 +108,7 @@ export class PluginFirstIntroductionComponent implements OnInit {
         complete = true; await this.ngOnInit(); this.success.set(this.i18n.t('language_plugin.published','The panel for {group} was published in Discord.').replace('{group}',group.name)); break;
       }
       if (!complete) throw new Error(this.i18n.t('language_plugin.publish_pending','Publishing is still in progress. Refresh the page later.'));
-    } catch (error:any) { this.error.set(error?.message || this.i18n.t('language_plugin.publish_error','Could not publish the panel.')); }
+    } catch (error:any) { this.error.set(this.errorMessage(error,this.i18n.t('language_plugin.publish_error','Could not publish the panel.'))); }
     finally { this.busy.set(false); }
   }
   async ensureRoles(group:Group): Promise<void> {
@@ -120,7 +121,7 @@ export class PluginFirstIntroductionComponent implements OnInit {
         if (failed.length) this.error.set(failed.map(item => `${item.name}: ${item.error || this.i18n.t('language_plugin.role_creation_error','Role creation failed')}`).join('; ')); complete = true; break; }
         if (!complete) throw new Error(this.i18n.t('language_plugin.discord_timeout','Discord timed out. Refresh the page.')); }
       await this.ngOnInit(); if (!this.error()) this.success.set(this.i18n.t('language_plugin.roles_ready','Language roles for {group} are ready.').replace('{group}',group.name));
-    } catch (error:any) { this.error.set(error?.message || this.i18n.t('language_plugin.roles_error','Could not create the roles.')); }
+    } catch (error:any) { this.error.set(this.errorMessage(error,this.i18n.t('language_plugin.roles_error','Could not create the roles.'))); }
     finally { this.busy.set(false); this.provisioning.set(''); }
   }
 }
