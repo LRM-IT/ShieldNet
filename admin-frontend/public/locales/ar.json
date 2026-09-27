@@ -2356,7 +2356,7 @@
     "no_default_language": "بلا لغة افتراضية",
     "default_language_help": "يبقى دور اللغة بعد اختيار علم آخر.",
     "language_roles": "أدوار اللغات",
-    "mask_variables": "المتغيرات: {group}، {flag}، {name}، {code}.",
+    "mask_variables": "المتغيرات: {group}، {name}، {code}.",
     "name_mask": "قالب اسم الدور",
     "creating_roles": "جارٍ إنشاء الأدوار…",
     "ensure_roles": "العثور على الأدوار أو إنشاؤها",

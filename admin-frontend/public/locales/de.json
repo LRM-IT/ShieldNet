@@ -2356,7 +2356,7 @@
     "no_default_language": "Keine Standardsprache",
     "default_language_help": "Diese Sprachrolle bleibt auch nach Auswahl einer anderen Flagge erhalten.",
     "language_roles": "Sprachrollen",
-    "mask_variables": "Variablen: {group}, {flag}, {name}, {code}.",
+    "mask_variables": "Variablen: {group}, {name}, {code}.",
     "name_mask": "Namensvorlage der Rolle",
     "creating_roles": "Rollen werden erstellt…",
     "ensure_roles": "Rollen finden oder erstellen",

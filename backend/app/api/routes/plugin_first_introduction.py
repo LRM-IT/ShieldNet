@@ -105,16 +105,27 @@ def _default_groups() -> list[dict]:
              "message_id": None} for group in DEFAULT_GROUPS]
 
 
+def _normalize_role_mask(mask: str | None) -> str:
+    """Migrate legacy localized/flag masks to stable English-only role names."""
+    value = (mask or "").strip()
+    if not value or "{flag}" in value or not value.isascii():
+        return "{group} - {name}"
+    return value
+
+
 def _groups(configuration: dict) -> list[dict]:
     if isinstance(configuration.get("groups"), list):
-        return [dict(group) for group in configuration["groups"]]
+        groups = [dict(group) for group in configuration["groups"]]
+        for group in groups:
+            group["role_name_mask"] = _normalize_role_mask(group.get("role_name_mask"))
+        return groups
     if any(key in configuration for key in ("channel_id", "language_roles", "message_id")):
         legacy = [{**_default_groups()[0], "id": "r1", "name": "R1"}]
         legacy[0].update({
             "channel_id": configuration.get("channel_id"),
             "language_roles": configuration.get("language_roles") or {},
             "message_id": configuration.get("message_id"),
-            "role_name_mask": configuration.get("role_name_mask") or "{group} - {name}",
+            "role_name_mask": _normalize_role_mask(configuration.get("role_name_mask")),
         })
         return legacy
     return _default_groups()
@@ -188,7 +199,8 @@ async def save_settings(guild_id: int, payload: SettingsInput,
     previous = {group["id"]: group for group in _groups(installation.configuration or {})}
     saved = []
     for group in payload.groups:
-        _role_names(group.role_name_mask, languages, group.id)
+        role_name_mask = _normalize_role_mask(group.role_name_mask)
+        _role_names(role_name_mask, languages, group.id)
         if set(group.language_roles) - codes:
             raise HTTPException(422, f"Unknown language role in {group.name}")
         if group.default_language_code and group.default_language_code not in codes:
@@ -197,6 +209,7 @@ async def save_settings(guild_id: int, payload: SettingsInput,
                               set(group.language_roles) != codes):
             raise HTTPException(422, f"{group.name}: select a channel, access role and every language role")
         data = group.model_dump()
+        data["role_name_mask"] = role_name_mask
         old = previous.get(group.id) or {}
         data["message_id"] = (old.get("message_id") if
                               old.get("channel_id") == group.channel_id and
@@ -266,7 +279,8 @@ async def ensure_language_roles(guild_id: int, payload: RoleProvisionInput,
     languages = await _languages(session, guild_id)
     if not 1 <= len(languages) <= 25:
         raise HTTPException(422, "Configure 1-25 server languages first")
-    names = _role_names(payload.role_name_mask, languages, group["id"])
+    role_name_mask = _normalize_role_mask(payload.role_name_mask)
+    names = _role_names(role_name_mask, languages, group["id"])
     roles = (await session.execute(select(DiscordGuildRole).where(
         DiscordGuildRole.guild_id == guild_id))).scalars().all()
     by_id = {str(role.discord_role_id): role for role in roles}
@@ -321,7 +335,7 @@ async def ensure_language_roles(guild_id: int, payload: RoleProvisionInput,
         await session.flush()
         queued.append(str(job.id))
     group["language_roles"] = assigned
-    group["role_name_mask"] = payload.role_name_mask
+    group["role_name_mask"] = role_name_mask
     installation.configuration = {**(installation.configuration or {}), "groups": groups}
     await session.commit()
     return {"jobs": queued, "language_roles": assigned, "role_names": names}

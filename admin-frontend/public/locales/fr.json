@@ -2355,7 +2355,7 @@
     "no_default_language": "Aucune langue par défaut",
     "default_language_help": "Ce rôle linguistique reste attribué après le choix d’un autre drapeau.",
     "language_roles": "Rôles linguistiques",
-    "mask_variables": "Variables : {group}, {flag}, {name}, {code}.",
+    "mask_variables": "Variables : {group}, {name}, {code}.",
     "name_mask": "Modèle du nom de rôle",
     "creating_roles": "Création des rôles…",
     "ensure_roles": "Trouver ou créer les rôles",
