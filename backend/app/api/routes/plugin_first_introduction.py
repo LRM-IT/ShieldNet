@@ -106,9 +106,9 @@ def _default_groups() -> list[dict]:
 
 
 def _normalize_role_mask(mask: str | None) -> str:
-    """Migrate legacy localized/flag masks to stable English-only role names."""
+    """Migrate localized masks while keeping the optional emoji flag variable."""
     value = (mask or "").strip()
-    if not value or "{flag}" in value or not value.isascii():
+    if not value or not value.isascii():
         return "{group} - {name}"
     return value
 
@@ -142,8 +142,10 @@ def _role_names(mask: str, languages: list[dict], group_name: str) -> dict[str, 
         raise HTTPException(422, "Generated role names must contain 1-100 characters")
     if len({name.casefold() for name in names.values()}) != len(names):
         raise HTTPException(422, "The role mask must produce distinct names")
-    if any(not name.isascii() for name in names.values()):
-        raise HTTPException(422, "Generated role names must use English characters only")
+    for item in languages:
+        text_part = names[item["code"]].replace(item.get("flag") or "", "")
+        if not text_part.isascii():
+            raise HTTPException(422, "Generated role names may use English characters and the language flag only")
     return names
 
 

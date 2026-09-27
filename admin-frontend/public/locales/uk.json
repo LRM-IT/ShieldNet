@@ -2247,7 +2247,7 @@
     "no_default_language": "Без мови за замовчуванням",
     "default_language_help": "Ця мовна роль зберігається після вибору іншого прапора.",
     "language_roles": "Мовні ролі",
-    "mask_variables": "Змінні: {group}, {name}, {code}.",
+    "mask_variables": "Змінні: {group}, {flag}, {name}, {code}.",
     "name_mask": "Маска назви ролі",
     "creating_roles": "Створення ролей…",
     "ensure_roles": "Знайти або створити ролі",

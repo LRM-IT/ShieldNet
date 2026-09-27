@@ -2354,7 +2354,7 @@
     "no_default_language": "Bez języka domyślnego",
     "default_language_help": "Ta rola językowa pozostaje po wybraniu innej flagi.",
     "language_roles": "Role językowe",
-    "mask_variables": "Zmienne: {group}, {name}, {code}.",
+    "mask_variables": "Zmienne: {group}, {flag}, {name}, {code}.",
     "name_mask": "Szablon nazwy roli",
     "creating_roles": "Tworzenie ról…",
     "ensure_roles": "Znajdź lub utwórz role",

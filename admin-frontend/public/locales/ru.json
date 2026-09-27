@@ -2247,7 +2247,7 @@
     "no_default_language": "Без языка по умолчанию",
     "default_language_help": "Эта языковая роль сохраняется после выбора другого флага.",
     "language_roles": "Языковые роли",
-    "mask_variables": "Переменные: {group}, {name}, {code}.",
+    "mask_variables": "Переменные: {group}, {flag}, {name}, {code}.",
     "name_mask": "Шаблон названия роли",
     "creating_roles": "Создание ролей…",
     "ensure_roles": "Найти или создать роли",

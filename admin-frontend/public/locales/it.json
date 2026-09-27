@@ -2354,7 +2354,7 @@
     "no_default_language": "Nessuna lingua predefinita",
     "default_language_help": "Questo ruolo linguistico resta assegnato dopo la scelta di un’altra bandiera.",
     "language_roles": "Ruoli linguistici",
-    "mask_variables": "Variabili: {group}, {name}, {code}.",
+    "mask_variables": "Variabili: {group}, {flag}, {name}, {code}.",
     "name_mask": "Modello nome ruolo",
     "creating_roles": "Creazione ruoli…",
     "ensure_roles": "Trova o crea ruoli",

@@ -37,7 +37,7 @@ interface Settings { installed: boolean; enabled: boolean; languages: Language[]
           <label>{{'language_plugin.default_language'|snT:'Default language'}}<select [(ngModel)]="group.default_language_code"><option [ngValue]="null">{{'language_plugin.no_default_language'|snT:'No default language'}}</option>
             @for (language of settings.languages; track language.code) { <option [value]="language.code">{{language.flag}} {{language.name}}</option> }</select></label>
           <p>{{'language_plugin.default_language_help'|snT:'This language role remains assigned to members with the access role even after another flag is selected.'}}</p>
-          <div class="builder"><h4>{{'language_plugin.language_roles'|snT:'Language roles'}}</h4><p>{{'language_plugin.mask_variables'|snT:'Variables: {group}, {name}, {code}.'}}</p>
+          <div class="builder"><h4>{{'language_plugin.language_roles'|snT:'Language roles'}}</h4><p>{{'language_plugin.mask_variables'|snT:'Variables: {group}, {flag}, {name}, {code}.'}}</p>
             <label>{{'language_plugin.name_mask'|snT:'Role name mask'}}<input [(ngModel)]="group.role_name_mask" maxlength="100" placeholder="{group} - {name}"></label>
             <div class="preview">@for (language of settings.languages; track language.code) { <small>{{language.code}} → {{rolePreview(group, language)}}</small> }</div>
             <button (click)="ensureRoles(group)" [disabled]="busy() || !settings.languages.length">{{provisioning() === group.id ? ('language_plugin.creating_roles'|snT:'Creating roles…') : ('language_plugin.ensure_roles'|snT:'Find or create roles')}}</button>
@@ -93,8 +93,8 @@ export class PluginFirstIntroductionComponent implements OnInit {
     catch { this.error.set(this.i18n.t('language_plugin.save_error','Could not save settings.')); } finally { this.busy.set(false); } }
   addGroup(): void { const id = `group${Date.now().toString(36)}`; this.settings.groups.push({id,name:this.i18n.t('language_plugin.new_group','New group'),enabled:false,channel_id:null,access_role_id:null,role_name_mask:'{group} - {name}',language_roles:{},default_language_code:null,message_id:null}); }
   removeGroup(id:string): void { this.settings.groups = this.settings.groups.filter(group => group.id !== id); }
-  private englishRoleMask(mask:string): string { const value = (mask || '').trim(); return !value || value.includes('{flag}') || /[^\x00-\x7F]/.test(value) ? '{group} - {name}' : value; }
-  rolePreview(group:Group,language:Language): string { return this.englishRoleMask(group.role_name_mask).replace(/\{group\}/g,group.id).replace(/\{name\}/g,language.name).replace(/\{code\}/g,language.code).trim(); }
+  private englishRoleMask(mask:string): string { const value = (mask || '').trim(); return !value || /[^\x00-\x7F]/.test(value) ? '{group} - {name}' : value; }
+  rolePreview(group:Group,language:Language): string { return this.englishRoleMask(group.role_name_mask).replace(/\{group\}/g,group.id).replace(/\{flag\}/g,language.flag || '').replace(/\{name\}/g,language.name).replace(/\{code\}/g,language.code).trim(); }
   async publish(group:Group): Promise<void> {
     if (this.busy()) return; this.busy.set(true); this.error.set(''); this.success.set('');
     const base = `/api/v1/discord/guilds/${this.guildId}/plugins/first-introduction/panels`;

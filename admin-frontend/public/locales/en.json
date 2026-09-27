@@ -2314,7 +2314,7 @@
     "no_default_language": "No default language",
     "default_language_help": "This language role remains assigned to members with the access role even after another flag is selected.",
     "language_roles": "Language roles",
-    "mask_variables": "Variables: {group}, {name}, {code}.",
+    "mask_variables": "Variables: {group}, {flag}, {name}, {code}.",
     "name_mask": "Role name mask",
     "creating_roles": "Creating roles…",
     "ensure_roles": "Find or create roles",
