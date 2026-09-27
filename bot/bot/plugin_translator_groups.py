@@ -20,6 +20,8 @@ DetectorFactory.seed = 0
 
 
 class TranslatorGroups:
+    REPLY_MAP_TTL = 90 * 24 * 60 * 60
+
     def __init__(self, bot: discord.Client, backend: BackendClient) -> None:
         self.bot = bot
         self.backend = backend
@@ -101,6 +103,7 @@ class TranslatorGroups:
         config = await self.configuration(message.guild.id)
         if not config["enabled"]:
             return
+        await self._remember_source(message)
         configured_source = self.configured_source_language(config, message.channel.id)
         actual_source = self.detect_source_language(message.content, configured_source, config) if message.content.strip() else configured_source
         attachments = await self._attachments(message) if config.get("forward_attachments", True) else []
@@ -137,18 +140,71 @@ class TranslatorGroups:
                 suffix = ("\n\n" + suffix_body) if suffix_body else ""
                 chunks = self._chunks(translated, 1900 - len(suffix)) if translated else [""]
                 webhook = await self._webhook(channel)
+                reply_message_id = await self._translated_reply_id(message, channel_id)
                 for index, chunk in enumerate(chunks):
                     files = self._files(attachments, message.guild.filesize_limit) if index == 0 else []
-                    await webhook.send(
-                        content=(chunk + (suffix if index == len(chunks) - 1 else "")) or None,
-                        files=files,
-                        username=message.author.display_name[:80],
-                        avatar_url=message.author.display_avatar.url,
-                        allowed_mentions=discord.AllowedMentions.none(),
-                    )
+                    content = (chunk + (suffix if index == len(chunks) - 1 else "")) or None
+                    if reply_message_id:
+                        # Discord's webhook execute endpoint does not expose native
+                        # message references in discord.py. Use the active guild bot
+                        # for replies so Discord renders the actual reply chain.
+                        author = discord.utils.escape_markdown(message.author.display_name[:80])
+                        sent = await channel.send(
+                            content=f"**{author}**\n{content or ''}",
+                            files=files,
+                            reference=channel.get_partial_message(reply_message_id),
+                            mention_author=False,
+                            allowed_mentions=discord.AllowedMentions.none(),
+                        )
+                    else:
+                        sent = await webhook.send(
+                            content=content,
+                            files=files,
+                            username=message.author.display_name[:80],
+                            avatar_url=message.author.display_avatar.url,
+                            allowed_mentions=discord.AllowedMentions.none(),
+                            wait=True,
+                        )
+                    if sent is not None:
+                        await self._remember_copy(message, channel_id, sent.id, primary=index == 0)
             except Exception:
                 logger.exception("Group translation failed guild=%s source=%s target=%s",
                                  message.guild.id, message.id, channel_id)
+
+    def _reply_alias_key(self, guild_id: int, message_id: int) -> str:
+        return f"shieldnet:translator-reply:{guild_id}:alias:{message_id}"
+
+    def _reply_map_key(self, guild_id: int, origin_id: int) -> str:
+        return f"shieldnet:translator-reply:{guild_id}:map:{origin_id}"
+
+    async def _remember_source(self, message: discord.Message) -> None:
+        alias = self._reply_alias_key(message.guild.id, message.id)
+        mapping = self._reply_map_key(message.guild.id, message.id)
+        pipe = self.redis.pipeline()
+        pipe.set(alias, str(message.id), ex=self.REPLY_MAP_TTL)
+        pipe.hset(mapping, str(message.channel.id), str(message.id))
+        pipe.expire(mapping, self.REPLY_MAP_TTL)
+        await pipe.execute()
+
+    async def _remember_copy(self, source: discord.Message, channel_id: int, copy_id: int, *, primary: bool) -> None:
+        alias = self._reply_alias_key(source.guild.id, copy_id)
+        mapping = self._reply_map_key(source.guild.id, source.id)
+        pipe = self.redis.pipeline()
+        pipe.set(alias, str(source.id), ex=self.REPLY_MAP_TTL)
+        if primary:
+            pipe.hset(mapping, str(channel_id), str(copy_id))
+        pipe.expire(mapping, self.REPLY_MAP_TTL)
+        await pipe.execute()
+
+    async def _translated_reply_id(self, message: discord.Message, target_channel_id: int) -> int | None:
+        reference_id = message.reference.message_id if message.reference else None
+        if not reference_id:
+            return None
+        origin = await self.redis.get(self._reply_alias_key(message.guild.id, reference_id))
+        if not origin:
+            return None
+        target = await self.redis.hget(self._reply_map_key(message.guild.id, int(origin)), str(target_channel_id))
+        return int(target) if target and target.isdigit() else None
 
     async def _cached_translation(self, message: discord.Message, channel_id: int, source_language: str, language: str, source_text: str, config: dict) -> str:
         use_cache = bool(config.get("cache_enabled", True)) and len(source_text.strip()) >= int(config.get("cache_min_characters", 4))
