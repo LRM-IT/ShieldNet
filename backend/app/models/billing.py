@@ -51,6 +51,23 @@ class BillingSubscription(Base, TimestampMixin):
     expiry_email_notice_for_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
+class BillingSubscriptionTransfer(Base):
+    __tablename__ = "subscription_transfers"
+    __table_args__ = ({"schema": "billing"},)
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    source_guild_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("discord.guilds.guild_id", ondelete="RESTRICT"), nullable=False)
+    target_guild_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("discord.guilds.guild_id", ondelete="RESTRICT"), nullable=False)
+    plugin_key: Mapped[str] = mapped_column(String(96), nullable=False)
+    days: Mapped[int] = mapped_column(nullable=False)
+    source_expires_before: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    source_expires_after: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    target_expires_before: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    target_expires_after: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    requested_by_user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("core.users.id", ondelete="RESTRICT"), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
+
+
 class BillingPayment(Base, TimestampMixin):
     __tablename__ = "payments"
     __table_args__ = (UniqueConstraint("order_reference", name="uq_billing_payment_order_reference"), {"schema": "billing"})

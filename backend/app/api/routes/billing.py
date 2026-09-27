@@ -14,7 +14,7 @@ from app.api.dependencies.guild_access import require_guild_management
 from app.api.dependencies.platform_access import require_superadmin
 from app.api.dependencies.internal import verify_internal_service_token
 from app.db.session import get_db_session
-from app.models.billing import BillingPluginPlan, BillingSubscription, BillingPayment, BillingWallet, BillingWalletTransaction, BillingDiscountCard, BillingTenureDiscount
+from app.models.billing import BillingPluginPlan, BillingSubscription, BillingSubscriptionTransfer, BillingPayment, BillingWallet, BillingWalletTransaction, BillingDiscountCard, BillingTenureDiscount
 from app.models.core import User
 from app.models.discord import Guild
 from app.models.member_actions import MemberAction, MemberActionStatus, MemberActionType
@@ -120,6 +120,16 @@ class SubscriptionReminderRequest(BaseModel):
     days_before: int = Field(default=3, ge=1, le=30)
     discord_dm: bool = True
     email: bool = False
+class SubscriptionTransferRequest(BaseModel):
+    source_guild_id: int
+    target_guild_id: int
+    plugin_key: str = Field(pattern=r"^(__paid_modules__|__custom_bot__)$")
+    days: int = Field(ge=1, le=3660)
+    @model_validator(mode="after")
+    def different_servers(self):
+        if self.source_guild_id == self.target_guild_id:
+            raise ValueError("Select two different Discord servers")
+        return self
 class DmCheckRequest(BaseModel):
     guild_id: int
 class EmailSettingsRequest(BaseModel):
@@ -296,6 +306,45 @@ async def guild_billing(guild_id: int, user: User = Depends(get_current_user), s
             "providers":{key:{"active":value["active"]} for key,value in provider_config.items()},
             "uah_quote":uah_quote,
             "email_available":bool(real_email(user)),"smtp_available":bool(email_config["enabled"] and email_config["configured"])}
+
+@router.get("/billing/subscriptions/transfers")
+async def subscription_transfers(user:User=Depends(get_current_user),session:AsyncSession=Depends(get_db_session)):
+    if user.discord_user_id is None: raise HTTPException(403,"Discord account is required")
+    guilds=list((await session.execute(select(Guild).where(Guild.owner_discord_id==user.discord_user_id).order_by(Guild.name))).scalars())
+    guild_ids=[x.guild_id for x in guilds];subscriptions=[]
+    if guild_ids:
+        subscriptions=list((await session.execute(select(BillingSubscription).where(BillingSubscription.guild_id.in_(guild_ids),BillingSubscription.plugin_key.in_([PAID_PACKAGE_KEY,"__custom_bot__"])))).scalars())
+    now=datetime.now(timezone.utc);available=[]
+    for row in subscriptions:
+        remaining=max(0,int((row.expires_at-now).total_seconds()//86400)) if row.status=="active" else 0
+        available.append({**subscription_dict(row),"transferable_days":remaining})
+    history=list((await session.execute(select(BillingSubscriptionTransfer).where(BillingSubscriptionTransfer.requested_by_user_id==user.id).order_by(BillingSubscriptionTransfer.created_at.desc()).limit(20))).scalars())
+    return {"guilds":[{"guild_id":str(x.guild_id),"name":x.name} for x in guilds],"subscriptions":available,"history":[{"id":str(x.id),"source_guild_id":str(x.source_guild_id),"target_guild_id":str(x.target_guild_id),"plugin_key":x.plugin_key,"days":x.days,"source_expires_after":x.source_expires_after,"target_expires_after":x.target_expires_after,"created_at":x.created_at} for x in history]}
+
+@router.post("/billing/subscriptions/transfers")
+async def transfer_subscription_days(payload:SubscriptionTransferRequest,user:User=Depends(get_current_user),session:AsyncSession=Depends(get_db_session)):
+    if user.discord_user_id is None: raise HTTPException(403,"Discord account is required")
+    guild_ids=sorted([payload.source_guild_id,payload.target_guild_id])
+    guilds=list((await session.execute(select(Guild).where(Guild.guild_id.in_(guild_ids)).with_for_update())).scalars())
+    if len(guilds)!=2 or any(x.owner_discord_id!=user.discord_user_id for x in guilds): raise HTTPException(403,"Both Discord servers must be owned by your account")
+    rows=list((await session.execute(select(BillingSubscription).where(BillingSubscription.guild_id.in_(guild_ids),BillingSubscription.plugin_key==payload.plugin_key).with_for_update())).scalars())
+    by_guild={x.guild_id:x for x in rows};source=by_guild.get(payload.source_guild_id);target=by_guild.get(payload.target_guild_id)
+    now=datetime.now(timezone.utc);duration=timedelta(days=payload.days)
+    if source is None or source.status!="active" or source.expires_at<=now: raise HTTPException(422,"Source subscription is not active")
+    if source.expires_at-now<duration: raise HTTPException(422,"Not enough complete paid days are available for transfer")
+    source_before=source.expires_at;source.expires_at=source.expires_at-duration
+    if source.expires_at<=now: source.status="expired"
+    target_before=target.expires_at if target else None
+    if target is None:
+        target=BillingSubscription(id=uuid4(),guild_id=payload.target_guild_id,plugin_key=payload.plugin_key,status="active",billing_period="transfer",starts_at=now,expires_at=now+duration,provider="transfer",owner_discord_id=user.discord_user_id,auto_renew=False);session.add(target)
+    else:
+        if target.expires_at<=now: target.starts_at=now
+        target.status="active";target.billing_period="transfer";target.expires_at=max(now,target.expires_at)+duration;target.owner_discord_id=user.discord_user_id;target.auto_renew=False
+    for row in (source,target):
+        row.expiry_notice_sent_at=None;row.expiry_notice_for_expires_at=None;row.expiry_dm_notice_for_expires_at=None;row.expiry_email_notice_for_expires_at=None
+    transfer=BillingSubscriptionTransfer(source_guild_id=payload.source_guild_id,target_guild_id=payload.target_guild_id,plugin_key=payload.plugin_key,days=payload.days,source_expires_before=source_before,source_expires_after=source.expires_at,target_expires_before=target_before,target_expires_after=target.expires_at,requested_by_user_id=user.id)
+    session.add(transfer);await session.commit()
+    return {"id":str(transfer.id),"days":payload.days,"plugin_key":payload.plugin_key,"source_expires_at":source.expires_at,"target_expires_at":target.expires_at}
 
 @router.post("/billing/wallet/voucher")
 async def redeem_voucher(payload:RedeemDiscountIn,user:User=Depends(get_current_user),session:AsyncSession=Depends(get_db_session)):
