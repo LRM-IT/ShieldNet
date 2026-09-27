@@ -41,6 +41,7 @@ class GroupInput(BaseModel):
     language_roles: dict[str, str] = Field(default_factory=dict)
     default_language_code: str | None = None
     multiple_selection: bool = False
+    remove_languages_without_access_role: bool = False
 
     @field_validator("id")
     @classmethod
@@ -104,6 +105,7 @@ def _default_groups() -> list[dict]:
              "role_name_mask": "{group} - {name}", "language_roles": {},
              "default_language_code": None,
              "multiple_selection": False,
+             "remove_languages_without_access_role": False,
              "message_id": None} for group in DEFAULT_GROUPS]
 
 
@@ -121,6 +123,9 @@ def _groups(configuration: dict) -> list[dict]:
         for group in groups:
             group["role_name_mask"] = _normalize_role_mask(group.get("role_name_mask"))
             group["multiple_selection"] = bool(group.get("multiple_selection", False))
+            group["remove_languages_without_access_role"] = bool(
+                group.get("remove_languages_without_access_role", False)
+            )
         return groups
     if any(key in configuration for key in ("channel_id", "language_roles", "message_id")):
         legacy = [{**_default_groups()[0], "id": "r1", "name": "R1"}]

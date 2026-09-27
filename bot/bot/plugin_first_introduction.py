@@ -103,13 +103,25 @@ class LanguageSelection:
             code = group.get("default_language_code")
             role_id = (group.get("language_roles") or {}).get(code) if code else None
             role = member.guild.get_role(int(role_id)) if role_id else None
-            if role is None or role >= me.top_role:
-                continue
             if access_role_id and not any(str(item.id) == access_role_id for item in member.roles):
-                if role in member.roles:
+                if group.get("remove_languages_without_access_role"):
+                    language_role_ids = {
+                        int(item) for item in (group.get("language_roles") or {}).values()
+                        if str(item).isdigit()
+                    }
+                    removable = [
+                        item for item in member.roles
+                        if item.id in language_role_ids and item < me.top_role
+                    ]
+                    if removable:
+                        await member.remove_roles(
+                            *removable,
+                            reason="GuildConsole language group dependency removed",
+                        )
+                elif role is not None and role < me.top_role and role in member.roles:
                     await member.remove_roles(role, reason="GuildConsole language group access removed")
                 continue
-            if role not in member.roles:
+            if role is not None and role < me.top_role and role not in member.roles:
                 await member.add_roles(role, reason="GuildConsole default language")
 
     async def on_reaction(self, payload: discord.RawReactionActionEvent, added: bool) -> None:
