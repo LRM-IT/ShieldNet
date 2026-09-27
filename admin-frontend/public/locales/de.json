@@ -2127,6 +2127,7 @@
     "setup": "Übersetzungseinrichtung",
     "setup_help": "Konfigurieren Sie die Übersetzungsroute und den Anbieter in AI Center. Serversprachen steuern die verfügbaren Sprachcodes.",
     "source_link": "Fügen Sie einen Link zur Quellnachricht ein",
+    "forward_replies": "Antworten zwischen Kanälen beibehalten",
     "attachments": "Anhänge weiterleiten",
     "stickers": "Aufkleber weiterleiten",
     "fallback": "Senden Sie den Originaltext, wenn AI fehlschlägt",

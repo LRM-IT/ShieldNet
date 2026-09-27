@@ -103,7 +103,9 @@ class TranslatorGroups:
         config = await self.configuration(message.guild.id)
         if not config["enabled"]:
             return
-        await self._remember_source(message)
+        forward_replies = bool(config.get("forward_replies", False))
+        if forward_replies:
+            await self._remember_source(message)
         configured_source = self.configured_source_language(config, message.channel.id)
         actual_source = self.detect_source_language(message.content, configured_source, config) if message.content.strip() else configured_source
         attachments = await self._attachments(message) if config.get("forward_attachments", True) else []
@@ -140,7 +142,7 @@ class TranslatorGroups:
                 suffix = ("\n\n" + suffix_body) if suffix_body else ""
                 chunks = self._chunks(translated, 1900 - len(suffix)) if translated else [""]
                 webhook = await self._webhook(channel)
-                reply_message_id = await self._translated_reply_id(message, channel_id)
+                reply_message_id = await self._translated_reply_id(message, channel_id) if forward_replies else None
                 for index, chunk in enumerate(chunks):
                     files = self._files(attachments, message.guild.filesize_limit) if index == 0 else []
                     content = (chunk + (suffix if index == len(chunks) - 1 else "")) or None
@@ -165,7 +167,7 @@ class TranslatorGroups:
                             allowed_mentions=discord.AllowedMentions.none(),
                             wait=True,
                         )
-                    if sent is not None:
+                    if forward_replies and sent is not None:
                         await self._remember_copy(message, channel_id, sent.id, primary=index == 0)
             except Exception:
                 logger.exception("Group translation failed guild=%s source=%s target=%s",

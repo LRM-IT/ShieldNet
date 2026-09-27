@@ -2011,6 +2011,7 @@
     "setup": "Translation setup",
     "setup_help": "Configure the translation route and provider in AI Center. Server Languages controls the available language codes.",
     "source_link": "Include link to source message",
+    "forward_replies": "Preserve replies between channels",
     "attachments": "Forward attachments",
     "stickers": "Forward stickers",
     "fallback": "Send original text if AI fails",

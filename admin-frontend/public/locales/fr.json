@@ -2126,6 +2126,7 @@
     "setup": "Configuration de la traduction",
     "setup_help": "Configurez l'itinéraire de traduction et le fournisseur dans AI Center. Les langues du serveur contrôlent les codes de langue disponibles.",
     "source_link": "Inclure un lien vers le message source",
+    "forward_replies": "Conserver les réponses entre les canaux",
     "attachments": "Transférer les pièces jointes",
     "stickers": "Transférer des autocollants",
     "fallback": "Envoyer le texte original en cas d'échec de AI",

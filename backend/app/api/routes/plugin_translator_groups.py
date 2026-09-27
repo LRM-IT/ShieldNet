@@ -61,6 +61,7 @@ class Group(BaseModel):
 class SettingsInput(BaseModel):
     groups: list[Group] = Field(default_factory=list, max_length=30)
     include_source_link: bool = True
+    forward_replies: bool = False
     cache_enabled: bool = True
     cache_ttl_hours: int = Field(default=72, ge=1, le=720)
     cache_max_entries: int = Field(default=2000, ge=100, le=50000)
@@ -161,6 +162,7 @@ async def _settings(session: AsyncSession, guild_id: int) -> dict:
         "enabled": bool(installation and installation.enabled),
         "groups": config.get("groups", []),
         "include_source_link": config.get("include_source_link", True),
+        "forward_replies": config.get("forward_replies", False),
         "cache_enabled": config.get("cache_enabled", True),
         "cache_ttl_hours": config.get("cache_ttl_hours", 72),
         "cache_max_entries": config.get("cache_max_entries", 2000),
