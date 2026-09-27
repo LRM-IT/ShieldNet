@@ -326,12 +326,12 @@ async def transfer_subscription_days(payload:SubscriptionTransferRequest,user:Us
     if user.discord_user_id is None: raise HTTPException(403,"Discord account is required")
     guild_ids=sorted([payload.source_guild_id,payload.target_guild_id])
     guilds=list((await session.execute(select(Guild).where(Guild.guild_id.in_(guild_ids)).with_for_update())).scalars())
-    if len(guilds)!=2 or any(x.owner_discord_id!=user.discord_user_id for x in guilds): raise HTTPException(403,"Both Discord servers must be owned by your account")
+    if len(guilds)!=2 or any(x.owner_discord_id!=user.discord_user_id for x in guilds): raise HTTPException(403,"transfer_ownership_required")
     rows=list((await session.execute(select(BillingSubscription).where(BillingSubscription.guild_id.in_(guild_ids),BillingSubscription.plugin_key==payload.plugin_key).with_for_update())).scalars())
     by_guild={x.guild_id:x for x in rows};source=by_guild.get(payload.source_guild_id);target=by_guild.get(payload.target_guild_id)
     now=datetime.now(timezone.utc);duration=timedelta(days=payload.days)
-    if source is None or source.status!="active" or source.expires_at<=now: raise HTTPException(422,"Source subscription is not active")
-    if source.expires_at-now<duration: raise HTTPException(422,"Not enough complete paid days are available for transfer")
+    if source is None or source.status!="active" or source.expires_at<=now: raise HTTPException(422,"transfer_source_inactive")
+    if source.expires_at-now<duration: raise HTTPException(422,"transfer_insufficient_days")
     source_before=source.expires_at;source.expires_at=source.expires_at-duration
     if source.expires_at<=now: source.status="expired"
     target_before=target.expires_at if target else None
