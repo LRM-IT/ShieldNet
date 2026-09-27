@@ -11,8 +11,15 @@ class DiscordManagementWorker:
         self.headers = {"X-ShieldNet-Service-Token": settings.internal_service_token}
 
     async def run_once(self):
+        guild_ids = [guild.id for guild in self.bot.managed_guilds]
+        if not guild_ids:
+            return
         async with httpx.AsyncClient(timeout=30) as client:
-            response = await client.get(f"{self.base_url}/api/v1/internal/discord-management/pending", headers=self.headers)
+            response = await client.get(
+                f"{self.base_url}/api/v1/internal/discord-management/pending",
+                headers=self.headers,
+                params=[("guild_id", guild_id) for guild_id in guild_ids],
+            )
             response.raise_for_status()
             payload = response.json()
         for item in payload.get("changes", []):

@@ -117,7 +117,7 @@ export class PluginFirstIntroductionComponent implements OnInit {
       if (result.jobs.length) { let complete = false; for (let attempt=0;attempt<40;attempt++) { await new Promise(resolve => setTimeout(resolve,1500));
         const status = await firstValueFrom(this.http.post<{complete:boolean;items:{name:string;status:string;error:string|null}[]}>(`${base}/status`,result.jobs));
         if (!status.complete) continue; const failed = status.items.filter(item => item.status !== 'completed');
-        if (failed.length) this.error.set(failed.map(item => `${item.name}: ${this.i18n.t('language_plugin.role_creation_error','Role creation failed')}`).join('; ')); complete = true; break; }
+        if (failed.length) this.error.set(failed.map(item => `${item.name}: ${item.error || this.i18n.t('language_plugin.role_creation_error','Role creation failed')}`).join('; ')); complete = true; break; }
         if (!complete) throw new Error(this.i18n.t('language_plugin.discord_timeout','Discord timed out. Refresh the page.')); }
       await this.ngOnInit(); if (!this.error()) this.success.set(this.i18n.t('language_plugin.roles_ready','Language roles for {group} are ready.').replace('{group}',group.name));
     } catch (error:any) { this.error.set(error?.message || this.i18n.t('language_plugin.roles_error','Could not create the roles.')); }

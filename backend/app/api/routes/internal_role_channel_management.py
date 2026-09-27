@@ -13,9 +13,18 @@ from app.api.routes.plugin_first_introduction import _groups
 router = APIRouter(prefix="/internal/discord-management", tags=["Internal Discord Management"], dependencies=[Depends(verify_internal_service_token)])
 
 @router.get("/pending")
-async def pending(limit: int = Query(25, ge=1, le=100), session: AsyncSession = Depends(get_db_session)):
-    changes = (await session.execute(select(DiscordStructureChange).where(DiscordStructureChange.status == "pending").order_by(DiscordStructureChange.created_at).limit(limit))).scalars().all()
-    bulk = (await session.execute(select(DiscordBulkRoleOperation).where(DiscordBulkRoleOperation.status == "pending").order_by(DiscordBulkRoleOperation.created_at).limit(limit))).scalars().all()
+async def pending(guild_id: list[int] = Query(...), limit: int = Query(25, ge=1, le=100), session: AsyncSession = Depends(get_db_session)):
+    guild_ids = set(guild_id)
+    if not guild_ids or len(guild_ids) > 500:
+        raise HTTPException(422, "Provide 1-500 managed guild IDs")
+    changes = (await session.execute(select(DiscordStructureChange).where(
+        DiscordStructureChange.status == "pending",
+        DiscordStructureChange.guild_id.in_(guild_ids),
+    ).order_by(DiscordStructureChange.created_at).limit(limit))).scalars().all()
+    bulk = (await session.execute(select(DiscordBulkRoleOperation).where(
+        DiscordBulkRoleOperation.status == "pending",
+        DiscordBulkRoleOperation.guild_id.in_(guild_ids),
+    ).order_by(DiscordBulkRoleOperation.created_at).limit(limit))).scalars().all()
     serialized=[]
     for x in changes:
         data=dict(x.payload or {})
