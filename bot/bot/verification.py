@@ -435,34 +435,28 @@ class VerifyModal(
     discord.ui.Modal,
     title="GuildConsole Verification",
 ):
-    alliance = discord.ui.TextInput(
-        label="Alliance",
-        min_length=1,
-        max_length=32,
-    )
-
-    nickname = discord.ui.TextInput(
-        label="Nickname",
-        min_length=1,
-        max_length=64,
-    )
-
-    server_number = discord.ui.TextInput(
-        label="Server number",
-        min_length=1,
-        max_length=32,
-    )
-
     def __init__(
         self,
         verification_client: VerificationClient,
         guild_id: int,
         prompt_message: discord.Message | None = None,
+        config: dict | None = None,
     ) -> None:
         super().__init__()
         self.verification_client = verification_client
         self.guild_id = guild_id
         self.prompt_message = prompt_message
+        template = str((config or {}).get("nickname_template") or "[{alliance}] {nickname}")
+        self.alliance: discord.ui.TextInput | None = None
+        self.server_number: discord.ui.TextInput | None = None
+        if "{alliance}" in template:
+            self.alliance = discord.ui.TextInput(label="Alliance", min_length=1, max_length=32)
+            self.add_item(self.alliance)
+        self.nickname = discord.ui.TextInput(label="Nickname", min_length=1, max_length=64)
+        self.add_item(self.nickname)
+        if "{server}" in template:
+            self.server_number = discord.ui.TextInput(label="Server number", min_length=1, max_length=32)
+            self.add_item(self.server_number)
 
     async def on_submit(
         self,
@@ -491,9 +485,9 @@ class VerifyModal(
                 await self.verification_client.create_request(
                     guild_id=self.guild_id,
                     discord_user_id=interaction.user.id,
-                    alliance=str(self.alliance.value),
+                    alliance=str(self.alliance.value) if self.alliance else "",
                     nickname=str(self.nickname.value),
-                    server_number=str(self.server_number.value),
+                    server_number=str(self.server_number.value) if self.server_number else "",
                 )
             )
 
@@ -554,6 +548,7 @@ class VerificationStartView(discord.ui.View):
 
     @discord.ui.button(label="Start verification", style=discord.ButtonStyle.primary)
     async def start(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
+        config = await self.verification_client.settings(self.guild_id)
         await interaction.response.send_modal(
-            VerifyModal(self.verification_client, self.guild_id, interaction.message)
+            VerifyModal(self.verification_client, self.guild_id, interaction.message, config=config)
         )

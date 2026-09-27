@@ -115,7 +115,7 @@ class ShieldNetBot(discord.Client):
         if channel_id and str(interaction.channel_id) != channel_id:
             await interaction.response.send_message(f"Use verification in <#{channel_id}>.", ephemeral=True)
             return
-        await interaction.response.send_modal(VerifyModal(self.verification, interaction.guild.id))
+        await interaction.response.send_modal(VerifyModal(self.verification, interaction.guild.id, config=config))
 
     async def _sync_verification_command(self, guild: discord.Guild) -> None:
         config = await self.verification.settings(guild.id)

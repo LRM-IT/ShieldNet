@@ -59,14 +59,15 @@ class VerificationSettingsInput(BaseModel):
 class VerificationRequestCreate(BaseModel):
     discord_user_id: int
     alliance: str = Field(
-        min_length=1,
+        default="",
+        min_length=0,
         max_length=32,
     )
     nickname: str = Field(
         min_length=1,
         max_length=64,
     )
-    server_number: str = Field(min_length=1, max_length=32)
+    server_number: str = Field(default="", min_length=0, max_length=32)
 
 
 class VerificationDecisionInput(BaseModel):

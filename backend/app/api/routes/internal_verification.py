@@ -36,11 +36,12 @@ router = APIRouter(
 async def internal_settings(guild_id: int, session: AsyncSession = Depends(get_db_session)):
     item = await session.scalar(select(VerificationSettings).where(VerificationSettings.guild_id == guild_id))
     if item is None:
-        return {"enabled": False, "invocation_channel_id": None, "text_commands": "", "slash_command_name": "verify", "channel_cleanup_minutes": 0, "auto_approve": True, "review_channel_id": None}
+        return {"enabled": False, "invocation_channel_id": None, "text_commands": "", "slash_command_name": "verify", "channel_cleanup_minutes": 0, "auto_approve": True, "review_channel_id": None, "nickname_template": "[{alliance}] {nickname}"}
     return {"enabled": item.enabled, "invocation_channel_id": str(item.invocation_channel_id) if item.invocation_channel_id else None,
             "text_commands": item.text_commands, "slash_command_name": item.slash_command_name,
             "channel_cleanup_minutes": item.channel_cleanup_minutes, "auto_approve": item.auto_approve,
-            "review_channel_id": str(item.review_channel_id) if item.review_channel_id else None}
+            "review_channel_id": str(item.review_channel_id) if item.review_channel_id else None,
+            "nickname_template": item.nickname_template}
 
 
 @router.post("/guilds/{guild_id}/requests")
@@ -67,7 +68,7 @@ async def create_request(
     nickname = payload.nickname.strip()
     server_number = payload.server_number.strip()
 
-    if not (
+    if "{alliance}" in settings.nickname_template and not (
         settings.alliance_min_length
         <= len(alliance)
         <= settings.alliance_max_length
