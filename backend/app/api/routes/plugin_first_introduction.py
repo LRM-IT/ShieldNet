@@ -26,7 +26,7 @@ internal_router = APIRouter(
     dependencies=[Depends(verify_internal_service_token)],
 )
 
-DEFAULT_GROUPS = ({"id": "language-1", "name": "Основна група", "enabled": True},)
+DEFAULT_GROUPS = ({"id": "language-1", "name": "Main group", "enabled": True},)
 ROLE_ID = re.compile(r"^[0-9]{15,22}$")
 GROUP_ID = re.compile(r"^[a-z0-9_-]{1,32}$")
 
@@ -131,6 +131,8 @@ def _role_names(mask: str, languages: list[dict], group_name: str) -> dict[str, 
         raise HTTPException(422, "Generated role names must contain 1-100 characters")
     if len({name.casefold() for name in names.values()}) != len(names):
         raise HTTPException(422, "The role mask must produce distinct names")
+    if any(not name.isascii() for name in names.values()):
+        raise HTTPException(422, "Generated role names must use English characters only")
     return names
 
 
@@ -143,7 +145,7 @@ async def _installation(session: AsyncSession, guild_id: int) -> GuildPluginInst
 
 async def _languages(session: AsyncSession, guild_id: int) -> list[dict]:
     rows = (await session.execute(
-        select(GlobalLanguage.code, GlobalLanguage.native_name, GlobalLanguage.flag)
+        select(GlobalLanguage.code, GlobalLanguage.name, GlobalLanguage.flag)
         .join(GuildLanguage, GuildLanguage.language_code == GlobalLanguage.code)
         .where(GuildLanguage.guild_id == guild_id, GuildLanguage.enabled.is_(True),
                GlobalLanguage.is_active.is_(True))
@@ -186,7 +188,7 @@ async def save_settings(guild_id: int, payload: SettingsInput,
     previous = {group["id"]: group for group in _groups(installation.configuration or {})}
     saved = []
     for group in payload.groups:
-        _role_names(group.role_name_mask, languages, group.name)
+        _role_names(group.role_name_mask, languages, group.id)
         if set(group.language_roles) - codes:
             raise HTTPException(422, f"Unknown language role in {group.name}")
         if group.default_language_code and group.default_language_code not in codes:
@@ -264,7 +266,7 @@ async def ensure_language_roles(guild_id: int, payload: RoleProvisionInput,
     languages = await _languages(session, guild_id)
     if not 1 <= len(languages) <= 25:
         raise HTTPException(422, "Configure 1-25 server languages first")
-    names = _role_names(payload.role_name_mask, languages, group["name"])
+    names = _role_names(payload.role_name_mask, languages, group["id"])
     roles = (await session.execute(select(DiscordGuildRole).where(
         DiscordGuildRole.guild_id == guild_id))).scalars().all()
     by_id = {str(role.discord_role_id): role for role in roles}
@@ -276,11 +278,27 @@ async def ensure_language_roles(guild_id: int, payload: RoleProvisionInput,
     existing_jobs = (await session.execute(select(DiscordStructureChange).where(
         DiscordStructureChange.guild_id == guild_id,
         DiscordStructureChange.object_type == "role",
-        DiscordStructureChange.operation == "create",
+        DiscordStructureChange.operation.in_(["create", "update"]),
         DiscordStructureChange.status.in_(["pending", "processing"])))).scalars().all()
     for code, name in names.items():
         current = by_id.get(str(assigned.get(code) or ""))
         if current and not current.managed and current.assignable:
+            if current.name != name:
+                pending = next((job for job in existing_jobs if
+                    (job.payload or {}).get("_plugin") == "first_introduction" and
+                    (job.payload or {}).get("_group_id", "r1") == group["id"] and
+                    (job.payload or {}).get("language_code") == code), None)
+                if pending:
+                    queued.append(str(pending.id))
+                else:
+                    job = DiscordStructureChange(guild_id=guild_id, object_type="role", operation="update",
+                        target_id=current.discord_role_id,
+                        payload={"name": name, "_plugin": "first_introduction",
+                                 "_group_id": group["id"], "language_code": code},
+                        preview={"safe_to_apply": True}, status="pending", requested_by=user.id)
+                    session.add(job)
+                    await session.flush()
+                    queued.append(str(job.id))
             continue
         assigned.pop(code, None)
         matching = by_name.get(name.casefold())
