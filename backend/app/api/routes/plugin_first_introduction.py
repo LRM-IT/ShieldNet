@@ -37,6 +37,7 @@ class GroupInput(BaseModel):
     enabled: bool = True
     channel_id: str | None = None
     access_role_id: str | None = None
+    dependency_role_id: str | None = None
     role_name_mask: str = Field(default="{group} - {name}", min_length=1, max_length=100)
     language_roles: dict[str, str] = Field(default_factory=dict)
     default_language_code: str | None = None
@@ -51,7 +52,7 @@ class GroupInput(BaseModel):
             raise ValueError("Group ID may contain lowercase letters, digits, _ and -")
         return value
 
-    @field_validator("channel_id", "access_role_id")
+    @field_validator("channel_id", "access_role_id", "dependency_role_id")
     @classmethod
     def valid_discord_id(cls, value: str | None) -> str | None:
         if value is not None and not ROLE_ID.fullmatch(value):
@@ -102,6 +103,7 @@ class PublishInput(BaseModel):
 
 def _default_groups() -> list[dict]:
     return [{**group, "channel_id": None, "access_role_id": None,
+             "dependency_role_id": None,
              "role_name_mask": "{group} - {name}", "language_roles": {},
              "default_language_code": None,
              "multiple_selection": False,
@@ -126,6 +128,10 @@ def _groups(configuration: dict) -> list[dict]:
             group["remove_languages_without_access_role"] = bool(
                 group.get("remove_languages_without_access_role", False)
             )
+            if group["remove_languages_without_access_role"] and not group.get("dependency_role_id"):
+                group["dependency_role_id"] = group.get("access_role_id")
+            else:
+                group["dependency_role_id"] = group.get("dependency_role_id")
         return groups
     if any(key in configuration for key in ("channel_id", "language_roles", "message_id")):
         legacy = [{**_default_groups()[0], "id": "r1", "name": "R1"}]
@@ -213,6 +219,8 @@ async def save_settings(guild_id: int, payload: SettingsInput,
         _role_names(role_name_mask, languages, group.name)
         if group.default_language_code and group.default_language_code not in codes:
             raise HTTPException(422, f"Unknown default language in {group.name}")
+        if group.remove_languages_without_access_role and not group.dependency_role_id:
+            raise HTTPException(422, f"Select a dependency role in {group.name}")
         data = group.model_dump()
         data["language_roles"] = {code: role_id for code, role_id in group.language_roles.items()
                                   if code in codes}

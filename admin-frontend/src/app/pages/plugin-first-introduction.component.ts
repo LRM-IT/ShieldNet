@@ -11,7 +11,7 @@ import { TranslationService } from '../core/translation.service';
 
 interface Language { code: string; name: string; flag: string | null; }
 interface Role { id: string; name: string; managed?: boolean; assignable?: boolean; }
-interface Group { id: string; name: string; enabled: boolean; channel_id: string | null; access_role_id: string | null; role_name_mask: string; language_roles: Record<string,string>; default_language_code: string | null; multiple_selection: boolean; remove_languages_without_access_role: boolean; message_id: string | null; }
+interface Group { id: string; name: string; enabled: boolean; channel_id: string | null; access_role_id: string | null; dependency_role_id: string | null; role_name_mask: string; language_roles: Record<string,string>; default_language_code: string | null; multiple_selection: boolean; remove_languages_without_access_role: boolean; message_id: string | null; }
 interface Settings { installed: boolean; enabled: boolean; languages: Language[]; groups: Group[]; }
 
 @Component({
@@ -36,8 +36,12 @@ interface Settings { installed: boolean; enabled: boolean; languages: Language[]
           <label>{{'language_plugin.access_role'|snT:'Group access role'}}<select [(ngModel)]="group.access_role_id"><option [ngValue]="null">{{'language_plugin.select_access_role'|snT:'Select an access role'}}</option>
             @for (role of allRoles(); track role.id) { <option [value]="role.id">{{role.name}}</option> }</select></label>
           <p>{{'language_plugin.access_role_help'|snT:'Only members with this access role can select a language in the group.'}}</p>
-          <label class="inline"><input type="checkbox" [(ngModel)]="group.remove_languages_without_access_role"> {{'language_plugin.remove_languages_without_access_role'|snT:'Remove language roles when the access role is removed'}}</label>
-          <p>{{'language_plugin.remove_languages_without_access_role_help'|snT:'When enabled, losing the group access role automatically removes every language role assigned by this group.'}}</p>
+          <label class="inline"><input type="checkbox" [(ngModel)]="group.remove_languages_without_access_role"> {{'language_plugin.remove_languages_without_access_role'|snT:'Remove language roles when the linked role is removed'}}</label>
+          @if (group.remove_languages_without_access_role) {
+            <label>{{'language_plugin.dependency_role'|snT:'Linked role'}}<select [(ngModel)]="group.dependency_role_id"><option [ngValue]="null">{{'language_plugin.select_dependency_role'|snT:'Select a linked role'}}</option>
+              @for (role of allRoles(); track role.id) { <option [value]="role.id">{{role.name}}</option> }</select></label>
+          }
+          <p>{{'language_plugin.remove_languages_without_access_role_help'|snT:'When enabled, losing the selected linked role automatically removes every language role assigned by this group.'}}</p>
           <label>{{'language_plugin.default_language'|snT:'Default language'}}<select [(ngModel)]="group.default_language_code"><option [ngValue]="null">{{'language_plugin.no_default_language'|snT:'No default language'}}</option>
             @for (language of settings.languages; track language.code) { <option [value]="language.code">{{language.flag}} {{language.name}}</option> }</select></label>
           <p>{{'language_plugin.default_language_help'|snT:'This language role remains assigned to members with the access role even after another flag is selected.'}}</p>
@@ -96,12 +100,12 @@ export class PluginFirstIntroductionComponent implements OnInit {
       else { await this.persist(); await this.plugins.enable(this.guildId,'first_introduction'); } await this.ngOnInit(); }
     catch { this.error.set(this.i18n.t('language_plugin.toggle_error','Could not change the plugin state. Check the group settings.')); } finally { this.busy.set(false); } }
   private payload(): object { const languageCodes = new Set(this.settings.languages.map(language => language.code)); return {groups:this.settings.groups.map(group => ({id:group.id,name:group.name.trim(),enabled:group.enabled,
-    channel_id:group.channel_id?.trim() || null,access_role_id:group.access_role_id || null,role_name_mask:this.englishRoleMask(group.role_name_mask),default_language_code:group.default_language_code || null,multiple_selection:!!group.multiple_selection,remove_languages_without_access_role:!!group.remove_languages_without_access_role,
+    channel_id:group.channel_id?.trim() || null,access_role_id:group.access_role_id || null,dependency_role_id:group.dependency_role_id || null,role_name_mask:this.englishRoleMask(group.role_name_mask),default_language_code:group.default_language_code || null,multiple_selection:!!group.multiple_selection,remove_languages_without_access_role:!!group.remove_languages_without_access_role,
     language_roles:Object.fromEntries(Object.entries(group.language_roles || {}).filter(([code,value]) => languageCodes.has(code) && value))}))}; }
   private async persist(): Promise<void> { this.settings = await firstValueFrom(this.http.put<Settings>(this.url,this.payload())); }
   async save(): Promise<void> { this.busy.set(true); this.error.set(''); this.success.set(''); try { await this.persist(); this.success.set(this.i18n.t('language_plugin.saved','Settings saved. Publish the panels for active groups.')); }
     catch (error:any) { this.error.set(this.errorMessage(error,this.i18n.t('language_plugin.save_error','Could not save settings.'))); } finally { this.busy.set(false); } }
-  addGroup(): void { const id = `group${Date.now().toString(36)}`; this.settings.groups.push({id,name:this.i18n.t('language_plugin.new_group','New group'),enabled:false,channel_id:null,access_role_id:null,role_name_mask:'{group} - {name}',language_roles:{},default_language_code:null,multiple_selection:false,remove_languages_without_access_role:false,message_id:null}); }
+  addGroup(): void { const id = `group${Date.now().toString(36)}`; this.settings.groups.push({id,name:this.i18n.t('language_plugin.new_group','New group'),enabled:false,channel_id:null,access_role_id:null,dependency_role_id:null,role_name_mask:'{group} - {name}',language_roles:{},default_language_code:null,multiple_selection:false,remove_languages_without_access_role:false,message_id:null}); }
   removeGroup(id:string): void { this.settings.groups = this.settings.groups.filter(group => group.id !== id); }
   private englishRoleMask(mask:string): string { const value = (mask || '').trim(); return !value || /[^\x00-\x7F]/.test(value) ? '{group} - {name}' : value; }
   rolePreview(group:Group,language:Language): string { return this.englishRoleMask(group.role_name_mask).replace(/\{group\}/g,group.name.trim() || group.id).replace(/\{flag\}/g,language.flag || '').replace(/\{name\}/g,language.name).replace(/\{code\}/g,language.code).trim(); }

@@ -2387,8 +2387,10 @@
     "multiple_selection": "Mitgliedern die Auswahl mehrerer Sprachen erlauben",
     "multiple_selection_help": "Mitglieder können mehrere Sprachrollen gleichzeitig behalten.",
     "single_selection_help": "Die Auswahl einer Sprache entfernt die anderen nicht standardmäßigen Sprachrollen des Mitglieds in dieser Gruppe.",
-    "remove_languages_without_access_role": "Sprachrollen entfernen, wenn die Zugriffsrolle entfernt wird",
-    "remove_languages_without_access_role_help": "Wenn aktiviert, entfernt der Verlust der Gruppenzugriffsrolle automatisch alle Sprachrollen dieser Gruppe."
+    "remove_languages_without_access_role": "Sprachrollen entfernen, wenn die verknüpfte Rolle entfernt wird",
+    "remove_languages_without_access_role_help": "Wenn aktiviert, entfernt der Verlust der ausgewählten verknüpften Rolle automatisch alle Sprachrollen dieser Gruppe.",
+    "dependency_role": "Verknüpfte Rolle",
+    "select_dependency_role": "Verknüpfte Rolle auswählen"
   },
   "public_pricing": {
     "nav": "Preise",

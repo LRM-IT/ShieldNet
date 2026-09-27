@@ -2278,8 +2278,10 @@
     "multiple_selection": "Дозволити учасникам вибирати кілька мов",
     "multiple_selection_help": "Учасники можуть одночасно мати кілька мовних ролей.",
     "single_selection_help": "Вибір мови видаляє інші мовні ролі учасника в цій групі, крім ролі за замовчуванням.",
-    "remove_languages_without_access_role": "Видаляти мовні ролі після втрати ролі доступу",
-    "remove_languages_without_access_role_help": "Якщо ввімкнено, втрата ролі доступу до групи автоматично видаляє всі мовні ролі цієї групи."
+    "remove_languages_without_access_role": "Видаляти мовні ролі після втрати пов’язаної ролі",
+    "remove_languages_without_access_role_help": "Якщо ввімкнено, втрата вибраної пов’язаної ролі автоматично видаляє всі мовні ролі цієї групи.",
+    "dependency_role": "Пов’язана роль",
+    "select_dependency_role": "Виберіть пов’язану роль"
   },
   "public_pricing": {
     "nav": "Тарифи",

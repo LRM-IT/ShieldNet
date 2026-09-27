@@ -2387,8 +2387,10 @@
     "multiple_selection": "السماح للأعضاء باختيار عدة لغات",
     "multiple_selection_help": "يمكن للأعضاء الاحتفاظ بعدة أدوار لغوية في الوقت نفسه.",
     "single_selection_help": "يؤدي اختيار لغة إلى إزالة أدوار اللغات الأخرى غير الافتراضية للعضو في هذه المجموعة.",
-    "remove_languages_without_access_role": "إزالة أدوار اللغات عند إزالة دور الوصول",
-    "remove_languages_without_access_role_help": "عند التفعيل، تؤدي خسارة دور الوصول إلى المجموعة إلى إزالة جميع أدوار اللغات التابعة لهذه المجموعة تلقائيًا."
+    "remove_languages_without_access_role": "إزالة أدوار اللغات عند إزالة الدور المرتبط",
+    "remove_languages_without_access_role_help": "عند التفعيل، تؤدي خسارة الدور المرتبط المحدد إلى إزالة جميع أدوار اللغات التابعة لهذه المجموعة تلقائيًا.",
+    "dependency_role": "الدور المرتبط",
+    "select_dependency_role": "اختر دورًا مرتبطًا"
   },
   "public_pricing": {
     "nav": "الأسعار",

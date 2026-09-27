@@ -94,31 +94,40 @@ class LanguageSelection:
             if not group.get("enabled") or (group_id and group["id"] != group_id):
                 continue
             access_role_id = group.get("access_role_id")
+            dependency_role_id = group.get("dependency_role_id") or (
+                access_role_id if group.get("remove_languages_without_access_role") else None
+            )
             # Member updates must only react to the configured access role being
             # added or removed. Rechecking on every role change restored a
             # language role immediately after an administrator removed it.
             if changed_role_ids is not None:
-                if not access_role_id or int(access_role_id) not in changed_role_ids:
+                watched_role_ids = {
+                    int(item) for item in (access_role_id, dependency_role_id)
+                    if item and str(item).isdigit()
+                }
+                if not watched_role_ids.intersection(changed_role_ids):
                     continue
+            if (group.get("remove_languages_without_access_role") and dependency_role_id
+                    and not any(str(item.id) == dependency_role_id for item in member.roles)):
+                language_role_ids = {
+                    int(item) for item in (group.get("language_roles") or {}).values()
+                    if str(item).isdigit()
+                }
+                removable = [
+                    item for item in member.roles
+                    if item.id in language_role_ids and item < me.top_role
+                ]
+                if removable:
+                    await member.remove_roles(
+                        *removable,
+                        reason="GuildConsole language group dependency removed",
+                    )
+                continue
             code = group.get("default_language_code")
             role_id = (group.get("language_roles") or {}).get(code) if code else None
             role = member.guild.get_role(int(role_id)) if role_id else None
             if access_role_id and not any(str(item.id) == access_role_id for item in member.roles):
-                if group.get("remove_languages_without_access_role"):
-                    language_role_ids = {
-                        int(item) for item in (group.get("language_roles") or {}).values()
-                        if str(item).isdigit()
-                    }
-                    removable = [
-                        item for item in member.roles
-                        if item.id in language_role_ids and item < me.top_role
-                    ]
-                    if removable:
-                        await member.remove_roles(
-                            *removable,
-                            reason="GuildConsole language group dependency removed",
-                        )
-                elif role is not None and role < me.top_role and role in member.roles:
+                if role is not None and role < me.top_role and role in member.roles:
                     await member.remove_roles(role, reason="GuildConsole language group access removed")
                 continue
             if role is not None and role < me.top_role and role not in member.roles:
@@ -165,6 +174,12 @@ class LanguageSelection:
         if added:
             access_role_id = group.get("access_role_id")
             if access_role_id and not any(str(current.id) == access_role_id for current in member.roles):
+                return
+            dependency_role_id = group.get("dependency_role_id") or (
+                access_role_id if group.get("remove_languages_without_access_role") else None
+            )
+            if (group.get("remove_languages_without_access_role") and dependency_role_id
+                    and not any(str(current.id) == dependency_role_id for current in member.roles)):
                 return
             await self.ensure_default_roles(member, group["id"])
             multiple_selection = bool(group.get("multiple_selection", False))

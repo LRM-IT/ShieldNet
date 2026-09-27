@@ -2385,8 +2385,10 @@
     "multiple_selection": "Zezwól członkom na wybór wielu języków",
     "multiple_selection_help": "Członkowie mogą jednocześnie zachować kilka ról językowych.",
     "single_selection_help": "Wybranie języka usuwa pozostałe niedomyślne role językowe członka w tej grupie.",
-    "remove_languages_without_access_role": "Usuń role językowe po usunięciu roli dostępu",
-    "remove_languages_without_access_role_help": "Po włączeniu utrata roli dostępu do grupy automatycznie usuwa wszystkie role językowe tej grupy."
+    "remove_languages_without_access_role": "Usuń role językowe po usunięciu powiązanej roli",
+    "remove_languages_without_access_role_help": "Po włączeniu utrata wybranej powiązanej roli automatycznie usuwa wszystkie role językowe tej grupy.",
+    "dependency_role": "Powiązana rola",
+    "select_dependency_role": "Wybierz powiązaną rolę"
   },
   "public_pricing": {
     "nav": "Cennik",
