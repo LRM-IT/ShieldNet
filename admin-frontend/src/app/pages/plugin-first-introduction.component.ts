@@ -94,7 +94,7 @@ export class PluginFirstIntroductionComponent implements OnInit {
   addGroup(): void { const id = `group${Date.now().toString(36)}`; this.settings.groups.push({id,name:this.i18n.t('language_plugin.new_group','New group'),enabled:false,channel_id:null,access_role_id:null,role_name_mask:'{group} - {name}',language_roles:{},default_language_code:null,message_id:null}); }
   removeGroup(id:string): void { this.settings.groups = this.settings.groups.filter(group => group.id !== id); }
   private englishRoleMask(mask:string): string { const value = (mask || '').trim(); return !value || /[^\x00-\x7F]/.test(value) ? '{group} - {name}' : value; }
-  rolePreview(group:Group,language:Language): string { return this.englishRoleMask(group.role_name_mask).replace(/\{group\}/g,group.id).replace(/\{flag\}/g,language.flag || '').replace(/\{name\}/g,language.name).replace(/\{code\}/g,language.code).trim(); }
+  rolePreview(group:Group,language:Language): string { return this.englishRoleMask(group.role_name_mask).replace(/\{group\}/g,group.name.trim() || group.id).replace(/\{flag\}/g,language.flag || '').replace(/\{name\}/g,language.name).replace(/\{code\}/g,language.code).trim(); }
   async publish(group:Group): Promise<void> {
     if (this.busy()) return; this.busy.set(true); this.error.set(''); this.success.set('');
     const base = `/api/v1/discord/guilds/${this.guildId}/plugins/first-introduction/panels`;

@@ -202,7 +202,7 @@ async def save_settings(guild_id: int, payload: SettingsInput,
     saved = []
     for group in payload.groups:
         role_name_mask = _normalize_role_mask(group.role_name_mask)
-        _role_names(role_name_mask, languages, group.id)
+        _role_names(role_name_mask, languages, group.name)
         if set(group.language_roles) - codes:
             raise HTTPException(422, f"Unknown language role in {group.name}")
         if group.default_language_code and group.default_language_code not in codes:
@@ -282,7 +282,7 @@ async def ensure_language_roles(guild_id: int, payload: RoleProvisionInput,
     if not 1 <= len(languages) <= 25:
         raise HTTPException(422, "Configure 1-25 server languages first")
     role_name_mask = _normalize_role_mask(payload.role_name_mask)
-    names = _role_names(role_name_mask, languages, group["id"])
+    names = _role_names(role_name_mask, languages, group.get("name") or group["id"])
     roles = (await session.execute(select(DiscordGuildRole).where(
         DiscordGuildRole.guild_id == guild_id))).scalars().all()
     by_id = {str(role.discord_role_id): role for role in roles}
