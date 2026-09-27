@@ -137,4 +137,3 @@ export class TranslationService {
     return result;
   }
 }
-
