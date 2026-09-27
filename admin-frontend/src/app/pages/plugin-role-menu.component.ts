@@ -5,6 +5,7 @@ import {ActivatedRoute} from '@angular/router';
 import {firstValueFrom} from 'rxjs';
 import {ShellComponent} from '../shared/shell.component';
 import {DiscordChannelPickerComponent} from '../shared/discord-channel-picker.component';
+import {DiscordEmojiPickerComponent} from '../shared/discord-emoji-picker.component';
 import {GuildPluginService} from '../core/guild-plugin.service';
 
 interface Role{id:string;name:string;managed:boolean;assignable:boolean}
@@ -12,7 +13,7 @@ interface Option{label:string;role_id:string;emoji:string;description:string}
 interface Panel{id:string;name:string;title:string;description:string;intro_text:string;notice_text:string;select_placeholder:string;enabled:boolean;channel_id:string|null;required_role_id:string|null;mode:'buttons'|'select';max_roles:number;options:Option[];message_id?:string|null;expanded?:boolean}
 interface Settings{installed:boolean;enabled:boolean;panels:Panel[]}
 
-@Component({standalone:true,imports:[FormsModule,ShellComponent,DiscordChannelPickerComponent],template:`
+@Component({standalone:true,imports:[FormsModule,ShellComponent,DiscordChannelPickerComponent,DiscordEmojiPickerComponent],template:`
 <sn-shell title="Role Menu"><main class="page">
   <header><span>GUILD PLUGIN</span><h2>Role Menu</h2><p>Members choose their own Discord roles using buttons or a select menu.</p></header>
   @if(error()){<div class="notice error">{{error()}}</div>} @if(success()){<div class="notice success">{{success()}}</div>}
@@ -30,7 +31,7 @@ interface Settings{installed:boolean;enabled:boolean;panels:Panel[]}
           <div class="form-grid"><label><span>Channel</span><sn-discord-channel-picker [guildId]="guildId" [value]="panel.channel_id" (valueChange)="panel.channel_id=$event" /></label><label><span>Required role</span><select [(ngModel)]="panel.required_role_id"><option [ngValue]="null">Everyone</option>@for(role of roles();track role.id){<option [value]="role.id">{{role.name}}</option>}</select></label></div>
           <div class="form-grid settings-grid"><label><span>Display</span><select [(ngModel)]="panel.mode"><option value="buttons">Buttons</option><option value="select">Select menu</option></select></label><label><span>Maximum selected roles</span><input type="number" min="0" max="25" [(ngModel)]="panel.max_roles"><small>0 means unlimited.</small></label><div class="field toggle-field"><span>Panel status</span><label class="check"><input type="checkbox" [(ngModel)]="panel.enabled"><span>Panel enabled</span></label></div></div>
           <div class="options"><div class="options-heading"><div><h4>Roles</h4><small>Configure the label, emoji, Discord role and description.</small></div><button class="secondary" (click)="addOption(panel)">Add role</button></div>
-            @for(option of panel.options;track $index;let oi=$index){<div class="option"><label>Label<input [(ngModel)]="option.label" maxlength="80"></label><label>Emoji<input [(ngModel)]="option.emoji" maxlength="40" placeholder="🎮"></label><label>Discord role<select [(ngModel)]="option.role_id"><option value="">Select role</option>@for(role of assignableRoles();track role.id){<option [value]="role.id">{{role.name}}</option>}</select></label><label>Description<input [(ngModel)]="option.description" maxlength="100"></label><button class="danger" (click)="panel.options.splice(oi,1)">Remove</button></div>}
+            @for(option of panel.options;track $index;let oi=$index){<div class="option"><label>Label<input [(ngModel)]="option.label" maxlength="80"></label><label>Emoji<sn-discord-emoji-picker [guildId]="guildId" [value]="option.emoji" (valueChange)="option.emoji=$event" /></label><label>Discord role<select [(ngModel)]="option.role_id"><option value="">Select role</option>@for(role of assignableRoles();track role.id){<option [value]="role.id">{{role.name}}</option>}</select></label><label>Description<input [(ngModel)]="option.description" maxlength="100"></label><button class="danger" (click)="panel.options.splice(oi,1)">Remove</button></div>}
           </div>
           <div class="footer"><button class="danger" (click)="settings.panels.splice(pi,1)">Delete panel</button><span></span><button class="secondary" (click)="save()">Save</button><button (click)="publish(panel)" [disabled]="!settings.enabled||!panel.enabled">Save and publish</button></div>
         </div>}

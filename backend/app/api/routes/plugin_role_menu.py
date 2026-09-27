@@ -22,7 +22,7 @@ PANEL_ID = re.compile(r"^[a-z0-9_-]{1,32}$")
 class OptionInput(BaseModel):
     label: str = Field(min_length=1, max_length=80)
     role_id: str
-    emoji: str = Field(default="", max_length=40)
+    emoji: str = Field(default="", max_length=100)
     description: str = Field(default="", max_length=100)
     @field_validator("role_id")
     @classmethod
