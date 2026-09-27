@@ -105,10 +105,8 @@ class TranslatorGroups:
         actual_source = self.detect_source_language(message.content, configured_source, config) if message.content.strip() else configured_source
         attachments = await self._attachments(message) if config.get("forward_attachments", True) else []
         for channel_id, language in self.targets(config, message.channel.id):
-            channel = message.guild.get_channel_or_thread(channel_id)
-            if not isinstance(channel, (discord.TextChannel, discord.Thread)):
-                logger.warning("Translation target is unavailable or unsupported guild=%s target=%s",
-                               message.guild.id, channel_id)
+            channel = message.guild.get_channel(channel_id)
+            if not isinstance(channel, discord.TextChannel):
                 continue
             try:
                 translated = ""
@@ -141,14 +139,12 @@ class TranslatorGroups:
                 webhook = await self._webhook(channel)
                 for index, chunk in enumerate(chunks):
                     files = self._files(attachments, message.guild.filesize_limit) if index == 0 else []
-                    send_options = {"thread": channel} if isinstance(channel, discord.Thread) else {}
                     await webhook.send(
                         content=(chunk + (suffix if index == len(chunks) - 1 else "")) or None,
                         files=files,
                         username=message.author.display_name[:80],
                         avatar_url=message.author.display_avatar.url,
                         allowed_mentions=discord.AllowedMentions.none(),
-                        **send_options,
                     )
             except Exception:
                 logger.exception("Group translation failed guild=%s source=%s target=%s",
@@ -227,15 +223,12 @@ class TranslatorGroups:
             value = re.sub(re.escape(token), lambda _match, text=original: text, value, flags=re.IGNORECASE)
         return value
 
-    async def _webhook(self, channel: discord.TextChannel | discord.Thread) -> discord.Webhook:
-        webhook_channel = channel.parent if isinstance(channel, discord.Thread) else channel
-        if not isinstance(webhook_channel, (discord.TextChannel, discord.ForumChannel)):
-            raise RuntimeError("The translation thread has no webhook-capable parent channel")
-        hooks = await webhook_channel.webhooks()
+    async def _webhook(self, channel: discord.TextChannel) -> discord.Webhook:
+        hooks = await channel.webhooks()
         for hook in hooks:
             if hook.name == "GuildConsole Translator" and hook.user == self.bot.user:
                 return hook
-        return await webhook_channel.create_webhook(name="GuildConsole Translator")
+        return await channel.create_webhook(name="GuildConsole Translator")
 
     @staticmethod
     async def _attachments(message: discord.Message) -> list[dict]:
