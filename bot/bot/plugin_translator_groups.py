@@ -140,33 +140,24 @@ class TranslatorGroups:
                 if len(suffix_body) > 1700:
                     suffix_body = suffix_body[:1697] + "..."
                 suffix = ("\n\n" + suffix_body) if suffix_body else ""
-                chunks = self._chunks(translated, 1900 - len(suffix)) if translated else [""]
                 webhook = await self._webhook(channel)
                 reply_message_id = await self._translated_reply_id(message, channel_id) if forward_replies else None
+                reply_prefix = await self._reply_prefix(channel, reply_message_id) if reply_message_id else ""
+                chunk_size = max(200, 1900 - len(suffix) - len(reply_prefix))
+                chunks = self._chunks(translated, chunk_size) if translated else [""]
                 for index, chunk in enumerate(chunks):
                     files = self._files(attachments, message.guild.filesize_limit) if index == 0 else []
                     content = (chunk + (suffix if index == len(chunks) - 1 else "")) or None
-                    if reply_message_id:
-                        # Discord's webhook execute endpoint does not expose native
-                        # message references in discord.py. Use the active guild bot
-                        # for replies so Discord renders the actual reply chain.
-                        author = discord.utils.escape_markdown(message.author.display_name[:80])
-                        sent = await channel.send(
-                            content=f"**{author}**\n{content or ''}",
-                            files=files,
-                            reference=channel.get_partial_message(reply_message_id),
-                            mention_author=False,
-                            allowed_mentions=discord.AllowedMentions.none(),
-                        )
-                    else:
-                        sent = await webhook.send(
-                            content=content,
-                            files=files,
-                            username=message.author.display_name[:80],
-                            avatar_url=message.author.display_avatar.url,
-                            allowed_mentions=discord.AllowedMentions.none(),
-                            wait=True,
-                        )
+                    if index == 0 and reply_prefix:
+                        content = reply_prefix + (content or "")
+                    sent = await webhook.send(
+                        content=content,
+                        files=files,
+                        username=message.author.display_name[:80],
+                        avatar_url=message.author.display_avatar.url,
+                        allowed_mentions=discord.AllowedMentions.none(),
+                        wait=True,
+                    )
                     if forward_replies and sent is not None:
                         await self._remember_copy(message, channel_id, sent.id, primary=index == 0)
             except Exception:
@@ -207,6 +198,19 @@ class TranslatorGroups:
             return None
         target = await self.redis.hget(self._reply_map_key(message.guild.id, int(origin)), str(target_channel_id))
         return int(target) if target and target.isdigit() else None
+
+    @staticmethod
+    async def _reply_prefix(channel: discord.TextChannel, message_id: int) -> str:
+        try:
+            replied = await channel.fetch_message(message_id)
+            author = discord.utils.escape_markdown(replied.author.display_name[:80])
+            excerpt = " ".join(replied.clean_content.split())[:180]
+            if len(replied.clean_content) > 180:
+                excerpt += "…"
+            summary = f"**{author}:** {discord.utils.escape_markdown(excerpt)}" if excerpt else f"**{author}**"
+            return f"> [↩]({replied.jump_url}) {summary}\n"
+        except (discord.NotFound, discord.Forbidden, discord.HTTPException):
+            return ""
 
     async def _cached_translation(self, message: discord.Message, channel_id: int, source_language: str, language: str, source_text: str, config: dict) -> str:
         use_cache = bool(config.get("cache_enabled", True)) and len(source_text.strip()) >= int(config.get("cache_min_characters", 4))
