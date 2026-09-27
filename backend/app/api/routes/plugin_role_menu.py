@@ -35,6 +35,9 @@ class PanelInput(BaseModel):
     name: str = Field(min_length=1, max_length=80)
     title: str = Field(min_length=1, max_length=100)
     description: str = Field(default="", max_length=1000)
+    intro_text: str = Field(default="", max_length=2000)
+    notice_text: str = Field(default="", max_length=1000)
+    select_placeholder: str = Field(default="Choose roles", max_length=150)
     enabled: bool = True
     channel_id: str | None = None
     required_role_id: str | None = None
@@ -59,6 +62,9 @@ class PanelInput(BaseModel):
         return value
     @model_validator(mode="after")
     def valid_options(self):
+        self.intro_text = self.intro_text.strip()
+        self.notice_text = self.notice_text.strip()
+        self.select_placeholder = self.select_placeholder.strip() or "Choose roles"
         ids=[item.role_id for item in self.options]
         if len(ids)!=len(set(ids)): raise ValueError("Roles in one panel must be unique")
         return self

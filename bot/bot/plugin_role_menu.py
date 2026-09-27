@@ -17,7 +17,7 @@ class RoleMenuSelect(discord.ui.Select):
         for item in panel.get("options",[]):
             options.append(discord.SelectOption(label=item["label"],value=item["role_id"],description=item.get("description") or None,emoji=emoji_value(item.get("emoji") or "")))
         max_values=min(len(options),panel.get("max_roles") or len(options))
-        super().__init__(placeholder="Choose roles",min_values=0,max_values=max(1,max_values),options=options,custom_id=f"gc-role-select:{panel['id']}")
+        super().__init__(placeholder=(panel.get("select_placeholder") or "Choose roles")[:150],min_values=0,max_values=max(1,max_values),options=options,custom_id=f"gc-role-select:{panel['id']}")
 
 class RoleMenuView(discord.ui.View):
     def __init__(self,panel:dict):
@@ -42,8 +42,15 @@ class RoleMenu:
         if old_id:
             try: await (await channel.fetch_message(int(old_id))).delete()
             except (discord.NotFound,discord.Forbidden): pass
-        embed=discord.Embed(title=panel["title"],description=panel.get("description") or "Choose your roles.",colour=discord.Colour.teal())
-        message=await channel.send(embed=embed,view=RoleMenuView(panel))
+        intro_text=(panel.get("intro_text") or "").strip()
+        notice_text=(panel.get("notice_text") or "").strip()
+        if intro_text or notice_text:
+            content=intro_text or None
+            embed=discord.Embed(description=f"**{notice_text}**",colour=discord.Colour.from_rgb(77, 210, 255)) if notice_text else None
+        else:
+            content=None
+            embed=discord.Embed(title=panel["title"],description=panel.get("description") or "Choose your roles.",colour=discord.Colour.teal())
+        message=await channel.send(content=content,embed=embed,view=RoleMenuView(panel))
         async with httpx.AsyncClient(timeout=20) as client:
             response=await client.post(f"{self.base}/panel",headers=self.headers,json={"guild_id":guild.id,"panel_id":panel_id,"channel_id":str(channel.id),"message_id":str(message.id)}); response.raise_for_status()
         return message
