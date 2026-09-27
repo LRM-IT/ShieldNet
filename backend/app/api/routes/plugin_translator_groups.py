@@ -204,8 +204,9 @@ async def cache_stats(guild_id: int, user: User = Depends(get_current_user), ses
     try:
         count = int(await redis.zcard(f"shieldnet:translator-cache-index:{guild_id}"))
         hits = int(await redis.get(f"shieldnet:translator-cache-hits:{guild_id}") or 0)
+        global_hits = int(await redis.get(f"shieldnet:translator-global-cache-hits:{guild_id}") or 0)
         misses = int(await redis.get(f"shieldnet:translator-cache-misses:{guild_id}") or 0)
-        return {"entries": count, "hits": hits, "misses": misses}
+        return {"entries": count, "hits": hits, "global_hits": global_hits, "misses": misses}
     finally:
         await redis.aclose()
 
@@ -219,7 +220,7 @@ async def clear_cache(guild_id: int, user: User = Depends(get_current_user), ses
         keys = await redis.zrange(index, 0, -1)
         if keys:
             await redis.delete(*keys)
-        await redis.delete(index, f"shieldnet:translator-cache-hits:{guild_id}", f"shieldnet:translator-cache-misses:{guild_id}")
+        await redis.delete(index, f"shieldnet:translator-cache-hits:{guild_id}", f"shieldnet:translator-global-cache-hits:{guild_id}", f"shieldnet:translator-cache-misses:{guild_id}")
         return {"cleared": len(keys)}
     finally:
         await redis.aclose()

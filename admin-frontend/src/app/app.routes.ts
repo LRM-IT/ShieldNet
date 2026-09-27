@@ -13,7 +13,6 @@ import { GuildDMBroadcastComponent } from './pages/guild-dm-broadcast.component'
 import { PluginWelcomeComponent } from './pages/plugin-welcome.component';
 import { PluginAntiFloodComponent } from './pages/plugin-antiflood.component';
 import { PluginFirstIntroductionComponent } from './pages/plugin-first-introduction.component';
-import { PluginTranslatorGroupsComponent } from './pages/plugin-translator-groups.component';
 import { PluginRoleMenuComponent } from './pages/plugin-role-menu.component';
 import { PluginAIAutoModComponent } from './pages/plugin-ai-automod.component';
 import { PluginEventManagerComponent } from './pages/plugin-event-manager.component';
@@ -139,7 +138,7 @@ export const routes: Routes = [
   { path: 'guild/:guildId/plugins/welcome', component: PluginWelcomeComponent, canActivate: [guildGuard], data: { guildModule: 'plugins' } },
   { path: 'guild/:guildId/plugins/antiflood', component: PluginAntiFloodComponent, canActivate: [guildGuard], data: { guildModule: 'plugins' } },
   { path: 'guild/:guildId/plugins/language-selection', component: PluginFirstIntroductionComponent, canActivate: [guildGuard], data: { guildModule: 'plugins' } },
-  { path: 'guild/:guildId/plugins/translator-groups', component: PluginTranslatorGroupsComponent, canActivate: [guildGuard], data: { guildModule: 'plugins' } },
+  { path: 'guild/:guildId/plugins/translator-groups', loadComponent: () => import('./pages/plugin-translator-groups.component').then(m => m.PluginTranslatorGroupsComponent), canActivate: [guildGuard], data: { guildModule: 'plugins' } },
   { path: 'guild/:guildId/plugins/role-menu', component: PluginRoleMenuComponent, canActivate: [guildGuard], data: { guildModule: 'plugins' } },
   { path: 'guild/:guildId/plugins/ai-automod', component: PluginAIAutoModComponent, canActivate: [guildGuard], data: { guildModule: 'plugins' } },
   { path: 'guild/:guildId/plugins/event-manager', component: PluginEventManagerComponent, canActivate: [guildGuard], data: { guildModule: 'plugins' } },

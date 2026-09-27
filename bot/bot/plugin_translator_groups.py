@@ -228,6 +228,7 @@ class TranslatorGroups:
                 if archived.get("found"):
                     translated = str(archived.get("translated_text") or "")
                     if translated:
+                        await self.redis.incr(f"shieldnet:translator-global-cache-hits:{message.guild.id}")
                         await self._store_local_cache(message.guild.id, key, translated, config)
                         return translated
             except Exception:
