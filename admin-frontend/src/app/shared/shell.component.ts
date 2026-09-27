@@ -558,6 +558,7 @@ export class ShellComponent implements OnInit, OnDestroy {
     { keys: ['role_menu', 'reaction_roles', 'reaction-roles', 'reactionroles'], label: 'plugin_names.role_menu', icon: '◈', path: 'plugins/role-menu' },
     { keys: ['ai_automod', 'ai-automod'], label: 'plugin_names.ai_automod', icon: 'AI', path: 'plugins/ai-automod' },
     { keys: ['event_manager', 'event-manager'], label: 'plugin_names.event_manager', icon: '◷', path: 'plugins/event-manager' },
+    { keys: ['channel_cleanup', 'channel-cleanup'], label: 'plugin_names.channel_cleanup', icon: '🧹', path: 'plugins/channel-cleanup' },
     { keys: ['war_planner', 'war-planner'], label: 'plugin_names.war_planner', icon: '⚔', path: 'plugins/war-planner' },
     { keys: ['activity_ranking', 'activity-ranking'], label: 'plugin_names.activity_ranking', icon: '🏆', path: 'plugins/activity-ranking' },
     { keys: ['audit_security', 'audit-security'], label: 'plugin_names.audit_security', icon: '◉', path: 'plugins/audit-security' },

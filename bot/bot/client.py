@@ -31,6 +31,7 @@ from bot.plugin_translator_groups import TranslatorGroups
 from bot.plugin_role_menu import RoleMenu
 from bot.plugin_ai_automod import AIAutoMod
 from bot.plugin_event_manager import EventManager
+from bot.plugin_channel_cleanup import ChannelCleanup
 from bot.plugin_war_planner import WarPlanner
 from bot.plugin_activity_ranking import ActivityRanking
 from bot.plugin_audit_security import AuditSecurity
@@ -75,6 +76,7 @@ class ShieldNetBot(discord.Client):
         self.role_menu = RoleMenu(self)
         self.ai_automod = AIAutoMod(self)
         self.event_manager = EventManager(self)
+        self.channel_cleanup = ChannelCleanup(self)
         self.war_planner = WarPlanner(self)
         self.activity_ranking = ActivityRanking(self)
         self.audit_security = AuditSecurity(self)
@@ -418,6 +420,7 @@ class ShieldNetBot(discord.Client):
         self.guild_dm_broadcast_loop.start()
         self.welcome_loop.start()
         self.event_reminder_loop.start()
+        self.channel_cleanup_loop.start()
         self.member_action_loop.start()
         self.security_snapshot_loop.start()
         self.explorer_snapshot_loop.start()
@@ -720,6 +723,18 @@ class ShieldNetBot(discord.Client):
 
     @event_reminder_loop.before_loop
     async def before_event_reminder_loop(self) -> None: await self.wait_until_ready()
+
+    @tasks.loop(minutes=1)
+    async def channel_cleanup_loop(self) -> None:
+        for guild in self.managed_guilds:
+            try:
+                await self.channel_cleanup.run_due(guild)
+            except Exception:
+                logger.exception("Channel cleanup loop failed guild=%s", guild.id)
+
+    @channel_cleanup_loop.before_loop
+    async def before_channel_cleanup_loop(self) -> None:
+        await self.wait_until_ready()
 
 
     @tasks.loop(seconds=10)

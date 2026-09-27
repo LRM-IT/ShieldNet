@@ -143,6 +143,7 @@ export const routes: Routes = [
   { path: 'guild/:guildId/plugins/role-menu', component: PluginRoleMenuComponent, canActivate: [guildGuard], data: { guildModule: 'plugins' } },
   { path: 'guild/:guildId/plugins/ai-automod', component: PluginAIAutoModComponent, canActivate: [guildGuard], data: { guildModule: 'plugins' } },
   { path: 'guild/:guildId/plugins/event-manager', component: PluginEventManagerComponent, canActivate: [guildGuard], data: { guildModule: 'plugins' } },
+  { path: 'guild/:guildId/plugins/channel-cleanup', loadComponent: () => import('./pages/plugin-channel-cleanup.component').then(m => m.PluginChannelCleanupComponent), canActivate: [guildGuard], data: { guildModule: 'plugins' } },
   { path: 'guild/:guildId/plugins/war-planner', component: PluginWarPlannerComponent, canActivate: [guildGuard], data: { guildModule: 'plugins' } },
   { path: 'guild/:guildId/plugins/activity-ranking', component: PluginActivityRankingComponent, canActivate: [guildGuard], data: { guildModule: 'plugins' } },
   { path: 'guild/:guildId/plugins/audit-security', component: PluginAuditSecurityComponent, canActivate: [guildGuard], data: { guildModule: 'plugins' } },

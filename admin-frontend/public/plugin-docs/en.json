@@ -74,6 +74,11 @@
       "configuration": "Set the time zone, announcement channel, RSVP options, reminder intervals and optional participant roles.",
       "check": "Create a near-term test event and confirm publication, RSVP updates and every reminder."
     },
+    "channel_cleanup": {
+      "purpose": "Automatically deletes messages older than the configured retention period in selected text channels, threads and forum posts.",
+      "configuration": "Add each destination, set its retention in days, choose whether pinned messages are protected, then select the schedule interval. A forum rule processes all active and archived posts in that forum.",
+      "check": "Save and enable the plugin, run one controlled cleanup manually, then confirm the result counters and any permission errors before relying on the schedule."
+    },
     "war_planner": {
       "purpose": "Coordinates wars, waves, targets and participant assignments.",
       "configuration": "Create the war dates, waves and targets, then assign participants and the publication channel.",

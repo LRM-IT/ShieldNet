@@ -74,6 +74,11 @@
       "configuration": "Встановіть часовий пояс, канал оголошення, параметри RSVP, інтервали нагадувань і необов’язкові ролі учасників.",
       "check": "Створіть тестову подію на найближчий час і підтвердьте публікацію, оновлення RSVP та кожне нагадування."
     },
+    "channel_cleanup": {
+      "purpose": "Automatically deletes messages older than the configured retention period in selected text channels, threads and forum posts.",
+      "configuration": "Add each destination, set its retention in days, choose whether pinned messages are protected, then select the schedule interval. A forum rule processes all active and archived posts in that forum.",
+      "check": "Save and enable the plugin, run one controlled cleanup manually, then confirm the result counters and any permission errors before relying on the schedule."
+    },
     "war_planner": {
       "purpose": "Координує війни, хвилі, цілі та призначення учасників.",
       "configuration": "Створіть дати війни, хвилі та цілі, а потім призначте учасників і канал публікації.",

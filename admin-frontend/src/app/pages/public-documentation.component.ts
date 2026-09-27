@@ -51,7 +51,7 @@ type PublicPricing={modules?:PublicModule[]};
 export class PublicDocumentationComponent implements OnInit {
   readonly pluginDocs=signal<PublicDocsFile|null>(null);
   readonly moduleTiers=signal<Record<string,boolean>>({});
-  readonly pluginKeys=['welcome','antiflood','translator_groups','first_introduction','verification_level1','voting','guild-dm-broadcast','role_menu','ai_automod','event_manager','war_planner','activity_ranking','audit_security','backup_restore','cross_guild_network','moderation'];
+  readonly pluginKeys=['welcome','antiflood','translator_groups','first_introduction','verification_level1','voting','guild-dm-broadcast','role_menu','ai_automod','event_manager','channel_cleanup','war_planner','activity_ranking','audit_security','backup_restore','cross_guild_network','moderation'];
   constructor(readonly i18n:TranslationService,private http:HttpClient){}
   async ngOnInit(){await Promise.all([this.loadPluginDocs(this.i18n.locale()),this.loadModuleTiers()])}
   async changeLocale(locale:string){await this.i18n.setLocale(locale);await this.loadPluginDocs(locale)}
@@ -60,5 +60,5 @@ export class PublicDocumentationComponent implements OnInit {
   isFree(key:string){return this.moduleTiers()[key.replaceAll('-','_')]===true}
   replacePlugin(value:string,name:string){return value.replaceAll('{plugin}',name)}
   pluginName(key:string){const normalized=({verification_level1:'verification',first_introduction:'language_selection','guild-dm-broadcast':'guild_dm_broadcast'} as Record<string,string>)[key]||key;return this.i18n.t(`plugin_names.${normalized}`,key.replaceAll('_',' '))}
-  pluginIcon(key:string){return ({welcome:'W',antiflood:'A',translator_groups:'T',first_introduction:'F',verification_level1:'V',voting:'✓','guild-dm-broadcast':'G',role_menu:'R',ai_automod:'AI',event_manager:'E',war_planner:'⚔',activity_ranking:'XP',audit_security:'S',backup_restore:'B',cross_guild_network:'C',moderation:'M'} as Record<string,string>)[key]||'P'}
+  pluginIcon(key:string){return ({welcome:'W',antiflood:'A',translator_groups:'T',first_introduction:'F',verification_level1:'V',voting:'✓','guild-dm-broadcast':'G',role_menu:'R',ai_automod:'AI',event_manager:'E',channel_cleanup:'🧹',war_planner:'⚔',activity_ranking:'XP',audit_security:'S',backup_restore:'B',cross_guild_network:'C',moderation:'M'} as Record<string,string>)[key]||'P'}
 }

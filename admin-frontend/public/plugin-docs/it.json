@@ -74,6 +74,11 @@
       "configuration": "Imposta il fuso orario, il canale di annuncio, le opzioni RSVP, gli intervalli dei promemoria e gli eventuali ruoli dei partecipanti.",
       "check": "Crea un evento di test a breve termine e conferma la pubblicazione, gli aggiornamenti RSVP e ogni promemoria."
     },
+    "channel_cleanup": {
+      "purpose": "Automatically deletes messages older than the configured retention period in selected text channels, threads and forum posts.",
+      "configuration": "Add each destination, set its retention in days, choose whether pinned messages are protected, then select the schedule interval. A forum rule processes all active and archived posts in that forum.",
+      "check": "Save and enable the plugin, run one controlled cleanup manually, then confirm the result counters and any permission errors before relying on the schedule."
+    },
     "war_planner": {
       "purpose": "Coordina guerre, ondate, obiettivi e assegnazioni dei partecipanti.",
       "configuration": "Crea le date della guerra, le ondate e gli obiettivi, quindi assegna i partecipanti e il canale di pubblicazione.",
