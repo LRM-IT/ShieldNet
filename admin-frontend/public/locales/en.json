@@ -2341,7 +2341,12 @@
     "role_creation_error": "Role creation failed",
     "discord_timeout": "Discord timed out. Refresh the page.",
     "roles_ready": "Language roles for {group} are ready.",
-    "roles_error": "Could not create the roles."
+    "roles_error": "Could not create the roles.",
+    "multiple_selection": "Allow members to select multiple languages",
+    "multiple_selection_help": "Members may keep several language roles at the same time.",
+    "single_selection_help": "Selecting a language removes the member’s other non-default language roles in this group.",
+    "remove_languages_without_access_role": "Remove language roles when the access role is removed",
+    "remove_languages_without_access_role_help": "When enabled, losing the group access role automatically removes every language role assigned by this group."
   },
   "public_pricing": {
     "nav": "Pricing",

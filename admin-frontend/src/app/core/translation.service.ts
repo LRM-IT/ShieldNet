@@ -11,7 +11,6 @@ export interface LanguageEntity {
   rtl: boolean;
   version: number;
 }
-
 type Dictionary = Record<string, unknown>;
 
 @Injectable({ providedIn: 'root' })
@@ -33,7 +32,7 @@ export class TranslationService {
   async initialize(preferred?: string | null): Promise<void> {
     const docs = await Promise.all(
       this.supportedLocales.map((code) =>
-        firstValueFrom(this.http.get<Dictionary>(`/locales/${code}.json?v=16.68`)),
+        firstValueFrom(this.http.get<Dictionary>(`/locales/${code}.json?v=16.69`)),
       ),
     );
     this.englishDictionary = docs[0];
@@ -51,7 +50,7 @@ export class TranslationService {
   async setLocale(code: string, persist = true): Promise<void> {
     const selected = this.languages().some((item) => item.code === code) ? code : 'en';
     const dictionary = await firstValueFrom(
-      this.http.get<Dictionary>(`/locales/${selected}.json?v=16.68`),
+      this.http.get<Dictionary>(`/locales/${selected}.json?v=16.69`),
     );
     this.dictionary.set(dictionary);
     this.phraseDictionary.set(this.buildPhraseDictionary(this.englishDictionary, dictionary));
@@ -138,3 +137,4 @@ export class TranslationService {
     return result;
   }
 }
+

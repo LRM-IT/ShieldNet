@@ -2381,7 +2381,12 @@
     "role_creation_error": "Creazione del ruolo non riuscita",
     "discord_timeout": "Discord non ha risposto in tempo. Aggiorna la pagina.",
     "roles_ready": "I ruoli linguistici di {group} sono pronti.",
-    "roles_error": "Impossibile creare i ruoli."
+    "roles_error": "Impossibile creare i ruoli.",
+    "multiple_selection": "Consenti ai membri di scegliere più lingue",
+    "multiple_selection_help": "I membri possono mantenere più ruoli linguistici contemporaneamente.",
+    "single_selection_help": "La scelta di una lingua rimuove gli altri ruoli linguistici non predefiniti del membro in questo gruppo.",
+    "remove_languages_without_access_role": "Rimuovi i ruoli linguistici quando viene rimosso il ruolo di accesso",
+    "remove_languages_without_access_role_help": "Se attivata, la perdita del ruolo di accesso al gruppo rimuove automaticamente tutti i ruoli linguistici di questo gruppo."
   },
   "public_pricing": {
     "nav": "Prezzi",

@@ -2381,7 +2381,12 @@
     "role_creation_error": "Nie udało się utworzyć roli",
     "discord_timeout": "Upłynął limit czasu Discorda. Odśwież stronę.",
     "roles_ready": "Role językowe grupy {group} są gotowe.",
-    "roles_error": "Nie udało się utworzyć ról."
+    "roles_error": "Nie udało się utworzyć ról.",
+    "multiple_selection": "Zezwól członkom na wybór wielu języków",
+    "multiple_selection_help": "Członkowie mogą jednocześnie zachować kilka ról językowych.",
+    "single_selection_help": "Wybranie języka usuwa pozostałe niedomyślne role językowe członka w tej grupie.",
+    "remove_languages_without_access_role": "Usuń role językowe po usunięciu roli dostępu",
+    "remove_languages_without_access_role_help": "Po włączeniu utrata roli dostępu do grupy automatycznie usuwa wszystkie role językowe tej grupy."
   },
   "public_pricing": {
     "nav": "Cennik",
