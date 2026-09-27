@@ -11,7 +11,7 @@ interface EmojiChoice{value:string;name:string;image?:string;symbol?:string;serv
 @Component({
   selector:'sn-discord-emoji-picker',standalone:true,imports:[CommonModule,FormsModule],template:`
   <details class="picker" #menu>
-    <summary [title]="selectedName()"><span class="preview">@if(selectedImage()){<img [src]="selectedImage()" alt="">}@else{ {{selectedSymbol()||'＋'}} }</span><span class="chevron">⌄</span></summary>
+    <summary><span class="preview">@if(selectedImage()){<img [src]="selectedImage()" [alt]="selectedName()">}@else{ {{selectedSymbol()||'＋'}} }</span><span class="chevron">⌄</span></summary>
     <div class="popover">
       <div class="tools"><input [ngModel]="query()" (ngModelChange)="query.set($event)" placeholder="Search emoji"><button type="button" (click)="refresh($event)" [disabled]="loading()">{{loading()?'…':'↻'}}</button></div>
       <button type="button" class="clear" (click)="choose('',menu)">No emoji</button>
