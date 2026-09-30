@@ -15,14 +15,15 @@ export interface PlatformOwner {
   id: string;
   display_name: string | null;
   login: string;
-  email: string;
+  email: string | null;
+  registered: boolean;
   email_verified: boolean;
   avatar_url: string | null;
   discord_user_id: string | null;
   status: string;
   preferred_locale: string | null;
   last_login_at: string | null;
-  created_at: string;
+  created_at: string | null;
   guilds: PlatformOwnerGuild[];
 }
 

@@ -2003,6 +2003,7 @@
     "custom_bot_online": "Online na własnym bocie"
   },
   "platform_users": {
+    "not_registered": "Niezarejestrowany w panelu",
     "nav": "Właściciele serwerów",
     "title": "Właściciele serwerów",
     "eyebrow": "UŻYTKOWNICY PANELU",

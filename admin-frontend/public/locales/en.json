@@ -1963,6 +1963,7 @@
     "custom_bot_online": "Online on custom bot"
   },
   "platform_users": {
+    "not_registered": "Not registered in the panel",
     "nav": "Server owners",
     "title": "Server owners",
     "eyebrow": "PANEL USERS",

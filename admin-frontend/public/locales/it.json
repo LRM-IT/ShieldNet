@@ -2003,6 +2003,7 @@
     "custom_bot_online": "Online con il bot personalizzato"
   },
   "platform_users": {
+    "not_registered": "Non registrato nel pannello",
     "nav": "Proprietari server",
     "title": "Proprietari server",
     "eyebrow": "UTENTI DEL PANNELLO",

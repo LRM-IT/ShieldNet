@@ -2005,6 +2005,7 @@
     "custom_bot_online": "Online über eigenen Bot"
   },
   "platform_users": {
+    "not_registered": "Nicht im Panel registriert",
     "nav": "Serverbesitzer",
     "title": "Serverbesitzer",
     "eyebrow": "PANEL-BENUTZER",

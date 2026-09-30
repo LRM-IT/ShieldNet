@@ -2,13 +2,14 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field, field_validator
-from sqlalchemy import or_, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.dependencies.platform_access import require_superadmin
 from app.db.session import get_db_session
 from app.models.core import User
 from app.models.discord import Guild
+from app.models.members import DiscordMember
 from app.models.explorer import GuildInvite
 from app.models.member_actions import MemberActionType
 from app.schemas.member_actions import MemberActionCreate
@@ -49,20 +50,21 @@ async def support_invite_settings(session: AsyncSession) -> dict:
     }
 
 
-def serialize_user(user: User, guilds: list[Guild], invite_codes: dict[int, str] | None = None) -> dict:
+def serialize_user(user: User | None, guilds: list[Guild], invite_codes: dict[int, str] | None = None, member: DiscordMember | None = None) -> dict:
     invite_codes = invite_codes or {}
     return {
-        "id": str(user.id),
-        "display_name": user.display_name,
-        "login": user.login,
-        "email": user.email,
-        "email_verified": user.email_verified,
-        "avatar_url": user.avatar_url,
-        "discord_user_id": str(user.discord_user_id) if user.discord_user_id else None,
-        "status": user.status.value,
-        "preferred_locale": user.preferred_locale,
-        "last_login_at": user.last_login_at,
-        "created_at": user.created_at,
+        "id": str(user.id) if user else f"discord:{guilds[0].owner_discord_id}",
+        "registered": user is not None,
+        "display_name": user.display_name if user else ((member.global_name or member.username) if member else str(guilds[0].owner_discord_id)),
+        "login": user.login if user else (member.username if member else ""),
+        "email": user.email if user else None,
+        "email_verified": user.email_verified if user else False,
+        "avatar_url": user.avatar_url if user else (member.avatar_url if member else None),
+        "discord_user_id": str(user.discord_user_id if user else guilds[0].owner_discord_id),
+        "status": user.status.value if user else "unregistered",
+        "preferred_locale": user.preferred_locale if user else None,
+        "last_login_at": user.last_login_at if user else None,
+        "created_at": user.created_at if user else None,
         "guilds": [
             {
                 "guild_id": str(guild.guild_id),
@@ -104,19 +106,28 @@ async def list_server_owners(
     if not owner_ids:
         return {"items": [], "total": 0}
 
-    statement = select(User).where(User.discord_user_id.in_(owner_ids), User.deleted_at.is_(None))
-    term = search.strip()
-    if term:
-        pattern = f"%{term}%"
-        filters = [User.email.ilike(pattern), User.login.ilike(pattern), User.display_name.ilike(pattern)]
-        if term.isdigit():
-            filters.append(User.discord_user_id == int(term))
-        statement = statement.where(or_(*filters))
-    users = (await session.execute(statement.order_by(User.display_name, User.login))).scalars().all()
+    users = (await session.execute(select(User).where(
+        User.discord_user_id.in_(owner_ids), User.deleted_at.is_(None)
+    ))).scalars().all()
+    users_by_owner = {user.discord_user_id: user for user in users}
+    members = (await session.execute(select(DiscordMember).where(
+        DiscordMember.discord_user_id.in_(owner_ids),
+        DiscordMember.guild_id.in_([guild.guild_id for guild in guilds]),
+    ).order_by(DiscordMember.updated_at.desc()))).scalars().all()
+    members_by_owner = {}
+    for member in members:
+        members_by_owner.setdefault(member.discord_user_id, member)
     by_owner: dict[int, list[Guild]] = {}
     for guild in guilds:
-        by_owner.setdefault(guild.owner_discord_id, []).append(guild)
-    items = [serialize_user(user, by_owner.get(user.discord_user_id or 0, []), invite_codes) for user in users]
+        if guild.owner_discord_id > 0:
+            by_owner.setdefault(guild.owner_discord_id, []).append(guild)
+    items = [serialize_user(users_by_owner.get(owner_id), owned, invite_codes, members_by_owner.get(owner_id))
+             for owner_id, owned in by_owner.items()]
+    term = search.strip().casefold()
+    if term:
+        items = [item for item in items if any(term in str(item.get(key) or "").casefold()
+                 for key in ("email", "login", "display_name", "discord_user_id"))]
+    items.sort(key=lambda item: (item["display_name"] or item["login"] or item["discord_user_id"]).casefold())
     return {"items": items, "total": len(items)}
 
 
@@ -142,19 +153,37 @@ async def update_support_invite_settings(
     return await support_invite_settings(session)
 
 
+async def resolve_owner(session: AsyncSession, reference: str) -> tuple[User | None, int]:
+    if reference.startswith("discord:"):
+        raw_id = reference.removeprefix("discord:")
+        if len(raw_id) > 19 or not raw_id.isascii() or not raw_id.isdigit() or not 0 < int(raw_id) < 2**63:
+            raise HTTPException(status_code=404, detail="Server owner not found")
+        discord_id = int(raw_id)
+        user = (await session.execute(select(User).where(
+            User.discord_user_id == discord_id, User.deleted_at.is_(None)
+        ))).scalar_one_or_none()
+        return user, discord_id
+    try:
+        user_id = UUID(reference)
+    except ValueError:
+        raise HTTPException(status_code=404, detail="Server owner not found")
+    user = await session.get(User, user_id)
+    if user is None or user.deleted_at is not None or user.discord_user_id is None:
+        raise HTTPException(status_code=404, detail="Server owner not found")
+    return user, user.discord_user_id
+
+
 @router.get("/{user_id}")
 async def get_server_owner(
-    user_id: UUID,
+    user_id: str,
     _: User = Depends(require_superadmin),
     session: AsyncSession = Depends(get_db_session),
 ):
-    owner = await session.get(User, user_id)
-    if owner is None or owner.deleted_at is not None or owner.discord_user_id is None:
-        raise HTTPException(status_code=404, detail="Server owner not found")
+    owner, discord_id = await resolve_owner(session, user_id)
     guilds = (
         await session.execute(
             select(Guild)
-            .where(Guild.owner_discord_id == owner.discord_user_id, Guild.last_sync_at.is_not(None))
+            .where(Guild.owner_discord_id == discord_id, Guild.last_sync_at.is_not(None))
             .order_by(Guild.name)
         )
     ).scalars().all()
@@ -172,12 +201,16 @@ async def get_server_owner(
         if invite.max_uses and invite.uses >= invite.max_uses:
             continue
         invite_codes.setdefault(invite.guild_id, invite.code)
-    return serialize_user(owner, guilds, invite_codes)
+    member = (await session.execute(select(DiscordMember).where(
+        DiscordMember.discord_user_id == discord_id,
+        DiscordMember.guild_id.in_([guild.guild_id for guild in guilds]),
+    ).order_by(DiscordMember.updated_at.desc()).limit(1))).scalar_one_or_none()
+    return serialize_user(owner, guilds, invite_codes, member)
 
 
 @router.post("/{user_id}/dm", status_code=status.HTTP_202_ACCEPTED)
 async def send_owner_dm(
-    user_id: UUID,
+    user_id: str,
     payload: DirectMessagePayload,
     current_user: User = Depends(require_superadmin),
     session: AsyncSession = Depends(get_db_session),
@@ -185,16 +218,12 @@ async def send_owner_dm(
     message = payload.message.strip()
     if not message:
         raise HTTPException(status_code=422, detail="Message cannot be empty")
-    owner = await session.get(User, user_id)
-    if owner is None or owner.deleted_at is not None:
-        raise HTTPException(status_code=404, detail="User not found")
-    if owner.discord_user_id is None:
-        raise HTTPException(status_code=409, detail="This user has no linked Discord account")
+    owner, discord_id = await resolve_owner(session, user_id)
 
     guild = (
         await session.execute(
             select(Guild)
-            .where(Guild.owner_discord_id == owner.discord_user_id, Guild.last_sync_at.is_not(None))
+            .where(Guild.owner_discord_id == discord_id, Guild.last_sync_at.is_not(None))
             .order_by(Guild.bot_status.desc(), Guild.name)
             .limit(1)
         )
@@ -204,7 +233,7 @@ async def send_owner_dm(
 
     action = await MemberActionService(session).create(
         guild_id=guild.guild_id,
-        discord_user_id=owner.discord_user_id,
+        discord_user_id=discord_id,
         requested_by=current_user.id,
         data=MemberActionCreate(
             action_type=MemberActionType.SEND_DM,
