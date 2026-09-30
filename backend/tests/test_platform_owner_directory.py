@@ -30,7 +30,9 @@ def test_directory_includes_unregistered_owners_and_groups_their_servers():
     def session():
         return SimpleNamespace(execute=AsyncMock(side_effect=[result(guilds), result([]), result([user]), result([member])]))
 
-    response = asyncio.run(list_server_owners("", user, session()))
+    list_session = session()
+    response = asyncio.run(list_server_owners("", user, list_session))
+    assert "last_sync_at" not in str(list_session.execute.call_args_list[0].args[0].whereclause)
     assert response["total"] == 3
     by_id = {item["discord_user_id"]: item for item in response["items"]}
     assert by_id["101"]["registered"] is True
@@ -44,7 +46,7 @@ def test_directory_includes_unregistered_owners_and_groups_their_servers():
     assert [item["discord_user_id"] for item in filtered["items"]] == ["102"]
 
 
-def test_discord_owner_profile_requires_an_owned_synced_server():
+def test_discord_owner_profile_requires_an_owned_server():
     session = SimpleNamespace(execute=AsyncMock(side_effect=[result([]), result([])]))
     try:
         asyncio.run(get_server_owner("discord:102", None, session))
@@ -58,6 +60,7 @@ def test_discord_owner_profile_without_panel_account():
     member = SimpleNamespace(username="owner", global_name="Owner", avatar_url=None)
     session = SimpleNamespace(execute=AsyncMock(side_effect=[result([]), result([guild(1, 102)]), result([]), result([member])]))
     profile = asyncio.run(get_server_owner("discord:102", None, session))
+    assert "last_sync_at" not in str(session.execute.call_args_list[1].args[0].whereclause)
     assert profile["registered"] is False
     assert profile["display_name"] == "Owner"
     assert profile["created_at"] is None

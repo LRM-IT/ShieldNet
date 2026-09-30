@@ -87,7 +87,7 @@ async def list_server_owners(
 ):
     guilds = (
         await session.execute(
-            select(Guild).where(Guild.last_sync_at.is_not(None)).order_by(Guild.name)
+            select(Guild).where(Guild.owner_discord_id > 0).order_by(Guild.name)
         )
     ).scalars().all()
     invites = (
@@ -183,7 +183,7 @@ async def get_server_owner(
     guilds = (
         await session.execute(
             select(Guild)
-            .where(Guild.owner_discord_id == discord_id, Guild.last_sync_at.is_not(None))
+            .where(Guild.owner_discord_id == discord_id)
             .order_by(Guild.name)
         )
     ).scalars().all()
