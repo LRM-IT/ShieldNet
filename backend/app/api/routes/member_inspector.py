@@ -72,7 +72,7 @@ async def inspect_member(
         timeline.append(MemberTimelineItem(id=f"left-{discord_user_id}", kind="member", title="Left server", status="left", occurred_at=member_row.left_at))
 
     timeline.sort(key=lambda x: x.occurred_at, reverse=True)
-    role_ids = [r.discord_role_id for r in member.roles]
+    role_ids = [int(r.discord_role_id) for r in member.roles]
     permission_mask = 0
     if role_ids:
         role_rows = (await session.execute(select(DiscordGuildRole).where(
