@@ -513,6 +513,8 @@
     "deleted_success": "Automation rule deleted."
   },
   "verification": {
+    "instruction_button": "Mostra il pulsante di verifica sotto le istruzioni",
+    "instruction_button_help": "Salva e pubblica le istruzioni per aggiornare il pulsante nel messaggio Discord.",
     "cleanup_excluded_ids": "Messaggi esclusi dalla pulizia",
     "cleanup_excluded_help": "Separa gli ID con virgole. Le istruzioni pubblicate vengono aggiunte automaticamente.",
     "instruction_text": "Istruzioni di verifica",

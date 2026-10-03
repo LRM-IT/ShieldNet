@@ -513,6 +513,8 @@
     "deleted_success": "Automation rule deleted."
   },
   "verification": {
+    "instruction_button": "Show verification button below the instructions",
+    "instruction_button_help": "Use Save and publish instructions to update the button on the Discord message.",
     "cleanup_excluded_ids": "Messages excluded from cleanup",
     "cleanup_excluded_help": "Message IDs separated by commas. Published instructions are added automatically.",
     "instruction_text": "Verification instructions",

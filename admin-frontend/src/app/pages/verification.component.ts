@@ -93,6 +93,11 @@ import { DiscordChannelPickerComponent } from '../shared/discord-channel-picker.
           <textarea [(ngModel)]="instructionText" rows="8" maxlength="3500"></textarea>
           <small class="muted">{{'verification.instruction_help'|snT:'Discord Markdown is supported. Use {command} for the current slash command. Save and publish to the verification channel.'}}</small>
         </label>
+        <label class="check">
+          <input type="checkbox" [(ngModel)]="instructionButtonEnabled">
+          {{'verification.instruction_button'|snT:'Show verification button below the instructions'}}
+        </label>
+        <small class="muted">{{'verification.instruction_button_help'|snT:'Use Save and publish instructions to update the button on the Discord message.'}}</small>
         <button class="btn secondary" [disabled]="publishingInstruction() || saving() || !instructionText.trim() || !invocationChannelId" (click)="publishInstruction()">{{'verification.instruction_publish'|snT:'Save and publish instructions'}}</button>
 
         <label>
@@ -368,6 +373,7 @@ export class VerificationComponent
   textCommands = '!verify';
   slashCommandName = 'verify';
   instructionText = '';
+  instructionButtonEnabled = true;
   cleanupExcludedMessageIds = '';
   readonly publishingInstruction = signal(false);
   channelCleanupMinutes = 0;
@@ -399,6 +405,7 @@ export class VerificationComponent
     this.slashCommandName = settings.slash_command_name || 'verify';
     this.channelCleanupMinutes = Number(settings.channel_cleanup_minutes || 0);
     this.instructionText = settings.instruction_text || '';
+    this.instructionButtonEnabled = settings.instruction_button_enabled ?? true;
     this.cleanupExcludedMessageIds = settings.cleanup_excluded_message_ids || '';
     this.nicknameTemplate =
       settings.nickname_template;
@@ -529,6 +536,7 @@ export class VerificationComponent
           slash_command_name: this.slashCommandName,
           channel_cleanup_minutes: Number(this.channelCleanupMinutes || 0),
           instruction_text: this.instructionText,
+          instruction_button_enabled: this.instructionButtonEnabled,
           cleanup_excluded_message_ids: this.cleanupExcludedMessageIds,
           nickname_template:
             this.nicknameTemplate,

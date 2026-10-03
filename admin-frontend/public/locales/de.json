@@ -515,6 +515,8 @@
     "deleted_success": "Automation rule deleted."
   },
   "verification": {
+    "instruction_button": "Verifizierungsschaltfläche unter der Anleitung anzeigen",
+    "instruction_button_help": "Speichern und veröffentlichen Sie die Anleitung, um die Schaltfläche in Discord zu aktualisieren.",
     "cleanup_excluded_ids": "Von der Bereinigung ausgeschlossene Nachrichten",
     "cleanup_excluded_help": "Nachrichten-IDs durch Kommas trennen. Veröffentlichte Anleitungen werden automatisch hinzugefügt.",
     "instruction_text": "Verifizierungsanleitung",

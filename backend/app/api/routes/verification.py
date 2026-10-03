@@ -56,6 +56,7 @@ async def publish_instruction(guild_id: int, current_user: User = Depends(get_cu
     message_id = result.get("message_id") if str(result.get("channel_id")) == channel_id else None
     job = DiscordStructureChange(guild_id=guild_id, object_type="verification_instruction", operation="publish",
         payload={"channel_id": channel_id, "message_id": message_id,
+                 "show_button": settings.instruction_button_enabled,
                  "text": settings.instruction_text.replace("{command}", "/" + settings.slash_command_name)},
         preview={"safe_to_apply": True}, status="pending", requested_by=current_user.id)
     session.add(job)
@@ -142,6 +143,7 @@ async def get_settings(
         "slash_command_name": item.slash_command_name,
         "channel_cleanup_minutes": item.channel_cleanup_minutes,
         "instruction_text": item.instruction_text,
+        "instruction_button_enabled": item.instruction_button_enabled,
         "cleanup_excluded_message_ids": item.cleanup_excluded_message_ids,
         "nickname_template": item.nickname_template,
         "auto_approve": item.auto_approve,

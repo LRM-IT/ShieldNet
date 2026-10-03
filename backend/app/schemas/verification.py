@@ -13,6 +13,7 @@ class VerificationSettingsInput(BaseModel):
     text_commands: str = Field(default="!verify", max_length=255)
     slash_command_name: str = Field(default="verify", min_length=1, max_length=32)
     channel_cleanup_minutes: int = Field(default=0, ge=0, le=10080)
+    instruction_button_enabled: bool = True
     instruction_text: str = Field(default="", max_length=3500)
     cleanup_excluded_message_ids: str = Field(default="", max_length=6000)
 

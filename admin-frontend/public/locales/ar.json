@@ -515,6 +515,8 @@
     "deleted_success": "Automation rule deleted."
   },
   "verification": {
+    "instruction_button": "إظهار زر التحقق أسفل التعليمات",
+    "instruction_button_help": "احفظ التعليمات وانشرها لتحديث الزر في رسالة Discord.",
     "cleanup_excluded_ids": "الرسائل المستثناة من التنظيف",
     "cleanup_excluded_help": "افصل معرفات الرسائل بفواصل. تضاف التعليمات المنشورة تلقائيًا.",
     "instruction_text": "تعليمات التحقق",

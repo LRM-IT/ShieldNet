@@ -514,6 +514,8 @@
     "deleted_success": "Automation rule deleted."
   },
   "verification": {
+    "instruction_button": "Afficher le bouton de vérification sous les instructions",
+    "instruction_button_help": "Enregistrez et publiez les instructions pour mettre à jour le bouton dans Discord.",
     "cleanup_excluded_ids": "Messages exclus du nettoyage",
     "cleanup_excluded_help": "Séparez les identifiants par des virgules. Les instructions publiées sont ajoutées automatiquement.",
     "instruction_text": "Instructions de vérification",

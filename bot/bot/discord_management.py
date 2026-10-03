@@ -75,9 +75,9 @@ class DiscordManagementWorker:
                     except discord.NotFound:
                         pass
                 if message is not None and message.author.id == self.bot.user.id:
-                    await message.edit(content=None, embed=embed, view=VerificationPublicView(self.bot.verification), allowed_mentions=discord.AllowedMentions.none())
+                    await message.edit(content=None, embed=embed, view=VerificationPublicView(self.bot.verification) if data.get("show_button", True) else None, allowed_mentions=discord.AllowedMentions.none())
                 else:
-                    message = await channel.send(embed=embed, view=VerificationPublicView(self.bot.verification), allowed_mentions=discord.AllowedMentions.none())
+                    message = await channel.send(embed=embed, view=VerificationPublicView(self.bot.verification) if data.get("show_button", True) else None, allowed_mentions=discord.AllowedMentions.none())
                 result = {"message_id": str(message.id), "channel_id": str(channel.id)}
             elif kind == "language_panel" and op == "publish":
                 message = await self.bot.language_selection.publish_panel(guild, data["group_id"])

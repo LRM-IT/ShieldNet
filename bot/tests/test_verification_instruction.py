@@ -26,6 +26,13 @@ async def check_publication():
     await worker._process_change(item)
     assert channel.send.await_count == 1
     message.edit.assert_awaited_once()
+    item["payload"]["show_button"] = False
+    await worker._process_change(item)
+    assert message.edit.call_args.kwargs["view"] is None
+    item["payload"]["show_button"] = True
+    await worker._process_change(item)
+    assert message.edit.call_args.kwargs["view"].is_persistent()
+    assert channel.send.await_count == 1
 
 
 def test_instruction_publication_edits_existing_message():
