@@ -7,7 +7,6 @@ import discord
 import httpx
 
 from bot.config import settings
-from bot.verification import VerificationPublicView
 
 logger = logging.getLogger(__name__)
 
@@ -108,7 +107,6 @@ class WelcomeWorker:
             message = await channel.send(
                 content,
                 allowed_mentions=discord.AllowedMentions(users=True),
-                view=VerificationPublicView(self.bot.verification),
             )
             await self._post("/message-result", {
                 "task_id": task_id,
