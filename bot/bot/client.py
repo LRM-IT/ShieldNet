@@ -87,6 +87,8 @@ class ShieldNetBot(discord.Client):
         self.redis = Redis.from_url(settings.redis_url, decode_responses=True)
         self.worker_name = f"discord-worker:{socket.gethostname()}" + (f":custom:{target_guild_id}" if target_guild_id else ":system")
         self._register_commands()
+        # Keep templates after global commands are removed from Discord at startup.
+        self._guild_command_templates = tuple(self.tree.get_commands())
 
     @property
     def managed_guilds(self):
@@ -126,6 +128,9 @@ class ShieldNetBot(discord.Client):
             return
         guild_ref = discord.Object(id=guild.id)
         previous = self._verification_slash_commands.get(guild.id)
+        if previous is None:
+            for command in self._guild_command_templates:
+                self.tree.add_command(command, guild=guild_ref, override=True)
         if previous and previous != "verify":
             self.tree.remove_command(previous, guild=guild_ref)
         if desired != "verify":
@@ -426,11 +431,22 @@ class ShieldNetBot(discord.Client):
         self.explorer_snapshot_loop.start()
         self.runtime_heartbeat_loop.start()
         self.voting.loop.start()
-        if self.target_guild_id is None: asyncio.create_task(self.queue_worker())
+        self._queue_worker_task = asyncio.create_task(self.queue_worker()) if self.target_guild_id is None else None
 
     async def close(self) -> None:
-        if self.periodic_sync.is_running():
-            self.periodic_sync.cancel()
+        # Routing changes replace clients; stop workers before closing their HTTP session.
+        workers = []
+        for loop in [value for value in vars(self).values() if isinstance(value, tasks.Loop)] + [self.voting.loop]:
+            task = loop.get_task()
+            if task is not None:
+                loop.cancel()
+                workers.append(task)
+        queue_task = getattr(self, "_queue_worker_task", None)
+        if queue_task is not None:
+            queue_task.cancel()
+            workers.append(queue_task)
+        if workers:
+            await asyncio.gather(*workers, return_exceptions=True)
         await self.redis.aclose()
         await super().close()
 
@@ -450,12 +466,14 @@ class ShieldNetBot(discord.Client):
 
     async def on_guild_join(self, guild: discord.Guild) -> None:
         await self.backend.register_guild(guild)
+        await self._sync_verification_command(guild)
         await self._ensure_guildconsole_role(guild)
         await self.guild_role_sync.synchronize(guild)
         await self.reload_config(guild.id)
 
     async def on_guild_remove(self, guild: discord.Guild) -> None:
         self.cache.clear(guild.id)
+        self._verification_slash_commands.pop(guild.id, None)
         await self.backend.mark_guild_left(guild.id)
 
     async def ensure_config(self, guild_id: int) -> GuildModuleState:
