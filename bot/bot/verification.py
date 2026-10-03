@@ -441,11 +441,13 @@ class VerifyModal(
         guild_id: int,
         prompt_message: discord.Message | None = None,
         config: dict | None = None,
+        from_public_button: bool = False,
     ) -> None:
         super().__init__()
         self.verification_client = verification_client
         self.guild_id = guild_id
         self.prompt_message = prompt_message
+        self.from_public_button = from_public_button
         template = str((config or {}).get("nickname_template") or "[{alliance}] {nickname}")
         self.alliance: discord.ui.TextInput | None = None
         self.server_number: discord.ui.TextInput | None = None
@@ -465,7 +467,8 @@ class VerifyModal(
         config = await self.verification_client.settings(self.guild_id)
         channel_id = config.get("invocation_channel_id")
         if not config.get("enabled") or (
-            interaction.guild is not None
+            not self.from_public_button
+            and interaction.guild is not None
             and channel_id
             and str(interaction.channel_id) != channel_id
         ):
@@ -552,3 +555,27 @@ class VerificationStartView(discord.ui.View):
         await interaction.response.send_modal(
             VerifyModal(self.verification_client, self.guild_id, interaction.message, config=config)
         )
+
+
+class VerificationPublicView(discord.ui.View):
+    """Shared verification button that survives bot restarts."""
+    def __init__(self, verification_client: VerificationClient) -> None:
+        super().__init__(timeout=None)
+        self.verification_client = verification_client
+
+    @discord.ui.button(label="Verify now", emoji="✅", style=discord.ButtonStyle.success,
+                       custom_id="guildconsole:verification:start")
+    async def start(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
+        if interaction.guild_id is None:
+            await interaction.response.send_message("Use this button in the server.", ephemeral=True)
+            return
+        try:
+            config = await self.verification_client.settings(interaction.guild_id)
+            if not config.get("enabled"):
+                await interaction.response.send_message("Verification is currently disabled.", ephemeral=True)
+                return
+            await interaction.response.send_modal(VerifyModal(
+                self.verification_client, interaction.guild_id, config=config, from_public_button=True))
+        except Exception:
+            if not interaction.response.is_done():
+                await interaction.response.send_message("Unable to open verification. Please try again.", ephemeral=True)

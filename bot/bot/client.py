@@ -1,4 +1,4 @@
-from bot.verification import VerificationClient, VerifyModal, VerificationStartView
+from bot.verification import VerificationClient, VerifyModal, VerificationStartView, VerificationPublicView
 from bot.permissions import PermissionClient
 import asyncio
 import logging
@@ -416,6 +416,7 @@ class ShieldNetBot(discord.Client):
                 await interaction.followup.send(chunk, ephemeral=private)
 
     async def setup_hook(self) -> None:
+        self.add_view(VerificationPublicView(self.verification))
         # Commands are synchronized per guild in on_ready so one application owns
         # a guild at a time and Discord does not show duplicate command sets.
         self.periodic_sync.start()
