@@ -513,6 +513,8 @@
     "deleted_success": "Automation rule deleted."
   },
   "verification": {
+    "image_load_error": "Unable to load the reference image.",
+    "image_retry": "Retry loading image",
     "title": "Verification",
     "settings": "Verification settings",
     "description": "Configure the verification command, member nickname and Verified role.",

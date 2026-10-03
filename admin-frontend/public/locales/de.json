@@ -515,6 +515,8 @@
     "deleted_success": "Automation rule deleted."
   },
   "verification": {
+    "image_load_error": "Das Referenzbild konnte nicht geladen werden.",
+    "image_retry": "Bild erneut laden",
     "title": "Verifizierung",
     "settings": "Überprüfungseinstellungen",
     "description": "Konfigurieren Sie den Verifizierungsbefehl, den Mitgliedsnamen und die Rolle Verified.",

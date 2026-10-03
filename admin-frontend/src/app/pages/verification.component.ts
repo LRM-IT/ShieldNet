@@ -1,6 +1,7 @@
 import {
   Component,
   OnInit,
+  OnDestroy,
   signal,
 } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
@@ -166,11 +167,12 @@ import { DiscordChannelPickerComponent } from '../shared/discord-channel-picker.
                 } @empty { <p class="muted">{{'verification.criteria_empty'|snT:'Add at least one rule, for example Leader with values R4 and R5.'}}</p> }
               </div>
               <label>{{'verification.reference_image'|snT:'Reference image'}}<input type="file" accept="image/png,image/jpeg,image/webp" (change)="selectTemplate(level,$event)"></label>
-              @if (level.preview || level.template_url) {
-                <div class="marker-image"><img [src]="level.preview || level.template_url"><div class="marker" [style.left.%]="level.marker.x*100" [style.top.%]="level.marker.y*100" [style.width.%]="level.marker.width*100" [style.height.%]="level.marker.height*100"></div></div>
+              @if (level.preview) {
+                <div class="marker-image"><img [src]="level.preview"><div class="marker" [style.left.%]="level.marker.x*100" [style.top.%]="level.marker.y*100" [style.width.%]="level.marker.width*100" [style.height.%]="level.marker.height*100"></div></div>
                 <button class="btn secondary" (click)="openMarkerEditor(level)">{{'verification.select_region'|snT:'Select the verification region visually'}}</button>
               }
-              <p class="muted">{{'verification.region_help'|snT:'Mark the area where AI should look for the verification criterion.'}}</p>
+              @if(level.imageError){<p role="alert">{{'verification.image_load_error'|snT:'Unable to load the reference image.'}}</p><button class="btn secondary" (click)="loadTemplate(level)">{{'verification.image_retry'|snT:'Retry loading image'}}</button>}
+              <p class="muted">{{'verification.region_help' |snT:'Mark the area where AI should look for the verification criterion.'}}</p>
               <div class="buttons"><button class="btn" (click)="saveLevel(level)">{{'verification.save_level'|snT:'Save level'}}</button><button class="btn danger" (click)="removeLevel(level)">{{'verification.delete'|snT:'Delete'}}</button></div>
             </div>
           </details>
@@ -182,7 +184,7 @@ import { DiscordChannelPickerComponent } from '../shared/discord-channel-picker.
           <section class="card marker-dialog">
             <div class="heading"><div><h2>{{'verification.verification_region'|snT:'Verification region'}}</h2><p class="muted">{{'verification.region_editor_help'|snT:'Drag over the required image area with a mouse or finger.'}}</p></div><button class="btn secondary" (click)="closeMarkerEditor()">{{'verification.close'|snT:'Close'}}</button></div>
             <div class="marker-editor" (pointerdown)="markerStart($event)" (pointermove)="markerMove($event)" (pointerup)="markerEnd($event)" (pointercancel)="markerEnd($event)">
-              <img [src]="markerLevel.preview || markerLevel.template_url" draggable="false">
+              <img [src]="markerLevel.preview" draggable="false">
               <div class="marker active" [style.left.%]="markerDraft.x*100" [style.top.%]="markerDraft.y*100" [style.width.%]="markerDraft.width*100" [style.height.%]="markerDraft.height*100"></div>
             </div>
             <div class="buttons"><button class="btn secondary" (click)="resetMarker()">{{'verification.select_entire_image'|snT:'Select entire image'}}</button><button class="btn" (click)="applyMarker()">{{'verification.apply_region'|snT:'Apply region'}}</button></div>
@@ -334,12 +336,13 @@ import { DiscordChannelPickerComponent } from '../shared/discord-channel-picker.
   `],
 })
 export class VerificationComponent
-  implements OnInit
+  implements OnInit, OnDestroy
 {
   readonly guildId = this.route.snapshot.paramMap.get('guildId') ?? '';
 
   readonly roles = signal<any[]>([]);
   readonly levels = signal<any[]>([]);
+  private destroyed = false;
   readonly requests = signal<any[]>([]);
   markerLevel:any=null;
   markerDraft:any={x:0,y:0,width:1,height:1};
@@ -393,14 +396,31 @@ export class VerificationComponent
       ...criterion,
       values_text:(criterion.values?.length ? criterion.values : [criterion.expected_text]).filter(Boolean).join(', '),
     }))})));
+    await Promise.all(this.levels().filter(level=>level.has_template).map(level=>this.loadTemplate(level)));
     if (!this.autoApprove) await this.loadPending();
   }
 
+  async loadTemplate(level:any):Promise<void> {
+    level.imageError=false;
+    try {
+      const blob=await this.verification.levelTemplate(this.guildId,level.id);
+      if(this.destroyed || level.file || !this.levels().includes(level))return;
+      if(level.preview)URL.revokeObjectURL(level.preview);
+      level.preview=URL.createObjectURL(blob);
+    } catch {
+      if(!this.destroyed && !level.file)level.imageError=true;
+    }
+    if(!this.destroyed)this.levels.update(items=>[...items]);
+  }
+  ngOnDestroy():void {
+    this.destroyed=true;
+    for(const level of this.levels())if(level.preview)URL.revokeObjectURL(level.preview);
+  }
   async addLevel(): Promise<void> {
     const row=await this.verification.createLevel(this.guildId,{name:`${this.i18n.t('verification.level','Level')} ${this.levels().length+2}`,enabled:false,channel_id:null,expected_text:'',role_ids:[],criteria:[],marker:{x:0,y:0,width:1,height:1}});
     this.levels.update(items=>[...items,row]);
   }
-  selectTemplate(level:any,event:Event):void { const file=(event.target as HTMLInputElement).files?.[0]; if(!file)return; level.file=file; if(level.preview)URL.revokeObjectURL(level.preview); level.preview=URL.createObjectURL(file); setTimeout(()=>this.openMarkerEditor(level)); }
+  selectTemplate(level:any,event:Event):void { const file=(event.target as HTMLInputElement).files?.[0]; if(!file)return; level.file=file; level.imageError=false; if(level.preview)URL.revokeObjectURL(level.preview); level.preview=URL.createObjectURL(file); setTimeout(()=>this.openMarkerEditor(level)); }
   openMarkerEditor(level:any):void { this.markerLevel=level; this.markerDraft={...(level.marker||{x:0,y:0,width:1,height:1})}; }
   closeMarkerEditor():void { this.markerLevel=null; this.markerOrigin=null; }
   resetMarker():void { this.markerDraft={x:0,y:0,width:1,height:1}; }
@@ -419,9 +439,9 @@ export class VerificationComponent
     const payload={name:level.name,enabled:level.enabled,channel_id:level.channel_id ? String(level.channel_id) : null,expected_text:criteria[0]?.expected_text||'',role_ids:criteria[0]?.role_ids||[],criteria,marker:level.marker};
     if(level.file)await this.verification.uploadLevelTemplate(this.guildId,level.id,level.file,level.marker);
     const saved=await this.verification.updateLevel(this.guildId,level.id,payload);
-    Object.assign(level,saved,{file:null,preview:null,criteria:(saved.criteria||[]).map((criterion:any)=>({...criterion,values_text:(criterion.values||[criterion.expected_text]).filter(Boolean).join(', ')}))}); this.message.set(this.i18n.t('verification.level_saved','Level {name} saved.').replace('{name}',level.name));
+    Object.assign(level,saved,{file:null,criteria:(saved.criteria||[]).map((criterion:any)=>({...criterion,values_text:(criterion.values||[criterion.expected_text]).filter(Boolean).join(', ')}))}); this.message.set(this.i18n.t('verification.level_saved','Level {name} saved.').replace('{name}',level.name));
   }
-  async removeLevel(level:any):Promise<void> { await this.verification.deleteLevel(this.guildId,level.id); this.levels.update(items=>items.filter(item=>item.id!==level.id)); }
+  async removeLevel(level:any):Promise<void> { await this.verification.deleteLevel(this.guildId,level.id); if(level.preview)URL.revokeObjectURL(level.preview); this.levels.update(items=>items.filter(item=>item.id!==level.id)); }
 
   async loadPending():Promise<void> {
     const result=await this.verification.listRequests(this.guildId,'pending');

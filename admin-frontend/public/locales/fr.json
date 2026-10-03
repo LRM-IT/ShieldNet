@@ -514,6 +514,8 @@
     "deleted_success": "Automation rule deleted."
   },
   "verification": {
+    "image_load_error": "Impossible de charger l’image de référence.",
+    "image_retry": "Réessayer de charger l’image",
     "title": "Vérification",
     "settings": "Paramètres de vérification",
     "description": "Configurez la commande de vérification, le pseudonyme du membre et le rôle Verified.",

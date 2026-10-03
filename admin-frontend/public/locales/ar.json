@@ -515,6 +515,8 @@
     "deleted_success": "Automation rule deleted."
   },
   "verification": {
+    "image_load_error": "تعذر تحميل الصورة المرجعية.",
+    "image_retry": "إعادة تحميل الصورة",
     "title": "التحقق",
     "settings": "إعدادات التحقق",
     "description": "اضبط أمر التحقق واسم العضو ودور Verified.",

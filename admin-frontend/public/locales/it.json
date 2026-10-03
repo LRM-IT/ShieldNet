@@ -513,6 +513,8 @@
     "deleted_success": "Automation rule deleted."
   },
   "verification": {
+    "image_load_error": "Impossibile caricare l’immagine di riferimento.",
+    "image_retry": "Riprova a caricare l’immagine",
     "title": "Verifica",
     "settings": "Impostazioni di verifica",
     "description": "Configura il comando di verifica, il nickname del membro e il ruolo Verified.",
