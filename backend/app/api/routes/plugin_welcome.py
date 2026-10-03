@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -302,7 +302,7 @@ async def member_roles(
         await session.execute(
             text("""
                 UPDATE plugin_welcome.tasks
-                SET status='completed',completed_at=now(),updated_at=now()
+                SET status='completed',completed_at=now(),last_error=NULL,updated_at=now()
                 WHERE guild_id=:guild_id AND user_id=:user_id
                   AND status='waiting'
                 RETURNING id
@@ -338,7 +338,10 @@ async def member_left(
     return {"task_ids": [str(item) for item in rows]}
 
 @internal_router.get("/due")
-async def due(session: AsyncSession = Depends(get_db_session)):
+async def due(guild_id: list[int] = Query(default=[]), session: AsyncSession = Depends(get_db_session)):
+    # A worker may claim tasks only for guilds handled by its live bot instance.
+    if not guild_id:
+        return {"item": None}
     row = (
         await session.execute(
             text("""
@@ -350,6 +353,7 @@ async def due(session: AsyncSession = Depends(get_db_session)):
                 FROM plugin_welcome.tasks t
                 JOIN plugin_welcome.settings s ON s.guild_id=t.guild_id
                 WHERE t.status='waiting'
+                  AND t.guild_id = ANY(CAST(:guild_ids AS bigint[]))
                   AND s.enabled=true
                   AND t.next_send_at<=now()
                   AND (
@@ -360,7 +364,8 @@ async def due(session: AsyncSession = Depends(get_db_session)):
                 ORDER BY t.next_send_at
                 FOR UPDATE SKIP LOCKED
                 LIMIT 1
-            """)
+            """),
+            {"guild_ids": guild_id},
         )
     ).mappings().first()
     if row is None:

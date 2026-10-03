@@ -58,10 +58,14 @@ class WelcomeWorker:
             await self.delete_task_messages(task_id)
 
     async def run_once(self) -> None:
+        guild_ids = [guild.id for guild in self.bot.managed_guilds]
+        if not guild_ids:
+            return
         async with httpx.AsyncClient(timeout=30) as client:
             response = await client.get(
                 f"{self.base}/api/v1/internal/plugin-welcome/due",
                 headers=self.headers,
+                params=[("guild_id", str(guild_id)) for guild_id in guild_ids],
             )
             response.raise_for_status()
             item = response.json().get("item")
@@ -75,7 +79,11 @@ class WelcomeWorker:
                 raise RuntimeError("Guild is unavailable")
             member = guild.get_member(int(item["user_id"]))
             if member is None:
-                raise RuntimeError("Member is unavailable")
+                try:
+                    member = await guild.fetch_member(int(item["user_id"]))
+                except discord.NotFound:
+                    await self._post("/member-left", {"guild_id": guild.id, "user_id": int(item["user_id"])})
+                    return
 
             required_role_id = int(item["required_role_id"])
             if any(role.id == required_role_id for role in member.roles):
