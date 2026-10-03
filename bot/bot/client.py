@@ -83,6 +83,7 @@ class ShieldNetBot(discord.Client):
         self.cross_guild_network = CrossGuildNetwork(self)
         self.verification_levels = VerificationLevelsClient(self)
         self._verification_slash_commands: dict[int, str] = {}
+        self._command_sync_lock = asyncio.Lock()
         self._initial_sync_done = False
         self.redis = Redis.from_url(settings.redis_url, decode_responses=True)
         self.worker_name = f"discord-worker:{socket.gethostname()}" + (f":custom:{target_guild_id}" if target_guild_id else ":system")
@@ -122,28 +123,29 @@ class ShieldNetBot(discord.Client):
         await interaction.response.send_modal(VerifyModal(self.verification, interaction.guild.id, config=config))
 
     async def _sync_verification_command(self, guild: discord.Guild) -> None:
-        config = await self.verification.settings(guild.id)
-        desired = config.get("slash_command_name") or "verify"
-        if self._verification_slash_commands.get(guild.id) == desired:
-            return
-        guild_ref = discord.Object(id=guild.id)
-        previous = self._verification_slash_commands.get(guild.id)
-        if previous is None:
+        async with self._command_sync_lock:
+            config = await self.verification.settings(guild.id)
+            desired = config.get("slash_command_name") or "verify"
+            if self._verification_slash_commands.get(guild.id) == desired:
+                return
+            if desired != "verify" and any(command.name == desired for command in self._guild_command_templates):
+                raise ValueError("Verification command conflicts with another bot command")
+            guild_ref = discord.Object(id=guild.id)
+            self.tree.clear_commands(guild=guild_ref)
             for command in self._guild_command_templates:
-                self.tree.add_command(command, guild=guild_ref, override=True)
-        if previous and previous != "verify":
-            self.tree.remove_command(previous, guild=guild_ref)
-        if desired != "verify":
-            async def custom_verify(interaction: discord.Interaction) -> None:
-                await self._open_verification(interaction, command_name=desired)
-            self.tree.add_command(app_commands.Command(
-                name=desired,
-                description="Open the server verification form.",
-                callback=custom_verify,
-            ), guild=guild_ref, override=True)
-        await self.tree.sync(guild=guild_ref)
-        self._verification_slash_commands[guild.id] = desired
-        logger.info("Verification slash command synchronized guild=%s command=/%s", guild.id, desired)
+                if command.name != "verify" or desired == "verify":
+                    self.tree.add_command(command, guild=guild_ref, override=True)
+            if desired != "verify":
+                async def custom_verify(interaction: discord.Interaction) -> None:
+                    await self._open_verification(interaction, command_name=desired)
+                self.tree.add_command(app_commands.Command(
+                    name=desired,
+                    description="Open the server verification form.",
+                    callback=custom_verify,
+                ), guild=guild_ref, override=True)
+            await self.tree.sync(guild=guild_ref)
+            self._verification_slash_commands[guild.id] = desired
+            logger.info("Verification slash command synchronized guild=%s command=/%s", guild.id, desired)
 
     def _register_commands(self) -> None:
         @self.tree.command(name="guildconsole_status", description="Show GuildConsole status.")
@@ -459,7 +461,10 @@ class ShieldNetBot(discord.Client):
                     if guild.id != self.target_guild_id: await guild.leave()
             if settings.sync_commands_on_start:
                 for guild in self.managed_guilds:
-                    ref=discord.Object(id=guild.id);self.tree.copy_global_to(guild=ref);await self.tree.sync(guild=ref)
+                    try:
+                        await self._sync_verification_command(guild)
+                    except Exception:
+                        logger.exception("Initial command synchronization failed for guild %s", guild.id)
                 self.tree.clear_commands(guild=None);await self.tree.sync()
             asyncio.create_task(self._sync_all())
             asyncio.create_task(self._sync_all_guild_roles())

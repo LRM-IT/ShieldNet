@@ -23,7 +23,27 @@ async def check_command_registration():
     assert bot.tree.sync.await_count == 1
     bot.verification.settings.return_value = {"slash_command_name": "introduce"}
     await bot._sync_verification_command(guild)
-    assert expected | {"introduce"} == {command.name for command in bot.tree.get_commands(guild=ref)}
+    assert (expected - {"verify"}) | {"introduce"} == {command.name for command in bot.tree.get_commands(guild=ref)}
+    bot.verification.settings.return_value = {"slash_command_name": "register"}
+    bot.tree.sync.side_effect = RuntimeError("Temporary Discord failure")
+    try:
+        await bot._sync_verification_command(guild)
+    except RuntimeError:
+        pass
+    else:
+        raise AssertionError("Expected sync failure")
+    assert bot._verification_slash_commands[guild.id] == "introduce"
+    bot.tree.sync.side_effect = None
+    await bot._sync_verification_command(guild)
+    assert (expected - {"verify"}) | {"register"} == {command.name for command in bot.tree.get_commands(guild=ref)}
+    bot.verification.settings.return_value = {"slash_command_name": "verify"}
+    await bot._sync_verification_command(guild)
+    assert expected == {command.name for command in bot.tree.get_commands(guild=ref)}
+    # A second guild may start with a custom name after global templates are cleared.
+    bot.verification.settings.return_value = {"slash_command_name": "join"}
+    await bot._sync_verification_command(SimpleNamespace(id=456))
+    assert (expected - {"verify"}) | {"join"} == {command.name for command in bot.tree.get_commands(guild=discord.Object(id=456))}
+    assert expected == {command.name for command in bot.tree.get_commands(guild=ref)}
 
     @tasks.loop(seconds=3600)
     async def worker():
