@@ -513,6 +513,15 @@
     "deleted_success": "Automation rule deleted."
   },
   "verification": {
+    "cleanup_excluded_ids": "Wiadomości wykluczone z czyszczenia",
+    "cleanup_excluded_help": "Oddziel identyfikatory przecinkami. Opublikowane instrukcje są dodawane automatycznie.",
+    "instruction_text": "Instrukcja weryfikacji",
+    "instruction_help": "Obsługiwany jest Markdown Discorda. {command} oznacza aktualne polecenie.",
+    "instruction_publish": "Zapisz i opublikuj instrukcję",
+    "instruction_pending": "Publikacja dodana do kolejki.",
+    "instruction_published": "Instrukcja opublikowana i chroniona przed czyszczeniem.",
+    "instruction_error": "Nie udało się opublikować instrukcji.",
+
     "image_load_error": "Nie udało się wczytać obrazu wzorcowego.",
     "image_retry": "Wczytaj obraz ponownie",
     "title": "Weryfikacja",

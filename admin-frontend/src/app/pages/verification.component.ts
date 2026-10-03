@@ -85,6 +85,16 @@ import { DiscordChannelPickerComponent } from '../shared/discord-channel-picker.
           <small class="muted">{{'verification.cleanup_minutes_help'|snT:'All messages in the verification channel older than this value are deleted. Set 0 to disable cleanup.'}}</small>
         </label>
 
+        <label>{{'verification.cleanup_excluded_ids'|snT:'Messages excluded from cleanup'}}
+          <textarea [(ngModel)]="cleanupExcludedMessageIds" rows="2" maxlength="6000" placeholder="123456789012345678, 234567890123456789"></textarea>
+          <small class="muted">{{'verification.cleanup_excluded_help'|snT:'Message IDs separated by commas. Published instructions are added automatically.'}}</small>
+        </label>
+        <label>{{'verification.instruction_text'|snT:'Verification instructions'}}
+          <textarea [(ngModel)]="instructionText" rows="8" maxlength="3500"></textarea>
+          <small class="muted">{{'verification.instruction_help'|snT:'Discord Markdown is supported. Use {command} for the current slash command. Save and publish to the verification channel.'}}</small>
+        </label>
+        <button class="btn secondary" [disabled]="publishingInstruction() || saving() || !instructionText.trim() || !invocationChannelId" (click)="publishInstruction()">{{'verification.instruction_publish'|snT:'Save and publish instructions'}}</button>
+
         <label>
           {{ "verification.verified_role" | snT:"Verified role" }}
           <select [(ngModel)]="verifiedRoleId">
@@ -357,6 +367,9 @@ export class VerificationComponent
   invocationChannelId = '';
   textCommands = '!verify';
   slashCommandName = 'verify';
+  instructionText = '';
+  cleanupExcludedMessageIds = '';
+  readonly publishingInstruction = signal(false);
   channelCleanupMinutes = 0;
   nicknameTemplate = '[{alliance}] {nickname}';
   allianceMin = 2;
@@ -385,6 +398,8 @@ export class VerificationComponent
     this.textCommands = settings.text_commands || '';
     this.slashCommandName = settings.slash_command_name || 'verify';
     this.channelCleanupMinutes = Number(settings.channel_cleanup_minutes || 0);
+    this.instructionText = settings.instruction_text || '';
+    this.cleanupExcludedMessageIds = settings.cleanup_excluded_message_ids || '';
     this.nicknameTemplate =
       settings.nickname_template;
     this.allianceMin =
@@ -465,19 +480,40 @@ export class VerificationComponent
     await this.loadPending();
   }
 
-  async saveSettings(): Promise<void> {
+  async publishInstruction():Promise<void> {
+    this.publishingInstruction.set(true);
+    try {
+      if(!await this.saveSettings())return;
+      const job=await this.verification.publishInstruction(this.guildId);
+      this.message.set(this.i18n.t('verification.instruction_pending','Publication queued.'));
+      for(let attempt=0;attempt<30 && !this.destroyed;attempt++){
+        await new Promise(resolve=>setTimeout(resolve,2000));
+        if(this.destroyed)return;
+        const result=await this.verification.instructionStatus(this.guildId,job.job_id);
+        if(result.status==='failed')throw new Error(result.error);
+        if(result.status==='completed'){
+          this.cleanupExcludedMessageIds=result.cleanup_excluded_message_ids;
+          this.message.set(this.i18n.t('verification.instruction_published','Instructions published and protected from cleanup.'));
+          return;
+        }
+      }
+    }catch(e:any){this.message.set(e?.error?.detail||e?.message||this.i18n.t('verification.instruction_error','Unable to publish instructions.'));}
+    finally{this.publishingInstruction.set(false);}
+  }
+
+  async saveSettings(): Promise<boolean> {
     this.saving.set(true);
     this.message.set('');
 
     if (!this.autoApprove && !this.reviewChannelId) {
       this.message.set(this.i18n.t('verification.review_channel_required','Select a private moderator channel or thread for manual verification.'));
       this.saving.set(false);
-      return;
+      return false;
     }
     if (!this.autoApprove && this.reviewChannelId === this.invocationChannelId) {
       this.message.set(this.i18n.t('verification.review_channel_must_differ','The moderator channel must be different from the member verification channel.'));
       this.saving.set(false);
-      return;
+      return false;
     }
 
     try {
@@ -492,6 +528,8 @@ export class VerificationComponent
           text_commands: this.textCommands,
           slash_command_name: this.slashCommandName,
           channel_cleanup_minutes: Number(this.channelCleanupMinutes || 0),
+          instruction_text: this.instructionText,
+          cleanup_excluded_message_ids: this.cleanupExcludedMessageIds,
           nickname_template:
             this.nicknameTemplate,
           auto_approve: this.autoApprove,
@@ -506,10 +544,12 @@ export class VerificationComponent
         this.i18n.t('verification.settings_saved','Verification settings saved.'),
       );
       if (!this.autoApprove) await this.loadPending();
+      return true;
     } catch {
       this.message.set(
         this.i18n.t('verification.settings_save_error','Unable to save verification settings.'),
       );
+      return false;
     } finally {
       this.saving.set(false);
     }

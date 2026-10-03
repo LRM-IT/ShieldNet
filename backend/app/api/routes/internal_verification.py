@@ -40,6 +40,7 @@ async def internal_settings(guild_id: int, session: AsyncSession = Depends(get_d
     return {"enabled": item.enabled, "invocation_channel_id": str(item.invocation_channel_id) if item.invocation_channel_id else None,
             "text_commands": item.text_commands, "slash_command_name": item.slash_command_name,
             "channel_cleanup_minutes": item.channel_cleanup_minutes, "auto_approve": item.auto_approve,
+            "cleanup_excluded_message_ids": item.cleanup_excluded_message_ids,
             "review_channel_id": str(item.review_channel_id) if item.review_channel_id else None,
             "nickname_template": item.nickname_template}
 

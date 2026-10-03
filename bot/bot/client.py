@@ -1018,7 +1018,8 @@ class ShieldNetBot(discord.Client):
                 if channel is None:
                     channel = await guild.fetch_channel(int(channel_id))
                 cutoff = discord.utils.utcnow() - timedelta(minutes=minutes)
-                deleted = await channel.purge(before=cutoff, limit=None, bulk=True, reason="GuildConsole verification channel cleanup")
+                excluded = {value.strip() for value in (config.get("cleanup_excluded_message_ids") or "").split(",") if value.strip()}
+                deleted = await channel.purge(before=cutoff, limit=None, check=lambda message: str(message.id) not in excluded, bulk=True, reason="GuildConsole verification channel cleanup")
                 if deleted:
                     logger.info("Verification channel cleaned: guild=%s channel=%s messages=%s", guild.id, channel_id, len(deleted))
             except Exception:

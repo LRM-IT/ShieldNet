@@ -57,6 +57,8 @@ class VerificationSettings(Base):
     text_commands: Mapped[str] = mapped_column(String(255), nullable=False, server_default="!verify")
     slash_command_name: Mapped[str] = mapped_column(String(32), nullable=False, server_default="verify")
     channel_cleanup_minutes: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
+    instruction_text: Mapped[str] = mapped_column(Text, nullable=False, server_default="")
+    cleanup_excluded_message_ids: Mapped[str] = mapped_column(Text, nullable=False, server_default="")
     nickname_template: Mapped[str] = mapped_column(
         String(128),
         nullable=False,

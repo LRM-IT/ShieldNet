@@ -515,6 +515,15 @@
     "deleted_success": "Automation rule deleted."
   },
   "verification": {
+    "cleanup_excluded_ids": "Von der Bereinigung ausgeschlossene Nachrichten",
+    "cleanup_excluded_help": "Nachrichten-IDs durch Kommas trennen. Veröffentlichte Anleitungen werden automatisch hinzugefügt.",
+    "instruction_text": "Verifizierungsanleitung",
+    "instruction_help": "Discord-Markdown wird unterstützt. {command} steht für den aktuellen Befehl.",
+    "instruction_publish": "Anleitung speichern und veröffentlichen",
+    "instruction_pending": "Veröffentlichung eingereiht.",
+    "instruction_published": "Anleitung veröffentlicht und vor Bereinigung geschützt.",
+    "instruction_error": "Anleitung konnte nicht veröffentlicht werden.",
+
     "image_load_error": "Das Referenzbild konnte nicht geladen werden.",
     "image_retry": "Bild erneut laden",
     "title": "Verifizierung",

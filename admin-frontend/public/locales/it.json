@@ -513,6 +513,15 @@
     "deleted_success": "Automation rule deleted."
   },
   "verification": {
+    "cleanup_excluded_ids": "Messaggi esclusi dalla pulizia",
+    "cleanup_excluded_help": "Separa gli ID con virgole. Le istruzioni pubblicate vengono aggiunte automaticamente.",
+    "instruction_text": "Istruzioni di verifica",
+    "instruction_help": "Markdown di Discord supportato. {command} indica il comando attuale.",
+    "instruction_publish": "Salva e pubblica le istruzioni",
+    "instruction_pending": "Pubblicazione in coda.",
+    "instruction_published": "Istruzioni pubblicate e protette dalla pulizia.",
+    "instruction_error": "Impossibile pubblicare le istruzioni.",
+
     "image_load_error": "Impossibile caricare l’immagine di riferimento.",
     "image_retry": "Riprova a caricare l’immagine",
     "title": "Verifica",

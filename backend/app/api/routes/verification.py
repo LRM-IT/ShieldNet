@@ -14,6 +14,7 @@ from app.api.dependencies.guild_access import (
 )
 from app.db.session import get_db_session
 from app.models.core import User
+from app.models.role_channel_management import DiscordStructureChange
 from app.models.verification import (
     VerificationDecision,
     VerificationRequest,
@@ -30,6 +31,48 @@ from app.schemas.verification import (
 from app.services.audit_service import AuditService
 
 router = APIRouter(tags=["Verification"])
+
+
+@router.post("/discord/guilds/{guild_id}/verification/instruction/publish")
+async def publish_instruction(guild_id: int, current_user: User = Depends(get_current_user), session: AsyncSession = Depends(get_db_session)):
+    await require_guild_management(session, current_user, guild_id)
+    settings = await session.scalar(select(VerificationSettings).where(VerificationSettings.guild_id == guild_id).with_for_update())
+    if not settings or not settings.invocation_channel_id or not settings.instruction_text.strip():
+        raise HTTPException(422, "Save the verification channel and instruction text first")
+    existing = await session.scalar(select(DiscordStructureChange).where(
+        DiscordStructureChange.guild_id == guild_id,
+        DiscordStructureChange.object_type == "verification_instruction",
+        DiscordStructureChange.status == "pending",
+    ).limit(1))
+    if existing:
+        return {"job_id": str(existing.id)}
+    previous = await session.scalar(select(DiscordStructureChange).where(
+        DiscordStructureChange.guild_id == guild_id,
+        DiscordStructureChange.object_type == "verification_instruction",
+        DiscordStructureChange.status == "completed",
+    ).order_by(DiscordStructureChange.created_at.desc()).limit(1))
+    result = (previous.payload or {}).get("_result", {}) if previous else {}
+    channel_id = str(settings.invocation_channel_id)
+    message_id = result.get("message_id") if str(result.get("channel_id")) == channel_id else None
+    job = DiscordStructureChange(guild_id=guild_id, object_type="verification_instruction", operation="publish",
+        payload={"channel_id": channel_id, "message_id": message_id,
+                 "text": settings.instruction_text.replace("{command}", "/" + settings.slash_command_name)},
+        preview={"safe_to_apply": True}, status="pending", requested_by=current_user.id)
+    session.add(job)
+    await session.commit()
+    return {"job_id": str(job.id)}
+
+
+@router.get("/discord/guilds/{guild_id}/verification/instruction/jobs/{job_id}")
+async def instruction_status(guild_id: int, job_id: uuid.UUID, current_user: User = Depends(get_current_user), session: AsyncSession = Depends(get_db_session)):
+    await require_guild_management(session, current_user, guild_id)
+    job = await session.get(DiscordStructureChange, job_id)
+    if not job or job.guild_id != guild_id or job.object_type != "verification_instruction":
+        raise HTTPException(404, "Publication job not found")
+    item = await session.scalar(select(VerificationSettings).where(VerificationSettings.guild_id == guild_id))
+    return {"status": job.status, "error": job.result_message,
+            "cleanup_excluded_message_ids": item.cleanup_excluded_message_ids if item else "",
+            **((job.payload or {}).get("_result") or {})}
 
 
 def serialize_request(item: VerificationRequest) -> dict:
@@ -98,6 +141,8 @@ async def get_settings(
         "text_commands": item.text_commands,
         "slash_command_name": item.slash_command_name,
         "channel_cleanup_minutes": item.channel_cleanup_minutes,
+        "instruction_text": item.instruction_text,
+        "cleanup_excluded_message_ids": item.cleanup_excluded_message_ids,
         "nickname_template": item.nickname_template,
         "auto_approve": item.auto_approve,
         "alliance_min_length": item.alliance_min_length,

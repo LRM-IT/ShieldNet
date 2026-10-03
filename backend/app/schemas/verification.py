@@ -13,6 +13,16 @@ class VerificationSettingsInput(BaseModel):
     text_commands: str = Field(default="!verify", max_length=255)
     slash_command_name: str = Field(default="verify", min_length=1, max_length=32)
     channel_cleanup_minutes: int = Field(default=0, ge=0, le=10080)
+    instruction_text: str = Field(default="", max_length=3500)
+    cleanup_excluded_message_ids: str = Field(default="", max_length=6000)
+
+    @field_validator("cleanup_excluded_message_ids")
+    @classmethod
+    def valid_excluded_ids(cls, value: str) -> str:
+        ids = list(dict.fromkeys(part.strip() for part in value.replace("\n", ",").split(",") if part.strip()))
+        if len(ids) > 200 or any(not re.fullmatch(r"[0-9]{1,19}", item) or not 0 < int(item) < 2**63 for item in ids):
+            raise ValueError("Enter up to 200 Discord message IDs separated by commas")
+        return ",".join(ids)
     nickname_template: str = Field(
         default="[{alliance}] {nickname}",
         min_length=3,

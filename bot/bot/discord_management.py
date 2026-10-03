@@ -60,6 +60,24 @@ class DiscordManagementWorker:
                 description = (data.get("description") or "").strip()
                 await guild.edit(**kwargs)
                 result = {"guild_id": str(guild.id), "name": kwargs["name"], "description": description, "game": data.get("game") or ""}
+            elif kind == "verification_instruction" and op == "publish":
+                channel = guild.get_channel_or_thread(int(data["channel_id"]))
+                if channel is None:
+                    channel = await guild.fetch_channel(int(data["channel_id"]))
+                if not isinstance(channel, (discord.TextChannel, discord.Thread)):
+                    raise RuntimeError("Select a text channel or thread for verification")
+                embed = discord.Embed(title="✅ Server verification", description=data["text"], colour=0x21CBB8)
+                message = None
+                if data.get("message_id"):
+                    try:
+                        message = await channel.fetch_message(int(data["message_id"]))
+                    except discord.NotFound:
+                        pass
+                if message is not None and message.author.id == self.bot.user.id:
+                    await message.edit(content=None, embed=embed, allowed_mentions=discord.AllowedMentions.none())
+                else:
+                    message = await channel.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
+                result = {"message_id": str(message.id), "channel_id": str(channel.id)}
             elif kind == "language_panel" and op == "publish":
                 message = await self.bot.language_selection.publish_panel(guild, data["group_id"])
                 result = {"message_id": str(message.id), "channel_id": str(message.channel.id)}

@@ -515,6 +515,15 @@
     "deleted_success": "Automation rule deleted."
   },
   "verification": {
+    "cleanup_excluded_ids": "الرسائل المستثناة من التنظيف",
+    "cleanup_excluded_help": "افصل معرفات الرسائل بفواصل. تضاف التعليمات المنشورة تلقائيًا.",
+    "instruction_text": "تعليمات التحقق",
+    "instruction_help": "يدعم تنسيق Discord. يُستبدل {command} بالأمر الحالي.",
+    "instruction_publish": "حفظ التعليمات ونشرها",
+    "instruction_pending": "تمت إضافة النشر إلى قائمة الانتظار.",
+    "instruction_published": "تم نشر التعليمات وحمايتها من التنظيف.",
+    "instruction_error": "تعذر نشر التعليمات.",
+
     "image_load_error": "تعذر تحميل الصورة المرجعية.",
     "image_retry": "إعادة تحميل الصورة",
     "title": "التحقق",

@@ -513,6 +513,15 @@
     "deleted_success": "Automation rule deleted."
   },
   "verification": {
+    "cleanup_excluded_ids": "Messages excluded from cleanup",
+    "cleanup_excluded_help": "Message IDs separated by commas. Published instructions are added automatically.",
+    "instruction_text": "Verification instructions",
+    "instruction_help": "Discord Markdown is supported. Use {command} for the current slash command.",
+    "instruction_publish": "Save and publish instructions",
+    "instruction_pending": "Publication queued.",
+    "instruction_published": "Instructions published and protected from cleanup.",
+    "instruction_error": "Unable to publish instructions.",
+
     "image_load_error": "Unable to load the reference image.",
     "image_retry": "Retry loading image",
     "title": "Verification",

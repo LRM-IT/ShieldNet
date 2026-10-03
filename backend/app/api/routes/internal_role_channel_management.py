@@ -7,6 +7,7 @@ from app.api.dependencies.internal import verify_internal_service_token
 from app.db.session import get_db_session
 from app.models.role_channel_management import DiscordStructureChange, DiscordBulkRoleOperation
 from app.models.plugins import GuildPluginInstallation
+from app.models.verification import VerificationSettings
 from app.schemas.role_channel_management import StructureResultRequest, BulkRoleResultRequest
 from app.api.routes.plugin_first_introduction import _groups
 
@@ -45,6 +46,13 @@ async def pending(guild_id: list[int] = Query(...), limit: int = Query(25, ge=1,
 async def change_result(item_id: uuid.UUID, payload: StructureResultRequest, session: AsyncSession = Depends(get_db_session)):
     item = await session.get(DiscordStructureChange, item_id)
     if not item: raise HTTPException(404, "Change not found")
+    if payload.status == "completed" and item.object_type == "verification_instruction":
+        settings = await session.scalar(select(VerificationSettings).where(VerificationSettings.guild_id == item.guild_id).with_for_update())
+        message_id = str(payload.data.get("message_id") or "")
+        if not settings or not message_id.isdigit() or str(payload.data.get("channel_id")) != str(item.payload.get("channel_id")):
+            raise HTTPException(422, "Invalid instruction publication result")
+        ids = [value.strip() for value in (settings.cleanup_excluded_message_ids or "").split(",") if value.strip()]
+        settings.cleanup_excluded_message_ids = ",".join(dict.fromkeys([*ids, message_id]))
     item.status = payload.status; item.result_message = payload.message; item.payload = {**(item.payload or {}), "_result": payload.data}; item.completed_at = datetime.now(UTC)
     if (payload.status == "completed" and item.payload.get("_plugin") == "first_introduction"
             and item.payload.get("language_code") and payload.data.get("role_id")):

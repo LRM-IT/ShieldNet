@@ -21,6 +21,8 @@ class ChannelCleanup:
             return response.json()
 
     async def run_due(self, guild: discord.Guild) -> None:
+        verification = await self.bot.verification.settings(guild.id)
+        excluded_ids = {value.strip() for value in (verification.get("cleanup_excluded_message_ids") or "").split(",") if value.strip()}
         claim = await self.request("POST", f"/guilds/{guild.id}/claim")
         if not claim.get("claimed"):
             return
@@ -29,7 +31,7 @@ class ChannelCleanup:
         errors: list[str] = []
         for target in claim.get("targets") or []:
             try:
-                result = await self._clean_target(guild, target)
+                result = await self._clean_target(guild, target, excluded_ids)
                 deleted += result[0]
                 scanned += result[1]
             except Exception as exc:
@@ -45,7 +47,7 @@ class ChannelCleanup:
             },
         )
 
-    async def _clean_target(self, guild: discord.Guild, target: dict) -> tuple[int, int]:
+    async def _clean_target(self, guild: discord.Guild, target: dict, excluded_ids: set[str] | None = None) -> tuple[int, int]:
         channel_id = int(target["channel_id"])
         channel = guild.get_channel_or_thread(channel_id)
         if channel is None:
@@ -62,20 +64,20 @@ class ChannelCleanup:
             deleted = 0
             scanned = 0
             for thread in threads.values():
-                count = await self._purge(thread, cutoff, keep_pinned)
+                count = await self._purge(thread, cutoff, keep_pinned, excluded_ids)
                 deleted += count
                 scanned += 1
             return deleted, scanned
         if isinstance(channel, (discord.TextChannel, discord.Thread)):
-            return await self._purge(channel, cutoff, keep_pinned), 1
+            return await self._purge(channel, cutoff, keep_pinned, excluded_ids), 1
         raise RuntimeError("Only text channels, forum channels and threads are supported")
 
     @staticmethod
-    async def _purge(channel: discord.TextChannel | discord.Thread, cutoff: datetime, keep_pinned: bool) -> int:
+    async def _purge(channel: discord.TextChannel | discord.Thread, cutoff: datetime, keep_pinned: bool, excluded_ids: set[str] | None = None) -> int:
         deleted = await channel.purge(
             limit=None,
             before=cutoff,
-            check=lambda message: not (keep_pinned and message.pinned),
+            check=lambda message: str(message.id) not in (excluded_ids or set()) and not (keep_pinned and message.pinned),
             bulk=True,
             reason="GuildConsole Channel Cleanup retention policy",
         )
