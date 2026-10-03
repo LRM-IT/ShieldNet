@@ -2502,6 +2502,8 @@
     "retry": "Relancer"
   },
   "welcome": {
+    "reminder_message": "Message de rappel",
+    "reminder_help": "Envoyé après le premier message de bienvenue. Accepte les mêmes variables indiquées ci-dessus.",
     "title": "Bienvenue",
     "eyebrow": "PLUGIN GUILDCONSOLE",
     "description": "Accueillez les nouveaux membres et dirigez-les vers la vérification.",

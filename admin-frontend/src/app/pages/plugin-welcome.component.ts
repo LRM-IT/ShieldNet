@@ -22,6 +22,7 @@ interface Settings {
   verification_channel_id:string|null;
   required_role_id:string|null;
   message_template:string;
+  reminder_template:string;
   repeat_enabled:boolean;
   repeat_minutes:number;
   max_reminders:number;
@@ -107,6 +108,12 @@ interface Settings {
               <input type="checkbox" [(ngModel)]="settings.repeat_enabled" name="repeat_enabled">
               {{'welcome.repeat_until_role'|snT:'Repeat until the required role is received'}}
             </label>
+            <label class="field">
+              {{'welcome.reminder_message'|snT:'Reminder message'}}
+              <textarea [(ngModel)]="settings.reminder_template" name="reminder_template"
+                        rows="7" maxlength="2000" required data-no-auto-translate></textarea>
+              <span class="hint">{{'welcome.reminder_help'|snT:'Used after the first welcome message. Supports the same variables listed above.'}}</span>
+            </label>
             <div class="grid">
               <label>{{'welcome.repeat_minutes'|snT:'Repeat every, minutes'}}
                 <input type="number" min="1" max="1440"
@@ -142,6 +149,10 @@ interface Settings {
               <div>
                 <div class="author"><strong>GuildConsole</strong><span>BOT</span><small>{{'welcome.preview_time'|snT:'Today at 12:00'}}</small></div>
                 <div class="message" data-no-auto-translate>{{preview()}}</div>
+                @if(settings.repeat_enabled){
+                  <h4>{{'welcome.reminder_message'|snT:'Reminder message'}}</h4>
+                  <div class="message" data-no-auto-translate>{{preview(true)}}</div>
+                }
               </div>
             </div>
           </section>
@@ -205,6 +216,7 @@ export class PluginWelcomeComponent implements OnInit{
     enabled:true,welcome_channel_id:null,verification_channel_id:null,
     required_role_id:null,
     message_template:this.defaultMessage,
+    reminder_template:"⏰ Verification reminder, {mention}!\n\nYou have not completed verification yet. Please go to {verification_channel} and use the verification command to submit your details.\n\nComplete verification to access **{guild}**. If you need help, contact a moderator.",
     repeat_enabled:true,repeat_minutes:5,max_reminders:12,
     delete_after_verified:true,ignore_bots:true
   };
@@ -220,9 +232,9 @@ export class PluginWelcomeComponent implements OnInit{
     const q=this.roleSearch.trim().toLowerCase();
     return this.roles().filter(r=>r.name!=='@everyone'&&(!q||r.name.toLowerCase().includes(q)||r.id.includes(q))).slice(0,50);
   }
-  preview(){
+  preview(reminder=false){
     const wc=this.channels().find(x=>x.id===this.settings.verification_channel_id);
-    return this.settings.message_template
+    return (reminder?this.settings.reminder_template:this.settings.message_template)
       .replaceAll('{mention}','@NewMember')
       .replaceAll('{username}','newmember')
       .replaceAll('{display_name}','New Member')

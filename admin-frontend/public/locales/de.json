@@ -2503,6 +2503,8 @@
     "retry": "Erneut ausführen"
   },
   "welcome": {
+    "reminder_message": "Erinnerungsnachricht",
+    "reminder_help": "Wird nach der ersten Begrüßung gesendet. Unterstützt dieselben oben aufgeführten Variablen.",
     "title": "Begrüßung",
     "eyebrow": "GUILDCONSOLE-PLUGIN",
     "description": "Begrüßen Sie neue Mitglieder und leiten Sie sie zur Verifizierung weiter.",

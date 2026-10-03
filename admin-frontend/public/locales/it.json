@@ -2501,6 +2501,8 @@
     "retry": "Riprova"
   },
   "welcome": {
+    "reminder_message": "Messaggio di promemoria",
+    "reminder_help": "Inviato dopo il primo messaggio di benvenuto. Supporta le stesse variabili elencate sopra.",
     "title": "Benvenuto",
     "eyebrow": "PLUGIN GUILDCONSOLE",
     "description": "Accogli i nuovi membri e indirizzali alla verifica.",

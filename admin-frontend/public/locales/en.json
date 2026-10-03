@@ -2461,6 +2461,8 @@
     "retry": "Retry"
   },
   "welcome": {
+    "reminder_message": "Reminder message",
+    "reminder_help": "Used after the first welcome message. Supports the same variables listed above.",
     "title": "Welcome",
     "eyebrow": "GUILDCONSOLE PLUGIN",
     "description": "Welcome new members and redirect them to verification.",

@@ -2501,6 +2501,8 @@
     "retry": "Ponów"
   },
   "welcome": {
+    "reminder_message": "Treść przypomnienia",
+    "reminder_help": "Wysyłana po pierwszym powitaniu. Obsługuje te same zmienne wymienione powyżej.",
     "title": "Powitanie",
     "eyebrow": "WTYCZKA GUILDCONSOLE",
     "description": "Witaj nowych członków i kieruj ich do weryfikacji.",

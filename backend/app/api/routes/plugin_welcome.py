@@ -29,12 +29,15 @@ DEFAULT_MESSAGE = (
     "Please continue to {verification_channel} and complete verification."
 )
 
+DEFAULT_REMINDER = '⏰ Verification reminder, {mention}!\n\nYou have not completed verification yet. Please go to {verification_channel} and use the verification command to submit your details.\n\nComplete verification to access **{guild}**. If you need help, contact a moderator.'
+
 class WelcomeSettings(BaseModel):
     enabled: bool = True
     welcome_channel_id: int | None = None
     verification_channel_id: int | None = None
     required_role_id: int | None = None
     message_template: str = Field(default=DEFAULT_MESSAGE, min_length=1, max_length=2000)
+    reminder_template: str = Field(default=DEFAULT_REMINDER, min_length=1, max_length=2000)
     repeat_enabled: bool = True
     repeat_minutes: int = Field(default=5, ge=1, le=1440)
     max_reminders: int = Field(default=12, ge=0, le=1000)
@@ -84,7 +87,7 @@ async def get_settings(
         await session.execute(
             text("""
                 SELECT enabled,welcome_channel_id,verification_channel_id,
-                       required_role_id,message_template,repeat_enabled,
+                       required_role_id,message_template,reminder_template,repeat_enabled,
                        repeat_minutes,max_reminders,delete_after_verified,
                        ignore_bots
                 FROM plugin_welcome.settings
@@ -166,11 +169,11 @@ async def save_settings(
         text("""
             INSERT INTO plugin_welcome.settings(
                 guild_id,enabled,welcome_channel_id,verification_channel_id,
-                required_role_id,message_template,repeat_enabled,repeat_minutes,
+                required_role_id,message_template,reminder_template,repeat_enabled,repeat_minutes,
                 max_reminders,delete_after_verified,ignore_bots,updated_at
             ) VALUES(
                 :guild_id,:enabled,:welcome_channel_id,:verification_channel_id,
-                :required_role_id,:message_template,:repeat_enabled,:repeat_minutes,
+                :required_role_id,:message_template,:reminder_template,:repeat_enabled,:repeat_minutes,
                 :max_reminders,:delete_after_verified,:ignore_bots,now()
             )
             ON CONFLICT(guild_id) DO UPDATE SET
@@ -179,6 +182,7 @@ async def save_settings(
                 verification_channel_id=excluded.verification_channel_id,
                 required_role_id=excluded.required_role_id,
                 message_template=excluded.message_template,
+                reminder_template=excluded.reminder_template,
                 repeat_enabled=excluded.repeat_enabled,
                 repeat_minutes=excluded.repeat_minutes,
                 max_reminders=excluded.max_reminders,
@@ -222,7 +226,7 @@ async def internal_settings(
         await session.execute(
             text("""
                 SELECT enabled,welcome_channel_id,verification_channel_id,
-                       required_role_id,message_template,repeat_enabled,
+                       required_role_id,message_template,reminder_template,repeat_enabled,
                        repeat_minutes,max_reminders,delete_after_verified,
                        ignore_bots
                 FROM plugin_welcome.settings
@@ -348,7 +352,7 @@ async def due(guild_id: list[int] = Query(default=[]), session: AsyncSession = D
                 SELECT t.id,t.guild_id,t.user_id,t.username,t.display_name,
                        t.guild_name,t.sent_count,
                        s.welcome_channel_id,s.verification_channel_id,
-                       s.required_role_id,s.message_template,
+                       s.required_role_id,s.message_template,s.reminder_template,
                        s.repeat_enabled,s.repeat_minutes,s.max_reminders
                 FROM plugin_welcome.tasks t
                 JOIN plugin_welcome.settings s ON s.guild_id=t.guild_id
@@ -380,7 +384,10 @@ async def due(guild_id: list[int] = Query(default=[]), session: AsyncSession = D
         {"id": row["id"], "minutes": int(row["repeat_minutes"])},
     )
     await session.commit()
-    return {"item": dict(row)}
+    item = dict(row)
+    if item["sent_count"] > 0:
+        item["message_template"] = item["reminder_template"]
+    return {"item": item}
 
 @internal_router.post("/message-result")
 async def message_result(
