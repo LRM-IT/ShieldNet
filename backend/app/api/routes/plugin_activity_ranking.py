@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import math
+
 from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File, Response
 from pathlib import Path
 from io import BytesIO
@@ -84,12 +86,21 @@ def level_for(points: float, settings: dict) -> int:
     return max(1, int((max(0.0, points) / base) ** (1 / growth)) + 1)
 
 
+def level_progress(points: float, settings: dict) -> dict:
+    level = level_for(points, settings)
+    target = max(1, settings["level_base_points"]) * level ** max(1.0, settings["level_growth"])
+    remaining = max(0.0, target - points)
+    per_message = settings["message_points"]
+    return {"next_level": level + 1, "xp_to_next_level": round(remaining, 2),
+            "messages_to_next_level": max(1, math.ceil(remaining / per_message)) if per_message > 0 else None}
+
+
 async def leaderboard(session: AsyncSession, guild_id: int, item, limit: int = 100) -> list[dict]:
     scores = (item.configuration or {}).get("scores", {}) if item else {}
     members = (await session.execute(select(DiscordMember).where(DiscordMember.guild_id == guild_id, DiscordMember.discord_user_id.in_([int(key) for key in scores] or [0])))).scalars().all()
     names = {str(member.discord_user_id): member.global_name or member.username for member in members}
     settings = config(item)
-    rows = [{"discord_user_id": user_id, "name": names.get(user_id, f"User {user_id}"), **values, "level": level_for(float(values.get("points", 0)), settings)} for user_id, values in scores.items()]
+    rows = [{"discord_user_id": user_id, "name": names.get(user_id, f"User {user_id}"), **values, **level_progress(float(values.get("points", 0)), settings), "level": level_for(float(values.get("points", 0)), settings)} for user_id, values in scores.items()]
     rows.sort(key=lambda value: (-float(value.get("points", 0)), value["name"].casefold()))
     return [{"rank": index + 1, **value} for index, value in enumerate(rows[:limit])]
 

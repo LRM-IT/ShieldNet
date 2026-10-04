@@ -1,5 +1,8 @@
 {
   "activity_levels": {
+    "to_next_level": "Messages to next level",
+    "message_xp_off": "Message XP disabled",
+    "remaining_help": "Remaining messages are estimated from current XP and XP per message. Only messages awarded XP after the cooldown count; voice activity can reduce the remaining total.",
     "background_title": "Level-up card background",
     "background_help": "Upload PNG, JPEG or WebP up to 8 MB and 20 megapixels. Recommended ratio: 3:1 (1200 × 400). Saved immediately for this server.",
     "background_upload": "Upload background",
