@@ -227,9 +227,7 @@ async def save_settings(guild_id: int, payload: SettingsInput,
         data["role_name_mask"] = role_name_mask
         old = previous.get(group.id) or {}
         data["message_id"] = (old.get("message_id") if
-                              old.get("channel_id") == group.channel_id and
-                              old.get("language_roles") == data["language_roles"] and
-                              bool(old.get("multiple_selection", False)) == group.multiple_selection else None)
+                              old.get("channel_id") == group.channel_id else None)
         saved.append(data)
     installation.configuration = {**(installation.configuration or {}), "groups": saved}
     await session.commit()

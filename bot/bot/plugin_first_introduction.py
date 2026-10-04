@@ -47,25 +47,36 @@ class LanguageSelection:
         if not lines or any(not item["flag"] for item in languages):
             raise ValueError("Every language needs a flag")
         selection_hint = "React with one or more flags:" if group.get("multiple_selection") else "React with one flag:"
-        message = await channel.send(f"**{group['name']} — Choose your language**\n{selection_hint}\n" + "\n".join(lines))
+        content = f"**{group['name']} — Choose your language**\n{selection_hint}\n" + "\n".join(lines)
+        message = None
+        if group.get("message_id"):
+            try:
+                message = await channel.fetch_message(int(group["message_id"]))
+            except discord.NotFound:
+                pass
+        created = message is None
+        if created:
+            message = await channel.send(content)
+        else:
+            await message.edit(content=content)
         try:
+            desired_flags = {item["flag"] for item in languages}
+            existing_flags = {str(reaction.emoji) for reaction in message.reactions if reaction.me}
             for item in languages:
-                await message.add_reaction(item["flag"])
+                if item["flag"] not in existing_flags:
+                    await message.add_reaction(item["flag"])
+            for reaction in message.reactions:
+                if str(reaction.emoji) not in desired_flags:
+                    await message.clear_reaction(reaction.emoji)
             async with httpx.AsyncClient(timeout=20) as client:
                 response = await client.post(f"{self.base}/panel", headers=self.headers, json={
                     "guild_id": guild.id, "group_id": group["id"], "channel_id": str(channel_id), "message_id": str(message.id),
                 })
                 response.raise_for_status()
         except Exception:
-            await message.delete()
+            if created:
+                await message.delete()
             raise
-        previous_id = group.get("message_id")
-        if previous_id and str(message.id) != previous_id:
-            try:
-                previous = await channel.fetch_message(int(previous_id))
-                await previous.delete()
-            except discord.HTTPException:
-                logger.warning("Could not remove prior language panel guild=%s message=%s", guild.id, previous_id)
         if group.get("default_language_code"):
             asyncio.create_task(self.sync_default_roles(guild, group["id"]))
         return message
