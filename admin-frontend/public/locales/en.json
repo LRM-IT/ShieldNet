@@ -1,5 +1,13 @@
 {
   "activity_levels": {
+    "background_title": "Level-up card background",
+    "background_help": "Upload PNG, JPEG or WebP up to 8 MB and 20 megapixels. Recommended ratio: 3:1 (1200 × 400). Saved immediately for this server.",
+    "background_upload": "Upload background",
+    "background_default": "The standard background is active.",
+    "background_reset": "Restore standard background",
+    "background_saved": "Background saved. New level-up cards will use it.",
+    "background_restored": "Standard background restored.",
+    "background_error": "Could not load or save the background. Use PNG, JPEG or WebP up to 8 MB and 20 megapixels.",
     "title": "Levels & Rewards",
     "eyebrow": "GUILD PLUGIN",
     "description": "Award XP for useful chat and voice participation, then grant roles at selected levels.",

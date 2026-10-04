@@ -43,7 +43,14 @@ class ActivityRanking:
    try:
     try:avatar=await member.display_avatar.with_size(256).with_static_format('png').read()
     except Exception:avatar=None
-    card=await asyncio.to_thread(render_level_card,avatar,member.display_name,level,[role.name for role in roles])
+    background=None
+    if result.get('background_id'):
+     try:
+      async with httpx.AsyncClient(timeout=10) as client:
+       response=await client.get(f'{self.base}/guilds/{member.guild.id}/background',headers=self.headers)
+       response.raise_for_status();background=response.content
+     except Exception:logger.warning("Custom level background unavailable guild=%s",member.guild.id)
+    card=await asyncio.to_thread(render_level_card,avatar,member.display_name,level,[role.name for role in roles],background)
     embed.set_image(url='attachment://level-up.png')
    except Exception:
     logger.exception("Could not render level card guild=%s member=%s",member.guild.id,member.id)

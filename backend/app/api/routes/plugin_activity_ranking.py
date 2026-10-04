@@ -1,6 +1,10 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File, Response
+from pathlib import Path
+from io import BytesIO
+from uuid import uuid4, UUID
+from PIL import Image, ImageOps
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -56,6 +60,7 @@ async def installation(session: AsyncSession, guild_id: int, lock: bool = False)
 def config(item) -> dict:
     raw = item.configuration or {} if item else {}
     return {
+        "background_id": raw.get("background_id"),
         "message_points": int(raw.get("message_points", 1)),
         "voice_points_per_minute": float(raw.get("voice_points_per_minute", .2)),
         "message_cooldown_seconds": int(raw.get("message_cooldown_seconds", 60)),
@@ -147,6 +152,7 @@ async def activity(payload: ActivityInput, session: AsyncSession = Depends(get_d
     reward_role_ids = [str(reward.get("role_id")) for reward in settings["reward_roles"] if reward.get("role_id") and int(reward.get("level", 0)) <= level]
     return {
         "recorded": True,
+        "background_id": settings.get("background_id"),
         "score": {**score, "level": level},
         "leveled_up": level > previous_level,
         "reward_role_ids": reward_role_ids,
@@ -157,3 +163,82 @@ async def activity(payload: ActivityInput, session: AsyncSession = Depends(get_d
         "announcement_channel_id": settings["announcement_channel_id"],
         "announcement_message": settings["announcement_message"],
     }
+
+
+BACKGROUND_ROOT = Path("/var/lib/shieldnet/templates/level-backgrounds")
+
+
+def normalize_background(content: bytes) -> bytes:
+    try:
+        with Image.open(BytesIO(content)) as image:
+            if image.format not in {"PNG", "JPEG", "WEBP"} or image.width * image.height > 20_000_000:
+                raise ValueError("Unsupported image")
+            image = ImageOps.fit(ImageOps.exif_transpose(image).convert("RGB"), (1200, 400), method=Image.Resampling.LANCZOS)
+            output = BytesIO()
+            image.save(output, "JPEG", quality=92)
+            return output.getvalue()
+    except Exception as exc:
+        raise HTTPException(422, "Upload a valid PNG, JPEG or WebP image (up to 20 megapixels)") from exc
+
+
+@router.post("/discord/guilds/{guild_id}/plugins/activity-ranking/background")
+async def upload_background(guild_id: int, file: UploadFile = File(...), user: User = Depends(get_current_user), session: AsyncSession = Depends(get_db_session)):
+    await require_guild_module(session, user, guild_id, "plugins")
+    content = await file.read(8 * 1024 * 1024 + 1)
+    if len(content) > 8 * 1024 * 1024:
+        raise HTTPException(422, "Maximum image size is 8 MB")
+    content = normalize_background(content)
+    item = await installation(session, guild_id, True)
+    if not item:
+        raise HTTPException(409, "Install Activity & Ranking first")
+    folder = BACKGROUND_ROOT / str(guild_id)
+    folder.mkdir(parents=True, exist_ok=True)
+    background_id = str(uuid4())
+    old = (item.configuration or {}).get("background_id")
+    path = folder / f"{background_id}.jpg"
+    path.write_bytes(content)
+    try:
+        item.configuration = {**(item.configuration or {}), "background_id": background_id}
+        await session.commit()
+    except Exception:
+        path.unlink(missing_ok=True)
+        raise
+    if old:
+        (folder / f"{UUID(old)}.jpg").unlink(missing_ok=True)
+    return {"background_id": background_id}
+
+
+@router.delete("/discord/guilds/{guild_id}/plugins/activity-ranking/background")
+async def reset_background(guild_id: int, user: User = Depends(get_current_user), session: AsyncSession = Depends(get_db_session)):
+    await require_guild_module(session, user, guild_id, "plugins")
+    item = await installation(session, guild_id, True)
+    if not item:
+        raise HTTPException(404, "Plugin not found")
+    old = (item.configuration or {}).get("background_id")
+    item.configuration = {**(item.configuration or {}), "background_id": None}
+    await session.commit()
+    if old:
+        (BACKGROUND_ROOT / str(guild_id) / f"{UUID(old)}.jpg").unlink(missing_ok=True)
+    return {"background_id": None}
+
+
+async def background_response(guild_id: int, session: AsyncSession):
+    item = await installation(session, guild_id)
+    background_id = (item.configuration or {}).get("background_id") if item else None
+    if not background_id:
+        raise HTTPException(404, "Background not found")
+    path = BACKGROUND_ROOT / str(guild_id) / f"{UUID(background_id)}.jpg"
+    if not path.exists():
+        raise HTTPException(404, "Background not found")
+    return Response(path.read_bytes(), media_type="image/jpeg", headers={"Cache-Control": "no-store"})
+
+
+@router.get("/discord/guilds/{guild_id}/plugins/activity-ranking/background")
+async def get_background(guild_id: int, user: User = Depends(get_current_user), session: AsyncSession = Depends(get_db_session)):
+    await require_guild_module(session, user, guild_id, "plugins")
+    return await background_response(guild_id, session)
+
+
+@internal_router.get("/guilds/{guild_id}/background")
+async def internal_background(guild_id: int, session: AsyncSession = Depends(get_db_session)):
+    return await background_response(guild_id, session)

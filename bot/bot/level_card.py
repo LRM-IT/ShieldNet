@@ -20,8 +20,8 @@ def fit(draw, value, width, size):
     return font(size)
 
 
-def render_level_card(avatar_bytes: bytes | None, display_name: str, level: int, role_names: list[str]) -> bytes:
-    image = Image.open(ASSETS / "level-background.png").convert("RGBA").resize((1200, 400), Image.Resampling.LANCZOS)
+def render_level_card(avatar_bytes: bytes | None, display_name: str, level: int, role_names: list[str], background_bytes: bytes | None = None) -> bytes:
+    image = Image.open(BytesIO(background_bytes) if background_bytes else ASSETS / "level-background.png").convert("RGBA").resize((1200, 400), Image.Resampling.LANCZOS)
     shade = Image.new("RGBA", image.size, (12, 8, 30, 75))
     image = Image.alpha_composite(image, shade)
     draw = ImageDraw.Draw(image)

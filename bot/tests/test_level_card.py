@@ -15,6 +15,9 @@ def test_cards_render_with_and_without_roles():
         assert Image.open(BytesIO(data)).size==(1200,400)
         assert len(data)<8_000_000
     assert render_level_card(b'bad image','Test',120,[])
+    custom=render_level_card(None,'Test',4,[],avatar.getvalue())
+    assert Image.open(BytesIO(custom)).size==(1200,400)
+    assert custom != render_level_card(None,'Test',4,[])
 
 
 def test_rewards_only_show_after_success_and_all_destinations_get_fresh_files():
@@ -32,7 +35,7 @@ def test_rewards_only_show_after_success_and_all_destinations_get_fresh_files():
             'announce_level_up':True,'announce_in_reply':True,'announce_in_dm':True,'announce_in_channel':True,'announcement_channel_id':'9'}
         with patch('bot.plugin_activity_ranking.render_level_card',return_value=b'png') as render:
             await ActivityRanking(None).apply_rewards(member,result,source)
-            assert render.call_args.args[-1]==([] if fail else ['Chat Enjoyer'])
+            assert render.call_args.args[3]==([] if fail else ['Chat Enjoyer'])
         files=[send.call_args.kwargs['file'] for send in (source.reply,member.send,channel.send)]
         assert len({id(f) for f in files})==3
         assert all(f.filename=='level-up.png' for f in files)
