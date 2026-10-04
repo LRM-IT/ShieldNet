@@ -1,8 +1,13 @@
 from __future__ import annotations
 from datetime import UTC,datetime
+import asyncio
+import logging
+from io import BytesIO
+from bot.level_card import render_level_card
 import httpx
 import discord
 from bot.config import settings
+logger = logging.getLogger(__name__)
 class ActivityRanking:
  def __init__(self,bot):self.bot=bot;self.base=settings.backend_url.rstrip('/')+'/api/v1/internal/plugin-activity-ranking';self.headers={'X-ShieldNet-Service-Token':settings.internal_service_token};self.cooldowns={};self.voice={}
  async def request(self,method,path,**kwargs):
@@ -27,18 +32,32 @@ class ActivityRanking:
   current={str(role.id)for role in member.roles};roles=[member.guild.get_role(int(role_id))for role_id in result.get('reward_role_ids',[])if str(role_id)not in current];roles=[role for role in roles if role is not None]
   if roles:
    try:await member.add_roles(*roles,reason=f"ShieldNet level {result.get('score',{}).get('level',1)} reward")
-   except Exception:pass
+   except Exception:
+    logger.exception("Could not grant level rewards guild=%s member=%s",member.guild.id,member.id)
+    roles=[]
   if result.get('leveled_up')and result.get('announce_level_up'):
    score=result.get('score',{});level=score.get('level',1);text=str(result.get('announcement_message')or'🎉 {member} reached level {level}!').replace('{member}',member.mention).replace('{level}',str(level)).replace('{xp}',str(score.get('points',0)))
-   embed=discord.Embed(title=f'🏆 Level {level}',description=text,colour=discord.Colour.purple());embed.set_author(name=member.display_name,icon_url=member.display_avatar.url);embed.add_field(name='XP',value=f"{score.get('points',0):g}");embed.add_field(name='Reward roles',value=', '.join(role.mention for role in roles)or'—')
+   embed=discord.Embed(description=text,colour=discord.Colour.purple())
+   if roles:embed.add_field(name='Your new role' if len(roles)==1 else 'Your new roles',value=', '.join(role.mention for role in roles)[:1024],inline=False)
+   card=None
+   try:
+    try:avatar=await member.display_avatar.with_size(256).with_static_format('png').read()
+    except Exception:avatar=None
+    card=await asyncio.to_thread(render_level_card,avatar,member.display_name,level,[role.name for role in roles])
+    embed.set_image(url='attachment://level-up.png')
+   except Exception:
+    logger.exception("Could not render level card guild=%s member=%s",member.guild.id,member.id)
+    embed.title=f'Level {level}'
+   async def deliver(send,**kwargs):
+    try:
+     # Discord closes each attachment after delivery; use fresh bytes per destination.
+     if card:kwargs['file']=discord.File(BytesIO(card),filename='level-up.png')
+     await send(embed=embed,**kwargs)
+    except Exception:logger.exception("Could not send level announcement guild=%s member=%s",member.guild.id,member.id)
    if result.get('announce_in_reply')and source_message is not None:
-    try:await source_message.reply(embed=embed,mention_author=False)
-    except Exception:pass
+    await deliver(source_message.reply,mention_author=False)
    if result.get('announce_in_dm'):
-    try:await member.send(embed=embed)
-    except Exception:pass
+    await deliver(member.send)
    if result.get('announce_in_channel')and result.get('announcement_channel_id'):
     channel=member.guild.get_channel(int(result['announcement_channel_id']))
-    if channel and hasattr(channel,'send'):
-     try:await channel.send(embed=embed)
-     except Exception:pass
+    if channel and hasattr(channel,'send'):await deliver(channel.send)
