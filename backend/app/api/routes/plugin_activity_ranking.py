@@ -98,7 +98,7 @@ def level_progress(points: float, settings: dict) -> dict:
 async def leaderboard(session: AsyncSession, guild_id: int, item, limit: int = 100) -> list[dict]:
     scores = (item.configuration or {}).get("scores", {}) if item else {}
     members = (await session.execute(select(DiscordMember).where(DiscordMember.guild_id == guild_id, DiscordMember.discord_user_id.in_([int(key) for key in scores] or [0])))).scalars().all()
-    names = {str(member.discord_user_id): member.global_name or member.username for member in members}
+    names = {str(member.discord_user_id): member.nickname or member.global_name or member.username for member in members}
     settings = config(item)
     rows = [{"discord_user_id": user_id, "name": names.get(user_id, f"User {user_id}"), **values, **level_progress(float(values.get("points", 0)), settings), "level": level_for(float(values.get("points", 0)), settings)} for user_id, values in scores.items()]
     rows.sort(key=lambda value: (-float(value.get("points", 0)), value["name"].casefold()))
