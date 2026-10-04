@@ -249,8 +249,11 @@ async def publish_language_panel(guild_id: int, payload: PublishInput,
     if not group or not group.get("channel_id") or not group.get("access_role_id"):
         raise HTTPException(422, "Configure and enable this language group first")
     languages = await _languages(session, guild_id)
-    if set(group.get("language_roles") or {}) != {item["code"] for item in languages}:
-        raise HTTPException(422, "Create or select all language roles first")
+    selected_codes = set(group.get("language_roles") or {})
+    if not selected_codes or not selected_codes.issubset({item["code"] for item in languages}):
+        raise HTTPException(422, "Select at least one configured language role first")
+    if group.get("default_language_code") and group["default_language_code"] not in selected_codes:
+        raise HTTPException(422, "Select a role for the default language or disable the default language")
     pending = await session.scalar(select(DiscordStructureChange).where(
         DiscordStructureChange.guild_id == guild_id,
         DiscordStructureChange.object_type == "language_panel",

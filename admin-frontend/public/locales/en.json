@@ -2335,6 +2335,8 @@
     "error_source_option": "Source option {number} is missing."
   },
   "language_plugin": {
+    "skip_language": "Do not use this language",
+    "optional_languages": "Select roles only for the languages you need. Languages without a role are not published. Automatic role creation creates roles for all server languages.",
     "eyebrow": "GUILD PLUGIN",
     "title": "Language Selection",
     "description": "Independent language panels and roles for each access level.",

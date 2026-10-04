@@ -2377,6 +2377,8 @@
     "error_source_option": "Ausgangsantwort {number} fehlt."
   },
   "language_plugin": {
+    "skip_language": "Diese Sprache nicht verwenden",
+    "optional_languages": "Wählen Sie nur Rollen für gewünschte Sprachen. Sprachen ohne Rolle werden nicht veröffentlicht. Die automatische Erstellung erstellt Rollen für alle Serversprachen.",
     "eyebrow": "SERVER-PLUGIN",
     "title": "Sprachauswahl",
     "description": "Eigene Sprachbereiche und Rollen für jede Zugriffsebene.",

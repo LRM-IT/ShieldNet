@@ -2375,6 +2375,8 @@
     "error_source_option": "Manca la risposta di origine {number}."
   },
   "language_plugin": {
+    "skip_language": "Non usare questa lingua",
+    "optional_languages": "Seleziona solo i ruoli delle lingue desiderate. Le lingue senza ruolo non vengono pubblicate. La creazione automatica crea ruoli per tutte le lingue del server.",
     "eyebrow": "PLUGIN DEL SERVER",
     "title": "Selezione lingua",
     "description": "Pannelli e ruoli linguistici separati per ogni livello di accesso.",

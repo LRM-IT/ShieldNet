@@ -42,13 +42,14 @@ class LanguageSelection:
             channel = await self.bot.fetch_channel(channel_id)
         if not isinstance(channel, (discord.TextChannel, discord.Thread)) or channel.guild.id != guild.id:
             raise ValueError("Configured channel or thread is unavailable")
-        lines = [f'{item["flag"]} — {item["name"]}' for item in config["languages"]]
-        if not lines or any(not item["flag"] for item in config["languages"]):
+        languages = [item for item in config["languages"] if (group.get("language_roles") or {}).get(item["code"])]
+        lines = [f'{item["flag"]} — {item["name"]}' for item in languages]
+        if not lines or any(not item["flag"] for item in languages):
             raise ValueError("Every language needs a flag")
         selection_hint = "React with one or more flags:" if group.get("multiple_selection") else "React with one flag:"
         message = await channel.send(f"**{group['name']} — Choose your language**\n{selection_hint}\n" + "\n".join(lines))
         try:
-            for item in config["languages"]:
+            for item in languages:
                 await message.add_reaction(item["flag"])
             async with httpx.AsyncClient(timeout=20) as client:
                 response = await client.post(f"{self.base}/panel", headers=self.headers, json={

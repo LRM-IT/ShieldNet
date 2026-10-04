@@ -54,9 +54,10 @@ interface Settings { installed: boolean; enabled: boolean; languages: Language[]
             <div class="preview">@for (language of settings.languages; track language.code) { <small>{{language.code}} → {{rolePreview(group, language)}}</small> }</div>
             <button (click)="ensureRoles(group)" [disabled]="busy() || !settings.languages.length">{{provisioning() === group.id ? ('language_plugin.creating_roles'|snT:'Creating roles…') : ('language_plugin.ensure_roles'|snT:'Find or create roles')}}</button>
           </div>
+          <p>{{'language_plugin.optional_languages'|snT:'Select roles only for the languages you need. Languages without a role are not published. Automatic role creation creates roles for all server languages.'}}</p>
           @for (language of settings.languages; track language.code) {
             <label>{{language.flag || ('language_plugin.no_flag'|snT:'No flag')}} {{language.name}} ({{language.code}})
-              <select [(ngModel)]="group.language_roles[language.code]"><option value="">{{'language_plugin.select_role'|snT:'Select a role'}}</option>
+              <select [(ngModel)]="group.language_roles[language.code]"><option value="">{{'language_plugin.skip_language'|snT:'Do not use this language'}}</option>
                 @for (role of assignableRoles(); track role.id) { <option [value]="role.id">{{role.name}}</option> }</select></label>
           } @empty { <p>{{'language_plugin.configure_languages_first'|snT:'Configure the server languages first.'}}</p> }
           @if (group.message_id) { <p>{{'language_plugin.published_panel'|snT:'Published panel'}}: {{group.message_id}}</p> }

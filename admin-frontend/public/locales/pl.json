@@ -2375,6 +2375,8 @@
     "error_source_option": "Brakuje odpowiedzi źródłowej {number}."
   },
   "language_plugin": {
+    "skip_language": "Nie używaj tego języka",
+    "optional_languages": "Wybierz role tylko dla potrzebnych języków. Języki bez roli nie są publikowane. Automatyczne tworzenie obejmuje wszystkie języki serwera.",
     "eyebrow": "WTYCZKA SERWERA",
     "title": "Wybór języka",
     "description": "Oddzielne panele językowe i role dla każdego poziomu dostępu.",
