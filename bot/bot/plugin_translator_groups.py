@@ -103,6 +103,14 @@ class TranslatorGroups:
         config = await self.configuration(message.guild.id)
         if not config["enabled"]:
             return
+        # Count each original message once, independent of target count and AI/cache outcome.
+        if any(group.get("enabled") and any(str(binding.get("channel_id")) == str(message.channel.id) for binding in group.get("channels", [])) for group in config.get("groups", [])):
+            try:
+                async with httpx.AsyncClient(timeout=5) as client:
+                    response = await client.post(f"{self.base}/guilds/{message.guild.id}/incoming", headers=self.headers, json={"channel_id":str(message.channel.id),"message_id":str(message.id)})
+                    response.raise_for_status()
+            except Exception:
+                logger.exception("Could not record translation traffic guild=%s channel=%s",message.guild.id,message.channel.id)
         forward_replies = bool(config.get("forward_replies", False))
         if forward_replies:
             await self._remember_source(message)

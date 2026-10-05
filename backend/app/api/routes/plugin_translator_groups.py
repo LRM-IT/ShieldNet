@@ -7,7 +7,7 @@ from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field, field_validator
-from sqlalchemy import delete, desc, func, or_, select
+from sqlalchemy import delete, desc, func, or_, select, text
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from redis.asyncio import Redis
@@ -353,3 +353,51 @@ async def unbind_channel(guild_id: int, group_name: str, channel_id: str, sessio
     installation.configuration = {**config, "groups": groups}
     await session.commit()
     return {"removed": True}
+
+
+class IncomingMessage(BaseModel):
+    channel_id: int = Field(gt=0, le=2**63-1)
+    message_id: int = Field(gt=0, le=2**63-1)
+
+
+@internal_router.post("/guilds/{guild_id}/incoming")
+async def record_incoming(guild_id: int, payload: IncomingMessage, session: AsyncSession = Depends(get_db_session)):
+    item = await _installation(session, guild_id)
+    groups = (item.configuration or {}).get("groups", []) if item else []
+    active = any(group.get("enabled") and any(str(c.get("channel_id")) == str(payload.channel_id) for c in group.get("channels", [])) for group in groups)
+    if not item or not item.enabled or not active:
+        return {"recorded": False}
+    result = await session.execute(text("""
+        INSERT INTO discord.translation_incoming(guild_id,message_id,channel_id)
+        VALUES(:guild_id,:message_id,:channel_id)
+        ON CONFLICT(guild_id,message_id) DO NOTHING RETURNING message_id
+    """), {"guild_id":guild_id, **payload.model_dump()})
+    recorded = result.scalar_one_or_none() is not None
+    await session.commit()
+    return {"recorded": recorded}
+
+
+@router.get("/discord/guilds/{guild_id}/plugins/translator-groups/statistics")
+async def traffic_statistics(guild_id: int, user: User = Depends(get_current_user), session: AsyncSession = Depends(get_db_session)):
+    await require_guild_module(session,user,guild_id,"plugins")
+    item = await _installation(session,guild_id)
+    groups = (item.configuration or {}).get("groups", []) if item else []
+    channels = {}
+    for group in groups:
+        for binding in group.get("channels", []):
+            channel_id = str(binding["channel_id"])
+            row = channels.setdefault(channel_id,{"channel_id":channel_id,"groups":[],"total":0,"day":0,"week":0,"month":0})
+            if group.get("name") not in row["groups"]:row["groups"].append(group.get("name", ""))
+    rows = (await session.execute(text("""
+        SELECT channel_id,count(*) AS total,
+          count(*) FILTER(WHERE received_at >= now()-interval '24 hours') AS day,
+          count(*) FILTER(WHERE received_at >= now()-interval '7 days') AS week,
+          count(*) FILTER(WHERE received_at >= now()-interval '30 days') AS month
+        FROM discord.translation_incoming WHERE guild_id=:guild_id GROUP BY channel_id
+    """),{"guild_id":guild_id})).mappings().all()
+    for row in rows:
+        channel_id=str(row["channel_id"])
+        channels.setdefault(channel_id,{"channel_id":channel_id,"groups":[]}).update({k:row[k] for k in ("total","day","week","month")})
+    names = dict((await session.execute(select(GuildChannel.discord_channel_id,GuildChannel.name).where(GuildChannel.guild_id==guild_id))).all())
+    for row in channels.values():row["name"]=names.get(int(row["channel_id"]),row["channel_id"])
+    return {"items":sorted(channels.values(),key=lambda row:(-row["total"],row["name"])),"total":sum(row["total"] for row in channels.values())}

@@ -30,6 +30,17 @@ interface CacheStats { entries:number;hits:number;global_hits:number;misses:numb
         <section class="panel"><p>{{'translator_groups.install_hint'|snT:'Install this plugin to configure translation groups.'}}</p>
           <button (click)="install()" [disabled]="busy()">{{'translator_groups.install'|snT:'Install plugin'}}</button></section>
       } @else {
+        <nav class="actions"><button [class.secondary]="activeTab() !== 'settings'" (click)="activeTab.set('settings')">{{'translator_groups.settings_tab'|snT}}</button><button [class.secondary]="activeTab() !== 'statistics'" (click)="showStatistics()">{{'translator_groups.statistics_tab'|snT}}</button></nav>
+        @if (activeTab() === 'statistics') {
+          <section class="panel"><div class="heading"><h3>{{'translator_groups.statistics_tab'|snT}}</h3><button (click)="loadStatistics()" [disabled]="statsLoading()">{{'translator_groups.stats_refresh'|snT}}</button></div>
+          <p>{{'translator_groups.stats_help'|snT}}</p>
+          @if(statsError()){<p class="error">{{statsError()}}</p>}
+          @if(statsLoading()){<p>{{'translator_groups.stats_loading'|snT}}</p>}
+          <p>{{'translator_groups.stats_total'|snT}}: <strong>{{trafficTotal()}}</strong></p>
+          <div class="traffic-table"><table><thead><tr><th>{{'translator_groups.channel'|snT}}</th><th>{{'translator_groups.groups'|snT}}</th><th>{{'translator_groups.stats_day'|snT}}</th><th>{{'translator_groups.stats_week'|snT}}</th><th>{{'translator_groups.stats_month'|snT}}</th><th>{{'translator_groups.stats_all'|snT}}</th></tr></thead><tbody>
+          @for(row of traffic();track row.channel_id){<tr><td><strong>#{{row.name}}</strong><br><small>{{row.channel_id}}</small></td><td>{{row.groups.join(', ') || '—'}}</td><td>{{row.day}}</td><td>{{row.week}}</td><td>{{row.month}}</td><td><strong>{{row.total}}</strong></td></tr>}@empty{<tr><td colspan="6">{{'translator_groups.stats_empty'|snT}}</td></tr>}
+          </tbody></table></div></section>
+        } @else {
         <section class="panel"><div class="heading"><div><h3>{{'translator_groups.setup'|snT:'Translation setup'}}</h3>
           <p>{{'translator_groups.setup_help'|snT:'Configure the translation route and provider in AI Center. Server Languages controls the available language codes.'}}</p></div>
           </div>
@@ -73,10 +84,12 @@ interface CacheStats { entries:number;hits:number;global_hits:number;misses:numb
         <section class="panel"><h3>{{'translator_groups.commands'|snT:'Basic Discord commands'}}</h3><p>{{'translator_groups.commands_help'|snT:'Administrators can use /group_add, /group_language in a channel, and /group_unlanguage. All other settings stay here.'}}</p>
           <p>{{'translator_groups.requirements'|snT:'The bot needs Message Content access and permission to manage webhooks in target channels. Translation does not run until this plugin and the AI Center translation route are enabled.'}}</p></section>
         <button class="save" (click)="save()" [disabled]="busy()">{{'translator_groups.save'|snT:'Save settings'}}</button>
+        }
       }
     </main></sn-shell>
   `,
   styles: [`
+.traffic-table{overflow-x:auto}table{width:100%;border-collapse:collapse;min-width:680px}th,td{padding:.85rem;text-align:left;border-bottom:1px solid var(--line)}th{color:var(--muted)}
     .page{max-width:1050px;margin:auto;display:grid;gap:1rem;padding-bottom:3rem}
     header span{color:var(--primary);font-size:.7rem;font-weight:800;letter-spacing:.12em}.header-row,.plugin-state{display:flex;align-items:center;justify-content:space-between;gap:1rem}.plugin-state{justify-content:flex-end;flex-wrap:wrap}.plugin-state strong{padding:.45rem .7rem;border:1px solid var(--line);border-radius:999px;color:var(--muted)}.plugin-state strong.active{color:var(--primary);border-color:var(--primary)}
     h2{margin:.3rem 0;font-size:1.8rem}h3{margin:0 0 .6rem}p{color:var(--muted);margin:.3rem 0 1rem}
@@ -93,6 +106,12 @@ interface CacheStats { entries:number;hits:number;global_hits:number;misses:numb
   `],
 })
 export class PluginTranslatorGroupsComponent implements OnInit {
+  readonly activeTab=signal<'settings'|'statistics'>('settings');
+  readonly traffic=signal<{channel_id:string;name:string;groups:string[];day:number;week:number;month:number;total:number}[]>([]);
+  readonly trafficTotal=signal(0);readonly statsLoading=signal(false);readonly statsError=signal('');
+  showStatistics(){this.activeTab.set('statistics');void this.loadStatistics();}
+  async loadStatistics(){if(this.statsLoading())return;this.statsLoading.set(true);this.statsError.set('');try{const data=await firstValueFrom(this.http.get<{items:any[];total:number}>(this.url.replace('/settings','/statistics')));this.traffic.set(data.items);this.trafficTotal.set(data.total);}catch{this.statsError.set(this.i18n.t('translator_groups.stats_error'));}finally{this.statsLoading.set(false);}}
+
   private readonly http = inject(HttpClient);
   private readonly route = inject(ActivatedRoute);
   private readonly plugins = inject(GuildPluginService);

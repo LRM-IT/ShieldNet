@@ -2102,6 +2102,18 @@
     "invite_unavailable": "Invitation unavailable"
   },
   "translator_groups": {
+    "settings_tab": "Settings",
+    "statistics_tab": "Statistics",
+    "stats_refresh": "Refresh",
+    "stats_help": "Incoming participant messages in enabled translation-group channels. Each original is counted once, including attachments, regardless of translation outcome. Collection starts with this update; older messages are not included.",
+    "stats_total": "Total incoming messages",
+    "stats_day": "24 hours",
+    "stats_week": "7 days",
+    "stats_month": "30 days",
+    "stats_all": "All time",
+    "stats_empty": "No channels or messages yet.",
+    "stats_loading": "Loading statistics…",
+    "stats_error": "Could not load statistics.",
     "title": "Translator Groups",
     "eyebrow": "GUILD PLUGIN",
     "description": "Messages in one language channel are translated into the other channels of its group through AI Center.",
