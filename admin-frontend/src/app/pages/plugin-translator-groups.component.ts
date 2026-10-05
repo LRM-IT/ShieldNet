@@ -60,7 +60,7 @@ interface CacheStats { entries:number;hits:number;global_hits:number;misses:numb
                         <sn-discord-channel-picker [guildId]="guildId" [value]="binding.channel_id" [showHint]="false" [allowedTypes]="['text','guild_text','0','news','announcement','guild_announcement','5']" (valueChange)="binding.channel_id=$event || ''" />
                       </label>
                       <label>{{'translator_groups.language'|snT:'Language'}}<select [(ngModel)]="binding.language"><option value="">{{'translator_groups.select_language'|snT:'Select language'}}</option>
-                        @for (language of settings.languages; track language.code) { <option [value]="language.code">{{ language.name }} ({{ language.code }})</option> }
+                        @for (language of settings.languages; track language.code) { <option [value]="language.code" translate="no" data-no-auto-translate>{{ language.name }} ({{ language.code }})</option> }
                       </select></label>
                       <button class="secondary remove" (click)="group.channels.splice(bi, 1)">{{'translator_groups.remove'|snT:'Remove'}}</button></div>
                   }

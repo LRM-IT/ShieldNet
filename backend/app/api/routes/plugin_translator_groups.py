@@ -124,7 +124,7 @@ async def _installation(session: AsyncSession, guild_id: int) -> GuildPluginInst
 
 async def _languages(session: AsyncSession, guild_id: int) -> list[dict]:
     rows = (await session.execute(
-        select(GlobalLanguage.code, GlobalLanguage.native_name)
+        select(GlobalLanguage.code, GlobalLanguage.name)
         .join(GuildLanguage, GuildLanguage.language_code == GlobalLanguage.code)
         .where(GuildLanguage.guild_id == guild_id, GuildLanguage.enabled.is_(True), GlobalLanguage.is_active.is_(True))
         .order_by(GuildLanguage.sort_order, GlobalLanguage.name)
