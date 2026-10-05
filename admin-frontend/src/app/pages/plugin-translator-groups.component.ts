@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute } from '@angular/router';
@@ -9,6 +9,7 @@ import { TranslatePipe } from '../core/translate.pipe';
 import { TranslationService } from '../core/translation.service';
 import { DiscordChannelPickerComponent } from '../shared/discord-channel-picker.component';
 
+type TrafficSort = 'name'|'groups'|'day'|'week'|'month'|'total';
 interface Language { code: string; name: string; }
 interface Binding { channel_id: string; language: string; }
 interface Group { name: string; enabled: boolean; channels: Binding[]; expanded?: boolean; }
@@ -37,8 +38,8 @@ interface CacheStats { entries:number;hits:number;global_hits:number;misses:numb
           @if(statsError()){<p class="error">{{statsError()}}</p>}
           @if(statsLoading()){<p>{{'translator_groups.stats_loading'|snT}}</p>}
           <p>{{'translator_groups.stats_total'|snT}}: <strong>{{trafficTotal()}}</strong></p>
-          <div class="traffic-table"><table><thead><tr><th>{{'translator_groups.channel'|snT}}</th><th>{{'translator_groups.groups'|snT}}</th><th>{{'translator_groups.stats_day'|snT}}</th><th>{{'translator_groups.stats_week'|snT}}</th><th>{{'translator_groups.stats_month'|snT}}</th><th>{{'translator_groups.stats_all'|snT}}</th></tr></thead><tbody>
-          @for(row of traffic();track row.channel_id){<tr><td><strong>#{{row.name}}</strong><br><small>{{row.channel_id}}</small></td><td>{{row.groups.join(', ') || '—'}}</td><td>{{row.day}}</td><td>{{row.week}}</td><td>{{row.month}}</td><td><strong>{{row.total}}</strong></td></tr>}@empty{<tr><td colspan="6">{{'translator_groups.stats_empty'|snT}}</td></tr>}
+          <div class="traffic-table"><table><thead><tr><th [attr.aria-sort]="sortKey()==='name'?(sortDescending()?'descending':'ascending'):'none'"><button class="sort-button" (click)="sortTraffic('name')">{{'translator_groups.channel'|snT}} <span aria-hidden="true">{{sortKey()==='name'?(sortDescending()?'▼':'▲'):'↕'}}</span></button></th><th [attr.aria-sort]="sortKey()==='groups'?(sortDescending()?'descending':'ascending'):'none'"><button class="sort-button" (click)="sortTraffic('groups')">{{'translator_groups.groups'|snT}} <span aria-hidden="true">{{sortKey()==='groups'?(sortDescending()?'▼':'▲'):'↕'}}</span></button></th><th [attr.aria-sort]="sortKey()==='day'?(sortDescending()?'descending':'ascending'):'none'"><button class="sort-button" (click)="sortTraffic('day')">{{'translator_groups.stats_day'|snT}} <span aria-hidden="true">{{sortKey()==='day'?(sortDescending()?'▼':'▲'):'↕'}}</span></button></th><th [attr.aria-sort]="sortKey()==='week'?(sortDescending()?'descending':'ascending'):'none'"><button class="sort-button" (click)="sortTraffic('week')">{{'translator_groups.stats_week'|snT}} <span aria-hidden="true">{{sortKey()==='week'?(sortDescending()?'▼':'▲'):'↕'}}</span></button></th><th [attr.aria-sort]="sortKey()==='month'?(sortDescending()?'descending':'ascending'):'none'"><button class="sort-button" (click)="sortTraffic('month')">{{'translator_groups.stats_month'|snT}} <span aria-hidden="true">{{sortKey()==='month'?(sortDescending()?'▼':'▲'):'↕'}}</span></button></th><th [attr.aria-sort]="sortKey()==='total'?(sortDescending()?'descending':'ascending'):'none'"><button class="sort-button" (click)="sortTraffic('total')">{{'translator_groups.stats_all'|snT}} <span aria-hidden="true">{{sortKey()==='total'?(sortDescending()?'▼':'▲'):'↕'}}</span></button></th></tr></thead><tbody>
+          @for(row of sortedTraffic();track row.channel_id){<tr><td><strong>#{{row.name}}</strong><br><small>{{row.channel_id}}</small></td><td>{{row.groups.join(', ') || '—'}}</td><td>{{row.day}}</td><td>{{row.week}}</td><td>{{row.month}}</td><td><strong>{{row.total}}</strong></td></tr>}@empty{<tr><td colspan="6">{{'translator_groups.stats_empty'|snT}}</td></tr>}
           </tbody></table></div></section>
         } @else {
         <section class="panel"><div class="heading"><div><h3>{{'translator_groups.setup'|snT:'Translation setup'}}</h3>
@@ -89,7 +90,7 @@ interface CacheStats { entries:number;hits:number;global_hits:number;misses:numb
     </main></sn-shell>
   `,
   styles: [`
-.traffic-table{overflow-x:auto}table{width:100%;border-collapse:collapse;min-width:680px}th,td{padding:.85rem;text-align:left;border-bottom:1px solid var(--line)}th{color:var(--muted)}
+.traffic-table{overflow-x:auto}.traffic-table .sort-button{display:flex;align-items:center;gap:.4rem;padding:.3rem 0;border:0;background:transparent;color:inherit;white-space:nowrap}.traffic-table .sort-button:focus-visible{outline:2px solid var(--primary);outline-offset:4px}.sort-button span{color:var(--primary)}table{width:100%;border-collapse:collapse;min-width:680px}th,td{padding:.85rem;text-align:left;border-bottom:1px solid var(--line)}th{color:var(--muted)}
     .page{max-width:1050px;margin:auto;display:grid;gap:1rem;padding-bottom:3rem}
     header span{color:var(--primary);font-size:.7rem;font-weight:800;letter-spacing:.12em}.header-row,.plugin-state{display:flex;align-items:center;justify-content:space-between;gap:1rem}.plugin-state{justify-content:flex-end;flex-wrap:wrap}.plugin-state strong{padding:.45rem .7rem;border:1px solid var(--line);border-radius:999px;color:var(--muted)}.plugin-state strong.active{color:var(--primary);border-color:var(--primary)}
     h2{margin:.3rem 0;font-size:1.8rem}h3{margin:0 0 .6rem}p{color:var(--muted);margin:.3rem 0 1rem}
@@ -108,6 +109,15 @@ interface CacheStats { entries:number;hits:number;global_hits:number;misses:numb
 export class PluginTranslatorGroupsComponent implements OnInit {
   readonly activeTab=signal<'settings'|'statistics'>('settings');
   readonly traffic=signal<{channel_id:string;name:string;groups:string[];day:number;week:number;month:number;total:number}[]>([]);
+  readonly sortKey=signal<TrafficSort>('total');readonly sortDescending=signal(true);
+  readonly sortedTraffic=computed(()=>{
+    const key=this.sortKey(),direction=this.sortDescending()?-1:1;
+    return [...this.traffic()].sort((a,b)=>{
+      const comparison=key==='name'?a.name.localeCompare(b.name,undefined,{numeric:true,sensitivity:'base'}):key==='groups'?a.groups.join(', ').localeCompare(b.groups.join(', '),undefined,{numeric:true,sensitivity:'base'}):a[key]-b[key];
+      return direction*comparison || a.name.localeCompare(b.name,undefined,{numeric:true,sensitivity:'base'}) || a.channel_id.localeCompare(b.channel_id);
+    });
+  });
+  sortTraffic(key:TrafficSort){if(this.sortKey()===key)this.sortDescending.update(value=>!value);else{this.sortKey.set(key);this.sortDescending.set(key!=='name'&&key!=='groups');}}
   readonly trafficTotal=signal(0);readonly statsLoading=signal(false);readonly statsError=signal('');
   showStatistics(){this.activeTab.set('statistics');void this.loadStatistics();}
   async loadStatistics(){if(this.statsLoading())return;this.statsLoading.set(true);this.statsError.set('');try{const data=await firstValueFrom(this.http.get<{items:any[];total:number}>(this.url.replace('/settings','/statistics')));this.traffic.set(data.items);this.trafficTotal.set(data.total);}catch{this.statsError.set(this.i18n.t('translator_groups.stats_error'));}finally{this.statsLoading.set(false);}}
