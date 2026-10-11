@@ -35,7 +35,7 @@ def language_for(survey, role_ids, groups, locale):
 
 def embed(survey, language):
     text = survey["translations"][language]
-    result = discord.Embed(title=("💡 " + text["title"])[:256], description=text["description"], color=0x21CBB8)
+    result = discord.Embed(title=("💡 " + text["title"]) if len(text["title"])<=253 else text["title"], description=text["description"], color=0x21CBB8)
     # Stable marker allows recovery if Discord accepted a send but acknowledgement failed.
     result.set_footer(text="GuildConsole · " + survey["id"])
     return result

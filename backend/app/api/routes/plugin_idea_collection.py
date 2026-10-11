@@ -25,11 +25,11 @@ internal_router = APIRouter(prefix="/internal/idea-collection/guilds/{guild_id}"
 class SurveyText(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True)
     title: str = Field(min_length=1, max_length=256)
-    description: str = Field(min_length=1, max_length=4000)
+    description: str = Field(min_length=1, max_length=4096)
     button: str = Field(default="Answer now", min_length=1, max_length=80)
     label: str = Field(default="Your idea", min_length=1, max_length=45)
     placeholder: str = Field(default="What would you like to see on our server?", max_length=100)
-    thanks: str = Field(default="Thank you! Your idea has been sent to the server team.", min_length=1, max_length=1000)
+    thanks: str = Field(default="Thank you! Your idea has been sent to the server team.", min_length=1, max_length=2000)
 
 
 class SurveyInput(BaseModel):

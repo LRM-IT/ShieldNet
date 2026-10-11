@@ -28,6 +28,19 @@ def test_validation():
         raise AssertionError("Whitespace answer accepted")
 
 
+def test_discord_field_boundaries():
+    limits = {"title": 256, "description": 4096, "button": 80, "label": 45,
+              "placeholder": 100, "thanks": 2000}
+    for field, limit in limits.items():
+        values = {"title": "Ideas", "description": "Question", field: "x" * limit}
+        assert len(getattr(api.SurveyText(**values), field)) == limit
+        try:
+            api.SurveyText(**{**values, field: "x" * (limit + 1)})
+        except ValidationError:
+            continue
+        raise AssertionError(f"Accepted oversized {field}")
+
+
 def test_closed_and_cross_guild():
     async def run():
         session = AsyncMock()
