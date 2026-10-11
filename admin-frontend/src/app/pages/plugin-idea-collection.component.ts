@@ -50,7 +50,7 @@ interface SurveyText { title: string; description: string; button: string; label
           @for(survey of surveys; track survey.id){<article class="survey">
             <div><strong>{{survey.translations[survey.primary_language].title}}</strong><p>{{t(survey.job_status)}} · {{survey.response_count}} {{t('responses')}}</p>@if(survey.error){<p class="error">{{survey.error}}</p>}</div>
             <div class="actions"><button class="secondary" [disabled]="busy" (click)="edit(survey)">{{t('edit')}}</button><button class="secondary" (click)="showResponses(survey.id)">{{t('responses')}}</button><button class="secondary" [disabled]="busy || !survey.active" (click)="close(survey)">{{t('close')}}</button>@if(survey.message_id){<a [href]="'https://discord.com/channels/'+guildId+'/'+survey.channel_id+'/'+survey.message_id" target="_blank" rel="noopener">Discord ↗</a>}</div>
-          } @empty {<p>{{t('empty')}}</p>}
+          </article>} @empty {<p>{{t('empty')}}</p>}
         </section>
       } @else {
         <section class="card editor"><div class="actions"><h3>{{t('responses')}} ({{responseTotal}})</h3><button class="secondary" [disabled]="busy" (click)="loadResponses()">{{t('refresh')}}</button></div>
