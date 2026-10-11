@@ -2,7 +2,7 @@ import asyncio
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock
 import discord
-from bot.plugin_idea_collection import language_for, SurveyButton, IdeaModal, private_view, IdeaCollectionWorker
+from bot.plugin_idea_collection import language_for, SurveyButton, IdeaModal, private_view, IdeaCollectionWorker, ui_text, UI_TEXT
 
 
 def survey():
@@ -27,6 +27,10 @@ def test_persistent_button_and_private_form():
         assert button.item.custom_id=="gc_idea:"+data['id']
         view=private_view(None,data,'ru')
         assert view.children[-1].label=='Ответить сейчас'
+        assert view.children[0].placeholder=='🌐 Выберите язык'
+        for code in ['en','ru','uk','de','fr','it','pl','ar']:
+            assert ui_text(code, 'language') and ui_text(code, 'unavailable')
+        assert ui_text('fr-FR','language')==UI_TEXT['fr']['language']
         worker=SimpleNamespace(request=AsyncMock())
         modal=IdeaModal(worker,data,'ru',77)
         modal.idea._value='A suggestion'

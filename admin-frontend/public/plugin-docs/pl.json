@@ -161,6 +161,11 @@
           "body": "Obecna strona skupia się na kolejce spraw, odpowiedzialności, priorytetach, terminach, statystykach i obciążeniu moderatorów. API obsługuje również zgłoszenia, dowody, notatki, sankcje, szablony i odwołania; część funkcji może być dostępna w powiązanych ekranach lub przyszłych aktualizacjach."
         }
       ]
+    },
+    "idea_collection": {
+      "purpose": "Zbieraj propozycje członków za pomocą wielojęzycznych ankiet i prywatnych formularzy.",
+      "configuration": "1. Zainstaluj i włącz Zbieranie pomysłów. 2. Utwórz ankietę i wybierz kanał tekstowy lub istniejący wątek forum. 3. Ustaw język publiczny, tytuł, pytanie, tekst przycisku, etykietę pola i potwierdzenie. 4. Dodaj języki ręcznie albo skonfiguruj własny klucz API i trasę tłumaczenia w Centrum AI, a następnie wybierz „Przetłumacz przez AI”. Sprawdź tłumaczenia. 5. Zapisz i opublikuj. 6. Czytaj propozycje w zakładce „Odpowiedzi”. Zamknij ankietę, aby zakończyć przyjmowanie odpowiedzi; zapisane odpowiedzi pozostają dostępne.",
+      "check": "Kliknij przycisk jako członek serwera. Sprawdź język wybrany na podstawie ról językowych lub języka Discorda i zmień go w razie potrzeby. Otwórz formularz i wyślij pomysł. Sprawdź prywatne potwierdzenie oraz odpowiedź w panelu. Ponowne wysłanie aktualizuje tę samą odpowiedź."
     }
   }
 }

@@ -1,12 +1,19 @@
 """Persistent survey buttons, private language selection and idea forms."""
 import logging
 import re
+import json
+from pathlib import Path
 import discord
 import httpx
 from discord.ext import tasks
 from bot.config import settings
 
 log = logging.getLogger(__name__)
+UI_TEXT = json.loads((Path(__file__).parent / "assets" / "idea-locales.json").read_text(encoding="utf-8"))
+
+
+def ui_text(language, key):
+    return UI_TEXT.get(str(language).lower().split("-")[0], UI_TEXT["en"])[key]
 
 
 def language_for(survey, role_ids, groups, locale):
@@ -34,10 +41,8 @@ def embed(survey, language):
     return result
 
 
-async def unavailable(interaction):
-    messages = {"ru": "Опрос недоступен или закрыт. Попробуйте позже.",
-                "uk": "Опитування недоступне або закрите. Спробуйте пізніше."}
-    text = messages.get(str(interaction.locale).split("-")[0], "This survey is unavailable or closed. Please try again later.")
+async def unavailable(interaction, language=None):
+    text = ui_text(language or interaction.locale, "unavailable")
     if interaction.response.is_done():
         await interaction.followup.send(text, ephemeral=True)
     else:
@@ -55,7 +60,7 @@ class IdeaModal(discord.ui.Modal):
 
     async def on_submit(self, interaction):
         if interaction.user.id != self.user_id or str(interaction.guild_id) != self.survey["guild_id"]:
-            return await unavailable(interaction)
+            return await unavailable(interaction, self.language)
         await interaction.response.defer(ephemeral=True, thinking=True)
         try:
             await self.worker.request("POST", interaction.guild_id, f"/{self.survey['id']}/answer", {
@@ -65,7 +70,7 @@ class IdeaModal(discord.ui.Modal):
                                             ephemeral=True, allowed_mentions=discord.AllowedMentions.none())
         except Exception:
             log.exception("Idea response failed survey=%s", self.survey["id"])
-            await unavailable(interaction)
+            await unavailable(interaction, self.language)
 
 
 class OpenForm(discord.ui.Button):
@@ -79,8 +84,8 @@ class OpenForm(discord.ui.Button):
 
 
 class LanguageSelect(discord.ui.Select):
-    def __init__(self, worker, survey):
-        super().__init__(placeholder="🌐 Language", options=[discord.SelectOption(label=code.upper(), value=code)
+    def __init__(self, worker, survey, language):
+        super().__init__(placeholder="🌐 " + ui_text(language, "language"), options=[discord.SelectOption(label=code.upper(), value=code)
                                                            for code in survey["translations"]])
         self.worker, self.survey = worker, survey
 
@@ -93,7 +98,7 @@ class LanguageSelect(discord.ui.Select):
 def private_view(worker, survey, language):
     view = discord.ui.View(timeout=600)
     if len(survey["translations"]) > 1:
-        view.add_item(LanguageSelect(worker, survey))
+        view.add_item(LanguageSelect(worker, survey, language))
     view.add_item(OpenForm(worker, survey, language))
     return view
 

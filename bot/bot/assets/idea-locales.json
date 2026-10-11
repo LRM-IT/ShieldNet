@@ -1,0 +1,34 @@
+{
+  "en": {
+    "language": "Select language",
+    "unavailable": "This survey is closed or unavailable."
+  },
+  "ru": {
+    "language": "Выберите язык",
+    "unavailable": "Опрос закрыт или недоступен."
+  },
+  "uk": {
+    "language": "Виберіть мову",
+    "unavailable": "Опитування закрите або недоступне."
+  },
+  "de": {
+    "language": "Sprache auswählen",
+    "unavailable": "Diese Umfrage ist geschlossen oder nicht verfügbar."
+  },
+  "fr": {
+    "language": "Choisir une langue",
+    "unavailable": "Ce questionnaire est fermé ou indisponible."
+  },
+  "it": {
+    "language": "Seleziona lingua",
+    "unavailable": "Questo sondaggio è chiuso o non disponibile."
+  },
+  "pl": {
+    "language": "Wybierz język",
+    "unavailable": "Ta ankieta jest zamknięta lub niedostępna."
+  },
+  "ar": {
+    "language": "اختر اللغة",
+    "unavailable": "هذا الاستبيان مغلق أو غير متاح."
+  }
+}

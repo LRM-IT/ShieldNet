@@ -161,6 +161,11 @@
           "body": "La page actuelle se concentre sur la file des dossiers, les responsables, les priorités, les délais, les statistiques et la charge des modérateurs. L’API prend aussi en charge signalements, preuves, notes, sanctions, modèles et appels; certaines fonctions peuvent apparaître dans des écrans associés ou de futures mises à jour."
         }
       ]
+    },
+    "idea_collection": {
+      "purpose": "Recueillez les suggestions des membres avec des questionnaires multilingues et des formulaires privés.",
+      "configuration": "1. Installez et activez la collecte d’idées. 2. Créez un questionnaire et choisissez un salon textuel ou un fil de forum existant. 3. Définissez la langue publique, le titre, la question, le bouton, le libellé du champ et la confirmation. 4. Ajoutez des langues manuellement ou configurez votre clé API et le routage de traduction dans le centre IA, puis utilisez « Traduire avec l’IA ». Vérifiez les traductions. 5. Enregistrez et publiez. 6. Consultez les propositions dans « Réponses ». Fermez le questionnaire pour arrêter les envois ; les réponses restent disponibles.",
+      "check": "Cliquez sur le bouton avec un compte membre. Vérifiez la langue choisie selon les rôles linguistiques ou la langue de Discord et changez-la si nécessaire. Ouvrez le formulaire et envoyez une idée. Vérifiez la confirmation privée et la réponse dans le panneau. Un nouvel envoi met à jour la même réponse."
     }
   }
 }

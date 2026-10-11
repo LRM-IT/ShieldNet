@@ -2904,6 +2904,31 @@
     "pending": "Queued",
     "processing": "Publishing",
     "published": "Published",
-    "closed": "Closed"
+    "closed": "Closed",
+    "defaults": {
+      "title": "Share your ideas",
+      "description": "What would you like to see on our server? Share your ideas and help us make our community better.",
+      "button": "Answer now",
+      "label": "Your idea",
+      "placeholder": "Describe your suggestion…",
+      "thanks": "Thank you! Your idea has been sent to the server team."
+    },
+    "errors": {
+      "install": "Install and enable Idea Collection first.",
+      "missing": "Survey not found.",
+      "channel": "Select a text channel or an existing forum thread.",
+      "wait": "Wait for publication to finish.",
+      "move": "Create a new survey to change the published channel.",
+      "translation": "Translation failed. Check the AI Center translation route, API key and text length.",
+      "closed": "This survey is closed or unavailable.",
+      "language": "Unsupported survey language.",
+      "validation": "Check all required fields, text lengths and the selected channel.",
+      "permission": "You do not have permission to perform this action.",
+      "subscription": "An active subscription is required to enable this plugin.",
+      "publication": "Publication failed. Check bot permissions and the selected channel.",
+      "network": "Unable to connect. Please try again."
+    },
+    "summary": "Collect member ideas through multilingual Discord surveys and private response forms.",
+    "status_failed": "Publication failed"
   }
 }

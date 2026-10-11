@@ -161,6 +161,11 @@
           "body": "La pagina corrente si concentra su coda dei casi, responsabili, priorità, scadenze, statistiche e carico dei moderatori. L’API supporta anche segnalazioni, prove, note, sanzioni, modelli e ricorsi; alcune funzioni possono essere disponibili in schermate collegate o in futuri aggiornamenti."
         }
       ]
+    },
+    "idea_collection": {
+      "purpose": "Raccogli i suggerimenti dei membri tramite sondaggi multilingue e moduli privati.",
+      "configuration": "1. Installa e attiva Raccolta di idee. 2. Crea un sondaggio e scegli un canale testuale o un thread esistente del forum. 3. Imposta la lingua pubblica, il titolo, la domanda, il pulsante, l’etichetta del campo e la conferma. 4. Aggiungi le lingue manualmente oppure configura la tua chiave API e il percorso di traduzione nel Centro IA e usa «Traduci con IA». Controlla le traduzioni. 5. Salva e pubblica. 6. Leggi le proposte in «Risposte». Chiudi il sondaggio per interrompere gli invii; le risposte vengono conservate.",
+      "check": "Premi il pulsante con un account membro. Controlla la lingua selezionata dai ruoli linguistici o dalla lingua di Discord e cambiala se necessario. Apri il modulo e invia un’idea. Verifica la conferma privata e la risposta nel pannello. Un nuovo invio aggiorna la stessa risposta."
     }
   }
 }

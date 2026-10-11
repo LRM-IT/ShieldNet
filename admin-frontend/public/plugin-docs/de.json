@@ -161,6 +161,11 @@
           "body": "Die aktuelle Plugin-Seite konzentriert sich auf Fallwarteschlange, Zuständigkeit, Priorität, Fristen, Statistiken und Moderatorauslastung. Die Plattform-API unterstützt zusätzlich Meldungen, Beweise, Notizen, Sanktionen, Vorlagen und Einsprüche; einige Funktionen können über verbundene Ansichten oder spätere UI-Updates bereitgestellt werden."
         }
       ]
+    },
+    "idea_collection": {
+      "purpose": "Sammelt Vorschläge über mehrsprachige Umfragen und private Formulare.",
+      "configuration": "1. Installiere und aktiviere die Ideensammlung. 2. Erstelle eine Umfrage und wähle einen Textkanal oder bestehenden Forumsthread. 3. Lege die öffentliche Sprache fest und schreibe Titel, Frage, Schaltflächentext, Feldbeschriftung und Bestätigung. 4. Füge Sprachen manuell hinzu oder richte deinen API-Schlüssel und die Übersetzungsroute im KI-Center ein und wähle „Mit KI übersetzen“. Prüfe die Übersetzungen. 5. Speichere und veröffentliche. 6. Lies Vorschläge unter „Antworten“. Schließe die Umfrage, um weitere Antworten zu verhindern; vorhandene Antworten bleiben erhalten.",
+      "check": "Klicke als Mitglied auf die öffentliche Schaltfläche. Prüfe die Sprache anhand der Sprachrolle oder Discord-Sprache und ändere sie bei Bedarf. Öffne das Formular und sende eine Idee. Prüfe die private Bestätigung und die Antwort im Verwaltungsbereich. Erneutes Absenden aktualisiert dieselbe Antwort."
     }
   }
 }

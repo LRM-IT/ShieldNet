@@ -55,7 +55,7 @@ export class PublicDocumentationComponent implements OnInit {
   constructor(readonly i18n:TranslationService,private http:HttpClient){}
   async ngOnInit(){await Promise.all([this.loadPluginDocs(this.i18n.locale()),this.loadModuleTiers()])}
   async changeLocale(locale:string){await this.i18n.setLocale(locale);await this.loadPluginDocs(locale)}
-  async loadPluginDocs(locale:string){try{this.pluginDocs.set(await firstValueFrom(this.http.get<PublicDocsFile>(`/plugin-docs/${locale}.json?v=3`)))}catch{this.pluginDocs.set(await firstValueFrom(this.http.get<PublicDocsFile>('/plugin-docs/en.json?v=3')))}}
+  async loadPluginDocs(locale:string){try{this.pluginDocs.set(await firstValueFrom(this.http.get<PublicDocsFile>(`/plugin-docs/${locale}.json?v=4`)))}catch{this.pluginDocs.set(await firstValueFrom(this.http.get<PublicDocsFile>('/plugin-docs/en.json?v=4')))}}
   async loadModuleTiers(){try{const pricing=await firstValueFrom(this.http.get<PublicPricing>('/api/v1/public/pricing'));this.moduleTiers.set(Object.fromEntries((pricing.modules??[]).map(item=>[item.plugin_key,item.is_free])))}catch{this.moduleTiers.set({})}}
   isFree(key:string){return this.moduleTiers()[key.replaceAll('-','_')]===true}
   replacePlugin(value:string,name:string){return value.replaceAll('{plugin}',name)}
