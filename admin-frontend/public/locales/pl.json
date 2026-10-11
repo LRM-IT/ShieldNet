@@ -2778,9 +2778,12 @@
       "permission": "Nie masz uprawnień do wykonania tej czynności.",
       "subscription": "Do włączenia wtyczki jest wymagana aktywna subskrypcja.",
       "publication": "Publikacja nie powiodła się. Sprawdź uprawnienia bota i wybrany kanał.",
-      "network": "Nie można się połączyć. Spróbuj ponownie."
+      "network": "Nie można się połączyć. Spróbuj ponownie.",
+      "too_long": "Maksymalnie {max} znaków.",
+      "required": "Uzupełnij to pole i sprawdź jego wartość."
     },
     "summary": "Zbieraj pomysły członków przez wielojęzyczne ankiety i prywatne formularze.",
-    "status_failed": "Błąd publikacji"
+    "status_failed": "Błąd publikacji",
+    "translation_review": "Otrzymano tłumaczenie. Sprawdź wskazane pola przed zapisaniem."
   }
 }

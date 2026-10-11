@@ -2780,9 +2780,12 @@
       "permission": "Du hast keine Berechtigung für diese Aktion.",
       "subscription": "Zum Aktivieren des Plugins ist ein aktives Abonnement erforderlich.",
       "publication": "Veröffentlichung fehlgeschlagen. Prüfe Bot-Berechtigungen und den ausgewählten Kanal.",
-      "network": "Verbindung fehlgeschlagen. Bitte erneut versuchen."
+      "network": "Verbindung fehlgeschlagen. Bitte erneut versuchen.",
+      "too_long": "Höchstens {max} Zeichen.",
+      "required": "Fülle dieses Feld aus und prüfe den Wert."
     },
     "summary": "Sammelt Ideen über mehrsprachige Umfragen und private Antwortformulare.",
-    "status_failed": "Veröffentlichung fehlgeschlagen"
+    "status_failed": "Veröffentlichung fehlgeschlagen",
+    "translation_review": "Übersetzung erhalten. Prüfe die angegebenen Felder vor dem Speichern."
   }
 }

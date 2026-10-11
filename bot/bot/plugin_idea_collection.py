@@ -35,7 +35,7 @@ def language_for(survey, role_ids, groups, locale):
 
 def embed(survey, language):
     text = survey["translations"][language]
-    result = discord.Embed(title="💡 " + text["title"], description=text["description"], color=0x21CBB8)
+    result = discord.Embed(title=("💡 " + text["title"])[:256], description=text["description"], color=0x21CBB8)
     # Stable marker allows recovery if Discord accepted a send but acknowledgement failed.
     result.set_footer(text="GuildConsole · " + survey["id"])
     return result
@@ -52,7 +52,7 @@ async def unavailable(interaction, language=None):
 class IdeaModal(discord.ui.Modal):
     def __init__(self, worker, survey, language, user_id):
         text = survey["translations"][language]
-        super().__init__(title=text["title"], timeout=600)
+        super().__init__(title=text["title"][:45], timeout=600)
         self.worker, self.survey, self.language, self.user_id = worker, survey, language, user_id
         self.idea = discord.ui.TextInput(label=text["label"], placeholder=text["placeholder"],
                                         style=discord.TextStyle.paragraph, min_length=1, max_length=4000)

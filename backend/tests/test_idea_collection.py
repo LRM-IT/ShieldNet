@@ -13,7 +13,7 @@ def test_validation():
     good = {"channel_id": "1520849874529026048", "primary_language": "en", "translations": {"en": text}}
     assert api.SurveyInput(**good).translations["en"].button == "Answer now"
     for changes in ({"primary_language": "ru"}, {"channel_id": "9223372036854775808"},
-                    {"translations": {"en": {**text, "title": "x" * 46}}},
+                    {"translations": {"en": {**text, "title": "x" * 257}}},
                     {"translations": {"en": text, "../": text}}):
         try:
             api.SurveyInput(**{**good, **changes})
@@ -63,4 +63,21 @@ def test_expired_publication_lease():
             else:
                 raise AssertionError("Stale acknowledgement accepted")
         session.commit.assert_not_called()
+    asyncio.run(run())
+
+
+def test_translations_preserved_with_long_ui_label():
+    async def run():
+        for language in ("vi", "fr"):
+            runtime = SimpleNamespace(translate=AsyncMock(side_effect=[
+                "Translated survey title longer than forty-five characters",
+                "Translated question", "B" * 81, "Idea", "Describe", "Thanks"]))
+            with patch.object(api, "require_guild_module", AsyncMock()), patch.object(api, "installation", AsyncMock()), patch.object(api, "AIRuntimeService", return_value=runtime):
+                result = await api.translate(111, api.TranslateInput(source_language="en", target_language=language,
+                    text=api.SurveyText(title="Ideas", description="Question")), None, AsyncMock())
+            assert result["description"] == "Translated question"
+            assert len(result["title"]) > 45
+            assert result["warnings"][0]["loc"] == ["translations", language, "button"]
+            assert result["warnings"][0]["ctx"]["max_length"] == 80
+            assert all("system_prompt" in call.kwargs for call in runtime.translate.call_args_list)
     asyncio.run(run())

@@ -2779,9 +2779,12 @@
       "permission": "Vous n’avez pas l’autorisation d’effectuer cette action.",
       "subscription": "Un abonnement actif est nécessaire pour activer ce module.",
       "publication": "Échec de publication. Vérifiez les permissions du bot et le salon choisi.",
-      "network": "Connexion impossible. Veuillez réessayer."
+      "network": "Connexion impossible. Veuillez réessayer.",
+      "too_long": "Maximum {max} caractères.",
+      "required": "Remplissez ce champ et vérifiez sa valeur."
     },
     "summary": "Recueillez les idées des membres avec des questionnaires multilingues et des formulaires privés.",
-    "status_failed": "Échec de publication"
+    "status_failed": "Échec de publication",
+    "translation_review": "Traduction reçue. Vérifiez les champs indiqués avant d’enregistrer."
   }
 }

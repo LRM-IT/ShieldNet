@@ -3,7 +3,7 @@ from uuid import UUID, uuid4
 import re
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from pydantic import BaseModel, Field, ConfigDict, model_validator
+from pydantic import BaseModel, Field, ConfigDict, ValidationError, model_validator
 from sqlalchemy import select, func, or_
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -24,7 +24,7 @@ internal_router = APIRouter(prefix="/internal/idea-collection/guilds/{guild_id}"
 
 class SurveyText(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True)
-    title: str = Field(min_length=1, max_length=45)
+    title: str = Field(min_length=1, max_length=256)
     description: str = Field(min_length=1, max_length=4000)
     button: str = Field(default="Answer now", min_length=1, max_length=80)
     label: str = Field(default="Your idea", min_length=1, max_length=45)
@@ -128,10 +128,19 @@ async def translate(guild_id: int, payload: TranslateInput, user: User = Depends
     result = {}
     try:
         for field, value in payload.text.model_dump().items():
+            limit = SurveyText.model_fields[field].metadata
+            max_length = next((x.max_length for x in limit if hasattr(x, "max_length")), 4000)
             result[field] = await AIRuntimeService(session).translate(guild_id=guild_id, module_key="idea_collection",
                 text=value, source_language=payload.source_language, target_language=payload.target_language,
+                system_prompt=f"Return only the translated text. Keep it within {max_length} characters. Use concise natural wording for UI labels; preserve the meaning.",
                 metadata={"field": field}) if value and payload.source_language != payload.target_language else value
-        return SurveyText.model_validate(result)
+        try:
+            return SurveyText.model_validate(result)
+        except ValidationError as exc:
+            # Preserve paid-for translations so the administrator can fix a long
+            # label instead of losing every translated field and paying again.
+            return {**result, "warnings": [{"loc": ["translations", payload.target_language, *e["loc"]],
+                    "type": e["type"], "ctx": e.get("ctx", {})} for e in exc.errors()]}
     except (LookupError, RuntimeError, ValueError) as exc:
         raise HTTPException(422, "Translation failed. Check the AI Center translation route and text length.") from exc
 

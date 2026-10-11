@@ -2778,9 +2778,12 @@
       "permission": "Non hai il permesso di eseguire questa azione.",
       "subscription": "Per attivare il plugin è necessario un abbonamento attivo.",
       "publication": "Pubblicazione non riuscita. Controlla i permessi del bot e il canale scelto.",
-      "network": "Connessione non riuscita. Riprova."
+      "network": "Connessione non riuscita. Riprova.",
+      "too_long": "Massimo {max} caratteri.",
+      "required": "Compila questo campo e controlla il valore."
     },
     "summary": "Raccogli le idee dei membri con sondaggi multilingue e moduli privati.",
-    "status_failed": "Pubblicazione non riuscita"
+    "status_failed": "Pubblicazione non riuscita",
+    "translation_review": "Traduzione ricevuta. Controlla i campi indicati prima di salvare."
   }
 }

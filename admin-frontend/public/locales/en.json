@@ -2926,9 +2926,12 @@
       "permission": "You do not have permission to perform this action.",
       "subscription": "An active subscription is required to enable this plugin.",
       "publication": "Publication failed. Check bot permissions and the selected channel.",
-      "network": "Unable to connect. Please try again."
+      "network": "Unable to connect. Please try again.",
+      "too_long": "Maximum {max} characters.",
+      "required": "Complete this field and check its value."
     },
     "summary": "Collect member ideas through multilingual Discord surveys and private response forms.",
-    "status_failed": "Publication failed"
+    "status_failed": "Publication failed",
+    "translation_review": "Translation received. Review the highlighted fields before saving."
   }
 }

@@ -36,7 +36,7 @@ interface SurveyText { title: string; description: string; button: string; label
           @if(form.translations[activeCode]; as text){
             <div class="actions"><h3>{{languageName(activeCode)}}</h3><button class="secondary" [disabled]="busy || activeCode===form.primary_language" (click)="translate()">✨ {{t('translate')}}</button><button class="secondary" [disabled]="busy || activeCode===form.primary_language" (click)="removeLanguage()">{{t('remove')}}</button></div>
             <p>{{t('ai_help')}}</p>
-            <label>{{t('title')}}<input maxlength="45" [(ngModel)]="text.title"></label>
+            <label>{{t('title')}}<input maxlength="256" [(ngModel)]="text.title"></label>
             <label>{{t('description')}}<textarea rows="5" maxlength="4000" [(ngModel)]="text.description"></textarea></label>
             <div class="grid"><label>{{t('button')}}<input maxlength="80" [(ngModel)]="text.button"></label><label>{{t('label')}}<input maxlength="45" [(ngModel)]="text.label"></label></div>
             <label>{{t('placeholder')}}<input maxlength="100" [(ngModel)]="text.placeholder"></label>
@@ -63,7 +63,7 @@ interface SurveyText { title: string; description: string; button: string; label
     }
   </main></sn-shell>`,
   styles: [`
-    .page{max-width:1120px;margin:auto;display:grid;gap:1rem;padding-bottom:3rem}.card{padding:1.3rem;border:1px solid var(--line);border-radius:16px;background:var(--panel)}.editor{display:grid;gap:1rem}h2,h3,p{margin:.3rem 0}p,small{color:var(--muted)}.actions{display:flex;gap:.65rem;flex-wrap:wrap;align-items:center}.actions>h3,.actions>strong{margin-inline-end:auto}.grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}label{display:grid;gap:.45rem;font-weight:600;min-width:0}input,select,textarea{box-sizing:border-box;width:100%;padding:.8rem;border:1px solid var(--line);border-radius:9px;background:var(--panel-2);color:var(--text);font:inherit;min-height:46px}textarea{resize:vertical}.actions select{width:auto;max-width:100%}button,.preview-button{padding:.75rem 1rem;border:1px solid var(--line);border-radius:9px;background:var(--primary);color:#061919;font-weight:700;cursor:pointer;min-height:44px}button.secondary,nav button{background:var(--panel-2);color:var(--text)}nav button.active{border-color:var(--primary);color:var(--primary)}button:disabled{opacity:.45;cursor:not-allowed}.preview{border-inline-start:4px solid var(--primary);padding:1rem;background:var(--panel-2);border-radius:8px}.preview-button{display:inline-block;margin-top:.8rem}.preserve{white-space:pre-wrap;overflow-wrap:anywhere}.survey{padding:1rem 0;border-top:1px solid var(--line);display:grid;gap:.8rem;margin-top:1rem}.error{color:#ff939f}.success{color:#70e7bd}a{color:var(--primary)}@media(max-width:650px){.grid{grid-template-columns:1fr}.card{padding:1rem}.actions select{width:100%}small{overflow-wrap:anywhere}}
+    .page{max-width:1120px;margin:auto;display:grid;gap:1rem;padding-bottom:3rem}.card{padding:1.3rem;border:1px solid var(--line);border-radius:16px;background:var(--panel)}.editor{display:grid;gap:1rem}h2,h3,p{margin:.3rem 0}p,small{color:var(--muted)}.actions{display:flex;gap:.65rem;flex-wrap:wrap;align-items:center}.actions>h3,.actions>strong{margin-inline-end:auto}.grid{align-items:start;display:grid;grid-template-columns:1fr 1fr;gap:1rem}label{align-content:start;display:grid;gap:.45rem;font-weight:600;min-width:0}input,select,textarea{box-sizing:border-box;width:100%;padding:.8rem;border:1px solid var(--line);border-radius:9px;background:var(--panel-2);color:var(--text);font:inherit;min-height:46px}textarea{resize:vertical}.grid select,.grid input{height:50px;min-height:50px}.grid sn-discord-channel-picker{min-height:50px}.error{white-space:pre-line}.actions select{width:auto;max-width:100%}button,.preview-button{padding:.75rem 1rem;border:1px solid var(--line);border-radius:9px;background:var(--primary);color:#061919;font-weight:700;cursor:pointer;min-height:44px}button.secondary,nav button{background:var(--panel-2);color:var(--text)}nav button.active{border-color:var(--primary);color:var(--primary)}button:disabled{opacity:.45;cursor:not-allowed}.preview{border-inline-start:4px solid var(--primary);padding:1rem;background:var(--panel-2);border-radius:8px}.preview-button{display:inline-block;margin-top:.8rem}.preserve{white-space:pre-wrap;overflow-wrap:anywhere}.survey{padding:1rem 0;border-top:1px solid var(--line);display:grid;gap:.8rem;margin-top:1rem}.error{color:#ff939f}.success{color:#70e7bd}a{color:var(--primary)}@media(max-width:650px){.grid{grid-template-columns:1fr}.card{padding:1rem}.actions select{width:100%}small{overflow-wrap:anywhere}}
   `],
 })
 export class PluginIdeaCollectionComponent implements OnInit, OnDestroy {
@@ -88,7 +88,14 @@ export class PluginIdeaCollectionComponent implements OnInit, OnDestroy {
       'An active subscription is required to enable this plugin':'subscription'};
     if(typeof detail==='string' && errors[detail])return this.t('errors.'+errors[detail]);
     if(publication)return this.t('errors.publication');
-    if(Array.isArray(detail)||status===422)return this.t('errors.validation');
+    if(Array.isArray(detail))return detail.map(item=>{
+      const loc=item.loc||[];const field=loc[loc.length-1];const index=loc.indexOf('translations');
+      const code=index>=0?loc[index+1]:this.form.primary_language;
+      const label=['title','description','button','label','placeholder','thanks'].includes(field)?this.t(field):field==='channel_id'?this.t('channel'):this.t('survey');
+      const reason=item.ctx?.max_length?this.t('errors.too_long').replace('{max}',String(item.ctx.max_length)):this.t('errors.required');
+      return `${this.languageName(code)} — ${label}: ${reason}`;
+    }).join('\n');
+    if(status===422)return this.t('errors.validation');
     if(status===401||status===403)return this.t('errors.permission');
     if(status===402)return this.t('errors.subscription');
     return this.t(status===0?'errors.network':'failed');
@@ -101,11 +108,11 @@ export class PluginIdeaCollectionComponent implements OnInit, OnDestroy {
   async changeState(){await this.run(async()=>{if(!this.installed)await this.plugins.install(this.guildId,'idea_collection');else if(this.enabled)await this.plugins.disable(this.guildId,'idea_collection');else await this.plugins.enable(this.guildId,'idea_collection');await this.load();});}
   languageName(code:string){const l=this.directory.find(x=>x.code===code);return l?`${l.flag || '🌐'} ${l.name} (${code})`:code.toUpperCase();}
   availableLanguages(){return this.directory.filter(l=>!this.codes.includes(l.code));}
-  async addLanguage(){if(!this.addCode)return;await this.run(async()=>{const code=this.addCode;const locale=['en','ru','uk','de','fr','it','pl','ar'].includes(code)?code:'en';const dictionary=await firstValueFrom(this.http.get<any>(`/locales/${locale}.json?v=16.75`));this.form.translations[code]={...dictionary.idea_collection.defaults,title:'',description:''};this.activeCode=code;this.addCode='';});}
+  async addLanguage(){if(!this.addCode)return;await this.run(async()=>{const code=this.addCode;const locale=['en','ru','uk','de','fr','it','pl','ar'].includes(code)?code:'en';const dictionary=await firstValueFrom(this.http.get<any>(`/locales/${locale}.json?v=16.76`));this.form.translations[code]={...dictionary.idea_collection.defaults,title:'',description:''};this.activeCode=code;this.addCode='';});}
   removeLanguage(){delete this.form.translations[this.activeCode];this.activeCode=this.form.primary_language;}
   newSurvey(){this.editingId='';this.activeCode=this.i18n.locale();this.form={channel_id:'',primary_language:this.activeCode,translations:{[this.activeCode]:this.defaults()}};this.error='';this.success='';}
   edit(s:any){this.editingId=s.id;this.form=structuredClone({channel_id:s.channel_id,primary_language:s.primary_language,translations:s.translations});this.activeCode=s.primary_language;this.tab='settings';}
-  async translate(){await this.run(async()=>{const code=this.activeCode;const result=await firstValueFrom(this.http.post<SurveyText>(this.url+'/translate',{source_language:this.form.primary_language,target_language:code,text:this.form.translations[this.form.primary_language]}));this.form.translations[code]=result;this.success=this.t('translated');});}
+  async translate(){await this.run(async()=>{const code=this.activeCode;const result=await firstValueFrom(this.http.post<SurveyText & {warnings?:any[]}>(this.url+'/translate',{source_language:this.form.primary_language,target_language:code,text:this.form.translations[this.form.primary_language]}));const {warnings,...text}=result;this.form.translations[code]=text;if(warnings?.length){this.error=this.apiError(warnings);this.success=this.t('translation_review');}else this.success=this.t('translated');});}
   async save(publish:boolean){await this.run(async()=>{const result=await firstValueFrom(this.editingId?this.http.put<any>(this.url+'/'+this.editingId,this.form):this.http.post<any>(this.url,this.form));this.editingId=result.id;if(publish)await firstValueFrom(this.http.post(this.url+'/'+result.id+'/publish',{}));await this.load();this.success=this.t(publish?'queued':'saved');});}
   async close(s:any){await this.run(async()=>{await firstValueFrom(this.http.post(this.url+'/'+s.id+'/close',{}));await this.load();this.success=this.t('queued');});}
   async showResponses(id?:string){this.tab='responses';this.responseSurvey=id||this.responseSurvey||this.surveys[0]?.id||'';this.offset=0;await this.loadResponses();}
