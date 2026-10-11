@@ -82,10 +82,16 @@ class OpenForm(discord.ui.Button):
         await interaction.response.send_modal(IdeaModal(self.worker, self.survey, self.language, interaction.user.id))
 
 
+def language_options(survey):
+    labels = survey.get('language_labels', {})
+    return [discord.SelectOption(label=labels.get(code, {}).get('name') or code.upper(), value=code,
+                                 emoji=labels.get(code, {}).get('flag') or None)
+            for code in survey['translations']]
+
+
 class LanguageSelect(discord.ui.Select):
     def __init__(self, worker, survey, language):
-        super().__init__(placeholder="🌐 " + ui_text(language, "language"), options=[discord.SelectOption(label=code.upper(), value=code)
-                                                           for code in survey["translations"]])
+        super().__init__(placeholder="🌐 " + ui_text(language, "language"), options=language_options(survey))
         self.worker, self.survey = worker, survey
 
     async def callback(self, interaction):
@@ -112,7 +118,7 @@ class SurveyButton(discord.ui.DynamicItem[discord.ui.Button], template=r"gc_idea
     async def from_custom_id(cls, interaction, item, match: re.Match):
         return cls(match["survey"], item.label)
 
-    async def callback(self, interaction):
+    async def callback(self, interaction, selected_language=None):
         await interaction.response.defer(ephemeral=True, thinking=True)
         worker = interaction.client.idea_collection
         try:
@@ -121,17 +127,48 @@ class SurveyButton(discord.ui.DynamicItem[discord.ui.Button], template=r"gc_idea
             survey = await worker.request("GET", interaction.guild_id, f"/{self.survey_id}")
             if str(interaction.message.id) != survey["message_id"]:
                 return await unavailable(interaction)
+            if selected_language is not None and selected_language not in survey["translations"]:
+                return await unavailable(interaction)
             groups = []
             try:
                 config = await interaction.client.language_selection.configuration(interaction.guild_id)
                 groups = config.get("groups", []) if config.get("enabled") else []
             except Exception:
                 log.warning("Language roles unavailable; using Discord locale")
-            code = language_for(survey, {str(r.id) for r in getattr(interaction.user, "roles", [])}, groups, interaction.locale)
+            code = selected_language or language_for(survey, {str(r.id) for r in getattr(interaction.user, "roles", [])}, groups, interaction.locale)
             await interaction.followup.send(embed=embed(survey, code), view=private_view(worker, survey, code), ephemeral=True)
         except Exception:
             log.exception("Unable to open idea survey")
             await unavailable(interaction)
+
+
+class SurveyLanguageSelect(discord.ui.DynamicItem[discord.ui.Select], template=r"gc_idea_language:(?P<survey>[0-9a-f-]{36})"):
+    def __init__(self, survey_id, item):
+        self.survey_id = survey_id
+        super().__init__(item)
+
+    @classmethod
+    async def from_custom_id(cls, interaction, item, match: re.Match):
+        return cls(match['survey'], item)
+
+    async def callback(self, interaction):
+        values = (interaction.data or {}).get('values', [])
+        if len(values) != 1:
+            return await unavailable(interaction)
+        await SurveyButton(self.survey_id).callback(interaction, values[0])
+
+
+def public_view(survey):
+    view = discord.ui.View(timeout=None)
+    if len(survey['translations']) > 1:
+        select = discord.ui.Select(custom_id='gc_idea_language:'+survey['id'],
+                                   placeholder=ui_text(survey['primary_language'], 'language'),
+                                   options=language_options(survey), row=0)
+        view.add_item(SurveyLanguageSelect(survey['id'], select))
+    button = SurveyButton(survey['id'], survey['translations'][survey['primary_language']]['button'])
+    button.item.row = 1
+    view.add_item(button)
+    return view
 
 
 class IdeaCollectionWorker:
@@ -189,8 +226,7 @@ class IdeaCollectionWorker:
                         break
             view = None
             if survey["active"]:
-                view = discord.ui.View(timeout=None)
-                view.add_item(SurveyButton(survey["id"], survey["translations"][survey["primary_language"]]["button"]))
+                view = public_view(survey)
             if message:
                 await message.edit(embed=embed(survey, survey["primary_language"]), view=view, allowed_mentions=discord.AllowedMentions.none())
             elif survey["active"]:

@@ -26,7 +26,7 @@ from bot.guild_dm_broadcast import GuildDMBroadcastWorker
 from bot.plugin_welcome import WelcomeWorker
 from bot.plugin_antiflood import AntiFloodWorker
 from bot.plugin_voting import VotingWorker
-from bot.plugin_idea_collection import IdeaCollectionWorker, SurveyButton
+from bot.plugin_idea_collection import IdeaCollectionWorker, SurveyButton, SurveyLanguageSelect
 from bot.plugin_first_introduction import LanguageSelection
 from bot.plugin_translator_groups import TranslatorGroups
 from bot.plugin_role_menu import RoleMenu
@@ -419,7 +419,7 @@ class ShieldNetBot(discord.Client):
 
     async def setup_hook(self) -> None:
         self.add_view(VerificationPublicView(self.verification))
-        self.add_dynamic_items(SurveyButton)
+        self.add_dynamic_items(SurveyButton, SurveyLanguageSelect)
         # Commands are synchronized per guild in on_ready so one application owns
         # a guild at a time and Discord does not show duplicate command sets.
         self.periodic_sync.start()

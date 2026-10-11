@@ -16,10 +16,20 @@ from app.models.core import User
 from app.models.plugins import GuildPluginInstallation
 from app.models.explorer import GuildChannel
 from app.models.plugin_idea_collection import IdeaSurvey, IdeaResponse
+from app.models.global_languages import GlobalLanguage
 from app.services.ai_runtime import AIRuntimeService
 
 router = APIRouter(prefix="/discord/guilds/{guild_id}/plugins/idea-collection", tags=["Idea Collection"])
 internal_router = APIRouter(prefix="/internal/idea-collection/guilds/{guild_id}", dependencies=[Depends(verify_internal_service_token)])
+
+
+async def serialize_for_bot(session, row):
+    data = serialize(row)
+    languages = (await session.scalars(select(GlobalLanguage).where(
+        GlobalLanguage.code.in_(data['translations'])))).all()
+    data['language_labels'] = {language.code: {'name': language.name, 'flag': language.flag}
+                               for language in languages}
+    return data
 
 
 class SurveyText(BaseModel):
@@ -189,7 +199,7 @@ async def claim(guild_id: int, session: AsyncSession = Depends(get_db_session)):
         return {"item": None}
     row.job_status, row.claim_id, row.claimed_at = "processing", uuid4(), datetime.now(UTC)
     await session.commit()
-    return {"item": serialize(row), "claim_id": str(row.claim_id)}
+    return {"item": await serialize_for_bot(session, row), "claim_id": str(row.claim_id)}
 
 
 class CompleteInput(BaseModel):
@@ -217,7 +227,7 @@ async def internal_survey(guild_id: int, survey_id: UUID, session: AsyncSession 
     row = await survey_row(session, guild_id, survey_id)
     if not row.active or not row.message_id:
         raise HTTPException(409, "This survey is closed or unavailable")
-    return serialize(row)
+    return await serialize_for_bot(session, row)
 
 
 class AnswerInput(BaseModel):

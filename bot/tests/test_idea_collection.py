@@ -86,3 +86,32 @@ def test_recovers_publication_by_hidden_button_id():
         assert message.edit.call_args.kwargs['embed'].footer.text=='GuildConsole'
         assert worker.request.call_args.args[-1]['message_id']==789
     asyncio.run(run())
+
+
+def test_public_language_menu_and_private_translation():
+    from bot.plugin_idea_collection import public_view, SurveyLanguageSelect
+    async def run():
+        data={**survey(), 'message_id':'789', 'language_labels':{
+            'en':{'name':'English','flag':'\U0001f1ec\U0001f1e7'},
+            'ru':{'name':'Russian','flag':'\U0001f1f7\U0001f1fa'}}}
+        view=public_view(data)
+        assert view.is_persistent()
+        select=view.children[0]
+        assert isinstance(select, SurveyLanguageSelect)
+        assert select.item.options[0].label=='English'
+        assert str(select.item.options[0].emoji)=='\U0001f1ec\U0001f1e7'
+        assert select.item.options[1].label=='Russian'
+        guild=SimpleNamespace(id=123)
+        worker=SimpleNamespace(request=AsyncMock(return_value=data))
+        interaction=SimpleNamespace(data={'values':['ru']}, guild=guild, guild_id=123,
+            message=SimpleNamespace(id=789),locale='en-US',user=SimpleNamespace(roles=[]),
+            client=SimpleNamespace(idea_collection=worker,managed_guilds=[guild],
+                language_selection=SimpleNamespace(configuration=AsyncMock(return_value={}))),
+            response=SimpleNamespace(defer=AsyncMock()),followup=SimpleNamespace(send=AsyncMock()))
+        restored=await SurveyLanguageSelect.from_custom_id(interaction,select.item,{'survey':data['id']})
+        await restored.callback(interaction)
+        sent=interaction.followup.send.call_args.kwargs
+        assert sent['ephemeral'] is True
+        assert sent['view'].children[-1].language=='ru'
+        assert sent['view'].children[0].options[0].label=='English'
+    asyncio.run(run())
