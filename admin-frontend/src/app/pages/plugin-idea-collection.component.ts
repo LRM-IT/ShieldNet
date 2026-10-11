@@ -28,7 +28,7 @@ interface SurveyText { title: string; description: string; button: string; label
         <section class="card editor">
           <div class="actions"><h3>{{t(editingId ? 'edit' : 'new')}}</h3><button class="secondary" [disabled]="busy" (click)="newSurvey()">＋ {{t('new')}}</button></div>
           <div class="grid">
-            <label>{{t('channel')}}<sn-discord-channel-picker [guildId]="guildId" [value]="form.channel_id" [showHint]="false" (valueChange)="form.channel_id=$event"/><small>{{t('channel_help')}}</small></label>
+            <label>{{t('channel')}}<sn-discord-channel-picker [guildId]="guildId" [value]="form.channel_id" [showHint]="false" (valueChange)="form.channel_id=$event || ''"/><small>{{t('channel_help')}}</small></label>
             <label>{{t('primary')}}<select [(ngModel)]="form.primary_language"><option *ngFor="let code of codes" [value]="code">{{languageName(code)}}</option></select></label>
           </div>
           <div class="actions"><select [(ngModel)]="addCode" [attr.aria-label]="t('language')"><option value="">{{t('language')}}</option><option *ngFor="let lang of availableLanguages()" [value]="lang.code" translate="no">{{lang.flag}} {{lang.name}} ({{lang.code}})</option></select><button [disabled]="!addCode || codes.length>=25" (click)="addLanguage()">＋ {{t('add')}}</button></div>
