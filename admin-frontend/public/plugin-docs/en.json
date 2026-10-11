@@ -161,6 +161,11 @@
           "body": "The current plugin page focuses on the operational case queue, ownership, priority, deadlines, statistics and moderator workload. The platform API also supports reports, evidence, notes, sanctions, templates and appeals; some of these functions may be exposed through related screens or later interface updates."
         }
       ]
+    },
+    "idea_collection": {
+      "purpose": "Collect member suggestions using multilingual survey messages and private forms.",
+      "configuration": "1. Install and enable Idea Collection. 2. Create a survey and select an existing text channel or forum thread. 3. Set the public message language and write the title, question, button, form label and confirmation. 4. Add languages manually or configure your provider API key and the translation route in AI Center, then use Translate with AI. Review all translations. 5. Save and publish. 6. Open Responses to read submissions. Close the survey to stop new submissions; answers remain available.",
+      "check": "Click the public button with a member account. Check the language selected from language roles or Discord locale, switch language if needed, open the form and submit. Verify the private confirmation and the saved response in the panel. Resubmitting updates the same member’s answer."
     }
   }
 }

@@ -1,0 +1,38 @@
+{
+  "id": "idea_collection",
+  "name": "Idea Collection",
+  "version": "1.0.0",
+  "description": "Collect member ideas through multilingual Discord surveys and private response forms.",
+  "author": "LRM-IT",
+  "min_core_version": "5.1.0",
+  "components": {
+    "backend": true,
+    "frontend": true,
+    "bot": true
+  },
+  "capabilities": [
+    "discord.read.guild",
+    "discord.send.message",
+    "ai.chat"
+  ],
+  "ui": {
+    "navigation": {
+      "label": "Idea Collection",
+      "icon": "💡",
+      "route": "plugins/idea-collection"
+    }
+  },
+  "entrypoints": {
+    "backend": "runtime:IdeaCollectionPlugin",
+    "frontend": "admin-frontend/src/app/pages/plugin-idea-collection.component.ts",
+    "bot": "bot/bot/plugin_idea_collection.py"
+  },
+  "entrypoint": "runtime.py",
+  "permissions": [
+    "view_channel",
+    "send_messages",
+    "send_messages_in_threads",
+    "read_message_history",
+    "embed_links"
+  ]
+}

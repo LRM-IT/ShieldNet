@@ -76,3 +76,5 @@ from app.models.plugin_control import PluginPermission, PluginPermissionGrant, P
 from app.models.platform_ai import PlatformAIProvider, PlatformAISettings
 from app.models.billing import BillingPluginPlan, BillingSubscription, BillingSubscriptionTransfer, BillingPayment, BillingWallet, BillingWalletTransaction, BillingDiscountCard, BillingDiscountRedemption, BillingTenureDiscount
 from app.models.support import SupportTicket, SupportTicketMessage, SupportTicketAttachment
+
+from app.models.plugin_idea_collection import IdeaSurvey, IdeaResponse

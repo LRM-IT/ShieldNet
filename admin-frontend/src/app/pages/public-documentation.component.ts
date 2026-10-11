@@ -51,7 +51,7 @@ type PublicPricing={modules?:PublicModule[]};
 export class PublicDocumentationComponent implements OnInit {
   readonly pluginDocs=signal<PublicDocsFile|null>(null);
   readonly moduleTiers=signal<Record<string,boolean>>({});
-  readonly pluginKeys=['welcome','antiflood','translator_groups','first_introduction','verification_level1','voting','guild-dm-broadcast','role_menu','ai_automod','event_manager','channel_cleanup','war_planner','activity_ranking','audit_security','backup_restore','cross_guild_network','moderation'];
+  readonly pluginKeys=['idea_collection','welcome','antiflood','translator_groups','first_introduction','verification_level1','voting','guild-dm-broadcast','role_menu','ai_automod','event_manager','channel_cleanup','war_planner','activity_ranking','audit_security','backup_restore','cross_guild_network','moderation'];
   constructor(readonly i18n:TranslationService,private http:HttpClient){}
   async ngOnInit(){await Promise.all([this.loadPluginDocs(this.i18n.locale()),this.loadModuleTiers()])}
   async changeLocale(locale:string){await this.i18n.setLocale(locale);await this.loadPluginDocs(locale)}

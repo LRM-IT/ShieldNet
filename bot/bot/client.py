@@ -26,6 +26,7 @@ from bot.guild_dm_broadcast import GuildDMBroadcastWorker
 from bot.plugin_welcome import WelcomeWorker
 from bot.plugin_antiflood import AntiFloodWorker
 from bot.plugin_voting import VotingWorker
+from bot.plugin_idea_collection import IdeaCollectionWorker, SurveyButton
 from bot.plugin_first_introduction import LanguageSelection
 from bot.plugin_translator_groups import TranslatorGroups
 from bot.plugin_role_menu import RoleMenu
@@ -71,6 +72,7 @@ class ShieldNetBot(discord.Client):
         self.welcome = WelcomeWorker(self)
         self.antiflood = AntiFloodWorker(self)
         self.voting = VotingWorker(self)
+        self.idea_collection = IdeaCollectionWorker(self)
         self.language_selection = LanguageSelection(self)
         self.translator_groups = TranslatorGroups(self, self.backend)
         self.role_menu = RoleMenu(self)
@@ -417,6 +419,7 @@ class ShieldNetBot(discord.Client):
 
     async def setup_hook(self) -> None:
         self.add_view(VerificationPublicView(self.verification))
+        self.add_dynamic_items(SurveyButton)
         # Commands are synchronized per guild in on_ready so one application owns
         # a guild at a time and Discord does not show duplicate command sets.
         self.periodic_sync.start()
@@ -434,12 +437,13 @@ class ShieldNetBot(discord.Client):
         self.explorer_snapshot_loop.start()
         self.runtime_heartbeat_loop.start()
         self.voting.loop.start()
+        self.idea_collection.loop.start()
         self._queue_worker_task = asyncio.create_task(self.queue_worker()) if self.target_guild_id is None else None
 
     async def close(self) -> None:
         # Routing changes replace clients; stop workers before closing their HTTP session.
         workers = []
-        for loop in [value for value in vars(self).values() if isinstance(value, tasks.Loop)] + [self.voting.loop]:
+        for loop in [value for value in vars(self).values() if isinstance(value, tasks.Loop)] + [self.voting.loop, self.idea_collection.loop]:
             task = loop.get_task()
             if task is not None:
                 loop.cancel()

@@ -593,6 +593,7 @@ export class GuildComponent implements OnInit {
       leadership: 'leadership',
       audit: 'audit',
       voting: 'plugins/voting',
+      idea_collection: 'plugins/idea-collection',
     };
 
     return map[key.toLowerCase()] || null;
