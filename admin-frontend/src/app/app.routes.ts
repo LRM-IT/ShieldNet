@@ -4,7 +4,6 @@ import { TemplateBankComponent } from './pages/template-bank.component';
 import { GuildAIComponent } from './pages/guild-ai.component';
 import { PlatformLanguagesComponent } from './pages/platform-languages.component';
 import { GuildLanguagesComponent } from './pages/guild-languages.component';
-import { PluginIdeaCollectionComponent } from './pages/plugin-idea-collection.component';
 import { PluginVotingComponent } from './pages/plugin-voting.component';
 import { VotingTemplatesComponent } from './pages/voting-templates.component';
 import { HealthMonitorComponent } from './pages/health-monitor.component';
@@ -150,7 +149,7 @@ export const routes: Routes = [
   { path: 'guild/:guildId/plugins/cross-guild-network', component: PluginCrossGuildNetworkComponent, canActivate: [guildGuard], data: { guildModule: 'plugins' } },
   { path: 'guild/:guildId/setup-wizard', component: ServerSetupWizardComponent, canActivate: [guildGuard], data: { guildModule: 'settings' } },
   { path: 'guild/:guildId/reaction-roles', redirectTo: 'guild/:guildId/plugins/role-menu', pathMatch: 'full' },
-  { path: 'guild/:guildId/plugins/idea-collection', component: PluginIdeaCollectionComponent, canActivate: [guildGuard], data: { guildModule: 'plugins' } },
+  { path: 'guild/:guildId/plugins/idea-collection', loadComponent: () => import('./pages/plugin-idea-collection.component').then(m => m.PluginIdeaCollectionComponent), canActivate: [guildGuard], data: { guildModule: 'plugins' } },
   { path: 'guild/:guildId/plugins/voting', component: PluginVotingComponent, canActivate: [guildGuard], data: { guildModule: 'plugins' } },
   { path: 'guild/:guildId/automation-monitor', component: AutomationMonitorComponent, canActivate: [guildGuard], data: { guildModule: 'automations' } },
   { path: 'guild/:guildId/workflow-scheduler', component: WorkflowSchedulerComponent, canActivate: [guildGuard], data: { guildModule: 'automations' } },
