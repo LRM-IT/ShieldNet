@@ -83,7 +83,7 @@ def test_recovers_publication_by_hidden_button_id():
         await worker.process(guild,{'item':data,'claim_id':'lease'})
         channel.send.assert_not_called()
         message.edit.assert_awaited_once()
-        assert message.edit.call_args.kwargs['embed'].footer.text=='GuildConsole'
+        assert message.edit.call_args.kwargs['embed'].footer.text is None
         assert worker.request.call_args.args[-1]['message_id']==789
     asyncio.run(run())
 
