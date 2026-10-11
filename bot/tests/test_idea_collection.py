@@ -64,3 +64,25 @@ def test_publication_edits_and_closes_existing_message():
         assert message.edit.call_args.kwargs['view'] is None
         channel.send.assert_not_called()
     asyncio.run(run())
+
+
+def test_recovers_publication_by_hidden_button_id():
+    async def run():
+        data={**survey(), 'channel_id':'456', 'message_id':None, 'active':True}
+        channel=MagicMock(spec=discord.TextChannel)
+        channel.guild=SimpleNamespace(id=123)
+        message=SimpleNamespace(id=789,edit=AsyncMock(),author=SimpleNamespace(id=99),embeds=[],
+            components=[SimpleNamespace(children=[SimpleNamespace(custom_id='gc_idea:'+data['id'])])])
+        async def history(**kwargs):
+            yield message
+        channel.history=history
+        channel.send=AsyncMock()
+        guild=SimpleNamespace(id=123,get_channel_or_thread=lambda _:channel)
+        worker=IdeaCollectionWorker(SimpleNamespace(user=SimpleNamespace(id=99)))
+        worker.request=AsyncMock()
+        await worker.process(guild,{'item':data,'claim_id':'lease'})
+        channel.send.assert_not_called()
+        message.edit.assert_awaited_once()
+        assert message.edit.call_args.kwargs['embed'].footer.text=='GuildConsole'
+        assert worker.request.call_args.args[-1]['message_id']==789
+    asyncio.run(run())

@@ -36,8 +36,7 @@ def language_for(survey, role_ids, groups, locale):
 def embed(survey, language):
     text = survey["translations"][language]
     result = discord.Embed(title=("💡 " + text["title"]) if len(text["title"])<=253 else text["title"], description=text["description"], color=0x21CBB8)
-    # Stable marker allows recovery if Discord accepted a send but acknowledgement failed.
-    result.set_footer(text="GuildConsole · " + survey["id"])
+    result.set_footer(text="GuildConsole")
     return result
 
 
@@ -179,8 +178,13 @@ class IdeaCollectionWorker:
                     pass
             elif survey["active"]:
                 async for candidate in channel.history(limit=100):
-                    if candidate.author.id == self.bot.user.id and any(
-                        x.footer.text == "GuildConsole · " + survey["id"] for x in candidate.embeds):
+                    # Recover using the button's internal ID, with legacy footer support.
+                    matches_button = any(
+                        getattr(component, "custom_id", None) == "gc_idea:" + survey["id"]
+                        for row in candidate.components for component in getattr(row, "children", [])
+                    )
+                    matches_legacy = any(x.footer.text == "GuildConsole · " + survey["id"] for x in candidate.embeds)
+                    if candidate.author.id == self.bot.user.id and (matches_button or matches_legacy):
                         message = candidate
                         break
             view = None
