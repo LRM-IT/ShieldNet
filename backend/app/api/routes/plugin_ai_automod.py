@@ -37,6 +37,7 @@ async def response(session,guild_id):
 async def get_settings(guild_id:int,user:User=Depends(get_current_user),session:AsyncSession=Depends(get_db_session)):
     await require_guild_module(session,user,guild_id,"plugins");return await response(session,guild_id)
 
+@router.post("/discord/guilds/{guild_id}/plugins/ai-automod/settings")
 @router.put("/discord/guilds/{guild_id}/plugins/ai-automod/settings")
 async def save_settings(guild_id:int,payload:SettingsInput,user:User=Depends(get_current_user),session:AsyncSession=Depends(get_db_session)):
     await require_guild_module(session,user,guild_id,"plugins");item=await installation(session,guild_id)
